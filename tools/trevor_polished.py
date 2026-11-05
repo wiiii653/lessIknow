@@ -2,7 +2,7 @@
 import math
 from pathlib import Path
 from build_sequence import Code
-from trevor_awakens import COLORS
+from trevor_awakens import COLORS, HIT as TREVOR_HIT, MIDPOINT as TREVOR_MIDPOINT
 ENTRY=0x6000
 
 def frames():
@@ -77,10 +77,10 @@ def helper():
     # Keep the exact act boundaries. First two pictures make the reveal;
     # the two energetic poses alternate on 256-tick intervals.
     c.emit(0xa9,16);a(0x8d,0x83e0)
-    a(0xad,0x83e3);c.emit(0xc9,26928>>8);c.branch(0x90,'quiet')
-    c.branch(0xd0,'energetic');a(0xad,0x83e2);c.emit(0xc9,26928&255);c.branch(0xb0,'energetic')
-    c.label('quiet');a(0xad,0x83e3);c.emit(0xc9,25432>>8);c.branch(0x90,'stage0')
-    c.branch(0xd0,'stage1');a(0xad,0x83e2);c.emit(0xc9,25432&255);c.branch(0xb0,'stage1')
+    a(0xad,0x83e3);c.emit(0xc9,TREVOR_HIT>>8);c.branch(0x90,'quiet')
+    c.branch(0xd0,'energetic');a(0xad,0x83e2);c.emit(0xc9,TREVOR_HIT&255);c.branch(0xb0,'energetic')
+    c.label('quiet');a(0xad,0x83e3);c.emit(0xc9,TREVOR_MIDPOINT>>8);c.branch(0x90,'stage0')
+    c.branch(0xd0,'stage1');a(0xad,0x83e2);c.emit(0xc9,TREVOR_MIDPOINT&255);c.branch(0xb0,'stage1')
     c.label('stage0');c.emit(0xa9,0);c.jump(0x4c,'stage_ready')
     c.label('stage1');c.emit(0xa9,1);c.jump(0x4c,'stage_ready')
     c.label('energetic');a(0xad,0x83e3);c.emit(0x29,1,0x09,2)

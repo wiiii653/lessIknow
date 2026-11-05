@@ -2,8 +2,9 @@
 
 import math
 from gym_background import gym_pixels
+from music_timing import tick_at_bar
 
-PRACTICE_TICK = 5984
+PRACTICE_TICK = tick_at_bar(16)
 PRACTICE_SCENE = 13
 # The basketball travels from the shooter's hands through an arc to the hoop,
 # then drops and bounces on the court before the next shot.
@@ -14,7 +15,7 @@ BALL_PATH = tuple((round(57 + 23 * t / 15),
      round(138 - 22 * math.sin((t - 9) / 6 * math.pi))) for t in range(16))
 
 
-PRACTICE_CUTS = (5984, 6981, 7978)
+PRACTICE_CUTS = (tick_at_bar(16), tick_at_bar(56, 3), tick_at_bar(64, 3))
 
 
 def practice_pixels():

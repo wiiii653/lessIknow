@@ -1,14 +1,14 @@
 """Trevor staging, hardware sprites and safe allocation of the seventeenth bank."""
 import unittest
 import test_sequence as sequence
-from trevor_awakens import START,HIT,END
+from trevor_awakens import START,MIDPOINT,HIT,END
 from trevor_polished import frames, helper, tunnel_frames, POLYGONS, inside
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class TrevorTests(unittest.TestCase):
     def test_illustrations_boundaries_and_missiles(self):
         art=frames();cpu=None;seen=set()
-        for tick in (START,START+512,START+1495,START+1496,HIT-1,HIT,HIT+256,HIT+512,END-1):
+        for tick in (START,START+512,MIDPOINT-1,MIDPOINT,HIT-1,HIT,HIT+256,HIT+512,END-1):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0x83e0],16)
             pose=cpu.memory[0x83ed];seen.add(pose)
@@ -61,7 +61,7 @@ class TrevorTests(unittest.TestCase):
         from extract_music import segments
         from scene_memory import RuntimeMemory
         from pathlib import Path
-        m=RuntimeMemory((sequence.ROOT/'build/visual-prototype-v051.xex').read_bytes())
+        m=RuntimeMemory((sequence.ROOT/'build/visual-prototype-v053.xex').read_bytes())
         m.banks[0][0]=0x55 # The second marker must disambiguate this coincidence.
         saved=[bytes(bank) for bank in m.banks[:16]]
         frame=bytes((i*17+i//256)&255 for i in range(16384))

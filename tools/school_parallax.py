@@ -1,9 +1,10 @@
 """Precomposed independent layers for school pan, 18 clocked frames."""
 from pathlib import Path
 from build_sequence import Code, PALETTE
+from music_timing import tick_at_bar
 from school_story import color
 ENTRY=0x7000
-START=3553
+START=tick_at_bar(19,2)
 
 # The three roots are fixed on original blonde pixels; only the tips move.
 HAIR_ROOTS=((26,9,20,0),(26,13,19,2),(27,19,21,4))

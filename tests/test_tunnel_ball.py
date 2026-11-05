@@ -3,6 +3,7 @@ import unittest
 import test_sequence as sequence
 from tunnel_ball import masks, tunnel_offsets
 from engine_effects import pmg_art
+from mosaic import KALEIDO_START
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class TunnelBallTests(unittest.TestCase):
@@ -13,7 +14,7 @@ class TunnelBallTests(unittest.TestCase):
                 self.assertEqual(frame[0][y]&frame[2][y],0)
                 self.assertEqual(frame[1][y]&frame[3][y],0)
         pictures=set()
-        for tick in range(11968,12224,32):
+        for tick in range(KALEIDO_START,KALEIDO_START+256,32):
             cpu=sequence.execute(tick);m=cpu.memory
             self.assertEqual(m[0xd01b],0x11)
             self.assertEqual(m[0xd01d],3)
@@ -27,7 +28,7 @@ class TunnelBallTests(unittest.TestCase):
         self.assertEqual(len(pictures),8)
 
     def test_held_bitmap_and_clean_handoff(self):
-        cpu=sequence.execute(11968)
+        cpu=sequence.execute(KALEIDO_START)
         bitmap=sequence.SequenceTests().raster(cpu)
         sparks=cpu.memory[0x980:0xa00]
         before=cpu.processorCycles
@@ -47,7 +48,7 @@ class TunnelBallTests(unittest.TestCase):
 
     def test_rainbow_panels_and_satellites_keep_distinct_bright_hues(self):
         colors=set()
-        for tick in range(11968,12224,32):
+        for tick in range(KALEIDO_START,KALEIDO_START+256,32):
             m=sequence.execute(tick).memory
             palette=tuple(m[a] for a in (0xd012,0xd013,0xd019))
             self.assertEqual(len({c>>4 for c in palette}),3)

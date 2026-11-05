@@ -1,8 +1,9 @@
 """Bank-eight portrait renderer; music owns offsets below $0B10."""
 from pathlib import Path
 from build_sequence import Code
-START, END = 14960, 20944
-CUTS = tuple(START + 1496*i for i in range(4))
+from music_timing import tick_at_bar
+START, END = tick_at_bar(40), tick_at_bar(56)
+CUTS = tuple(tick_at_bar(40 + 4*i) for i in range(4))
 ENTRY, DATA, HEIGHT = 0x4b10, 0x4fc0, 52
 
 def portraits():

@@ -13,11 +13,12 @@ from py65.devices.mpu6502 import MPU
 from build_sequence import PALETTE
 from scene_memory import video_memory, RuntimeMemory
 from pmg_preview import player_masks, atari_rgb
+from mosaic import KALEIDO_START
 
 
 def preview(tick, name):
-    info = json.loads(Path('build/visual-prototype-v051.json').read_text())
-    cpu = MPU(memory=RuntimeMemory(Path('build/visual-prototype-v051.xex').read_bytes()))
+    info = json.loads(Path('build/visual-prototype-v053.json').read_text())
+    cpu = MPU(memory=RuntimeMemory(Path('build/visual-prototype-v053.xex').read_bytes()))
     cpu.memory[0x23cd] = 0x60
     cpu.memory[0xd40b] = 124
     for offset in range(3):
@@ -77,5 +78,5 @@ if __name__ == '__main__':
                        (5610, 'school-girl-at-entrance'),
                        (5984, 'practice-closeup'), (6981, 'practice-shot'), (7978, 'practice-stretch'), (9152, 'dance-solo'),
                        (9808, 'dance-duo'), (10560, 'dance-trio'),
-                       (11968, 'kaleidoscope')):
+                       (KALEIDO_START, 'kaleidoscope')):
         preview(tick, name)

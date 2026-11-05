@@ -5,13 +5,14 @@ from pathlib import Path
 
 from build_title import render
 from gym_background import gym_pixels
+from music_timing import tick_at_bar
 
-TITLE_TICK = 1496  # 4 bars = 7.5 seconds
-DANCE_TICK = 8976  # 24 bars = 45 seconds
+TITLE_TICK = tick_at_bar(4)  # 4 bars = 7.5 seconds
+DANCE_TICK = tick_at_bar(24)  # 24 bars = 45 seconds
 PALETTE = ((0, 0, 0), (255, 50, 160), (0, 220, 255), (255, 190, 150))
 DANCE_WIDTH, DANCE_HEIGHT = 48, 144  # ANTIC 4 pixels are twice as wide as tall
-DANCE_SECOND_TICK = DANCE_TICK + 748  # two bars later: 48.75 seconds
-DANCE_THIRD_TICK = DANCE_TICK + 1496  # four bars later: 52.5 seconds
+DANCE_SECOND_TICK = tick_at_bar(26)  # two bars later: 48.75 seconds
+DANCE_THIRD_TICK = tick_at_bar(28)  # four bars later: 52.5 seconds
 DANCE_LEFTS = (56, 4, 108)  # center first, then left, then right
 
 

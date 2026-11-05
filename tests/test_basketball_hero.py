@@ -3,6 +3,7 @@ import unittest
 import test_sequence as sequence
 from basketball_hero import START,DUNK,END,frames,helper,DATA,ENTRY
 from engine_effects import pmg_art
+from trevor_awakens import END as TREVOR_END
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class HeroTests(unittest.TestCase):
@@ -19,7 +20,7 @@ class HeroTests(unittest.TestCase):
             self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),expected)
         self.assertEqual(seen,set(range(6)))
         self.assertEqual(sequence.execute(END,cpu).memory[0x83e0],16)
-        cpu=sequence.execute(32912,cpu)
+        cpu=sequence.execute(TREVOR_END,cpu)
         self.assertEqual(cpu.memory[0xd01d],3)  # rainbow ball in the rotator
         cpu=sequence.execute(9163,cpu)
         missiles,players=pmg_art()

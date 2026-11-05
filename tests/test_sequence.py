@@ -13,7 +13,10 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
 from extract_music import segments
-from build_sequence import dance_pixels, dance_group_pixels, DANCE_SECOND_TICK, DANCE_THIRD_TICK
+from build_sequence import (dance_pixels, dance_group_pixels, DANCE_TICK,
+                            DANCE_SECOND_TICK, DANCE_THIRD_TICK)
+from music_timing import tick_at_bar
+KALEIDO_TICK = tick_at_bar(32)
 from pmg_preview import player_masks
 if MPU is not None:
     from scene_memory import video_memory, RuntimeMemory
@@ -24,14 +27,14 @@ from gym_practice import PRACTICE_TICK, PRACTICE_SCENE, practice_pixels, BALL_PA
 
 def execute(tick, cpu=None):
     if cpu is None:
-        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v051.xex').read_bytes()))
+        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v053.xex').read_bytes()))
     cpu.memory[0x23cd] = 0x60  # UI callback isolated from the scene routine
     cpu.memory[0xd40b] = 124  # VCOUNT already in vertical blank
     for byte in range(3):
         cpu.memory[0x24a7 + byte] = (tick >> (8 * byte)) & 255
     cpu.sp = 0xfd
     cpu.memory[0x1fe:0x200] = [0xfe, 0x7f]
-    cpu.pc = json.loads((ROOT / 'build/visual-prototype-v051.json').read_text())['callback']
+    cpu.pc = json.loads((ROOT / 'build/visual-prototype-v053.json').read_text())['callback']
     for _ in range(100000):
         if cpu.pc == 0x7fff:
             return cpu
@@ -113,7 +116,7 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(bytes(memory[0xfffa:0xfffc]), b'\x10\x22')
         self.assertEqual(bytes(memory[0x26fc:0x270a]), bytes(v & 0xfe for v in bank_values))
         self.assertEqual(memory[0xd301], 0xff)  # OS restored before INIT returns
-        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v051.xex').read_bytes()))
+        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v053.xex').read_bytes()))
         cpu.pc = RUN
         for _ in range(20):
             if cpu.pc == 0x2146:
@@ -139,7 +142,7 @@ class SequenceTests(unittest.TestCase):
         for tick in (9152, 9808, 10560):
             pixels = self.raster(execute(tick))
             frame = execute(tick).memory[0x83e0] - 2
-            count = 1 if tick < 9724 else 2 if tick < 10472 else 3
+            count = 1 if tick < DANCE_SECOND_TICK else 2 if tick < DANCE_THIRD_TICK else 3
             self.assertEqual(pixels, dance_group_pixels(frame, count))
             self.assertEqual(pixels[:24 * 160], gym[:24 * 160])
             self.assertEqual(pixels[156 * 160:], gym[156 * 160:])
@@ -149,7 +152,9 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(gym[160 * 160 + 12], 3)
 
     def test_dancers_join_progressively_without_losing_detail(self):
-        for tick, count in ((9723, 1), (9724, 2), (10471, 2), (10472, 3), (11967, 3)):
+        for tick, count in ((DANCE_SECOND_TICK-1, 1), (DANCE_SECOND_TICK, 2),
+                            (DANCE_THIRD_TICK-1, 2), (DANCE_THIRD_TICK, 3),
+                            (KALEIDO_TICK-1, 3)):
             cpu = execute(tick)
             frame = cpu.memory[0x83e0] - 2
             self.assertEqual(self.raster(cpu), dance_group_pixels(frame, count))
@@ -160,12 +165,12 @@ class SequenceTests(unittest.TestCase):
                 self.assertEqual(self.raster(cpu), dance_group_pixels(frame, count))
 
     def test_banked_frame_copy_survives_music_interrupts(self):
-        info = json.loads((ROOT / 'build/visual-prototype-v051.json').read_text())
+        info = json.loads((ROOT / 'build/visual-prototype-v053.json').read_text())
         # Interrupt each dance bank and the practice bank's shared music tail.
         for pose in (0, 2, 4, 6, 8, 10, 12, 13, 14):
             count, frame = pose // 4 + 1, pose % 4
             tick = (11968 if pose == 13 else 34288) if pose > 12 else PRACTICE_TICK if pose == 12 else (9152, 9792, 10560)[count - 1] + frame * 16
-            cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v051.xex').read_bytes()))
+            cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v053.xex').read_bytes()))
             m = cpu.memory
             m[0xd40b] = 124
             m[0xd301] = m.values[3]
@@ -209,7 +214,7 @@ class SequenceTests(unittest.TestCase):
     def test_practice_replaces_departure_and_ends_at_original_dance_tick(self):
         self.assertEqual(PRACTICE_TICK, 5984)
         self.assertEqual(execute(PRACTICE_TICK - 1).memory[0x83e0], 12)
-        for tick in (PRACTICE_TICK, 6016, 6144, 6400, 7000, 8975):
+        for tick in (PRACTICE_TICK, 6016, 6144, 6400, 7000, DANCE_TICK-1):
             cpu = execute(tick)
             self.assertEqual(cpu.memory[0x83e0], PRACTICE_SCENE)
             self.assertEqual(cpu.memory[0x83e1], 0)
@@ -228,26 +233,26 @@ class SequenceTests(unittest.TestCase):
             self.assertEqual(self.raster(cpu), raw)
         for tick in (6980, 6981, 7977, 7978):
             self.assertEqual(self.raster(execute(tick)), practice_shot(tick))
-        cpu = execute(8976, execute(8975))
+        cpu = execute(DANCE_TICK, execute(DANCE_TICK-1))
         self.assertEqual(cpu.memory[0x83e0], 3)
         self.assertEqual(cpu.memory[0x83e1], 192)
         self.assertEqual(cpu.memory[0xd01d], 0)
-        info = json.loads((ROOT / 'build/visual-prototype-v051.json').read_text())
-        self.assertEqual(info['dance_tick'], 8976)
-        self.assertEqual(info['dance_second_tick'], 9724)
-        self.assertEqual(info['dance_third_tick'], 10472)
+        info = json.loads((ROOT / 'build/visual-prototype-v053.json').read_text())
+        self.assertEqual(info['dance_tick'], DANCE_TICK)
+        self.assertEqual(info['dance_second_tick'], DANCE_SECOND_TICK)
+        self.assertEqual(info['dance_third_tick'], DANCE_THIRD_TICK)
 
     def test_player_dma_enabled_for_both_mosaic_motifs(self):
-        cpu = execute(11967)
+        cpu = execute(KALEIDO_TICK-1)
         self.assertEqual(cpu.memory[0xd01d], 0)
-        cpu = execute(11968, cpu)
+        cpu = execute(KALEIDO_TICK, cpu)
         self.assertEqual(cpu.memory[0xd01d], 3)
         self.assertEqual(cpu.memory[0xd400], 0x2e)
         cpu = execute(12288, cpu)
         self.assertEqual(cpu.memory[0xd01d], 3)
 
     def test_intro_timing_and_matching_entrances(self):
-        info = json.loads((ROOT / 'build/visual-prototype-v051.json').read_text())
+        info = json.loads((ROOT / 'build/visual-prototype-v053.json').read_text())
         self.assertEqual(info['school_tick'], 2 * info['title_tick'])
         for elapsed in (0, 4, 24, 48, 92, 96):
             artist = execute(elapsed)
@@ -255,8 +260,8 @@ class SequenceTests(unittest.TestCase):
             self.assertEqual(artist.memory[0x83e1], title.memory[0x83e1])
 
     def test_startup_picture_is_blank_before_artist_entrance(self):
-        info = json.loads((ROOT / 'build/visual-prototype-v051.json').read_text())
-        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v051.xex').read_bytes()))
+        info = json.loads((ROOT / 'build/visual-prototype-v053.json').read_text())
+        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v053.xex').read_bytes()))
         for display in info['display_lists']:
             for row in range(192):
                 operand = display + 3 + row * 3
@@ -268,9 +273,9 @@ class SequenceTests(unittest.TestCase):
                                    (1544, 1, 96), (1592, 1, 0), (2991, 1, 0),
                                    (2992, 8, 0), (4487, 8, 0), (4488, 9, 0),
                                    (4862, 10, 0), (5236, 11, 0), (5610, 12, 0),
-                                   (5984, 13, 0), (8975, 13, 0),
-                                   (8976, 3, 192), (9024, 2, 96), (9072, 5, 0),
-                                   (11967, 5, 0), (11968, 6, 0),
+                                   (5984, 13, 0), (DANCE_TICK-1, 13, 0),
+                                   (DANCE_TICK, 3, 192), (DANCE_TICK+48, 2, 96), (DANCE_TICK+96, 5, 0),
+                                   (KALEIDO_TICK-1, 5, 0), (KALEIDO_TICK, 6, 0),
                                    (65536, 6, 0), (0xffffff, 6, 0)):
             with self.subTest(tick=tick):
                 cpu = execute(tick)
@@ -278,9 +283,11 @@ class SequenceTests(unittest.TestCase):
                 self.assertEqual(cpu.memory[0x83e1], shift)
 
     def test_live_scanlines_and_budget(self):
-        info = json.loads((ROOT / 'build/visual-prototype-v051.json').read_text())
+        info = json.loads((ROOT / 'build/visual-prototype-v053.json').read_text())
         blank = info['blank_row']
-        for tick in (0, 48, 96, 1496, 1544, 1592, 2992, 4488, 4862, 5236, 5610, 5984, 8975, 8976, 9024, 9072, 11968, 12000, 65536):
+        for tick in (0, 48, 96, 1496, 1544, 1592, 2992, 4488, 4862, 5236, 5610, 5984,
+                     DANCE_TICK-1, DANCE_TICK, DANCE_TICK+48, DANCE_TICK+96,
+                     KALEIDO_TICK, KALEIDO_TICK+32, 65536):
             cpu = execute(tick)
             frame, shift = cpu.memory[0x83e0], cpu.memory[0x83e1]
             display = cpu.memory[0xd402] | cpu.memory[0xd403] << 8
@@ -301,7 +308,8 @@ class SequenceTests(unittest.TestCase):
 
     def test_inactive_buffer_is_updated_then_swapped(self):
         cpu = execute(0)
-        for tick, expected in ((1496, 0x8000), (1592, 0x8400), (2992, 0x8000), (9072, 0x8400), (11968, 0x8000)):
+        for tick, expected in ((1496, 0x8000), (1592, 0x8400), (2992, 0x8000),
+                               (DANCE_TICK+96, 0x8400), (KALEIDO_TICK, 0x8000)):
             active = cpu.memory[0xd402] | cpu.memory[0xd403] << 8
             previous = cpu.memory[active:active + 586]
             cpu = execute(tick, cpu)

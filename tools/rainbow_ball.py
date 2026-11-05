@@ -2,9 +2,11 @@
 import math
 from build_sequence import Code
 from engine_effects import EFFECT_ORIGIN
+from crush_portraits import START as CRUSH_START
 ENTRY=0x6000
 RESTORE=0x6f00
-SHOT_START,SHOT_END=6981,7978
+from gym_practice import PRACTICE_CUTS
+SHOT_START,SHOT_END=PRACTICE_CUTS[1:3]
 
 def paths():
     # 997 music ticks, one flight. The final sampled phase is 996 >> 3 = 124.
@@ -35,7 +37,7 @@ def helper():
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     a(0xad,0x83e0);c.emit(0xc9,14);c.branch(0xd0,'not_portrait')
-    a(0xad,0x83e3);c.emit(0xc9,14960>>8);c.branch(0x90,'not_portrait');a(0x4c,0x6900)
+    a(0xad,0x83e3);c.emit(0xc9,CRUSH_START>>8);c.branch(0x90,'not_portrait');a(0x4c,0x6900)
     c.label('not_portrait');a(0xad,0x83e0);c.emit(0xc9,13);c.branch(0xd0,'inactive')
     # This interval is entirely within high-byte $1B..$1F.
     for threshold,low,high in ((SHOT_START,'inactive','after_start'),(SHOT_END,'active','inactive')):

@@ -6,17 +6,20 @@ import json
 from pathlib import Path
 
 from build_sequence import Code, text_pixels, dance_pixels, TITLE_TICK, DANCE_TICK, PALETTE, dance_group_pixels, DANCE_SECOND_TICK, DANCE_THIRD_TICK
+from music_timing import tick_at_bar
 from build_title import ROWS
 from engine_effects import copy_helper, effects_helper, pmg_art, COPY_ORIGIN, EFFECT_ORIGIN
 from dance_banks import FRAME_BASES, frame_address, frame_blob
 from gym_practice import practice_pixels, PRACTICE_TICK, PRACTICE_SCENE, BALL_PATH, PRACTICE_CUTS
 from build_visual_prototype import xex_segment
 from extract_music import segments
-from school_story import story_frames, SCHOOL_PHASES, girl_front_pixels, GIRL_PORTRAIT_SCENE
+from school_story import (story_frames, SCHOOL_PHASES, girl_front_pixels,
+                          GIRL_PORTRAIT_SCENE, SCHOOL_PORTRAIT_TICK,
+                          SCHOOL_PORTRAIT_END)
 from school_portrait_bank import loader as school_bank_loader, BANK_VALUE
 from mosaic import banks as mosaic_banks
 from school_parallax import banks as school_pan_banks
-from trevor_awakens import END as TREVOR_END, bank as trevor_bank
+from trevor_awakens import END as TREVOR_END, HIT as TREVOR_HIT, bank as trevor_bank
 from trevor_polished import bank as polished_trevor_bank
 from basketball_hero import START as HERO_START, END as HERO_END, ENTRY as HERO_ENTRY, BANK_VALUE as HERO_BANK, bank as hero_bank
 from pompom_effects import ENTRY as POM_ENTRY, DATA as POM_DATA, helper as pom_helper
@@ -25,8 +28,8 @@ from os_ram import loader, image as os_image, run_stub, RUN
 
 from crush_portraits import START as CRUSH_TICK, END as CRUSH_END, ENTRY as CRUSH_ENTRY, DATA as CRUSH_DATA, helper as crush_helper, packed as crush_packed, cleanup as crush_cleanup
 
-KALEIDO_TICK = 11968  # eight bars / 15 seconds after the dancer enters
-SCHOOL_TICK = TITLE_TICK * 2  # equal 7.5-second artist and title screens
+KALEIDO_TICK = tick_at_bar(32)  # eight bars / 15 seconds after the dancer enters
+SCHOOL_TICK = tick_at_bar(8)  # equal 7.5-second artist and title screens
 ORIGIN = 0x1400
 POOL_LOW = 0x1b00
 TABLE_BASE = 0xd800
@@ -39,7 +42,7 @@ def packed_rows(pixels):
             for y in range(192)]
 
 
-def build(output_path=Path('build/visual-prototype-v051.xex')):
+def build(output_path=Path('build/visual-prototype-v053.xex')):
     if output_path.exists():
         raise FileExistsError(f'Preserving existing XEX: {output_path}; choose --output with a new name')
     copy_code, copy_labels = copy_helper()
@@ -370,8 +373,8 @@ def build(output_path=Path('build/visual-prototype-v051.xex')):
     c.branch(0xf0, 'copy_practice')
     c.jump(0x4c, 'regular_lookup')
     c.label('copy_girl')
-    absolute(0xad,TICK);c.emit(0x38,0xe9,3553&255);absolute(0x8d,STATE+13)
-    absolute(0xad,TICK+1);c.emit(0xe9,3553>>8)
+    absolute(0xad,TICK);c.emit(0x38,0xe9,SCHOOL_PORTRAIT_TICK&255);absolute(0x8d,STATE+13)
+    absolute(0xad,TICK+1);c.emit(0xe9,SCHOOL_PORTRAIT_TICK>>8)
     for _ in range(5):c.emit(0x4a);absolute(0x6e,STATE+13)
     absolute(0xad,STATE+13);c.emit(0x4a,0x4a,0xaa)
     absolute(0xad,0xd301);c.emit(0x48)
@@ -774,8 +777,8 @@ def build(output_path=Path('build/visual-prototype-v051.xex')):
         'school_phases': SCHOOL_PHASES, 'table_base': TABLE_BASE,
         'dance_tick': DANCE_TICK, 'dance_second_tick': DANCE_SECOND_TICK,
         'dance_third_tick': DANCE_THIRD_TICK, 'kaleido_tick': KALEIDO_TICK,
-        'school_portrait_tick': 3553, 'school_portrait_end': 4114,
-        'trevor_start': HERO_END, 'trevor_hit':26928, 'trevor_end':TREVOR_END,
+        'school_portrait_tick': SCHOOL_PORTRAIT_TICK, 'school_portrait_end': SCHOOL_PORTRAIT_END,
+        'trevor_start': HERO_END, 'trevor_hit':TREVOR_HIT, 'trevor_end':TREVOR_END,
         'hero_start': HERO_START, 'hero_end': HERO_END, 'hero_bank': HERO_BANK,
         'crush_tick': CRUSH_TICK, 'crush_end': CRUSH_END,
         'crush_entry': CRUSH_ENTRY, 'crush_data': CRUSH_DATA,
@@ -799,5 +802,5 @@ def build(output_path=Path('build/visual-prototype-v051.xex')):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v051.xex'))
+    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v053.xex'))
     build(parser.parse_args().output)

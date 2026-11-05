@@ -4,11 +4,17 @@ from pathlib import Path
 
 from build_sequence import PALETTE
 from gym_practice import PRACTICE_TICK, PRACTICE_SCENE
+from music_timing import tick_at_bar
 
 # The whole school scene still lasts 15–45 seconds. The girl first appears
 # in the left foreground, then recedes toward the school's entrance.
 GIRL_PORTRAIT_SCENE = 14
-SCHOOL_PHASES = ((2992, 8), (3553, GIRL_PORTRAIT_SCENE), (4114, 8), (4488, 9), (4862, 10), (5236, 11), (5610, 12), (PRACTICE_TICK, PRACTICE_SCENE))
+SCHOOL_PORTRAIT_TICK = tick_at_bar(19, 2)
+SCHOOL_PORTRAIT_END = tick_at_bar(11)
+SCHOOL_PHASES = ((tick_at_bar(8), 8), (SCHOOL_PORTRAIT_TICK, GIRL_PORTRAIT_SCENE),
+                 (SCHOOL_PORTRAIT_END, 8), (tick_at_bar(12), 9),
+                 (tick_at_bar(13), 10), (tick_at_bar(14), 11),
+                 (tick_at_bar(15), 12), (PRACTICE_TICK, PRACTICE_SCENE))
 # (left, top, width, height), in the 160x64 school artwork's coordinates.
 # The first placement is twice full height: the bottom crops at the waist.
 # Foot positions approach the school steps at approximately (66, 46).

@@ -1,5 +1,6 @@
 """Small unbanked helper routines and preloaded PMG beat accents."""
-from build_sequence import Code, DANCE_TICK
+from build_sequence import Code
+from music_timing import tick_at_beat
 
 COPY_ORIGIN = 0xcf00
 EFFECT_ORIGIN = 0xaf00
@@ -109,7 +110,7 @@ def effects_helper(state=0x83e0):
     absop(0x8d, 0xd400)
     c.label('done')
     c.emit(0x60)
-    beats = [DANCE_TICK + i * 374 // 4 for i in range(32)]
+    beats = [tick_at_beat(96 + i) for i in range(32)]
     c.label('positions'); c.emit(*(x + 48 for x in (20, 55, 99, 136)))
     c.label('beat_lo'); c.emit(*(t & 255 for t in beats))
     c.label('beat_hi'); c.emit(*(t >> 8 for t in beats))

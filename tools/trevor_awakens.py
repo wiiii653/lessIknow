@@ -2,7 +2,8 @@
 import math
 from pathlib import Path
 from build_sequence import Code
-START,HIT,END=23936,26928,32912
+from music_timing import tick_at_bar
+START,MIDPOINT,HIT,END=tick_at_bar(64),tick_at_bar(68),tick_at_bar(72),tick_at_bar(88)
 ENTRY=0x6000
 BANK_VALUE=0x24b5
 COLORS=((0,0,0),(255,50,160),(116,0,144),(255,190,206))

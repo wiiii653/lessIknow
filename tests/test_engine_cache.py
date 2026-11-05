@@ -5,6 +5,7 @@ import unittest
 import test_sequence as sequence
 from build_sequence import dance_group_pixels
 from gym_practice import practice_shot
+from mosaic import KALEIDO_START
 
 if sequence.MPU is not None:
     from scene_memory import RuntimeMemory
@@ -23,7 +24,7 @@ if sequence.MPU is not None:
 @unittest.skipIf(sequence.MPU is None, 'install requirements-dev.txt')
 class CacheTests(unittest.TestCase):
     def cpu(self):
-        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v051.xex').read_bytes()))
+        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v053.xex').read_bytes()))
 
     def step(self, cpu, tick):
         cpu.memory.writes.clear()
@@ -97,7 +98,7 @@ class CacheTests(unittest.TestCase):
             self.assertTrue(any(raw[y*160+29] != decorated[y*160+29] for y in range(30)))
         self.step(cpu, 9187)
         self.assertEqual(cpu.memory[0xd01d], 0)
-        self.step(cpu, 11968)
+        self.step(cpu, KALEIDO_START)
         self.assertEqual(cpu.memory[0xd400], 0x2e)
         self.assertEqual(cpu.memory[0xd01d], 3)
         self.step(cpu, 12288)
