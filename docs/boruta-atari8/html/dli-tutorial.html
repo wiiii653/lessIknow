@@ -1,0 +1,2356 @@
+
+
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atari 8-bit Display List Interrupts: A Complete(ish) Tutorial &#8212; Player/Missile Podcast</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/cloud.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/table_styling.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,i,b,bi|Open+Sans:400,i,b,bi|Roboto+Mono:400,i,b,bi&amp;display=swap" type="text/css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+
+    
+    
+     
+        <script src="../_static/jquery.cookie.js"></script>
+    
+
+    
+     
+        <script src="../_static/cloud.base.js"></script>
+    
+
+    
+     
+        <script src="../_static/cloud.js"></script>
+    
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Atari 8-bit Fine Scrolling: A Complete(ish) Tutorial" href="../scrolling_tutorial/index.html" />
+    <link rel="prev" title="Player/Missile Podcast" href="../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+    <div class="relbar-top">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../podcast/index.html" title="Episodes" accesskey="E">episodes</a></li>
+<li class="right" style="margin-right: 10px"><a href="../magazines.html" title="magazines" accesskey="M">magazines</a></li>
+<li class="right" style="margin-right: 10px"><a href="../omnivore/" title="omnivore" accesskey="O">omnivore</a></li>
+<li class="right" style="margin-right: 10px"><a href="../jumpman/" title="jumpman" accesskey="J">jumpman</a></li>
+             
+        <li class="right" >
+          <a href="../index.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../scrolling_tutorial/index.html" title="Atari 8-bit Fine Scrolling: A Complete(ish) Tutorial"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../index.html" title="Player/Missile Podcast"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">Player/Missile Podcast</a> &#187;</li>
+
+        <li class="nav-item nav-item-this"><a href="">Atari 8-bit Display List Interrupts: A Complete(ish) Tutorial</a></li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="atari-8-bit-display-list-interrupts-a-complete-ish-tutorial">
+<h1>Atari 8-bit Display List Interrupts: A Complete(ish) Tutorial<a class="headerlink" href="#atari-8-bit-display-list-interrupts-a-complete-ish-tutorial" title="Permalink to this headline">¶</a></h1>
+<p><strong>Revision 8, updated 28 Dec 2019</strong></p>
+<p>This is a tutorial on Display List Interrupts (DLIs) for the Atari 8-bit series
+of computers. In a nutshell, DLIs provide a way to notify your program when a
+particular scan line is reached, allowing you to make changes mid-screen.</p>
+<p>No prior knowledge of DLIs is necessary before reading this tutorial. However,
+DLIs are an advanced programming technique in the sense that they require
+knowledge of 6502 assembly language, so this tutorial is going to assume that
+you are comfortable with that.</p>
+<p>All the examples here are assembled using the MAC/65-compatible assembler
+<a class="reference external" href="https://atari.miribilist.com/atasm/index.html">ATasm</a> (and more specifically
+to this tutorial, the version built-in to <a class="reference external" href="https://github.com/robmcmullen/omnivore">Omnivore</a>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All source code and XEX files are available in the <a class="reference external" href="https://github.com/playermissile/dli_tutorial">dli_tutorial source code repository</a> on github.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This tutorial is Copyright © 2019 and licensed under the <a class="reference external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, except for the <em>assembly language source code</em> (both in this tutorial and in the repository), which is placed in the public domain via <a class="reference external" href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>.</p>
+</div>
+<p>Before diving into DLIs, it is helpful to understand that they are very
+accurately named: Display List Interrupts literally interrupt the display list
+– they cause an event that is processed by your program as the computer is in
+the middle of drawing the screen. So it is necessary to understand what display
+lists are before understanding what it means to interrupt one, and even before that we must understand how the Atari uses the display list to generate the images shown on the screen.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Here are some resources for learning more about display list interrupts:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.atariarchives.org/dere/chapt05.php">De Re Atari, Chapter 5</a></p></li>
+<li><p><a class="reference external" href="https://atariage.com/forums/topic/291991-cc65-writing-a-dli-tutorial/">Yaron Nir’s tutorial using cc65</a></p></li>
+</ul>
+</div>
+<div class="section" id="displays-a-tiny-overview-of-how-tvs-work">
+<h2>Displays: A Tiny Overview of How TVs Work<a class="headerlink" href="#displays-a-tiny-overview-of-how-tvs-work" title="Permalink to this headline">¶</a></h2>
+<p>A TV screen is drawn by an electron beam tracing a path starting above the
+visible area, and drawing successive horizontal lines as the beam moves down
+the screen. Each line is drawn from left-to-right (as you look at the TV
+screen) and when it reaches the right hand side of the screen, the horizontal
+retrace starts where the beam is turned off and moved down to the next scan
+line below whereupon the beam is turned back on and the next line draws. When
+the full frame has been drawn, the beam is turned off again and the vertical
+retrace starts (starting the vertical blank interval). Once the beam is
+repositioned to the top leftmost position, the vertical blank interval ends,
+the beam is turned back on, and the next frame is started.</p>
+<p>On NTSC systems, the Atari draws 262 scan lines per frame, 60 times per second.
+On PAL systems it draws 312 scan lines per frame, 50 times per second. In
+either system, it draws scan lines from the top down, and left to right within
+a scan line.</p>
+<div class="figure align-center">
+<img alt="../_images/electron-beam.png" src="../_images/electron-beam.png" />
+</div>
+<p>This simplified description is the mental model we will use to describe the
+video drawing process. Real TVs are much more complicated, but for the
+purposes of this tutorial are not important. The Atari was constrained to
+produce images that rendered on the displays of the time, but the details of
+how each type of display works (e.g. interlaced TV vs progressive scan
+monitor) doesn’t affect the signal output by the Atari.</p>
+<p>One detail of color production is worth mentioning: a unit called the
+color clock, which is the smallest portion of a scan line that can be
+displayed with an arbitrary color. There are 228 color clocks per scan line,
+of which about 160 were typically visible on a cathode-ray TV display in the
+1970s when the Atari was developed. This corresponds to the 160 pixel
+horizontal resolution of Antic Modes B through E in the standard width
+playfield. Antic Mode F (Graphics 8 in BASIC) has 320 addressable pixels,
+corresponding to half a color clock, and only artifacting color is available.</p>
+<p>Color clocks also form the basis for the operating speed of the entire
+machine. For NTSC, the speed was chosen based on the use of a commonly
+available hardware component in use for TV displays, called an NTSC
+oscillating crystal. This component generates a pulse with a frequency of
+14.31818 MHz. This frequency was then divided by eight to produce the
+1.7897725 MHz clock at which the 6502 runs. By defining one CPU cycle to
+correspond to two color clocks, means there are 114 machine cycles per scan
+line. 262 scan lines per frame results in 29868 machine cycles every frame.
+And running at 1.7897725 Mhz means there are 1789772.5 machine cycles
+happening every second, which produces a frame rate of 59.92 Hz which can be
+displayed on a TV (even if it does not exactly sync up with broadcast NTSC).</p>
+<p>PAL systems produce the same 228 color clocks and 114 machine cycles per line,
+but display 312 scan lines. This results in 35568 cycles per frame. The PAL
+crystal oscillates with a frequency of 14.18757 MHz, divided by 8 to produce a
+CPU frequency of 1.77344625 Mhz, and 35568 cycles per frame produces a frame
+rate of 49.86 Hz; again, not syncing exactly with broadcast PAL but within
+tolerances to be displayed.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://lurkertech.com/lg/fields/">All About Video Fields</a></p></li>
+<li><p><a class="reference external" href="https://sagargv.blogspot.com/2011/04/ntsc-demystified-part-1-b-video-and.html">NTSC Demystified</a>, (<em>haha</em>), a very long series of blog posts describing NTSC encoding</p></li>
+<li><p>Obligatory link to the <a class="reference external" href="https://en.wikipedia.org/wiki/NTSC">NTSC article on Wikipedia</a></p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Composite_artifact_colors">Composite artifact colors</a> article on Wikipedia</p></li>
+<li><p>Section 4.2 in the <a class="reference external" href="http://www.virtualdub.org/downloads/Altirra%20Hardware%20Reference%20Manual.pdf">Altirra Hardware Reference Manual (PDF)</a> for much more technical detail and far, far less hand-waving.</p></li>
+<li><p>Discussion on NTSC pixel clocks and timing at <a class="reference external" href="https://retrocomputing.stackexchange.com/a/2206/6847">retrocomputing.stackexchange.com</a></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="display-lists-how-the-atari-generates-the-display">
+<span id="display-lists"></span><h2>Display Lists: How the Atari Generates the Display<a class="headerlink" href="#display-lists-how-the-atari-generates-the-display" title="Permalink to this headline">¶</a></h2>
+<p>ANTIC is the special coprocessor that handles screen drawing for the Atari
+computers. It is tightly coupled with the 6502 processor, and in fact can be
+thought of as being the driver of the 6502 because the ANTIC can halt the 6502
+when needed. Since only one chip can read memory at any time, ANTIC needs to
+halt the 6502 when it needs access to memory, so this Direct Memory Access
+(DMA) can cause 6502 instructions to appear to take more cycles than documented
+in a 6502 reference. In fact, the amount of time ANTIC “steals” will depend on
+many factors: the graphics mode, player/missiles being used, playfield size,
+and more.</p>
+<p>Since there are 228 color clocks and 114 machine cycles per scan line, this
+means that in one machine cycle, two color clocks are drawn on the screen. A
+typical machine instruction might take 5 machine cycles, so 10 color clocks
+could pass in the time to process a single instruction! This means we don’t
+have much time per scan line, so DLIs that attempt to change graphics in the
+middle of a line will have to be well optimized.</p>
+<p>It also means the 6502 is too slow to draw the screen itself, and this is
+where ANTIC’s special “instruction set” comes in. You program the ANTIC
+coprocessor using a display list, and ANTIC takes care of building the screen
+scan line by scan line, without any more intervention from the 6502 code.
+(Unless you ask for intervention! And that’s what a DLI is.)</p>
+<p>The display list is the special sequence of bytes that ANTIC interprets as a
+list of instruction. Each instruction causes ANTIC to draw a certain number of
+scan lines in a particular way. A DLI can be set on any ANTIC instruction.</p>
+<p>ANTIC supports display lists that produce at most 240 scan lines (even on PAL
+systems where many more scan lines are available), and the vertical blank
+interval always starts after 248 scan lines. When drawing scan lines, ANTIC
+skips 8 scan lines at to top of the display, so the output from the display
+list starts at the 9th scan line. A standard display list starts with 24 blank
+lines and 192 scan lines of display data, meaning that the TV will see 32 blank
+lines (the 8 automatically skipped plus the 24 in a standard display list)
+followed by 192 scan lines of display, then 24 blank lines, and finally the
+vertical blank that consumes the remaining 14 scan lines on NTSC (or 64 on
+PAL).</p>
+<div class="section" id="display-list-instruction-set">
+<h3>Display List Instruction Set<a class="headerlink" href="#display-list-instruction-set" title="Permalink to this headline">¶</a></h3>
+<p>An ANTIC display list instruction consists of 1 byte with an optional 2 byte
+address. There are 4 types of instructions: blank lines, text modes, bitmap
+graphic modes, and jump instructions. Instructions are encoded into the byte
+using a bitmask where low 4 bits encode the instruction type and the high 4
+bits encode the flags that affect that instruction:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 19%" />
+<col style="width: 19%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>7</p></td>
+<td><p>6</p></td>
+<td><p>5</p></td>
+<td><p>4</p></td>
+<td><p>3</p></td>
+<td><p>2</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>DLI</p></td>
+<td><p>LMS</p></td>
+<td><p>VSCROLL</p></td>
+<td><p>HSCROLL</p></td>
+<td colspan="4"><p>Mode</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The 4 flags are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>DLI (<code class="docutils literal notranslate"><span class="pre">$80</span></code>): enable a display list interrupt when processing this instruction</p></li>
+<li><p>LMS (<code class="docutils literal notranslate"><span class="pre">$40</span></code>): trigger a Load Memory Scan, changing where ANTIC looks for screen data, and requires an additional 2 byte address immediately following this instruction byte.</p></li>
+<li><p>VSCROLL (<code class="docutils literal notranslate"><span class="pre">$20</span></code>): enable vertical scrolling for this mode line</p></li>
+<li><p>HSCROLL (<code class="docutils literal notranslate"><span class="pre">$10</span></code>): enable horizontal scrolling for this mode line</p></li>
+</ul>
+</div></blockquote>
+<p>There are 6 text modes and 8 bitmap graphic modes for a total of 14 modes, and
+are encoded into low 4 bits using values as shown in these tables:</p>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text">Text Modes</span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Mode</p></td>
+<td><p>Decimal</p></td>
+<td><p>BASIC Mode</p></td>
+<td><p>Description</p></td>
+<td><p>Scan Lines</p></td>
+<td><p>Colors</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>02</p></td>
+<td><p>0</p></td>
+<td><p>40 x 24</p></td>
+<td><p>8</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>03</p></td>
+<td><p>n/a</p></td>
+<td><p>40 x 19</p></td>
+<td><p>10</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p>04</p></td>
+<td><p>n/a</p></td>
+<td><p>40 x 24</p></td>
+<td><p>8</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>5</p></td>
+<td><p>05</p></td>
+<td><p>n/a</p></td>
+<td><p>40 x 12</p></td>
+<td><p>16</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-even"><td><p>6</p></td>
+<td><p>06</p></td>
+<td><p>1</p></td>
+<td><p>20 x 24</p></td>
+<td><p>8</p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-odd"><td><p>7</p></td>
+<td><p>07</p></td>
+<td><p>2</p></td>
+<td><p>20 x 12</p></td>
+<td><p>16</p></td>
+<td><p>5</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id7">
+<caption><span class="caption-text">Bitmap Modes</span><a class="headerlink" href="#id7" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Mode</p></td>
+<td><p>Decimal</p></td>
+<td><p>BASIC Mode</p></td>
+<td><p>Description</p></td>
+<td><p>Scan Lines</p></td>
+<td><p>Colors</p></td>
+</tr>
+<tr class="row-even"><td><p>8</p></td>
+<td><p>08</p></td>
+<td><p>3</p></td>
+<td><p>40 x 24</p></td>
+<td><p>8</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>9</p></td>
+<td><p>09</p></td>
+<td><p>4</p></td>
+<td><p>80 x 48</p></td>
+<td><p>4</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>A</p></td>
+<td><p>10</p></td>
+<td><p>5</p></td>
+<td><p>80 x 48</p></td>
+<td><p>4</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>B</p></td>
+<td><p>11</p></td>
+<td><p>6</p></td>
+<td><p>160 x 96</p></td>
+<td><p>2</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>C</p></td>
+<td><p>12</p></td>
+<td><p>n/a</p></td>
+<td><p>160 x 192</p></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-odd"><td><p>D</p></td>
+<td><p>13</p></td>
+<td><p>7</p></td>
+<td><p>160 x 96</p></td>
+<td><p>2</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-even"><td><p>E</p></td>
+<td><p>14</p></td>
+<td><p>n/a</p></td>
+<td><p>160 x 192</p></td>
+<td><p>1</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>F</p></td>
+<td><p>15</p></td>
+<td><p>8</p></td>
+<td><p>320 x 192</p></td>
+<td><p>1</p></td>
+<td><p>2*</p></td>
+</tr>
+</tbody>
+</table>
+<p><a href="#id1"><span class="problematic" id="id2">*</span></a>mode F is also used as the basis for the GTIA modes (BASIC Graphics modes 9,
+10, &amp; 11), but this is a topic outside the scope of this tutorial.</p>
+<p>Blank lines are encoded as a mode value of zero, the bits 6, 5, and 4 taking
+the meaning of the number of blank lines rather than LMS, VSCROLL, and
+HSCROLL. Note that the DLI bit is still available on blank lines, as bit 7 is
+not co-opted by the blank line instruction.</p>
+<table class="docutils align-default" id="id8">
+<caption><span class="caption-text">Blank Line Instructions</span><a class="headerlink" href="#id8" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Hex</p></td>
+<td><p>Decimal</p></td>
+<td><p>Blank Lines</p></td>
+</tr>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>16</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>20</p></td>
+<td><p>32</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-odd"><td><p>30</p></td>
+<td><p>48</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-even"><td><p>40</p></td>
+<td><p>64</p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-odd"><td><p>50</p></td>
+<td><p>80</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-even"><td><p>60</p></td>
+<td><p>96</p></td>
+<td><p>7</p></td>
+</tr>
+<tr class="row-odd"><td><p>70</p></td>
+<td><p>112</p></td>
+<td><p>8</p></td>
+</tr>
+</tbody>
+</table>
+<p>Jumps provide the capability to split a display list into multiple parts in
+different memory locations. They are encoded using a mode value of one, and
+require an additional 2 byte address where ANTIC will look for the next display
+list instruction. If bit 6 is also set, it becomes the Jump and wait for Vertical
+Blank (JVB) instruction, which is how ANTIC knows that the display list is
+finished. The DLI bit may also be set on a jump instruction, but if set on the
+JVB instruction it triggers a DLI on every scan line from there until the
+vertical blank starts on the 249th scan line.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Apart from the <code class="docutils literal notranslate"><span class="pre">$41</span></code> JVB instruction, splitting display lists using other
+jumps like the <code class="docutils literal notranslate"><span class="pre">$01</span></code> instruction is not common. It has a side-effect of
+producing a single blank line in the display list.</p>
+</div>
+<p>The typical method to change the currently active display list is to change the
+address stored at <code class="docutils literal notranslate"><span class="pre">SDLSTL</span></code> (in low byte/high byte format in addresses
+<code class="docutils literal notranslate"><span class="pre">$230</span></code> and <code class="docutils literal notranslate"><span class="pre">$231</span></code>). At the next vertical blank, the hardware display list
+at <code class="docutils literal notranslate"><span class="pre">DLISTL</span></code> (<code class="docutils literal notranslate"><span class="pre">$d402</span></code> and <code class="docutils literal notranslate"><span class="pre">$d403</span></code>) will be updated with the values stored
+here and the screen drawing will commence using the new display list.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>More resources about display lists are available:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.atariarchives.org/mapping/memorymap.php#560,561">https://www.atariarchives.org/mapping/memorymap.php#560,561</a></p></li>
+<li><p><a class="reference external" href="https://www.atariarchives.org/mapping/appendix8.php">https://www.atariarchives.org/mapping/appendix8.php</a></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="a-sample-display-list">
+<h3>A Sample Display List<a class="headerlink" href="#a-sample-display-list" title="Permalink to this headline">¶</a></h3>
+<p>Here is a display list that contains different text modes mixed in a single screen.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/sample_display_list.png"><img alt="../_images/sample_display_list.png" src="../_images/sample_display_list.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/sample_display_list.s">sample_display_list.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/sample_display_list.xex">sample_display_list.xex</a></li>
+</ul><div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dlist</span>   <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>  <span class="c1">; 24 blank lines</span>
+        <span class="kp">.byte</span> <span class="mh">$46</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$40</span>  <span class="c1">; Mode 6 + LMS, setting screen memory to $4000</span>
+        <span class="kp">.byte</span> <span class="mi">6</span>            <span class="c1">; Mode 6</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span>          <span class="c1">; 8 blank lines</span>
+        <span class="kp">.byte</span> <span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span>    <span class="c1">; 5 lines of Mode 7</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span>          <span class="c1">; 8 blank lines</span>
+        <span class="kp">.byte</span> <span class="mi">2</span>            <span class="c1">; single line of Mode 2</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>  <span class="c1">; 24 blank lines</span>
+        <span class="kp">.byte</span> <span class="mi">2</span><span class="p">,</span><span class="mi">4</span>          <span class="c1">; Mode 2 followed by mode 4</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span>          <span class="c1">; 8 blank lines</span>
+        <span class="kp">.byte</span> <span class="mi">2</span><span class="p">,</span><span class="mi">5</span>          <span class="c1">; Mode 2 followed by mode 5</span>
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist</span> <span class="c1">; JVB, restart same display list on next frame</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cycle-stealing-by-antic">
+<h3>Cycle Stealing by ANTIC<a class="headerlink" href="#cycle-stealing-by-antic" title="Permalink to this headline">¶</a></h3>
+<p>The ANTIC coprocessor needs to access memory to perform its functions, and
+since the 6502 and ANTIC can’t both access at once, ANTIC will pause execution
+of the 6502 when it needs to read memory. It happens at specific points within
+the 114 cycles of each scan line, but where it happens (and how many times the
+6502 gets paused during the scan line) depends on the graphics mode.</p>
+<p>For overhead, ANTIC will typically steal 3 cycles to read the display list, 5
+cycles if player/missile graphics are enabled, and 9 cycles for memory
+refreshing. Scrolling requires additional cycle stealing because ANTIC needs
+to fetch more memory.</p>
+<p>Bitmapped modes (modes 8 - F) have cycles stolen corresponding to the number
+of bytes per line used in that mode. For example, mode E will use an
+additional 40 cycles, so in the context of writing a DLI for a game, the
+typical number of stolen cycles could be 57 out of the 114 cycles per scan
+line: 17 cycles for ANTIC overhead and 40 for the number of bytes per line.</p>
+<p>Text modes require additional cycles over bitmapped graphics modes, because
+ANTIC must fetch the font glyphs in addition to its other work. The first scan
+line of a font mode is almost entirely used by ANTIC and only a small number
+of cycles is available to the 6502. For normal 40-byte wide playfields, the
+first line of ANTIC modes 2 through 5 will yield at most about 30 cycles and
+subsequent lines about 60 cycles per scan line.</p>
+<p>About the worst-case scenario is one of the best modes for games: ANTIC mode
+4. This text mode, combined with scrolling and player/missile graphics and can
+reduce the available cycles to fewer than 10 on the first line and about 50 on
+subsequent lines!</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Section 4.14 in the
+<a href="#id10"><span class="problematic" id="id11">`Altirra Hardware Reference Manual (PDF)&lt;http://www.virtualdub.org/downloads/Altirra%20Hardware%20Reference%20Manual.pdf&gt;`_</span></a>
+contains tables depicting exactly which cycles are stolen by ANTIC for
+each mode.</p>
+</div>
+</div>
+<div class="section" id="restrictions">
+<h3>Restrictions<a class="headerlink" href="#restrictions" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li><p>display lists cannot cross a 1K boundary</p></li>
+<li><p>display list data cannot cross a 4k boundary, so you must use a display list command with the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> bit if using a bitmapped display mode that will result in a larger memory usage</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="display-list-interrupts-a-crash-course">
+<span id="dli-crash-course"></span><h2>Display List Interrupts: A Crash Course<a class="headerlink" href="#display-list-interrupts-a-crash-course" title="Permalink to this headline">¶</a></h2>
+<p>DLIs are non-maskable interrupts (NMIs), meaning they cannot be ignored. When
+an NMI occurs, the 6502 jumps to the address stored at <code class="docutils literal notranslate"><span class="pre">$fffa</span></code>, which points
+to an OS routine that checks the type of interrupt (either a DLI or a VBI) and
+vectors through the appropriate user vector. The NMI handler takes care of
+saving the processor status register and sets the interrupt flag, but <em>does
+not</em> save any processor registers. The user routine is responsible for saving
+any registers that it uses, restoring them when it is done using them, and must
+exit using the <code class="docutils literal notranslate"><span class="pre">RTI</span></code> instruction.</p>
+<p>Display list interrupts are not enabled by default. To use a DLI, the address
+vector at <code class="docutils literal notranslate"><span class="pre">VDSLST</span></code> (<code class="docutils literal notranslate"><span class="pre">$200</span></code> and <code class="docutils literal notranslate"><span class="pre">$201</span></code>) must be set to your routine, and
+then they must be enabled through a write to <code class="docutils literal notranslate"><span class="pre">NMIEN</span></code> at <code class="docutils literal notranslate"><span class="pre">$d40e</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You must set the address of your DLI before enabling them, otherwise the DLI
+could be called and use whatever address is stored at <code class="docutils literal notranslate"><span class="pre">$200</span></code>.</p>
+</div>
+<p>This initialization code can look like the following, where the constants
+<code class="docutils literal notranslate"><span class="pre">NMIEN_VBI</span></code> and <code class="docutils literal notranslate"><span class="pre">NMIEN_DLI</span></code> are defined as <code class="docutils literal notranslate"><span class="pre">$40</span></code> and <code class="docutils literal notranslate"><span class="pre">$80</span></code>,
+respectively, in <cite>hardware.s</cite> in the sample repository. Since <code class="docutils literal notranslate"><span class="pre">NMIEN</span></code> also
+controls the vertical blank interrupt, you must make sure that the VBI enable
+flag is also set.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; load display list interrupt address</span>
+<span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">dli</span>
+<span class="k">sta</span> <span class="n">VDSLST</span>
+<span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">dli</span>
+<span class="k">sta</span> <span class="n">VDSLST</span><span class="o">+</span><span class="mi">1</span>
+
+<span class="c1">; activate display list interrupt and vertical blank interrupt</span>
+<span class="k">lda</span> <span class="p">#</span><span class="n">NMIEN_DLI</span> <span class="o">|</span> <span class="n">NMIEN_VBI</span>
+<span class="k">sta</span> <span class="n">NMIEN</span>
+</pre></div>
+</div>
+<p>If your program has multiple DLIs, it may be necessary to set your DLIs in a
+vertical blank interrupt to guarantee that ANTIC will process them in the
+right order. Outside the VBI, your code could be running at an arbitrary scan
+line, perhaps between display list instructions that have their DLI bits set.
+In Yaron Nir’s tutorial a different technique is used, one not requiring a
+vertical blank interrupt but instead using the <code class="docutils literal notranslate"><span class="pre">RTCLOK</span></code> 3-byte zero page
+variable to instead infer that a VBI has <em>just</em> occurred. The last of the
+bytes, location <code class="docutils literal notranslate"><span class="pre">$14</span></code>, is incremented every vertical blank, so that
+technique is to wait until location <code class="docutils literal notranslate"><span class="pre">$14</span></code> changes, then set <code class="docutils literal notranslate"><span class="pre">NMIEN</span></code>:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>        lda RTCLOK+2
+?loop   cmp RTCLOK+2  ; will be equal until incremented in VB
+        beq ?loop
+
+        ; activate display list interrupt and vertical blank interrupt
+        lda #NMIEN_DLI | NMIEN_VBI
+        sta NMIEN
+</pre></div>
+</div>
+<div class="section" id="hardware-shadow-registers">
+<h3>Hardware &amp; Shadow Registers<a class="headerlink" href="#hardware-shadow-registers" title="Permalink to this headline">¶</a></h3>
+<p>The Atari is a memory-mapped system, where hardware devices like the ANTIC and
+GTIA chips are <em>mapped</em> to locations in memory and data is passed back and
+forth by reading or writing to specific addresses. They are usually either
+read-only or write-only, and many times an address is used for wildly
+different features depending on whether the address is read from or written
+to.</p>
+<p>Some of these hardware locations also have <em>shadow</em> registers in low RAM
+(typically page 2) that are labeled as performing the same function as a
+hardware register, with two important differences.</p>
+<p>First, they can be both read and written to, so (assuming you always use the
+shadow register to update the hardware register) it is possible to find out
+the current state of a hardware register by reading its shadow.</p>
+<p>Second, the hardware register is only updated <strong>once every vertical blank</strong> by
+an operating system routine that copies the shadow value to its hardware
+counterpart. Note that it does not happen the other way around, so changing a
+hardware register <em>does not</em> update a shadow register.</p>
+<p>The shadow registers are a convenience for development in higher level
+languages like BASIC where speed is not paramount. But code within a DLI must
+use hardware registers directly to affect change on a scan line.</p>
+<p>The shadow registers can still be useful in DLI development, in that they will
+automatically reset the hardware registers to the values in the shadow
+registers every vertical blank. This can be used to reset features like
+graphics colors and the character set address for the top of the screen at the
+next frame.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This only works if the operating system’s immediate vertical blank routine has not been replaced (i.e. you are only using the deferred vertical blank <code class="docutils literal notranslate"><span class="pre">VVBLKD</span></code> at <code class="docutils literal notranslate"><span class="pre">$224</span></code> and haven’t replaced the immediate vertical blank rountine <code class="docutils literal notranslate"><span class="pre">VVBLKI</span></code> at <code class="docutils literal notranslate"><span class="pre">$222</span></code>).</p>
+</div>
+<p>Some hardware registers have no shadows, like player position and size, so
+your own code (in the deferred VBI or the final DLI) must reset these to their
+correct values for the top of the screen.</p>
+<table class="colwidths-given docutils align-default" id="id9">
+<caption><span class="caption-text">Some Useful Shadow Registers</span><a class="headerlink" href="#id9" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Shadow</p></td>
+<td><p>Hex</p></td>
+<td><p>Hardware</p></td>
+<td><p>Hex</p></td>
+<td><p>Description</p></td>
+</tr>
+<tr class="row-even"><td><p>GPRIOR</p></td>
+<td><p>26f</p></td>
+<td><p>PRIOR</p></td>
+<td><p>d01b</p></td>
+<td><p>Player/playfield priority selection register</p></td>
+</tr>
+<tr class="row-odd"><td><p>PCOLR0</p></td>
+<td><p>2c0</p></td>
+<td><p>COLPM0</p></td>
+<td><p>d012</p></td>
+<td><p>Color of player/missile 0</p></td>
+</tr>
+<tr class="row-even"><td><p>PCOLR1</p></td>
+<td><p>2c1</p></td>
+<td><p>COLPM1</p></td>
+<td><p>d013</p></td>
+<td><p>Color of player/missile 1</p></td>
+</tr>
+<tr class="row-odd"><td><p>PCOLR2</p></td>
+<td><p>2c2</p></td>
+<td><p>COLPM2</p></td>
+<td><p>d014</p></td>
+<td><p>Color of player/missile 2</p></td>
+</tr>
+<tr class="row-even"><td><p>PCOLR3</p></td>
+<td><p>2c3</p></td>
+<td><p>COLPM3</p></td>
+<td><p>d015</p></td>
+<td><p>Color of player/missile 3</p></td>
+</tr>
+<tr class="row-odd"><td><p>COLOR0</p></td>
+<td><p>2c4</p></td>
+<td><p>COLPF0</p></td>
+<td><p>d016</p></td>
+<td><p>Color of playfield 0</p></td>
+</tr>
+<tr class="row-even"><td><p>COLOR1</p></td>
+<td><p>2c5</p></td>
+<td><p>COLPF1</p></td>
+<td><p>d017</p></td>
+<td><p>Color of playfield 1</p></td>
+</tr>
+<tr class="row-odd"><td><p>COLOR2</p></td>
+<td><p>2c6</p></td>
+<td><p>COLPF2</p></td>
+<td><p>d018</p></td>
+<td><p>Color of playfield 2</p></td>
+</tr>
+<tr class="row-even"><td><p>COLOR3</p></td>
+<td><p>2c7</p></td>
+<td><p>COLPF3</p></td>
+<td><p>d019</p></td>
+<td><p>Color of playfield 3</p></td>
+</tr>
+<tr class="row-odd"><td><p>COLOR4</p></td>
+<td><p>2c8</p></td>
+<td><p>COLBK</p></td>
+<td><p>d01a</p></td>
+<td><p>Background color</p></td>
+</tr>
+<tr class="row-even"><td><p>CHACT</p></td>
+<td><p>2f3</p></td>
+<td><p>CHACTL</p></td>
+<td><p>d401</p></td>
+<td><p>Character mode (inverse, upside-down characters)</p></td>
+</tr>
+<tr class="row-odd"><td><p>CHBAS</p></td>
+<td><p>2f4</p></td>
+<td><p>CHBASE</p></td>
+<td><p>d409</p></td>
+<td><p>Character base (page number of font)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="basic-display-list-interrupts">
+<h2>Basic Display List Interrupts<a class="headerlink" href="#basic-display-list-interrupts" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="our-first-display-list">
+<h3>Our First Display List<a class="headerlink" href="#our-first-display-list" title="Permalink to this headline">¶</a></h3>
+<p>A common use of display lists is to change colors in the middle of the
+screen.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/first_dli.gif"><img alt="../_images/first_dli.gif" src="../_images/first_dli.gif" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/first_dli.s">first_dli.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/first_dli.xex">first_dli.xex</a></li>
+</ul><p>Here is our first display list interrupt:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dli</span>     <span class="k">pha</span>             <span class="c1">; only using A register, so save old value to the stack</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$7a</span>        <span class="c1">; new background color</span>
+        <span class="k">sta</span> <span class="n">COLBK</span>       <span class="c1">; store it in the hardware register</span>
+        <span class="k">pla</span>             <span class="c1">; restore the A register</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+</pre></div>
+</div>
+<p>This is all the code it takes to change the color of the background. The
+obvious effect is the flickering line in the background, which we will solve
+in the next section.</p>
+<p>Examining the code shows the boilerplate discussed <a class="reference internal" href="#dli-crash-course"><span class="std std-ref">above</span></a> where DLIs always end with the <code class="docutils literal notranslate"><span class="pre">RTI</span></code> instruction
+and any registers used must be saved before your code changes them, and
+restored upon exit.</p>
+<p>The work performed in the interrupt is just two instructions: a load of a
+color value and a store where it puts it in the <em>hardware</em> register for the
+background color. Again, as noted <a class="reference internal" href="#hardware-shadow-registers">above</a>,
+hardware registers must be used in DLIs, not the shadow registers as shadow
+registers are ignored until the vertical blank.</p>
+</div>
+<div class="section" id="wsync-how-to-avoid-flickering">
+<h3>WSYNC: How to Avoid Flickering<a class="headerlink" href="#wsync-how-to-avoid-flickering" title="Permalink to this headline">¶</a></h3>
+<p>The Atari provides a way to sync with a scan line to avoid the flickering effect
+of the previous example.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/first_dli_with_wsync.png"><img alt="../_images/first_dli_with_wsync.png" src="../_images/first_dli_with_wsync.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/first_dli_with_wsync.s">first_dli_with_wsync.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/first_dli_with_wsync.xex">first_dli_with_wsync.xex</a></li>
+</ul><p>The flickering is avoided by saving some value (any value, the bit pattern is
+not important) to the <code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> memory location at <code class="docutils literal notranslate"><span class="pre">$d40a</span></code>. This causes the
+6502 to stop processing instructions until the electron beam nears the end of
+the scan line, at which point the 6502 will resume executing instructions.
+Because the electron beam is usually off-screen at this point, it is safe to
+change color registers for at least the next several instructions without
+artifacts appearing on screen.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dli</span>     <span class="k">pha</span>             <span class="c1">; only using A register, so save old value to the stack</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$7a</span>        <span class="c1">; new background color</span>
+        <span class="k">sta</span> <span class="n">WSYNC</span>       <span class="c1">; any value saved to WSYNC will trigger the pause</span>
+        <span class="k">sta</span> <span class="n">COLBK</span>       <span class="c1">; store it in the hardware register</span>
+        <span class="k">pla</span>             <span class="c1">; restore the A register</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> (wait for horizontal blank) usually restarts the 6502 on or
+about cycle 105 out of 114, but there are cases that can delay that. See the
+Altirra Hardware Reference Manual for more information.</p>
+</div>
+</div>
+<div class="section" id="a-dli-can-affect-many-scan-lines">
+<span id="rainbow-wsync"></span><h3>A DLI Can Affect Many Scan Lines<a class="headerlink" href="#a-dli-can-affect-many-scan-lines" title="Permalink to this headline">¶</a></h3>
+<p>This example shows that a single DLI affect multiple scan lines, even crossing
+into subsequent ANTIC mode 4 lines in the display list.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/rainbow_wsync.png"><img alt="../_images/rainbow_wsync.png" src="../_images/rainbow_wsync.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/rainbow_wsync.s">rainbow_wsync.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/rainbow_wsync.xex">rainbow_wsync.xex</a></li>
+</ul><p>DLIs can really be thought of as a way for your program to be told when a
+certain display list instruction is reached. Apart from the setup and teardown of
+the DLI subroutine itself and some timing limitations discussed in the next
+section, arbitrary amounts of code can be executed in a DLI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Author’s note: thinking that DLIs had to be short was a great source of
+confusion to me when trying to figure out how rainbow effects were
+generated. My thinking was that DLIs could only affect a single line, and
+for instance I could not figure out how to get a color change in the middle
+of a text mode. I don’t know why I thought that something bad would happen
+if a DLI went long, but I did.</p>
+</div>
+<p>This DLI changes background colors 16 times, where each color change lasts 2
+scan lines. So 32 scan lines means that it covers 4 display list entries of
+ANTIC mode 4.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>dli     pha             ; save A &amp; X registers to stack
+        txa
+        pha
+        ldx #16         ; make 16 color changes
+        lda #$a         ; initial color
+        sta WSYNC       ; first WSYNC gets us to start of scan line we want
+?loop   sta COLBK       ; change background color
+        clc
+        adc #$10        ; change color value, luminance remains the same
+        dex             ; update iteration count
+        sta WSYNC       ; make it the color change last ...
+        sta WSYNC       ;   for two scan lines
+        bne ?loop       ; sta doesn&#39;t affect flags so this still checks result of dex
+        lda #$00        ; reset background color to black
+        sta COLBK
+        pla             ; restore X &amp; A registers from stack
+        tax
+        pla
+        rti             ; always end DLI with RTI!
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="display-list-interrupts-getting-interrupted">
+<h2>Display List Interrupts Getting Interrupted<a class="headerlink" href="#display-list-interrupts-getting-interrupted" title="Permalink to this headline">¶</a></h2>
+<p>Because DLIs are non-maskable interrupts and NMIs can’t be blocked, a DLI will
+interrupt whatever is happening, including another DLI. To summarize:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>DLIs can be interrupted by other DLIs</p></li>
+<li><p>DLIs can be interrupted by the vertical blank</p></li>
+<li><p>The vertical blank can be interrupted by a DLI</p></li>
+<li><p>a DLI on a JVB instruction will cause interrupts on every scan line until the vertical blank</p></li>
+</ul>
+</div></blockquote>
+<div class="section" id="dli-interrupting-another-dli">
+<h3>DLI Interrupting Another DLI<a class="headerlink" href="#dli-interrupting-another-dli" title="Permalink to this headline">¶</a></h3>
+<p>Here’s a similar DLI to the above, except it changes the luminance value
+instead of the color value to make the effect easier to see. It starts with a
+bright pink and gets dimmer down to a dark red after 32 scan lines. But this
+time, the display list has <em>two</em> mode 4 lines that have the DLI bit set, the
+2nd and 4th:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dlist</span>   <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$40</span>
+        <span class="kp">.byte</span> <span class="mh">$84</span>  <span class="c1">; first DLI triggered on last scan line</span>
+        <span class="kp">.byte</span> <span class="mi">4</span>
+        <span class="kp">.byte</span> <span class="mh">$84</span>  <span class="c1">; second DLI triggered on last scan line</span>
+        <span class="kp">.byte</span> <span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+        <span class="kp">.byte</span> <span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+        <span class="kp">.byte</span> <span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist</span>
+</pre></div>
+</div>
+<p>The first DLI takes 32 scan lines to complete, but it is only 16 scan lines
+through its operation when the second DLI hits:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/dli_interrupting_dli.png"><img alt="../_images/dli_interrupting_dli.png" src="../_images/dli_interrupting_dli.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/dli_interrupting_dli.s">dli_interrupting_dli.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/dli_interrupting_dli.xex">dli_interrupting_dli.xex</a></li>
+</ul><p>When a DLI is interrupted, its state is saved just as if a normal program was
+interrupted. The interrupting code is then executed, and upon its completion,
+the control returns to the DLI at the point where it left off. But at this
+point, due to the interrupting event, the restored DLI will be resumed some
+number of scan lines below where it was interrupted, likely resulting in
+unplanned behavior.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>dli     pha             ; save A &amp; X registers to stack
+        txa
+        pha
+        ldx #16         ; make 16 color changes
+        lda #$5f        ; initial bright pink color
+        sta WSYNC       ; first WSYNC gets us to start of scan line we want
+?loop   sta COLBK       ; change background color
+        sec
+        sbc #1          ; make dimmer by decrementing luminance value
+        dex             ; update iteration count
+        sta WSYNC       ; make it the color change last ...
+        sta WSYNC       ;   for two scan lines
+        bne ?loop       ; sta doesn&#39;t affect processor flags so we are still    checking result of dex
+        lda #$00        ; reset background color to black
+        sta COLBK
+        pla             ; restore X &amp; A registers from stack
+        tax
+        pla
+        rti             ; always end DLI with RTI!
+</pre></div>
+</div>
+<p>Because the display list vector <code class="docutils literal notranslate"><span class="pre">VDLSTL</span></code> is not changed, the same code will
+be called each time an interrupt occurs.</p>
+<p>The first DLI hits and starts with a bright background color on the first scan
+line of the third line of text. But because this display list takes a long
+time, the second DLI on the 4th text line gets triggered before the first DLI
+has hit its <code class="docutils literal notranslate"><span class="pre">RTI</span></code> instruction. ANTIC interrupts the first DLI and starts the
+2nd DLI anyway. This effect is visible in the 5th line of text: the background
+color is bright again.</p>
+<p>But notice another artifact: the effect on the 5th line of text isn’t on its
+first scan line, but its second:</p>
+<div class="figure align-center">
+<img alt="../_images/dli_interrupting_dli_detail.png" src="../_images/dli_interrupting_dli_detail.png" />
+</div>
+<p>This is due to the fact that a WSYNC was called on the previous scan line, but
+the interrupt happened as well. The interrupt takes some cycles to begin, and
+by the time that happened <strong>and</strong> ANTIC stole all of its cycles to set up the
+text mode line, there weren’t enough cycles left for the first <code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> in the
+DLI code to happen on the same scan line. This forces that <code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> to happen
+on the next line, causing the delay and the appearance of a 3rd scan line of the
+same color before the second DLI starts its color cycling.</p>
+<p>The second DLI completes and performs its <code class="docutils literal notranslate"><span class="pre">RTI</span></code>, but then it returns control
+to the first DLI, which is already halfway done with its color cycling. When it
+resumes control, it is in 9th line of text on the screen, so it has four more
+color changes before it hits its own <code class="docutils literal notranslate"><span class="pre">RTI</span></code>.</p>
+</div>
+<div class="section" id="emulator-differences">
+<h3>Emulator Differences<a class="headerlink" href="#emulator-differences" title="Permalink to this headline">¶</a></h3>
+<p>The DLI interrupting another DLI is clearly an edge case, and edge cases are
+always good stress tests for emulators. A difference is clearly visible below
+when comparing a zoomed in portion of the display generated by the Altirra
+emulator as compared to the atari800 emulator (standalone or as embedded in
+Omnivore, they are the same code and produce the same result):</p>
+<div class="figure align-center">
+<img alt="../_images/emulator-differences.png" src="../_images/emulator-differences.png" />
+</div>
+<p>Notice how Altirra gets the color from the first DLI for two scan lines, 64
+and 65, before the correct color appears on scan line 66. The output from
+Altirra shows that the NMI doesn’t happen until between scan line 63 and 64.
+But clearly, the <code class="docutils literal notranslate"><span class="pre">sta</span> <span class="pre">COLBK</span></code> at scan line 63 is taking effect on scan line
+64, because scan line 64 has the background color <code class="docutils literal notranslate"><span class="pre">$57</span></code>. It appears the
+store of <code class="docutils literal notranslate"><span class="pre">$5f</span></code> on scan line 65, started on cycle 1 of that line, isn’t
+actually executed until much, much later since the <code class="docutils literal notranslate"><span class="pre">sec</span></code> doesn’t begin until
+cycle 108. This puts that color change in the horizontal blank period of scan
+line 65, which would seem to explain why Altirra shows two scan lines with the
+background color from the first DLI.</p>
+<p>This is the CPU history from the Altirra emulator:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>   60:  3 | A=58 X=09 Y=00 (   I C) | 3030: 8D 0A D4          STA WSYNC
+   60:  7 | A=58 X=09 Y=00 (   I C) | 3033: 8D 0A D4          STA WSYNC
+   60:108 | A=58 X=09 Y=00 (   I C) | 3036: D0 F1             BNE $3029
+   61:107 | A=58 X=09 Y=00 (   I C) | 3029: 8D 1A D0  L3029   STA COLBK
+   61:111 | A=58 X=09 Y=00 (   I C) | 302C: 38                SEC
+   61:113 | A=58 X=09 Y=00 (   I C) | 302D: E9 01             SBC #$01
+   62:  1 | A=57 X=09 Y=00 (   I C) | 302F: CA                DEX
+   62:  3 | A=57 X=08 Y=00 (   I C) | 3030: 8D 0A D4          STA WSYNC
+   62:  7 | A=57 X=08 Y=00 (   I C) | 3033: 8D 0A D4          STA WSYNC
+   62:108 | A=57 X=08 Y=00 (   I C) | 3036: D0 F1             BNE $3029
+   63:107 | A=57 X=08 Y=00 (   I C) | 3029: 8D 1A D0  L3029   STA COLBK
+- NMI interrupt (DLI)
+   64:  5 | A=57 X=08 Y=00 (   I C) | E791: 2C 0F D4  LE791   BIT NMIST
+   64: 11 | A=57 X=08 Y=00 (N  I C) | E794: 10 03             BPL $E799
+   64: 13 | A=57 X=08 Y=00 (N  I C) | E796: 6C 00 02          JMP (VDSLST)
+   64: 19 | A=57 X=08 Y=00 (N  I C) | 301F: 48                PHA
+   64:102 | A=57 X=08 Y=00 (N  I C) | 3020: 8A                TXA
+   64:104 | A=08 X=08 Y=00 (   I C) | 3021: 48                PHA
+   64:107 | A=08 X=08 Y=00 (   I C) | 3022: A2 10             LDX #$10
+   64:109 | A=08 X=10 Y=00 (   I C) | 3024: A9 5F             LDA #$5F
+   64:111 | A=5F X=10 Y=00 (   I C) | 3026: 8D 0A D4          STA WSYNC
+   65:  1 | A=5F X=10 Y=00 (   I C) | 3029: 8D 1A D0  L3029   STA COLBK
+   65:108 | A=5F X=10 Y=00 (   I C) | 302C: 38                SEC
+   65:110 | A=5F X=10 Y=00 (   I C) | 302D: E9 01             SBC #$01
+   65:112 | A=5E X=10 Y=00 (   I C) | 302F: CA                DEX
+   66:  0 | A=5E X=0F Y=00 (   I C) | 3030: 8D 0A D4          STA WSYNC
+   66:  4 | A=5E X=0F Y=00 (   I C) | 3033: 8D 0A D4          STA WSYNC
+   66:108 | A=5E X=0F Y=00 (   I C) | 3036: D0 F1             BNE $3029
+   67:107 | A=5E X=0F Y=00 (   I C) | 3029: 8D 1A D0  L3029   STA COLBK
+</pre></div>
+</div>
+<p>The atari800 emulator hits the DLI two instructions earlier than Altirra,
+immediately after the two <code class="docutils literal notranslate"><span class="pre">sta</span> <span class="pre">WSYNC</span></code> commands (and therefore before the
+<code class="docutils literal notranslate"><span class="pre">sta</span> <span class="pre">COLBK</span></code> that causes Altirra to have a new color on scan line 64). In the
+atari800/Omnivore instruction history below:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>60   5 | 58 09 25 ---I-C f6 3336  8d 0a d4  sta WSYNC     $d40a=58 (was d0)
+60 106 | 58 09 25 ---I-C f6 3339  8d 0a d4  sta WSYNC     $d40a=58 (was d0)
+61 106 | 58 09 25 ---I-C f6 333c  d0 f1     bne $332f     (taken)
+61 109 | 58 09 25 ---I-C f6 332f  8d 1a d0  sta COLBK     $d01a=58 (was 0f)
+61 113 | 58 09 25 ---I-C f6 3332  38        sec
+62   1 | 58 09 25 ---I-C f6 3333  e9 01     sbc #$01      A=57
+62   3 | 57 09 25 ---I-C f6 3335  ca        dex           X=08
+62   5 | 57 08 25 ---I-C f6 3336  8d 0a d4  sta WSYNC     $d40a=57 (was d0)
+62 106 | 57 08 25 ---I-C f6 3339  8d 0a d4  sta WSYNC     $d40a=57 (was d0)
+63   0 | --DLI
+63 106 | 57 08 25 ---I-C f3 c018  2c 0f d4  bit NMIRES    $d40f=1c N=1
+63 110 | 57 08 25 N--I-C f3 c01b  10 03     bpl $c020     (not taken)
+63 112 | 57 08 25 N--I-C f3 c01d  6c 00 02  jmp (VDSLST)  ($0200)=$3325
+64   4 | 57 08 25 N--I-C f3 3325  48        pha           $01f3=57
+64   7 | 57 08 25 N--I-C f2 3326  8a        txa           A=08 N=0
+64   9 | 08 08 25 ---I-C f2 3327  48        pha           $01f2=08
+64  12 | 08 08 25 ---I-C f1 3328  a2 10     ldx #$10      X=10
+64  14 | 08 10 25 ---I-C f1 332a  a9 5f     lda #$5f      A=5f
+64  16 | 5f 10 25 ---I-C f1 332c  8d 0a d4  sta WSYNC     $d40a=5f (was d0)
+64 107 | 5f 10 25 ---I-C f1 332f  8d 1a d0  sta COLBK     $d01a=5f (was 0f)
+64 111 | 5f 10 25 ---I-C f1 3332  38        sec
+64 113 | 5f 10 25 ---I-C f1 3333  e9 01     sbc #$01      A=5e
+65   1 | 5e 10 25 ---I-C f1 3335  ca        dex           X=0f
+65   3 | 5e 0f 25 ---I-C f1 3336  8d 0a d4  sta WSYNC     $d40a=5e (was d0)
+65 106 | 5e 0f 25 ---I-C f1 3339  8d 0a d4  sta WSYNC     $d40a=5e (was d0)
+66 106 | 5e 0f 25 ---I-C f1 333c  d0 f1     bne $332f     (taken)
+66 109 | 5e 0f 25 ---I-C f1 332f  8d 1a d0  sta COLBK     $d01a=5e (was 0f)
+</pre></div>
+</div>
+<p>the DLI starts late on scan line 63 as (naively) expected and gets to the
+<code class="docutils literal notranslate"><span class="pre">sta</span> <span class="pre">WSYNC</span></code> early in scan line 64 while there is still time to hit the <code class="docutils literal notranslate"><span class="pre">sta</span>
+<span class="pre">COLBK</span></code> while still on scan line 64. This changes scan line 65 to be the
+correct background color for the second DLI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>I’m not sure what’s going on with the differences in the WSYNC behavior between the two emulators. On Altirra, the two WSYNC commands seem to occur on scan line 62, but their effects aren’t felt immediately, so perhaps this is what’s causing the DLI to hit on scan line 64 instead of scan line 63. On atari800, the WSYNC commands cause their effects to be felt immediately, in the next command. I would presume that Altirra is closer to what’s going on with real hardware, as the author of Altirra has written the definitive guide to the internals of the machine, and Altirra has always been the leader in cycle-exact emulation.</p>
+</div>
+<p>I think the takeaway from this section is: don’t let your DLI get interrupted
+by anything else, or it is likely that you will encounter emulation
+differences.</p>
+</div>
+<div class="section" id="vbi-interrupting-a-dli">
+<h3>VBI Interrupting A DLI<a class="headerlink" href="#vbi-interrupting-a-dli" title="Permalink to this headline">¶</a></h3>
+<p>Here is an example of the vertical blank interrupting a DLI.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/vbi_interrupting_dli.png"><img alt="../_images/vbi_interrupting_dli.png" src="../_images/vbi_interrupting_dli.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/vbi_interrupting_dli.s">vbi_interrupting_dli.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/vbi_interrupting_dli.xex">vbi_interrupting_dli.xex</a></li>
+</ul><p>The DLI is started at the bottom of the screen, gets interrupted by the VBI,
+and picks up again when VBI ends. Even though the electron beam is turned off,
+<code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> is still called and performs its delay function when the scan line
+is off screen. The resulting image resumes its color cycling background on the
+top of the screen, stopping after 128 scan lines even though only a fraction
+of those are actually visible on screen.</p>
+</div>
+<div class="section" id="dli-interrupting-a-vli">
+<h3>DLI Interrupting A VLI<a class="headerlink" href="#dli-interrupting-a-vli" title="Permalink to this headline">¶</a></h3>
+<p>And for completeness, here is an example of a DLI interrupting the vertical blank.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/dli_interrupting_vbi.png"><img alt="../_images/dli_interrupting_vbi.png" src="../_images/dli_interrupting_vbi.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/dli_interrupting_vbi.s">dli_interrupting_vbi.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/dli_interrupting_vbi.xex">dli_interrupting_vbi.xex</a></li>
+</ul><p>The vertical blank routine would have to be quite long <em>and</em> the DLI set very
+early in the display list before this would happen.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In my own game development, I have run into this effect happening intermittently, where occasionally the VBI runs very long due to some complicated game logic that happens only under certain conditions. It’s something to be aware of.</p>
+</div>
+<p>In this example, this DLI is set on the final blank line of the display list,
+so the display list begins with these bytes:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$f0</span>
+</pre></div>
+</div>
+<p>triggering the DLI on scan line 24. The vertical blank has run from scan lines
+248 through 262 on one frame, and through 23 scan lines of the following frame
+before getting interrupted by the DLI.</p>
+<p>To visualize the processing in the vertical blank, this example changes
+background color as fast as it can once the vertical blank starts, up to the
+100th scan line of the generated image. It gets interrupted on scan line 23 for
+the DLI.</p>
+<p>The DLI is one we’ve seen before, just changing background color with
+<code class="docutils literal notranslate"><span class="pre">WSYNC</span></code>. Once it has completed, it returns and the VBI routine picks up where
+it left off, changing background color as fast as it can.</p>
+</div>
+<div class="section" id="dli-on-the-jvb-instruction">
+<h3>DLI on the JVB Instruction<a class="headerlink" href="#dli-on-the-jvb-instruction" title="Permalink to this headline">¶</a></h3>
+<p>A DLI on the JVB instruction at the end of the display list is possible, but
+has an interesting property: it triggers DLIs on every scan line until the
+vertical blank.</p>
+<p>If your DLI is not short enough, it will keep getting interrupted by the DLI
+on triggered by the next scan line, stacking up interrupts until mercifully
+the triggering process is stopped by the vertical blank after 248 scan lines
+have been generated.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As each new frame is generated in an emulator, it will enumerate the scan lines starting from zero. There are 248 scan lines before the vertical blank, which will be displayed as scan lines 0 - 247. The scan line labeled 248 will be the first scan line of the vertical blank.</p>
+</div>
+<p>After the vertical blank routine exits, the stacked-up DLI calls will have to
+unwind themselves so the most recently interrupted DLI (from scan line 247,
+the scan line just before the vertical blank) will resume and execute code
+until its <code class="docutils literal notranslate"><span class="pre">RTI</span></code>. This will pop data off the stack and return control to the
+DLI that was interrupted on scan line 246, and so-forth until all the
+interrupted DLIs have issued their <code class="docutils literal notranslate"><span class="pre">RTI</span></code> instructions.</p>
+<p>On a standard length display list that generates 24 blank lines followed by
+192 output lines, the JVB instruction will be on scan line 224. Since the JVB
+technically generates a single blank line in the display list, the DLI will
+also be triggered on scan line 224. This case would produce 24 DLIs before the
+vertical blank.</p>
+</div>
+</div>
+<div class="section" id="dlis-in-a-nutshell">
+<h2>DLIs in a Nutshell<a class="headerlink" href="#dlis-in-a-nutshell" title="Permalink to this headline">¶</a></h2>
+<p>DLIs provide you with a way to notify your program at a particular vertical
+location on the screen. They pause (or interrupt) the normal flow of program
+code, save the state of the machine, call your DLI subroutine, and restore the
+state of the computer before returning control to the code that was
+interrupted.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Here are the requirements for successful use of DLIs:</p>
+<ul class="simple">
+<li><p>your DLI routine must save any registers it clobbers</p></li>
+<li><p>restore any registers you save before exiting</p></li>
+<li><p>exit with an <code class="docutils literal notranslate"><span class="pre">RTI</span></code></p></li>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> if necessary</p></li>
+<li><p>be aware of cycles stolen by ANTIC: you could have only 60 cycles per scan line in higher resolution graphics modes, and as few as 10 (<strong>!</strong>) on the first line of text modes</p></li>
+<li><p>store the address of your routine in <code class="docutils literal notranslate"><span class="pre">VDSLST</span></code> before enabling DLIs with <code class="docutils literal notranslate"><span class="pre">NMIEN</span></code></p></li>
+<li><p>guard against the DLI itself being interrupted</p></li>
+</ul>
+</div>
+<p>Note that nowhere in that list was the requirement that the DLI be short. It
+doesn’t have to be, and in fact DLIs that span multiple scan lines are similar
+to kernels used in Atari 2600 programming. The difference is that ANTIC steals
+cycles depending on a bunch of factors, so the total cycle counting approach
+(or <a class="reference external" href="https://mitpress.mit.edu/books/racing-beam">Racing the Beam</a>) is usually
+not possible.</p>
+<p>However, most DLIs that you will run across in the wild <em>are</em> short, because
+they typically don’t do a lot of calculations. Most of the setup work will
+generally be done outside of the DLI and the DLI itself just handles the result
+of that work.</p>
+<p>
+<img src="/_static/Atari_logo_hr.png">
+<p></div>
+<div class="section" id="advanced-dli-examples">
+<h2>Advanced DLI Examples<a class="headerlink" href="#advanced-dli-examples" title="Permalink to this headline">¶</a></h2>
+<p>The following examples are available in both source code form and as XEX files
+at the <a class="reference external" href="https://github.com/playermissile/dli_tutorial">dli_tutorial source code repository</a> on github.</p>
+<p>They are coded using MAC/65 assembler syntax, but very few assembler-specific
+features are actually used, so they should be trivially ported to other
+assemblers.</p>
+<p>To get a copy of all the examples and source code, you can download and
+install <a class="reference external" href="https://git-scm.com/">git</a> for your platform. Then open a command
+line prompt on your computer and enter the command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/playermissile/dli_tutorial.git
+</pre></div>
+</div>
+<p>to download the complete repository.</p>
+<p>You can also download individual assembly source and XEX files from links in
+each section.</p>
+<p>In an attempt to de-clutter the examples as much as possible, most of the
+boilerplate code (for initialization and setup tasks) has been placed in
+libraries that are included during the compilation process. These are files
+like <code class="docutils literal notranslate"><span class="pre">util.s</span></code>, <code class="docutils literal notranslate"><span class="pre">util_dli.s</span></code> and so forth, and are available in the source code repository or directly <a class="reference external" href="https://github.com/playermissile/dli_tutorial/src">here</a>.</p>
+</div>
+<div class="section" id="topic-1-dli-positioning">
+<h2>Topic #1: DLI Positioning<a class="headerlink" href="#topic-1-dli-positioning" title="Permalink to this headline">¶</a></h2>
+<p>The following examples deal with various techniques regarding placing the DLI
+on screen.</p>
+</div>
+<div class="section" id="multiple-dlis">
+<h2>#1.1: Multiple DLIs<a class="headerlink" href="#multiple-dlis" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/multiple_dli_same_page.png"><img alt="../_images/multiple_dli_same_page.png" src="../_images/multiple_dli_same_page.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/multiple_dli_same_page.s">multiple_dli_same_page.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/multiple_dli_same_page.xex">multiple_dli_same_page.xex</a></li>
+</ul><p>One of the problems with having a single DLI vector is: what do you do when you
+want to have more than one DLI?</p>
+<p>Some techniques that you will see in the wild:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>use <code class="docutils literal notranslate"><span class="pre">VCOUNT</span></code> to check where you are on screen and branch accordingly</p></li>
+<li><p>increment an index value and use that to determine which DLI has been called</p></li>
+<li><p>change the <code class="docutils literal notranslate"><span class="pre">VDLSTL</span></code> vector to point to the next DLI in the chain</p></li>
+</ul>
+</div></blockquote>
+<p>Here’s an optimization of the last technique that can save some valuable
+cycles: put your DLIs in the same page of memory and only change the low byte.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>        <span class="o">*=</span> <span class="p">(</span><span class="o">*</span> <span class="o">&amp;</span> <span class="mh">$ff00</span><span class="p">)</span> <span class="o">+</span> <span class="mi">256</span> <span class="c1">; next page boundary</span>
+
+<span class="n">dli</span>     <span class="k">pha</span>             <span class="c1">; only using A register, so save it to the stack</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$55</span>        <span class="c1">; new background color</span>
+        <span class="k">sta</span> <span class="n">WSYNC</span>       <span class="c1">; first WSYNC gets us to start of scan line we want</span>
+        <span class="k">sta</span> <span class="n">COLBK</span>       <span class="c1">; change background color</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">dli2</span>      <span class="c1">; point to second DLI</span>
+        <span class="k">sta</span> <span class="n">VDSLST</span>
+        <span class="k">pla</span>             <span class="c1">; restore A register from stack</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+
+<span class="n">dli2</span>    <span class="k">pha</span>             <span class="c1">; only using A register, so save it to the stack</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$88</span>        <span class="c1">; new background color</span>
+        <span class="k">sta</span> <span class="n">WSYNC</span>       <span class="c1">; first WSYNC gets us to start of scan line we want</span>
+        <span class="k">sta</span> <span class="n">COLBK</span>       <span class="c1">; change background color</span>
+        <span class="k">pla</span>             <span class="c1">; restore A register from stack</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+
+
+<span class="n">vbi</span>     <span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">dli</span>       <span class="c1">; set DLI pointer to first in chain</span>
+        <span class="k">sta</span> <span class="n">VDSLST</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">dli</span>
+        <span class="k">sta</span> <span class="n">VDSLST</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">jmp</span> <span class="n">XITVBV</span>      <span class="c1">; always exit deferred VBI with jump here</span>
+</pre></div>
+</div>
+<p>This is a simplistic example, but keeping the high byte constant inside the
+DLI saves 6 cycles (by obviating the need for changing the high byte with
+<code class="docutils literal notranslate"><span class="pre">LDA</span> <span class="pre">#&gt;dli2;</span> <span class="pre">STA</span> <span class="pre">VDLSTL+1</span></code>). That may be enough for this optimization to be
+useful.</p>
+</div>
+<div class="section" id="moving-the-dli-up-and-down-the-screen">
+<span id="moving-dli"></span><h2>#1.2: Moving the DLI Up and Down the Screen<a class="headerlink" href="#moving-the-dli-up-and-down-the-screen" title="Permalink to this headline">¶</a></h2>
+<p>The DLI subroutine itself doesn’t directly know what scan line caused the
+interrupt because all DLIs are routed through the same vector at <code class="docutils literal notranslate"><span class="pre">VDLSTL</span></code>.
+The only trigger is in the display list: the DLI bit on the display list
+instruction.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/moving_dli.gif"><img alt="../_images/moving_dli.gif" src="../_images/moving_dli.gif" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/moving_dli.s">moving_dli.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/moving_dli.xex">moving_dli.xex</a></li>
+</ul><p>The display list can be modified in place to move the DLI to different lines
+without changing any DLI code. The code to move the DLI should be performed in
+the vertical blank to prevent the display list from being modified as ANTIC is
+using it to create the display:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">move_dli_line</span>
+        <span class="k">ldx</span> <span class="n">last_dli_line</span> <span class="c1">; get line number on screen of old DLI</span>
+        <span class="k">lda</span> <span class="n">dlist_line_lookup</span><span class="p">,</span><span class="n">x</span> <span class="c1">; get offset into display list of that line number</span>
+        <span class="k">tax</span>
+        <span class="k">lda</span> <span class="n">dlist_first</span><span class="p">,</span><span class="n">x</span> <span class="c1">; remove DLI bit</span>
+        <span class="k">and</span> <span class="p">#</span><span class="mh">$7f</span>
+        <span class="k">sta</span> <span class="n">dlist_first</span><span class="p">,</span><span class="n">x</span>
+        <span class="k">ldx</span> <span class="n">dli_line</span>    <span class="c1">; get line number on screen of new DLI</span>
+        <span class="k">stx</span> <span class="n">last_dli_line</span> <span class="c1">; remember</span>
+        <span class="k">lda</span> <span class="n">dlist_line_lookup</span><span class="p">,</span><span class="n">x</span> <span class="c1">; get offset into display list of that line number</span>
+        <span class="k">tax</span>
+        <span class="k">lda</span> <span class="n">dlist_first</span><span class="p">,</span><span class="n">x</span> <span class="c1">; set DLI bit</span>
+        <span class="k">ora</span> <span class="p">#</span><span class="mh">$80</span>
+        <span class="k">sta</span> <span class="n">dlist_first</span><span class="p">,</span><span class="n">x</span>
+        <span class="k">rts</span>
+</pre></div>
+</div>
+<p>The example allows the display list to be set on blank lines at the top of the
+display, and on the last mode 4 line in the display list which displays the
+background below the last mode 4 line on the screen.</p>
+</div>
+<div class="section" id="topic-2-colors">
+<span id="topic-color"></span><h2>Topic #2: Colors<a class="headerlink" href="#topic-2-colors" title="Permalink to this headline">¶</a></h2>
+<p>We have already seen several examples of using DLIs to show more colors on
+screen. The following examples are included to address more topics in common
+use in games or title screens.</p>
+</div>
+<div class="section" id="marching-rainbow-text">
+<h2>#2.1: Marching Rainbow Text<a class="headerlink" href="#marching-rainbow-text" title="Permalink to this headline">¶</a></h2>
+<p>Using code almost identical to the <a class="reference internal" href="#rainbow-wsync"><span class="std std-ref">rainbow</span></a> effect, a common effect seen in title screens can be created:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/marching_rainbow.png"><img alt="../_images/marching_rainbow.png" src="../_images/marching_rainbow.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/marching_rainbow.s">marching_rainbow.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/marching_rainbow.xex">marching_rainbow.xex</a></li>
+</ul><p>Using a simple display list:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dlist</span>   <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>  <span class="c1">; 48 blank lines</span>
+        <span class="kp">.byte</span> <span class="mh">$46</span><span class="p">,</span><span class="o">&lt;</span><span class="n">text</span><span class="p">,</span><span class="o">&gt;</span><span class="n">text</span> <span class="c1">; Mode 6 + LMS, setting screen memory to text</span>
+        <span class="kp">.byte</span> <span class="mi">6</span>            <span class="c1">; Mode 6</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>      <span class="c1">; 16 blank lines</span>
+        <span class="kp">.byte</span> <span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span>        <span class="c1">; 3 lines of Mode 7</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span>          <span class="c1">; 8 blank lines</span>
+        <span class="kp">.byte</span> <span class="mh">$f0</span>          <span class="c1">; 8 blank lines + DLI on last scan line</span>
+        <span class="kp">.byte</span> <span class="mi">7</span><span class="p">,</span><span class="mi">7</span>          <span class="c1">; 2 lines of Mode 7</span>
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist</span> <span class="c1">; JVB, restart same display list on next frame</span>
+</pre></div>
+</div>
+<p>the DLI simply loads the <code class="docutils literal notranslate"><span class="pre">start_color</span></code> variable as the initial color each
+time it is called, then increments the value stored in the hardware color
+register for playfield color zero (<code class="docutils literal notranslate"><span class="pre">COLPF0</span></code>) as it makes <code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> calls to
+advance one scan line down the screen. Each scan line increases luminance (i.e.
+gets brighter), until the low 4 bits controlling the luminance overflows into
+the high 4 bits, changing the color to the next in the Atari’s color palette at
+zero luminance.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>dli     pha             ; save A &amp; X registers to stack
+        txa
+        pha
+        ldx #32         ; make 32 color changes
+        lda start_color ; initial color
+        sta WSYNC       ; first WSYNC gets us to start of scan line we want
+?loop   sta COLPF0      ; change text color for UPPERCASE characters in gr2
+        clc
+        adc #$1         ; change color value, making brighter
+        dex             ; update iteration count
+        sta WSYNC       ; sta doesn&#39;t affect processor flags
+        bne ?loop       ; we are still checking result of dex
+        lda #text_color ; reset text color to normal color
+        sta COLPF0
+        dec start_color ; change starting color for next time
+        pla             ; restore X &amp; A registers from stack
+        tax
+        pla
+        rti             ; always end DLI with RTI!
+</pre></div>
+</div>
+<p>At the end of the DLI, <code class="docutils literal notranslate"><span class="pre">start_color</span></code> is <em>decremented</em>, meaning that the next
+time the DLI is called it will start with one luminance value lower than it did
+last time. This gives the appearance of the previous rainbow of color being
+“pushed” down the screen and a new darker line being inserted at the top of the
+rainbow.</p>
+<p>Changing that <code class="docutils literal notranslate"><span class="pre">dec</span> <span class="pre">start_color</span></code> to <code class="docutils literal notranslate"><span class="pre">inc</span> <span class="pre">start_color</span></code> would have the
+opposite effect and the rainbow of color would appear to move upward.</p>
+<p>Alternatively, leaving the <code class="docutils literal notranslate"><span class="pre">dec</span> <span class="pre">start_color</span></code> but changing the <code class="docutils literal notranslate"><span class="pre">clc</span></code>, <code class="docutils literal notranslate"><span class="pre">adc</span>
+<span class="pre">#$1</span></code> to:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">sec</span>
+<span class="k">sbc</span> <span class="p">#</span><span class="mh">$1</span>         <span class="c1">; change color value, making darker</span>
+</pre></div>
+</div>
+<p>would have the same effect as <code class="docutils literal notranslate"><span class="pre">inc</span> <span class="pre">start_color</span></code>.</p>
+</div>
+<div class="section" id="topic-3-character-sets">
+<span id="topic-chbase"></span><h2>Topic #3: Character Sets<a class="headerlink" href="#topic-3-character-sets" title="Permalink to this headline">¶</a></h2>
+<p>The character set on the Atari is comprised of 128 glyphs, each of which is 8
+bytes in size for a total of 1024 bytes for a complete font. The characters are
+defined in ANTIC font order, not ATASCII order, so the first 64 characters are
+the ATASCII characters 32 - 95 (symbols, numbers, and upper case letters), the
+next 32 are the graphic symbols on the control characters, and the final 32 are
+the lower case letters and a few remaining graphic symbols.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>More resources about character sets are available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CHBAS</span></code> in <a class="reference external" href="https://www.atariarchives.org/mapping/memorymap.php#756">Mapping the Atari</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CHBASE</span></code> in <a class="reference external" href="https://www.atariarchives.org/mapping/memorymap.php#54281">Mapping the Atari</a></p></li>
+<li><p><a class="reference external" href="https://www.atariarchives.org/mapping/appendix10.php">Mapping the Atari, Appendix 10</a></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="changing-character-sets">
+<span id="changing-chbase"></span><h2>#3.1: Changing Character Sets<a class="headerlink" href="#changing-character-sets" title="Permalink to this headline">¶</a></h2>
+<p>An extremely simple DLI is all that’s needed to change the character set at a
+particular scan line.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/simple_chbase.png"><img alt="../_images/simple_chbase.png" src="../_images/simple_chbase.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/simple_chbase.s">simple_chbase.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/simple_chbase.xex">simple_chbase.xex</a></li>
+</ul><p>This example uses two character sets: the default character set at the top of
+the screen, and an character set designed for ANTIC 4 for the bottom. The
+screen is broken up into 3 bands, one set of 8 lines of ANTIC mode 2 and two
+sets each containing 8 lines of ANTIC mode 4. The top two bands have the normal
+character set (<code class="docutils literal notranslate"><span class="pre">CHBASE</span> <span class="pre">=</span> <span class="pre">$e000</span></code>) and the bottom band has a custom character
+set designed for the 5 color mode.</p>
+<p>The DLI is set on the 16th text line: the final line in the second band of 8
+lines so that the character set change affects the 3rd band of 8 lines:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; mixed mode 2 and mode 4 display list</span>
+<span class="n">dlist_static</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>
+        <span class="kp">.byte</span> <span class="mh">$42</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$80</span>
+        <span class="kp">.byte</span> <span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span>     <span class="c1">; first band has 8 lines of mode 2</span>
+        <span class="kp">.byte</span> <span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mh">$84</span> <span class="c1">; 2nd band: 8 lines of mode 4 + DLI on last line</span>
+        <span class="kp">.byte</span> <span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>   <span class="c1">; 3rd band: 8 lines of mode 4</span>
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist_static</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist_static</span>
+</pre></div>
+</div>
+<p>The font for the top of the screen is set during the <code class="docutils literal notranslate"><span class="pre">init</span></code> routine using the
+the shadow register <code class="docutils literal notranslate"><span class="pre">CHBAS</span></code>, not the hardware register <code class="docutils literal notranslate"><span class="pre">CHBASE</span></code>. It will be
+reloaded every vertical blank by the operating system:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">lda</span> <span class="p">#</span><span class="mh">$e0</span>
+<span class="k">sta</span> <span class="n">CHBAS</span>
+</pre></div>
+</div>
+<p>The DLI is very simple, just loading the new character set, but this time using
+the hardware register <code class="docutils literal notranslate"><span class="pre">CHBASE</span></code>:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dli</span>     <span class="k">pha</span>             <span class="c1">; only using A register, so save it to the stack</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">font_data</span> <span class="c1">; page number of new font data</span>
+        <span class="k">sta</span> <span class="n">WSYNC</span>       <span class="c1">; first WSYNC gets us to start of scan line we want</span>
+        <span class="k">sta</span> <span class="n">CHBASE</span>      <span class="c1">; store to hardware register to affect change immediately</span>
+        <span class="k">pla</span>             <span class="c1">; restore A register from stack</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="x-multiple-interleaved-character-sets-for-soft-sprites">
+<h2>#3.x: Multiple Interleaved Character Sets for Soft Sprites<a class="headerlink" href="#x-multiple-interleaved-character-sets-for-soft-sprites" title="Permalink to this headline">¶</a></h2>
+<p>The author of the cc65 DLI tutorial, Yaron Nir, started a recent <a class="reference external" href="https://atariage.com/forums/topic/299571-introducing-interleaved-charactersets-any-game-screen-is-possible-almost/">topic on
+AtariAge</a> that described a technique
+to use a DLI to change the character set on each line to facilitate the use of
+soft sprites.</p>
+<p>Soft sprites require shifting images within characters to achieve smooth
+motion, so the height of the soft sprites determines how many lines of
+characters needed, and the width in pixels as compared to the width of each
+character determines the number of characters must be placed horizontally.
+ANTIC mode 4 is 8 scan lines tall and has 4 pixels across. Vertically, you
+could have sprites of height 9 scan lines using 2 character sets, 17 scan lines
+with 3 character sets, 25 scan lines with 4 character sets, etc. Sprites would
+need 2 characters side-by-side for up to 5 pixels, 3 characters for 9 pixels, 4
+characters for 13 pixels. etc.</p>
+<p>&lt;image here&gt;</p>
+<p>With only 128 glyphs per character set, bit patterns are at a premium. If, say,
+64 characters are used for background, only 64 characters remain for sprites.
+Using a 4x3 grid for sprites takes 12 out of the 64 available sprite glyphs, so
+5 (independent) soft sprites would be available since that would use 60
+characters. Limiting directions can reduce that number; if your sprites move
+only horizontally, for instance, sprites of 13 pixels by 16 scan lines would
+only take a 3x2 grid, or only 6 characters.</p>
+<p>The advantage of using a DLI with multiple character sets is that more
+characters are available for sprites.</p>
+</div>
+<div class="section" id="topic-4-player-missile-graphics">
+<h2>Topic #4: Player/Missile Graphics<a class="headerlink" href="#topic-4-player-missile-graphics" title="Permalink to this headline">¶</a></h2>
+<p>Player/Missile Graphics is the sprite system provided by the GTIA:
+independently positioned overlays on the playfield graphics that don’t disturb
+the playfield.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>the word <em>sprite</em> in this sense wasn’t in use when the Atari was designed, and <a class="reference external" href="https://graphics.fandom.com/wiki/Sprite">several</a> <a class="reference external" href="https://en.wikipedia.org/wiki/Sprite_(computer_graphics)">sources</a> <a class="reference external" href="http://groups.google.com/group/comp.sys.ti/msg/73e2451bcae4d91a">claim</a> that it was coined by the designers of the Texas Instruments TI 9918 graphics chip at about the same timeframe.</p>
+</div>
+<p>The GTIA provides 4 players with independent colors (from each other or the
+playfield) and 4 missiles with colors matching their respective player, or the
+4 missiles can be combined into a 5th player with its own color (although this
+reuses one playfield color). The players are 8 bits wide and can be displayed
+as one, two, or four color clocks wide per bit. This corresponds a width on
+screen of 8, 16, and 32 color clocks, respectively. Widths for all players and
+missiles can be set independently.</p>
+<p>Each player and missile can be positioned at an arbitrary horizontal location
+by setting a hardware register, but vertical positioning requires copying data
+to particular locations in the memory area reserved for it. Each player spans
+the height of the screen, and it is only the bit pattern in its storage area
+that determines what is drawn on a particular scan line.</p>
+<p>Missiles are two bits wide each with all 4 missiles packed into a single byte
+for a particular scan line. Bit masking is required to set data for one
+missile without affecting the others.</p>
+<p>The quick summary for our purposes is that horizontal repositioning of players
+is fast, it takes only a single store instruction. Vertical repositioning of
+player image data is slow, it requires copying memory around.</p>
+</div>
+<div class="section" id="multiplexing-players-vertically">
+<h2>#4.1: Multiplexing Players Vertically<a class="headerlink" href="#multiplexing-players-vertically" title="Permalink to this headline">¶</a></h2>
+<p>Reusing players (multiplexing) vertically is straightforward, meaning that a
+single player can be used to display arbitrary images at different vertical
+locations on the screen, provided that there is no vertical overlap.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/simple_multiplex_player.png"><img alt="../_images/simple_multiplex_player.png" src="../_images/simple_multiplex_player.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/simple_multiplex_player.s">simple_multiplex_player.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/simple_multiplex_player.xex">simple_multiplex_player.xex</a></li>
+</ul><p>Using the hardware <code class="docutils literal notranslate"><span class="pre">HPOSPn</span></code> or <code class="docutils literal notranslate"><span class="pre">HPOSMn</span></code> registers, the DLI will
+immediately change where ANTIC will draw the player or missile. The next time
+ANTIC draws the player on a scan line, it will use this new position.</p>
+<p>in the appropriate player or missile X position register. This demo uses the
+page-alignment trick for the second DLI, and changes the position and size of
+the players at each interrupt.</p>
+<p>This demo splits the screen vertically into 3 horizontal bands, A, B &amp; C, with
+the players extending the full height of the screen and labeled 0 through 3.
+This example uses the VBI to set the players for band A, the <code class="docutils literal notranslate"><span class="pre">dli</span></code> routine
+is the bottom of band A (and the top of band B) and therefore sets the players
+for band B, and the <code class="docutils literal notranslate"><span class="pre">dli2</span></code> routine is the bottom of band B (and the top of
+band C) and controls the players for band C.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">vbi</span>     <span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">dli</span>       <span class="c1">; set DLI pointer to first in chain</span>
+        <span class="k">sta</span> <span class="n">VDSLST</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">dli</span>
+        <span class="k">sta</span> <span class="n">VDSLST</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$40</span>        <span class="c1">; set player positions and sizes ...</span>
+        <span class="k">sta</span> <span class="n">HPOSP0</span>      <span class="c1">;   for the top of the screen</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$60</span>
+        <span class="k">sta</span> <span class="n">HPOSP1</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$80</span>
+        <span class="k">sta</span> <span class="n">HPOSP2</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$a0</span>
+        <span class="k">sta</span> <span class="n">HPOSP3</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mi">0</span>
+        <span class="k">sta</span> <span class="n">SIZEP0</span>
+        <span class="k">sta</span> <span class="n">SIZEP1</span>
+        <span class="k">sta</span> <span class="n">SIZEP2</span>
+        <span class="k">sta</span> <span class="n">SIZEP3</span>
+        <span class="k">jmp</span> <span class="n">XITVBV</span>      <span class="c1">; always exit deferred VBI with jump here</span>
+
+        <span class="o">*=</span> <span class="p">(</span><span class="o">*</span> <span class="o">&amp;</span> <span class="mh">$ff00</span><span class="p">)</span> <span class="o">+</span> <span class="mi">256</span> <span class="c1">; next page boundary</span>
+
+<span class="n">dli</span>     <span class="k">pha</span>             <span class="c1">; only using A register, so save it to the stack</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$55</span>        <span class="c1">; new background color</span>
+        <span class="k">sta</span> <span class="n">WSYNC</span>       <span class="c1">; first WSYNC gets us to start of scan line we want</span>
+        <span class="k">sta</span> <span class="n">COLBK</span>       <span class="c1">; change background color</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$30</span>        <span class="c1">; change position and sizes of players</span>
+        <span class="k">sta</span> <span class="n">HPOSP0</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$40</span>
+        <span class="k">sta</span> <span class="n">HPOSP1</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$50</span>
+        <span class="k">sta</span> <span class="n">HPOSP2</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$60</span>
+        <span class="k">sta</span> <span class="n">HPOSP3</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mi">1</span>
+        <span class="k">sta</span> <span class="n">SIZEP0</span>
+        <span class="k">sta</span> <span class="n">SIZEP1</span>
+        <span class="k">sta</span> <span class="n">SIZEP2</span>
+        <span class="k">sta</span> <span class="n">SIZEP3</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">dli2</span>      <span class="c1">; point to second DLI</span>
+        <span class="k">sta</span> <span class="n">VDSLST</span>
+        <span class="k">pla</span>             <span class="c1">; restore A register from stack</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+
+<span class="n">dli2</span>    <span class="k">pha</span>             <span class="c1">; only using A register, so save it to the stack</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$84</span>        <span class="c1">; new background color</span>
+        <span class="k">sta</span> <span class="n">WSYNC</span>       <span class="c1">; first WSYNC gets us to start of scan line we want</span>
+        <span class="k">sta</span> <span class="n">COLBK</span>       <span class="c1">; change background color</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$40</span>        <span class="c1">; change position and sizes of players</span>
+        <span class="k">sta</span> <span class="n">HPOSP0</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$70</span>
+        <span class="k">sta</span> <span class="n">HPOSP1</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$90</span>
+        <span class="k">sta</span> <span class="n">HPOSP2</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$b0</span>
+        <span class="k">sta</span> <span class="n">HPOSP3</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mi">3</span>
+        <span class="k">sta</span> <span class="n">SIZEP0</span>
+        <span class="k">sta</span> <span class="n">SIZEP1</span>
+        <span class="k">sta</span> <span class="n">SIZEP2</span>
+        <span class="k">sta</span> <span class="n">SIZEP3</span>
+        <span class="k">pla</span>             <span class="c1">; restore A register from stack</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+</pre></div>
+</div>
+<p>In discussing the timing issues that cause errors at the band boundaries, the
+players in band A are positioned by the VBI, and so are in place from well off
+the top of the screen and are correctly positioned at the first scan line.
+Players 0, 1, and 2 are correct at the bottom of the band, but player 3
+extends one scan line too far, into band B.</p>
+<p>The top of band B shows both position and size errors. When the first DLI hits
+on the last scan line of the 6th line of text, the background color is changed
+at the <code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> and ANTIC moves on to start drawing the first scan line of
+the 7th line of text (which is the first line of text in band B.) Players 0,
+1, and 2 are positioned correctly, which means their horizontal positions were
+set before ANTIC reached that portion of the scan line. The 3rd player remains
+in the same position as it was in band A, meaning that its horizontal position
+wasn’t set in time. ANTIC had stolen enough cycles setting up the mode 4 font
+that the 6502 didn’t get a chance to process the <code class="docutils literal notranslate"><span class="pre">sta</span> <span class="pre">HPOS3</span></code> before ANTIC
+had to draw that portion of the scan line. Since the code sets sizes after the
+horizontal positions, none of the sizes are set until the 2nd scan line of
+band B.</p>
+<p>The transition to band C with the <code class="docutils literal notranslate"><span class="pre">dli2</span></code> routine produces similar results,
+there just isn’t enough time with the <code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> used for the color change
+<em>and</em> all the cycles stolen by ANTIC mode 4 to process the all of the player
+changes in the first scan line of the band. Players 0, 1, and 2 are moved,
+player 3 is not, and all 4 players don’t get the correct size until the 2nd
+scan line of the band.</p>
+<p>It’s possible to imagine a scenario where a scan line of a player is not
+visible at all. For example, if player 3 above had been positioned very far to
+the right and <code class="docutils literal notranslate"><span class="pre">HPOSP3</span></code> was changed to move player 3 to the far left side, it
+could be possible that ANTIC has already drawn the left side of the screen but
+hadn’t yet reached the right side where player 3 had been positioned. Because
+<code class="docutils literal notranslate"><span class="pre">HPOSP3</span></code> is now showing that player 3 is on the left side of the screen,
+ANTIC would not draw it at its old location on the right side of the screen.</p>
+<p>It’s also possible, with careful timing, to reuse a player on a single line.
+However, purposeful use of this would difficult given all the different
+horizontal locations of ANTIC’s cycle stealing.</p>
+<p>Mode 4 was chosen (in all of its cycle-stealing glory) for these examples to
+get an idea of the worst-case scenerio. Taking out the <code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> and the color
+change did allow enough time that both the positions and sizes were changed
+without visible artifacts:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/simple_multiplex_player_no_wsync.png"><img alt="../_images/simple_multiplex_player_no_wsync.png" src="../_images/simple_multiplex_player_no_wsync.png" style="width: 90%;" /></a>
+</div>
+<p>but this is very simple code and the more real-world example in the next
+section will show that a buffer zone of several scan lines is necessary to
+make sure a player isn’t split across a band boundary or, as described above,
+even duplicating a line of the player or missing a scan line.</p>
+</div>
+<div class="section" id="multiplexing-with-horizontal-motion">
+<h2>#4.2: Multiplexing With Horizontal Motion<a class="headerlink" href="#multiplexing-with-horizontal-motion" title="Permalink to this headline">¶</a></h2>
+<p>Increasing the number of bands and adding independent player movement within
+each band requires some data structures and a DLI to control placement in each
+band.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/multiplex_player_movement.png"><img alt="../_images/multiplex_player_movement.png" src="../_images/multiplex_player_movement.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/multiplex_player_movement.s">multiplex_player_movement.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/multiplex_player_movement.xex">multiplex_player_movement.xex</a></li>
+</ul><p>The approach used in this example is to use a single DLI that uses an index
+value to determine which band it is operating within. This index value is used
+as an offset into arrays that hold the sprite X position, size, color, etc.</p>
+<p>There are a lot of independently moving objects in this demo: 12 bands, each
+with 4 players. There are very obvious timing issues in most bands on the
+first scan line after the DLI as sometimes the hardware registers for a player
+hasn’t been updated fully until the second scan line.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; same DLI routine is used for each band, the band_dli_index is used to set
+; player information for the appropriate band
+dli_band
+        pha             ; using A &amp; X
+        txa
+        pha
+        inc band_dli_index ; increment band index, VBI initialized to $ff,
+        ldx band_dli_index ;   so will become 0 for band A
+
+        ; control band X positions of players
+        lda bandp0_x,x  ; x position of player 0 in this band
+        sta HPOSP0
+        lda bandp0_color,x ; color of player 0 for this band
+        sta COLPM0
+        lda bandp0_size,x ; size of player 0 for this band
+        sta SIZEP0
+
+        lda bandp1_x,x  ; as above, but for players 1 - 3
+        sta HPOSP1
+        lda bandp1_color,x
+        sta COLPM1
+        lda bandp1_size,x
+        sta SIZEP1
+
+        lda bandp2_x,x
+        sta HPOSP2
+        lda bandp2_color,x
+        sta COLPM2
+        lda bandp2_size,x
+        sta SIZEP2
+
+        lda bandp3_x,x
+        sta HPOSP3
+        lda bandp3_color,x
+        sta COLPM3
+        lda bandp3_size,x
+        sta SIZEP3
+
+?done   pla             ; restore A &amp; X
+        tax
+        pla
+        rti             ; always end DLI with RTI!
+</pre></div>
+</div>
+<p>The addreses <code class="docutils literal notranslate"><span class="pre">bandpN_x</span></code>, <code class="docutils literal notranslate"><span class="pre">bandpN_color</span></code>, and <code class="docutils literal notranslate"><span class="pre">bandpN_size</span></code> (where N is
+the player number) are declared as lists with the number of entries equal to
+the number of bands. <code class="docutils literal notranslate"><span class="pre">band_dli_index</span></code> is incremented each time the DLI
+starts, and uses that index into the lists so it places the players in the
+correct location for that band.</p>
+<p>Notice that is <em>all</em> the DLI does. It does not calculate movement or perform any
+player logic, it simply puts players on the screen in the appropriate place for
+that band. All the calculation is done in the vertical blank:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; calculate new positions of players in all bands
+vbi     ldx #0
+?move   lda bandp0_x,x  ; update X coordinate
+        clc             ;   by adding velocity.
+        adc bandp0_dx,x ;   Note that velocity of $ff
+        sta bandp0_x,x  ;   is same as -1
+        cmp #$30        ; check left edge
+        bcs ?right      ; if &gt;=, it is still in playfield
+        lda #1          ; nope, &lt;, so make velocity positive
+        sta bandp0_dx,x
+        bne ?cont
+?right  cmp #$c0        ; check right edge
+        bcc ?cont       ; if &lt;, it is still in playfield
+        lda #$ff        ; nope, &gt;=, so make velocity negative
+        sta bandp0_dx,x
+?cont   inx             ; next player
+        cpx #num_dli_bands * 4 ; loop through 12 bands * 4 players each
+        bcc ?move
+
+        lda #$ff        ; initialize band index to get ready for band A
+        sta band_dli_index
+        jmp XITVBV      ; always exit deferred VBI with jump here
+</pre></div>
+</div>
+<p>Unlike the simple multiplexing demo in the previous section, this VBI does not
+set any positions of players. Instead, this demo sets the DLI bit on the last
+group of 8 blank lines at the beginning of the display list, before any mode 4
+lines. This initial DLI will set the players for band A, and as you can see in
+the demo the players above band A use the same X position and size as band L.
+The colors are not the same as band L, however, because of the use of the
+shadow registers to set the initial color in the <code class="docutils literal notranslate"><span class="pre">init_pmg</span></code> subroutine.</p>
+</div>
+<div class="section" id="reusing-players-horizontally">
+<h2>#4.3: Reusing Players Horizontally<a class="headerlink" href="#reusing-players-horizontally" title="Permalink to this headline">¶</a></h2>
+<p>Reusing players on the same scan line is possible, but requires cycle counting
+and has limitations, especially in text modes. The complicated cycle stealing
+performed by ANTIC will require consulting timing reference charts (such as in
+the Altirra Hardware Reference Manual) to determine how well it can be used for
+a particular graphics mode.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/reusing_player_horz.png"><img alt="../_images/reusing_player_horz.png" src="../_images/reusing_player_horz.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/reusing_player_horz.s">reusing_player_horz.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/reusing_player_horz.xex">reusing_player_horz.xex</a></li>
+</ul><p>Here’s the DLI that produces the effect above, where player 3 has multiple
+copies at the same vertical position. Again there are 12 vertical bands (this
+time ANTIC mode 5), where the first copy of player 3 is at the left side of the
+screen and the other 3 shift slowly to the left as it moves down bands in
+order to find the minimum possible horizontal shift between copies. This is
+not a kernel (see the next section for that), so the DLI bit is set on each of
+the mode 5 lines.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>dli     pha             ; using A &amp; X
+        txa
+        pha
+
+        dec copy1       ; move copies to the left one color clock each band
+        dec copy2
+        sta WSYNC       ; skip rest of last line of DLI line
+        dec copy3       ; not enough time to do all 3 decrements before 1st WSYNC
+        ldx #14         ; prepare for 14 scan lines in the loop
+        sta WSYNC       ; skip 1st line of mode 5 where ANTIC steals almost all cycles
+?loop   lda #48         ; set initial position of player 3
+        sta HPOSP3
+        nop             ; we&#39;re still on the tail end of the prevous scan
+        nop             ;   line, so we need to wait until the electron beam
+        nop             ;   passes this first position before we set the
+        nop             ;   next HPOS.
+        nop
+        nop
+        lda copy1       ; can&#39;t place copies until after electron beam draws
+        sta HPOSP3      ;   the player in the previous location. If you try
+        lda copy2       ;   to move HPOSP3 too early, the previous location
+        sta HPOSP3      ;   won&#39;t even get drawn. Too late, and it won&#39;t draw
+        lda copy3       ;   anything in the current location.  It&#39;s a battle.
+        sta HPOSP3
+        dex
+        beq ?done
+        sta WSYNC
+        bne ?loop
+
+?done   pla             ; restore A &amp; X
+        tax
+        pla
+        rti             ; always end DLI with RTI!
+</pre></div>
+</div>
+<p>This requires a VBI to reset the starting horizontal position at the top of
+each frame.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">vbi</span>     <span class="k">lda</span> <span class="p">#</span><span class="mi">68</span>         <span class="c1">; reset position counters for each copy of player 3</span>
+        <span class="k">sta</span> <span class="n">copy1</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mi">122</span>
+        <span class="k">sta</span> <span class="n">copy2</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mi">156</span>
+        <span class="k">sta</span> <span class="n">copy3</span>
+        <span class="k">jmp</span> <span class="n">XITVBV</span>      <span class="c1">; always exit deferred VBI with jump here</span>
+</pre></div>
+</div>
+<p>There is a lot to unpack here.</p>
+<p>First: using a text mode is a mistake because ANTIC steals so many cycles on
+the first scan line that there’s no way to place copies on that scan line. On
+subsequent lines, there is enough time to make multiple copies of a player
+except for the last line that will have to contain the <code class="docutils literal notranslate"><span class="pre">RTI</span></code> instruction.
+However, because this is not using a kernel- style DLI where it takes control
+for all 192 lines, the <code class="docutils literal notranslate"><span class="pre">RTI</span></code> has to happen before the last scan line so
+there is enough time for the interrupt processing for the next DLI without the
+the current DLI getting interrupted, which would then stack interrupts and
+cause scan line offsets.</p>
+<p>Second: notice the bands places in which the number <strong>3</strong> isn’t drawn in the
+player, instead only a single scan line in the player 3 color appears. This
+means there are not enough available cycles to set the new position of the
+player before the electron beam has already passed the desired horizontal
+position.</p>
+<p>The takeaways here:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the cycle counting necessary will be much easier using bitmap modes</p></li>
+<li><p>it will probably be more successful to use a kernel rather than multiple DLIs</p></li>
+<li><p>the author may revisit this technique at some point, but for now will leave further exploration to the reader, assuming the reader is much more patient regarding cycle counting than the author.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="x-multiplexing-with-arbitrary-motion">
+<h2>#4.x: Multiplexing with Arbitrary Motion<a class="headerlink" href="#x-multiplexing-with-arbitrary-motion" title="Permalink to this headline">¶</a></h2>
+<p>Vertical movement within bands requires the moving memory around the
+player/missile graphics area (pointed to by <code class="docutils literal notranslate"><span class="pre">PMBASE</span></code>) as in normal usage,
+with the following limitations:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>players must stay within their assigned band, otherwise they will get split across bands when the DLI occurs.</p></li>
+<li><p>players should avoid the first few scan lines below the top of the band boundary to prevent splitting</p></li>
+<li><p>when moving a player vertically within a band, only erase data from that band to prevent affecting the multiplexed players in other bands</p></li>
+</ul>
+</div></blockquote>
+<p>&lt;example goes here&gt;</p>
+</div>
+<div class="section" id="x-multiplexing-with-collision-detection">
+<h2>#4.x: Multiplexing With Collision Detection<a class="headerlink" href="#x-multiplexing-with-collision-detection" title="Permalink to this headline">¶</a></h2>
+<p>If it is important to tell in which band a has collided occurred, the DLI that
+starts a new band will be required to save the collision status registers,
+which will determine if a collision happened in the <em>previous</em> band. It will
+then reset the collision registers so the following DLI can check what
+happened in this band.</p>
+<p>If the knowledge of the band is not important, you can just check the
+collision registers in the vertical blank, which will report if there have
+been any collisions with anything in any band.</p>
+<p>&lt;example goes here&gt;</p>
+</div>
+<div class="section" id="topic-5-kernels">
+<h2>Topic #5: Kernels<a class="headerlink" href="#topic-5-kernels" title="Permalink to this headline">¶</a></h2>
+<p>The concept of a kernel comes from Atari 2600 programming. The 2600 does not
+have enough memory to store an entire frame – it has a line buffer, rather
+than a frame buffer. To create a graphic image with any vertical detail, the
+code must build the screen line-by-line, changing graphic information as the
+electron beam moves down the screen.</p>
+<p>Kernels for our purposes will be DLIs that take control for many scan lines to
+perform graphic operations that are not possible otherwise. We have seen
+horizontal positioning of players accomplished with a traditional DLI setup
+with interrupts on multiple display list commands. It could have been
+performed using a kernel, which (assuming the graphics mode is bitmapped
+rather than text) would have removed the restriction created by need for extra
+cycles near the <code class="docutils literal notranslate"><span class="pre">RTI</span></code> instruction.</p>
+<p>Kernels are a very advanced topic. The Atari 8-bit computers are the direct
+successor to the 2600, and the ANTIC and GTIA were designed to automate common
+tasks that in the 2600 requires kernel programming. Because so much is possible
+without kernels, this tutorial is not going to spend much time with this topic.
+However, a few examples are presented here to give you an idea of how they
+work.</p>
+</div>
+<div class="section" id="background-color-change-within-scan-line">
+<h2>#5.1: Background Color Change Within Scan Line<a class="headerlink" href="#background-color-change-within-scan-line" title="Permalink to this headline">¶</a></h2>
+<p>A simple kernel can be used to change the background color to “split” the
+screen horizontally. Having learned a lesson or two, the author is using a
+graphics mode for the following example, mode E (the 160x192, 4 color mode):</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/background_color_kernel.png"><img alt="../_images/background_color_kernel.png" src="../_images/background_color_kernel.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/background_color_kernel.s">background_color_kernel.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/background_color_kernel.xex">background_color_kernel.xex</a></li>
+</ul><p>which does show much more (but not complete!) uniformity. The problem scan
+lines are the first and somewhere in the middle. Here’s the DLI:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>dli     pha             ; using all registers
+        txa
+        pha
+        tya
+        pha
+
+        ldy #192
+        sta WSYNC       ; initialize to near beginning of first scan line of interest
+?loop   lda #90         ; set background color
+        sta COLBK
+        nop             ; wait for some time
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        lda #70         ; after 1st copy is drawn but before electron beam
+        sta COLBK
+        dey
+        sta WSYNC
+        bne ?loop
+
+        lda #0
+        sta COLBK
+
+?done   pla             ; restore all registers
+        tay
+        pla
+        tax
+        pla
+        rti             ; always end DLI with RTI!
+</pre></div>
+</div>
+<p>The code shows lots of waiting around. Using cycle counting of opcodes is the
+finest level of precision for direct manipulation of the graphics screen.
+There’s no way to get accuracy down to an individual color clock, unless the
+timing happens to work out that the instruction duration combined with the
+particular cycles on which ANTIC pauses the CPU to do its work happen to fall
+on the color clock you’re interested in.</p>
+<p>The issue on the first scan line is caused by the first <code class="docutils literal notranslate"><span class="pre">WSYNC</span></code> not being
+immediately followed by a branch instruction as in all subsequent calls to
+<code class="docutils literal notranslate"><span class="pre">WSYNC</span></code>. Solving this requires an extra delay added after that first
+<code class="docutils literal notranslate"><span class="pre">WSYNC</span></code>.</p>
+<p>Examining the display list will probably make it obvious where the problem scan
+line is in the middle of the screen:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; mode E standard display list</span>
+<span class="n">dlist_static_modeE</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>
+        <span class="kp">.byte</span> <span class="mh">$4e</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$80</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$4e</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$8f</span>  <span class="c1">; yep, it&#39;s right here</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span><span class="p">,</span><span class="mh">$e</span>
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist_static_modeE</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist_static_modeE</span>
+</pre></div>
+</div>
+<p>Because ANTIC can’t cross a 4k memory boundary (it only has 12 address lines,
+2^12 = 4096), the display list for full screen display of modes D, E, and F
+must be broken up into two sections of about 4K each. The <code class="docutils literal notranslate"><span class="pre">LMS</span></code> instruction
+<code class="docutils literal notranslate"><span class="pre">$4e</span></code> causes ANTIC to steal 2 cycles to read those two bytes that hold the
+screen address, which delays the timing by 2 cycles and forces the color
+change to happen later than desired. This problem wouldn’t happen with a
+display list of modes A, B, and C, for instance, because their maximum use of
+memory is less than 4k.</p>
+<p>Solving this problem requires some extra handling after 95 scan lines have
+passed in order to remove a bit of delay before changing the background color.</p>
+<p>But the author doesn’t find that this particular example would be very useful
+in actual games, so the next section will look at a technique using a kernel
+that is in common use in games: the multicolor player.</p>
+</div>
+<div class="section" id="x-multicolor-player">
+<h2>#5.x: Multicolor Player<a class="headerlink" href="#x-multicolor-player" title="Permalink to this headline">¶</a></h2>
+<p>We have seen DLIs being used to change player position, size, and color. Until
+now, these demos have been limited to particular vertical bands on screen.
+Changing player attributes at an arbitrary location on screen will require a
+kernel-style DLI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Strictly speaking, this is not true. If players do not overlap vertically, or only a single player needs to have characteristics adjusted, a <a class="reference internal" href="#moving-dli">moving DLI</a> technique could work.</p>
+</div>
+<p>&lt;example goes here&gt;</p>
+</div>
+<div class="section" id="topic-6-scrolling">
+<h2>Topic #6: Scrolling<a class="headerlink" href="#topic-6-scrolling" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Scrolling is a large topic; so large, in fact, that I wrote an <a class="reference internal" href="../scrolling_tutorial/index.html#scrolling-tutorial"><span class="std std-ref">additional tutorial</span></a> about it!</p>
+</div>
+<p>Display lists provide the ability to easily perform course scrolling without
+moving any display memory around. Instead, the visible display can be adjusted
+to provide scrolling at byte resolution by adjusting the address pointed to by
+any LMS instructions in the display list. The amount of graphical detail in a
+byte depends on the graphics mode: character modes by definition are one
+character per byte so the course scrolling limits are a single character
+vertically or horizontally. Bitmap modes can be 1 to 8 scan lines tall per
+byte, and 4 or 8 color clocks wide per byte.</p>
+<p>The Fine scrolling hardware registers provide the bridge between byte size and
+scan lines (vertically) or color clocks (horizontally; and note that a color
+clock in the smallest unit for horizontal scrolling, even in mode F).
+Vertically the <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> hardware register allows fine scrolling up to 16
+scan lines, and horizontally the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> register provides up to 16 color
+clocks fine scrolling.</p>
+<p>Continuous fine scrolling requires the use of both fine scrolling and course
+scrolling techniques, with the fine scrolling used until the size limit of the
+particular graphics mode is reached, then using course scrolling to move the
+display list to point to the next byte in memory while simultaneously
+resetting the fine scrolling register back to its starting point. Vertically,
+the size limit is the height in scan lines of the mode, and horizontally is
+the number of color clocks wide.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.atariarchives.org/dere/chapt06.php">De Re Atari, Chapter 6</a></p></li>
+<li><p>Mapping the Atari: <a class="reference external" href="https://www.atariarchives.org/mapping/memorymap.php#54276">HSCROL</a> and <a class="reference external" href="https://www.atariarchives.org/mapping/memorymap.php#54277">VSCROL</a></p></li>
+<li><p>my own <a class="reference internal" href="../scrolling_tutorial/index.html#scrolling-tutorial"><span class="std std-ref">Fine Scrolling: A Complete(ish) Tutorial</span></a></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="parallax-scrolling">
+<span id="id5"></span><h2>#6.1: Parallax Scrolling<a class="headerlink" href="#parallax-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>The “Moon Patrol” effect is actually very straightforward on the Atari, since
+splitting up the screen vertically is among the strengths of ANTIC.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/parallax_scrolling.png"><img alt="../_images/parallax_scrolling.png" src="../_images/parallax_scrolling.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/parallax_scrolling.s">parallax_scrolling.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/parallax_scrolling.xex">parallax_scrolling.xex</a></li>
+</ul><p>This effect does require a DLI because the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value is stored in an
+ANTIC hardware register and remains in effect until changed. It is nominally
+for full-screen scrolling, but since ANTIC has no memory of what it has done
+in the past, there is every reason to use the capability and modify it in the
+middle of the screen. The DLI is extremely simple, it just changes <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code>
+to a previously-computed value at for band:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; same DLI routine is used for each band, the band_dli_index is used to;
+; determine which band we&#39;re in
+dli_band
+        pha             ; using A &amp; X
+        txa
+        pha
+        inc band_dli_index ; increment band index, VBI initialized to $ff,
+        ldx band_dli_index ;   so will be 0 for band B (band A doesn&#39;t scroll!)
+
+        lda band_hscrol,x ; change HSCROL for this band
+        sta HSCROL
+
+?done   pla             ; restore A &amp; X
+        tax
+        pla
+        rti             ; always end DLI with RTI!
+</pre></div>
+</div>
+<p>The calculation of each band’s <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value is performed in the VBI.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; calculate new scrolling positions of bands
+vbi     ldx #2
+?move   lda band_hscrol_frac,x  ; update scrolling position fraction
+        clc                     ;   by adding velocity fraction.
+        adc band_hscrol_frac_delta,x
+        sta band_hscrol_frac,x
+        lda band_hscrol,x       ; update scrolling position whole number
+        adc #0
+        sta band_hscrol,x
+        cmp #4          ; 4 color clocks in Antic 4; check if need a course
+        bcc ?nope       ;   scroll
+
+        ; course scroll needed, chech which region
+        cpx #0
+        bne ?ckb
+        jsr course_scroll_b
+        bcc ?next       ; CLC in subroutine to allow branch
+
+?ckb    cpx #1
+        bne ?chc
+        jsr course_scroll_c
+        bcc ?next       ; CLC in subroutine to allow branch
+
+?chc    jsr course_scroll_d
+
+?next   lda #0          ; reset HSCROL for this band
+        sta band_hscrol,x
+
+?nope   dex
+        bpl ?move
+
+        lda #$ff        ; initialize band index to get ready for the first
+        sta band_dli_index ;   DLI which affects band B
+
+        lda #0          ; always reset HSCROL to zero for top of new screen
+        sta HSCROL
+
+        jmp XITVBV      ; always exit deferred VBI with jump here
+</pre></div>
+</div>
+<p>For this demo, band C is running two times faster than band B, and band D is
+running two times faster than band C. To allow some future speed modification
+and to prevent the demo from running too fast, it is actually operating on two-
+byte, fixed-point math: fractions of an <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value. Every VBI, the low
+byte (representing the fraction out of 256) changes by 32, 64, or 128
+depending on the band (B, C, and D, respectively), and when the low byte
+overflows, the high byte (and therefore <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code>) is updated.</p>
+</div>
+<div class="section" id="multiple-scrolling-regions">
+<h2>#6.2: Multiple Scrolling Regions<a class="headerlink" href="#multiple-scrolling-regions" title="Permalink to this headline">¶</a></h2>
+<p>Splitting the screen vertically allows multiple independent scrolling
+regions by changing the VSCROL and HSCROL values in the DLI so that the
+subsequent lines use different values.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/multiple_scrolling_regions.png"><img alt="../_images/multiple_scrolling_regions.png" src="../_images/multiple_scrolling_regions.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/src/multiple_scrolling_regions.s">multiple_scrolling_regions.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/dli_tutorial/master/xex/multiple_scrolling_regions.xex">multiple_scrolling_regions.xex</a></li>
+</ul><p>This example uses 2 regions with the DLI on a blank line separating them. More
+than 2 regions are possible using similar techniques, and is left as an
+exercise for the reader.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dlist</span>   <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>
+
+<span class="n">dlist_upper_region</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$90</span>       <span class="c1">; 12 lines in region, VSCROLL + HSCROLL</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$91</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$92</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$93</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$94</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$95</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$96</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$97</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$98</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$99</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$9a</span>
+        <span class="kp">.byte</span> <span class="mh">$54</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$9b</span>       <span class="c1">; last line in scrolling region, HSCROLL only</span>
+
+        <span class="kp">.byte</span> <span class="mh">$80</span>               <span class="c1">; one blank line + DLI</span>
+
+<span class="n">dlist_lower_region</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$90</span>       <span class="c1">; 12 lines in region, VSCROLL + HSCROLL</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$91</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$92</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$93</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$94</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$95</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$96</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$97</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$98</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$99</span>
+        <span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$9a</span>
+        <span class="kp">.byte</span> <span class="mh">$54</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$9b</span>       <span class="c1">; last line in scrolling region, HSCROLL only</span>
+
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist</span> <span class="c1">; JVB ends display list</span>
+</pre></div>
+</div>
+<p>Using a blank line as the DLI reduces the possibility of timing issues due to
+the large number of cycles stolen by ANTIC mode 4. There are very few cycles
+stolen on a blank line, and even through the DLI used below is not very long,
+real-world examples would probably be longer and could use the leeway provided
+by the extra cycles.</p>
+<p>The scrolling code is taken largely from the <a class="reference internal" href="../scrolling_tutorial/index.html#code-walkthrough"><span class="std std-ref">scrolling tutorial 2D
+scrolling code walkthrough</span></a>, so discussion of the workings
+of the scrolling code won’t be repeated here. The major difference is that the
+code needs to keep track of two separate scrolling regions. Think of the
+following as two-element arrays:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; two bytes per variable, one per region</span>
+<span class="n">vert_scroll</span> <span class="o">=</span> <span class="mh">$90</span>       <span class="c1">; variable used to store VSCROL value</span>
+<span class="n">horz_scroll</span> <span class="o">=</span> <span class="mh">$92</span>       <span class="c1">; variable used to store HSCROL value</span>
+<span class="n">scroll_dy</span> <span class="o">=</span> <span class="mh">$a2</span>         <span class="c1">; down = 1, up=$ff, no movement = 0</span>
+<span class="n">scroll_dx</span> <span class="o">=</span> <span class="mh">$a4</span>         <span class="c1">; right = 1, left=$ff, no movement = 0</span>
+</pre></div>
+</div>
+<p>Updating the scrolling parameters for both regions is performed in the vertical
+blank, where the <code class="docutils literal notranslate"><span class="pre">X</span></code> register is used as the array index into the variables.
+<code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">=</span> <span class="pre">0</span></code> refers to the upper region, and <code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">=</span> <span class="pre">1</span></code> the lower region.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>vbi     dec delay_count ; wait for number of VBLANKs before updating
+        bne ?exit       ;   fine/coarse scrolling
+
+        ldx #0          ; process top region
+        jsr process_movement ; update scrolling position
+        inx             ; process lower region
+        jsr process_movement ; update scrolling position
+
+        lda #delay      ; reset counter
+        sta delay_count
+
+        ; every VBI have to set the scrolling registers for the upper
+        ; region, otherwise the registers will still be set to the values
+        ; for the lower region that were handled in the DLI
+?exit   lda horz_scroll
+        sta HSCROL
+        lda vert_scroll
+        sta VSCROL
+        jmp XITVBV      ; exit VBI through operating system routine
+</pre></div>
+</div>
+<p>The idea behind multiple scrolling regions is: independent control of the
+hardware scrolling registers. Coarse scrolling for each region is dependent
+only on the LMS addresses of the display list, so no DLI would be needed.
+However, fine scrolling does need the mid-screen changes provided by a DLI,
+otherwise the <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> and <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> values would affect all scrolling
+regions.</p>
+<p>The hardware scrolling registers are set in the vertical blank and would
+normally affect the entire screen. But because of the DLI, they only affect the
+upper region. The DLI changes the hardware registers, meaning all the scrolled
+lines in the lower region use those new values.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dli</span>     <span class="k">pha</span>             <span class="c1">; only using A register, so save old value to the stack</span>
+        <span class="k">lda</span> <span class="n">horz_scroll</span><span class="o">+</span><span class="mi">1</span> <span class="c1">; lower region HSCROL value</span>
+        <span class="k">sta</span> <span class="n">HSCROL</span>      <span class="c1">; store in hardware register</span>
+        <span class="k">lda</span> <span class="n">vert_scroll</span><span class="o">+</span><span class="mi">1</span> <span class="c1">; lower region VSCROL value</span>
+        <span class="k">sta</span> <span class="n">VSCROL</span>      <span class="c1">; initialize hardware register</span>
+        <span class="k">pla</span>             <span class="c1">; restore the A register</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+</pre></div>
+</div>
+<p>The two-element arrays at <code class="docutils literal notranslate"><span class="pre">horz_scroll</span></code> and <code class="docutils literal notranslate"><span class="pre">vert_scroll</span></code> hold the values
+to be stored in the hardware registers for the upper region at index 0 and the
+lower region at index 1. In the scrolling code processing starting with the
+<code class="docutils literal notranslate"><span class="pre">process_movement</span></code> subroutine, the arrays are indexed using the <code class="docutils literal notranslate"><span class="pre">X</span></code>
+register, while in the VBI and DLI the array indexes are fixed. Because the VBI
+always uses array index 0 and the DLI always uses array index 1, there is no
+need to use the <code class="docutils literal notranslate"><span class="pre">X</span></code> register as an index.</p>
+<p>We won’t examine all 4 scrolling directions here, but we will look at one as an
+example of how they were all modified. The <code class="docutils literal notranslate"><span class="pre">X</span></code> register is loaded in the
+vertical blank, then the <code class="docutils literal notranslate"><span class="pre">process_movement</span></code> subroutine is called for both
+regions. Inside that subroutine, it calls the appropriate fine scrolling
+subroutines for the directions needed.</p>
+<p>Scrolling to the right will be used as the example. The fine scrolling
+subroutine shows the <code class="docutils literal notranslate"><span class="pre">X</span></code> indexing of the <code class="docutils literal notranslate"><span class="pre">horz_scroll</span></code> array:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>fine_scroll_right
+        dec horz_scroll,x
+        lda horz_scroll,x
+        bpl ?done       ; if non-negative, still in the middle of the character
+        jsr coarse_scroll_right ; wrapped to $ff, do a coarse scroll...
+        lda #horz_scroll_max-1  ;  ...followed by reseting the HSCROL register
+        sta horz_scroll,x
+?done   rts
+</pre></div>
+</div>
+<p>If coarse scrolling is needed, the <code class="docutils literal notranslate"><span class="pre">X</span></code> register is examined to determine which set of display list instructions need their LMS address updated:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>coarse_scroll_right
+        lda #12         ; 12 lines to modify
+        sta tmp_counter
+        lda #1          ; dlist_upper_region+1 is low byte of address
+        cpx #0
+        beq ?start
+        lda #(1+36+1)   ; dlist_upper_region+1+36+1 is dlist_region2+1
+?start  stx ?smc_savex+1 ; save X register using self-modifying code
+        tax
+?loop   inc dlist_upper_region,x
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dec tmp_counter
+        bne ?loop
+?smc_savex ldx #$ff
+        rts
+</pre></div>
+</div>
+<p>Because the <code class="docutils literal notranslate"><span class="pre">inc</span></code> instruction can only be indexed using the <code class="docutils literal notranslate"><span class="pre">X</span></code> register,
+the <code class="docutils literal notranslate"><span class="pre">X</span></code> value used as the region index must be saved. Rather than use a
+temporary variable, self-modifying code is used. The current <code class="docutils literal notranslate"><span class="pre">X</span></code> value is
+saved <em>as the argument</em> for an immediate load.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>if you haven’t seen this technique before, it is used quite often as a speed
+optimization. The standard stack-based technique:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">txa</span> <span class="c1">; 2 cycles</span>
+<span class="k">pha</span> <span class="c1">; 4 cycles</span>
+<span class="k">pla</span> <span class="c1">; 3 cycles</span>
+<span class="k">tax</span> <span class="c1">; 2 cycles</span>
+</pre></div>
+</div>
+<p>takes 13 cycles. Using a zero page variable:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">stx</span> <span class="n">zp</span> <span class="c1">; 3 cycles</span>
+<span class="k">ldx</span> <span class="n">zp</span> <span class="c1">; 3 cycles</span>
+</pre></div>
+</div>
+<p>takes 6 cycles. Using self-modifying code:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>        <span class="k">stx</span> <span class="n">smc</span><span class="o">+</span><span class="mi">1</span> <span class="c1">; 4 cycles, opcode is at address smc, value is at smc+1</span>
+<span class="n">smc</span>     <span class="k">ldx</span> <span class="p">#</span><span class="mh">$ff</span>  <span class="c1">; 2 cycles</span>
+</pre></div>
+</div>
+<p>also takes 6 cycles, but has the advantage of not needing dedicated storage
+in the zero page. Note that if you are optimizing for size, the self-modifying
+code version takes 5 bytes, while the stack and zero page versions
+only take 4.</p>
+<p>For improved code readability, I try to label any places where I use self
+modifying code with a <code class="docutils literal notranslate"><span class="pre">smc_</span></code> prefix.</p>
+</div>
+<p>Compared to the example from the scrolling tutorial, the remaining changes
+involve removal of all user input. The joystick control of the scrolling
+direction is replaced by hardcoded values, and the <strong>Option</strong> and <strong>Select</strong>
+keys are not handled.</p>
+<p>To modify the code to handle more than 2 scrolling regions, the array size in
+the zero page would have to be increased, the DLI display list bit would have
+to be set in the dividing line between all regions in the display list, the DLI
+itself would have to be made aware of which region it was operating in, and the
+coarse scrolling subroutines would have to handle the additional display list
+regions for updating LMS addresses.</p>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="../index.html" title="index">
+          <img class="logo" src="../_static/logo-200.png" alt="Logo"/>
+        </a></p>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="../index.html"
+                          title="Previous page">&larr; Player/Missile Podcast</a></p>
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="../scrolling_tutorial/index.html"
+                          title="Next page">&rarr; Atari 8-bit Fine Scrolling: A Complete(ish) Tutorial</a></p>
+  </div><div class="sphinx-toc sphinxlocaltoc">
+    <h3><a href="../index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Atari 8-bit Display List Interrupts: A Complete(ish) Tutorial</a><ul>
+<li><a class="reference internal" href="#displays-a-tiny-overview-of-how-tvs-work">Displays: A Tiny Overview of How TVs Work</a></li>
+<li><a class="reference internal" href="#display-lists-how-the-atari-generates-the-display">Display Lists: How the Atari Generates the Display</a><ul>
+<li><a class="reference internal" href="#display-list-instruction-set">Display List Instruction Set</a></li>
+<li><a class="reference internal" href="#a-sample-display-list">A Sample Display List</a></li>
+<li><a class="reference internal" href="#cycle-stealing-by-antic">Cycle Stealing by ANTIC</a></li>
+<li><a class="reference internal" href="#restrictions">Restrictions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#display-list-interrupts-a-crash-course">Display List Interrupts: A Crash Course</a><ul>
+<li><a class="reference internal" href="#hardware-shadow-registers">Hardware &amp; Shadow Registers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#basic-display-list-interrupts">Basic Display List Interrupts</a><ul>
+<li><a class="reference internal" href="#our-first-display-list">Our First Display List</a></li>
+<li><a class="reference internal" href="#wsync-how-to-avoid-flickering">WSYNC: How to Avoid Flickering</a></li>
+<li><a class="reference internal" href="#a-dli-can-affect-many-scan-lines">A DLI Can Affect Many Scan Lines</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#display-list-interrupts-getting-interrupted">Display List Interrupts Getting Interrupted</a><ul>
+<li><a class="reference internal" href="#dli-interrupting-another-dli">DLI Interrupting Another DLI</a></li>
+<li><a class="reference internal" href="#emulator-differences">Emulator Differences</a></li>
+<li><a class="reference internal" href="#vbi-interrupting-a-dli">VBI Interrupting A DLI</a></li>
+<li><a class="reference internal" href="#dli-interrupting-a-vli">DLI Interrupting A VLI</a></li>
+<li><a class="reference internal" href="#dli-on-the-jvb-instruction">DLI on the JVB Instruction</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dlis-in-a-nutshell">DLIs in a Nutshell</a></li>
+<li><a class="reference internal" href="#advanced-dli-examples">Advanced DLI Examples</a></li>
+<li><a class="reference internal" href="#topic-1-dli-positioning">Topic #1: DLI Positioning</a></li>
+<li><a class="reference internal" href="#multiple-dlis">#1.1: Multiple DLIs</a></li>
+<li><a class="reference internal" href="#moving-the-dli-up-and-down-the-screen">#1.2: Moving the DLI Up and Down the Screen</a></li>
+<li><a class="reference internal" href="#topic-2-colors">Topic #2: Colors</a></li>
+<li><a class="reference internal" href="#marching-rainbow-text">#2.1: Marching Rainbow Text</a></li>
+<li><a class="reference internal" href="#topic-3-character-sets">Topic #3: Character Sets</a></li>
+<li><a class="reference internal" href="#changing-character-sets">#3.1: Changing Character Sets</a></li>
+<li><a class="reference internal" href="#x-multiple-interleaved-character-sets-for-soft-sprites">#3.x: Multiple Interleaved Character Sets for Soft Sprites</a></li>
+<li><a class="reference internal" href="#topic-4-player-missile-graphics">Topic #4: Player/Missile Graphics</a></li>
+<li><a class="reference internal" href="#multiplexing-players-vertically">#4.1: Multiplexing Players Vertically</a></li>
+<li><a class="reference internal" href="#multiplexing-with-horizontal-motion">#4.2: Multiplexing With Horizontal Motion</a></li>
+<li><a class="reference internal" href="#reusing-players-horizontally">#4.3: Reusing Players Horizontally</a></li>
+<li><a class="reference internal" href="#x-multiplexing-with-arbitrary-motion">#4.x: Multiplexing with Arbitrary Motion</a></li>
+<li><a class="reference internal" href="#x-multiplexing-with-collision-detection">#4.x: Multiplexing With Collision Detection</a></li>
+<li><a class="reference internal" href="#topic-5-kernels">Topic #5: Kernels</a></li>
+<li><a class="reference internal" href="#background-color-change-within-scan-line">#5.1: Background Color Change Within Scan Line</a></li>
+<li><a class="reference internal" href="#x-multicolor-player">#5.x: Multicolor Player</a></li>
+<li><a class="reference internal" href="#topic-6-scrolling">Topic #6: Scrolling</a></li>
+<li><a class="reference internal" href="#parallax-scrolling">#6.1: Parallax Scrolling</a></li>
+<li><a class="reference internal" href="#multiple-scrolling-regions">#6.2: Multiple Scrolling Regions</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+        </div>
+      </div>
+    
+    
+        <div class="sidebar-toggle-group no-js">
+            
+            <button class="sidebar-toggle" id="sidebar-hide" title="Hide the sidebar menu">
+                 «
+                <span class="show-for-small">hide menu</span>
+                
+            </button>
+            <button class="sidebar-toggle" id="sidebar-show" title="Show the sidebar menu">
+                
+                <span class="show-for-small">menu</span>
+                <span class="hide-for-small">sidebar</span>
+                 »
+            </button>
+        </div>
+    
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../podcast/index.html" title="Episodes" accesskey="E">episodes</a></li>
+<li class="right" style="margin-right: 10px"><a href="../magazines.html" title="magazines" accesskey="M">magazines</a></li>
+<li class="right" style="margin-right: 10px"><a href="../omnivore/" title="omnivore" accesskey="O">omnivore</a></li>
+<li class="right" style="margin-right: 10px"><a href="../jumpman/" title="jumpman" accesskey="J">jumpman</a></li>
+             
+        <li class="right" >
+          <a href="../index.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../scrolling_tutorial/index.html" title="Atari 8-bit Fine Scrolling: A Complete(ish) Tutorial"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../index.html" title="Player/Missile Podcast"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">Player/Missile Podcast</a> &#187;</li>
+
+        <li class="nav-item nav-item-this"><a href="">Atari 8-bit Display List Interrupts: A Complete(ish) Tutorial</a></li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2024 Rob McMullen, Licensed under the <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC A-SA 4.0 Intl</a>.
+      Last updated on Jan 03 2024.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<title>Blitter manual - AtariForumWiki</title>
+<script>document.documentElement.className="client-js";RLCONF={"wgBreakFrames":false,"wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgRequestId":"auNRIfOiHeqaeboJ7KsNZgAAAFM","wgCSPNonce":false,"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Blitter_manual","wgTitle":"Blitter manual","wgCurRevisionId":11382,"wgRevisionId":11382,"wgArticleId":1259,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["Blitter","Programming"],"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgRelevantPageName":"Blitter_manual","wgRelevantArticleId":1259,"wgIsProbablyEditable":false,"wgRelevantPageIsProbablyEditable":false,"wgRestrictionEdit":[],"wgRestrictionMove":[],"wgVisualEditor":{"pageLanguageCode":"en",
+"pageLanguageDir":"ltr","pageVariantFallbacks":"en"},"wgVector2022PreviewPages":[],"wgEditSubmitButtonLabelPublish":false};RLSTATE={"site.styles":"ready","user.styles":"ready","user":"ready","user.options":"loading","skins.vector.styles.legacy":"ready","ext.visualEditor.desktopArticleTarget.noscript":"ready"};RLPAGEMODULES=["site","mediawiki.page.ready","mediawiki.toc","skins.vector.legacy.js","ext.visualEditor.desktopArticleTarget.init","ext.visualEditor.targetLoader"];</script>
+<script>(RLQ=window.RLQ||[]).push(function(){mw.loader.implement("user.options@12s5i",function($,jQuery,require,module){mw.user.tokens.set({"patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});});});</script>
+<link rel="stylesheet" href="/AtariForumWiki/load.php?lang=en&amp;modules=ext.visualEditor.desktopArticleTarget.noscript%7Cskins.vector.styles.legacy&amp;only=styles&amp;skin=vector"/>
+<script async="" src="/AtariForumWiki/load.php?lang=en&amp;modules=startup&amp;only=scripts&amp;raw=1&amp;skin=vector"></script>
+<meta name="generator" content="MediaWiki 1.39.2"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="viewport" content="width=1000"/>
+<link rel="icon" href="/favicon.ico"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/AtariForumWiki/opensearch_desc.php" title="AtariForumWiki (en)"/>
+<link rel="EditURI" type="application/rsd+xml" href="https://www.temlib.org/AtariForumWiki/api.php?action=rsd"/>
+<link rel="alternate" type="application/atom+xml" title="AtariForumWiki Atom feed" href="/AtariForumWiki/index.php?title=Special:RecentChanges&amp;feed=atom"/>
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Blitter_manual rootpage-Blitter_manual skin-vector action-view skin-vector-legacy vector-feature-language-in-header-enabled vector-feature-language-in-main-page-header-disabled vector-feature-language-alert-in-sidebar-disabled vector-feature-sticky-header-disabled vector-feature-sticky-header-edit-disabled vector-feature-table-of-contents-disabled vector-feature-visual-enhancement-next-disabled"><div id="mw-page-base" class="noprint"></div>
+<div id="mw-head-base" class="noprint"></div>
+<div id="content" class="mw-body" role="main">
+	<a id="top"></a>
+	<div id="siteNotice"></div>
+	<div class="mw-indicators">
+	</div>
+	<h1 id="firstHeading" class="firstHeading mw-first-heading"><span class="mw-page-title-main">Blitter manual</span></h1>
+	<div id="bodyContent" class="vector-body">
+		<div id="siteSub" class="noprint">From AtariForumWiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" class="mw-body-content mw-content-ltr" lang="en" dir="ltr"><div class="mw-parser-output"><pre><i>This document taken from the original Atari Blitter manual, 1987</i>
+</pre>
+<p>THE SCOPE OF THIS DOCUMENT is limited to a functional description of the Atari ST BLITTER. This document is not a data sheet for system integration, rather it is a user manual for  system programming. For more information, please refer to the texts listed at the end of this document.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading"><input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none" /><div class="toctitle" lang="en" dir="ltr"><h2 id="mw-toc-heading">Contents</h2><span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#INTRODUCTION"><span class="tocnumber">1</span> <span class="toctext">INTRODUCTION</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="#BIT-BLOCK_TRANSFERS"><span class="tocnumber">1.1</span> <span class="toctext">BIT-BLOCK TRANSFERS</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="#BIT-BLOCK_TRANSFER"><span class="tocnumber">1.2</span> <span class="toctext">BIT-BLOCK TRANSFER</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#FUNCTIONAL_DESCRIPTION"><span class="tocnumber">2</span> <span class="toctext">FUNCTIONAL DESCRIPTION</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#PROGRAMMING_MODEL"><span class="tocnumber">3</span> <span class="toctext">PROGRAMMING MODEL</span></a>
+<ul>
+<li class="toclevel-2 tocsection-6"><a href="#REGISTER_MAP"><span class="tocnumber">3.1</span> <span class="toctext">REGISTER MAP</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#BIT-BLOCK_ADDRESSES"><span class="tocnumber">3.2</span> <span class="toctext">BIT-BLOCK ADDRESSES</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#SOURCE_ADDRESS"><span class="tocnumber">3.2.1</span> <span class="toctext">SOURCE ADDRESS</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#SOURCE_X_INCREMENT"><span class="tocnumber">3.2.2</span> <span class="toctext">SOURCE X INCREMENT</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#SOURCE_Y_INCREMENT"><span class="tocnumber">3.2.3</span> <span class="toctext">SOURCE Y INCREMENT</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#DESTINATION_ADDRESS"><span class="tocnumber">3.2.4</span> <span class="toctext">DESTINATION ADDRESS</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href="#DESTINATION_X_INCREMENT"><span class="tocnumber">3.2.5</span> <span class="toctext">DESTINATION X INCREMENT</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#DESTINATION_Y_INCREMENT"><span class="tocnumber">3.2.6</span> <span class="toctext">DESTINATION Y INCREMENT</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#X_COUNT"><span class="tocnumber">3.2.7</span> <span class="toctext">X COUNT</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#Y_COUNT"><span class="tocnumber">3.2.8</span> <span class="toctext">Y COUNT</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-16"><a href="#BIT-BLOCK_ALIGNMENTS"><span class="tocnumber">3.3</span> <span class="toctext">BIT-BLOCK ALIGNMENTS</span></a>
+<ul>
+<li class="toclevel-3 tocsection-17"><a href="#ENDMASK_1,_2,_3"><span class="tocnumber">3.3.1</span> <span class="toctext">ENDMASK 1, 2, 3</span></a></li>
+<li class="toclevel-3 tocsection-18"><a href="#SKEW"><span class="tocnumber">3.3.2</span> <span class="toctext">SKEW</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href="#FXSR"><span class="tocnumber">3.3.3</span> <span class="toctext">FXSR</span></a></li>
+<li class="toclevel-3 tocsection-20"><a href="#NFSR"><span class="tocnumber">3.3.4</span> <span class="toctext">NFSR</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-21"><a href="#LOGIC_OPERATIONS"><span class="tocnumber">3.4</span> <span class="toctext">LOGIC OPERATIONS</span></a></li>
+<li class="toclevel-2 tocsection-22"><a href="#HALFTONE_OPERATIONS"><span class="tocnumber">3.5</span> <span class="toctext">HALFTONE OPERATIONS</span></a>
+<ul>
+<li class="toclevel-3 tocsection-23"><a href="#HALFTONE_RAM"><span class="tocnumber">3.5.1</span> <span class="toctext">HALFTONE RAM</span></a></li>
+<li class="toclevel-3 tocsection-24"><a href="#LINE_NUMBER"><span class="tocnumber">3.5.2</span> <span class="toctext">LINE NUMBER</span></a></li>
+<li class="toclevel-3 tocsection-25"><a href="#SMUDGE"><span class="tocnumber">3.5.3</span> <span class="toctext">SMUDGE</span></a></li>
+<li class="toclevel-3 tocsection-26"><a href="#HALFTONE_OPERATIONS_2"><span class="tocnumber">3.5.4</span> <span class="toctext">HALFTONE OPERATIONS</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-27"><a href="#BUS_ACCESSES"><span class="tocnumber">3.6</span> <span class="toctext">BUS ACCESSES</span></a>
+<ul>
+<li class="toclevel-3 tocsection-28"><a href="#HOG"><span class="tocnumber">3.6.1</span> <span class="toctext">HOG</span></a></li>
+<li class="toclevel-3 tocsection-29"><a href="#BUSY"><span class="tocnumber">3.6.2</span> <span class="toctext">BUSY</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-30"><a href="#Appendix_A_--_Programming_Example"><span class="tocnumber">4</span> <span class="toctext">Appendix A -- Programming Example</span></a></li>
+<li class="toclevel-1 tocsection-31"><a href="#Appendix_B_--_References"><span class="tocnumber">5</span> <span class="toctext">Appendix B -- References</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="INTRODUCTION">INTRODUCTION</span></h2>
+<p>The Atari ST Bit-Block Transfer Processor (BLiTTER) is a hardware implementation of the bit-block  transfer (BitBlt) algorithm. BitBlt can be simply described as a procedure that moves bit-aligned data from a source location to a destination location through a given logic operation. The BitBlt primitive can be used to perform such operations as:
+</p>
+<ul><li>Area seed filling</li>
+<li>Rotation by recursive subdivision</li>
+<li>Slice and smear magnification</li>
+<li>Brush line drawing using Bresenham DDA</li>
+<li>Text transformations (eg. bold, italic, outline)</li>
+<li>Text scrolling</li>
+<li>Window updating</li>
+<li>Pattern filling</li></ul>
+<p>And general memory-to-memory block copying [1].
+</p><p>The heart of BitBlt was first formally defined by Newman and Sproull in their description of the  function RasterOp [2]. As defined, RasterOp performed its block transfers on a bit-by-bit basis and was limited to a small subset of possible source and destination Boolean combinations. Enhancements to RasterOp such as processing bits in parallel or introducing a halftone pattern into the transfer were  literally left as exercises for the reader.
+</p><p>In an effort to improve the functionality and performance of the original algorithm, the prescribed  enhancements were incorporated into the definition of RasterOp and implemented in hardware as the  RasterOp Chip [3]. However the RasterOp Chip lacked the two-dimensionality of the original function and suffered from a performance bottleneck caused by the loading and reloading of source, destination, and halftone data (ie. it could not DMA).
+</p><p>While efforts were being made to improve the performance of RasterOp, the formal definition of  RasterOp was further refined and became the basis of the BitBlt copyLoop primitive in the Smalltalk-80 graphics kernel [4]. Because of  its comprehensive interface definition, the BitBlt primitive was inefficient and required special-case optimizations that violated its general-purpose nature. Clearly a  hardware solution was necessary to increase the performance of the BitBlt copyLoop without  sacrificing its functionality.
+</p><p>The Atari ST BLiTTER is a hardware solution to the performance problems of BitBlt. The BLiTTER is a DMA device that implements the full BitBlt copyLoop definition with the addition of a few minor extensions. Single word or multi-word increments and decrements are provided for transfers to
+destinations in Atari ST video display memory.  A center mask, which would otherwise be a constant  all ones, is also provided for an additional level of texture. The remainder of this document is directly based on the original functional description of the Atari ST BLiTTER.  
+</p>
+<h3><span class="mw-headline" id="BIT-BLOCK_TRANSFERS">BIT-BLOCK TRANSFERS</span></h3>
+<p>As previously stated, a bit-block transfer can be described as a procedure that moves bit-aligned data  from a  source location to a destination location through a given logic operation. There are sixteen logic combination rules associated with the merging of source and destination data. Note that this set  contains all possible combinations between source and destination. The following table contains the valid BitBlt combination rules:
+</p>
+<pre>          
+          LOGIC OPERATIONS  
+          (~s&amp;~d)|(~s&amp;d)|(s&amp;~d)|(s&amp;d)  
+                     _______________________________________
+                    |    |                                  |
+          MSB LSB   | OP | COMBINATION RULE                 |
+                    |    |                                  |
+          0 0 0 0   | 0  | all zeros                        |
+          0 0 0 1   | 1  | source AND destination           |
+          0 0 1 0   | 2  | source AND NOT destination       |
+          0 0 1 1   | 3  | source                           |
+          0 1 0 0   | 4  | NOT source AND destination       |
+          0 1 0 1   | 5  | destination                      |
+          0 1 1 0   | 6  | source XOR destination           |
+          0 1 1 1   | 7  | source OR destination            |
+          1 0 0 0   | 8  | NOT source AND NOT destination   |
+          1 0 0 1   | 9  | NOT source XOR destination       |
+          1 0 1 0   | A  | NOT destination                  |
+          1 0 1 1   | B  | source OR NOT destination        |
+          1 1 0 0   | C  | NOT source                       |
+          1 1 0 1   | D  | NOT source OR destination        |
+          1 1 1 0   | E  | NOT source OR NOT destination    |
+          1 1 1 1   | F  | all ones                         |
+                    |____|__________________________________|
+</pre>
+<p>Adjustments to block extents and several other transfer parameters are determined prior to the  invocation of the actual block transfer. These adjustments and parameters include clipping, skew, end masks, and overlap.
+</p><p><b>Clipping.</b>  The source and destination block extents are adjusted to conform with a specified  clipping rectangle. Since both source and destination blocks are of equal dimension, the destination block extent is clipped to the extent of the source block (or vice versa). Note that the block transfer need not be performed if the resultant extent is zero.
+</p><p><b>Skew.</b>  The source-to-destination horizontal bit skew is calculated.
+</p><p><b>End Masks.</b> The left and right partial word masks are determined. The masks are merged if the destination is one word in width.
+</p><p><b>Overlap.</b>  The block locations are checked for possible overlap in order to avoid the destruction of source data before it is transferred.
+</p><p>In non-overlapping transfers the source block scanning direction is inconsequential and can by default be from upper left to lower right. In overlapping transfers the source scanning direction is also from upper left to lower right if the source-to-destination transfer direction is up and/or to the left (ie.  source address is greater than or equal to destination address). However, if the overlapping source-to-destination transfer direction is down and/or to the right (ie. source address is less than destination  address), then the source data is scanned from lower right to upper left.
+</p><p>After the transfer parameters are determined the bit-block transfer operation can be invoked,  transferring source to destination through the logic operation (HALFTONE and HOP will be described in the next section):
+</p><p><br />
+</p>
+<h3><span class="mw-headline" id="BIT-BLOCK_TRANSFER">BIT-BLOCK TRANSFER</span></h3>
+<pre>                _________  _____________           ________________
+               |         ||             |         |                |
+               |  SOURCE ||  SOURCE     |         |  DESTINATION   |
+               |_________||_____________|         |________________|
+                    |________________|&lt;&lt; SKEW |                  |
+                                  |                              |
+           ______________      ___|____       ________________   |
+          |              |    |        |     |                |  |
+          |   HALFTONE   |----|  HOP   |-----|    LOGIC OP    |--|
+          |______________|    |________|     |________________|  |
+                                                       |         |
+                                                   ____|____     |
+                                                  |         |    |
+                                                  | ENDMASK |____|
+                                                  |_________|
+                                                       |
+                                              _________|_________
+                                             |                   |
+                                             |  NEW DESTINATION  |
+                                             |___________________|
+
+</pre>
+<h2><span class="mw-headline" id="FUNCTIONAL_DESCRIPTION">FUNCTIONAL DESCRIPTION</span></h2>
+<p>Please refer to the bit-block transfer diagram in the previous section. To understand how the  components of a block transfer work, let's look at the simplest possible transfer. Take the case where we wish to fill a block of  memory with either all zeros or all ones (OP = 0 or OP = F). In this case only the LOGIC OP block, which generates the ones or zeros, and the ENDMASK block are in the  data path. If the end mask contains all ones, the BLITTER will simply write one word after the other to the destination address without ever reading the destination.
+</p><p>As the writes take place the destination address will be adjusted according to the values in the  DESTINATION X INCREMENT, DESTINATION Y INCREMENT, X COUNT, and Y COUNT  registers. These registers define the size and shape of the block to be transferred. The X and Y COUNT registers define the size of the block. The X COUNT register specifies the number of word-size writes required to update one line of the destination. The Y COUNT register specifies the number of these lines in the block. The DESTINATION X INCREMENT register is a signed (2's complement) 16-bit quantity which is added to the destination address to calculate the address of the next destination word of the line. On the last write of the line the DESTINATION Y INCREMENT is added to calculate the address of the first word of the next line.
+</p><p>The end mask determines which bits of the destination word will be updated. Bits of the destination which correspond to ones in the end mask will be updated. Bits of the destination which correspond to zeros in the end mask will remain unchanged. Note that if any bits of the destination are to be left unchanged, a read-modify-write is required. In order to improve performance a read will only be performed if it is required. There are three ENDMASK registers numbered 1 through 3. ENDMASK 1 is used only for the first write of the line. ENDMASK 3 is used only for the last write of the line.  ENDMASK 2 is used for all other writes.
+</p><p>Now let's consider a more complicated case, suppose we want to XOR a destination block with a 16 x  16 halftone pattern. First we load the HALFTONE RAM with the halftone pattern. Select halftone only using the HOP register and select source XOR destination using the OP register. The LINE NUMBER register is used to specify which of the 16 words of HALFTONE RAM is used for the current line. This register will be incremented or decremented at the end of each line according to the  sign of the DESTINATION Y INCREMENT register. Set the DESTINATION X and Y INCREMENT and X and Y COUNT registers to the appropriate values and start the transfer. This same procedure can be followed to do the combination using any logic operation by simply changing the value in the OP register. Similarly the combination can be performed using a source block instead of the HALFTONE RAM or using the logical AND of a source block and the HALFTONE RAM by
+changing the value of the HOP register. A source block is the same size as the destination block but may have different increments and address defined by the SOURCE X and Y INCREMENT and SOURCE ADDRESS registers.
+</p><p>Finally, let's look at the case when the source and destination blocks are not bit-aligned. In this case we may need to read the first two source words into  the 32-bit source buffer and use the 16 bits that line up with the appropriate bits of the destination, as specified by the SKEW register. When the next source word is read, the lower 16 bits of the source buffer is transferred to the upper 16 bits and the  lower is replaced by the new data. This process is reversed when the source is being read from the right to the left (SOURCE X INCREMENT negative). Since there are cases when it may be necessary for an extra source read to be performed at the beginning of each line to "prime" the source buffer and  cases when it may not be necessary due to the choice of end mask, a bit has been provided which forces the extra read. The FXSR (aka. pre-fetch) bit in the SKEW register indicates, when set, that an extra source read should be performed at the beginning of each line to "prime" the source buffer.
+Similarly the NFSR (aka post-flush) bit, when set, will prevent the last source read of the line. This read may not be necessary with certain combinations of end masks and skews. If the read is  suppressed, the lower to upper half buffer transfer still occurs. Also in this case, a read-modify-write cycle is performed on the destination for the last write of each line regardless of the value of the corresponding ENDMASK register.
+</p>
+<h2><span class="mw-headline" id="PROGRAMMING_MODEL">PROGRAMMING MODEL</span></h2>
+<p>The BLiTTER contains a set of registers that specify bit-block addresses, bit-block alignments, logic and halftone operations, and bus accesses. The  register set-up time remains practically constant and is large relative to small block transfers, whereas large bit-blocks are dominated by the execution time of the transfer itself.
+</p>
+<h3><span class="mw-headline" id="REGISTER_MAP">REGISTER MAP</span></h3>
+<p>The following is a map of the BLiTTER programmable registers (note that all unused bits read back as zeros):
+</p>
+<pre>          FF 8A00   |oooooooo||oooooooo|     HALFTONE RAM
+          FF 8A02   |oooooooo||oooooooo|
+          FF 8A04   |oooooooo||oooooooo|
+                   &#160;:       &#160;::       &#160;:
+          FF 8A1E   |oooooooo||oooooooo|
+          FF 8A20   |oooooooo||ooooooo-|     SOURCE X INCREMENT
+          FF 8A22   |oooooooo||ooooooo-|     SOURCE Y INCREMENT
+          FF 8A24   |--------||oooooooo|     SOURCE ADDRESS
+          FF 8A26   |oooooooo||ooooooo-|
+          FF 8A28   |oooooooo||oooooooo|     ENDMASK 1
+          FF 8A2A   |oooooooo||oooooooo|     ENDMASK 2
+          FF 8A2C   |oooooooo||oooooooo|     ENDMASK 3
+          FF 8A2E   |oooooooo||ooooooo-|     DESTINATION X INCREMENT
+          FF 8A30   |oooooooo||ooooooo-|     DESTINATION Y INCREMENT
+          FF 8A32   |--------||oooooooo|     DESTINATION ADDRESS
+          FF 8A34   |oooooooo||ooooooo-|
+          FF 8A36   |oooooooo||oooooooo|     X COUNT
+          FF 8A38   |oooooooo||oooooooo|     Y COUNT
+
+          FF 8A3A   |------oo|               HOP
+          FF 8A3B   |----oooo|               OP
+
+          FF 8A3C   |ooo-oooo|
+                     ||| |__|_____________ LINE NUMBER
+                     |||__________________ SMUDGE
+                     ||___________________ HOG
+                     |____________________ BUSY
+
+          FF 8A3D   |oo--oooo|
+                     ||  |__|_____________ SKEW
+                     ||___________________ NFSR
+                     |____________________ FXSR
+</pre>
+<h3><span class="mw-headline" id="BIT-BLOCK_ADDRESSES">BIT-BLOCK ADDRESSES</span></h3>
+<p>This subsection describes registers that specify bit-block origins, address increments, and extents.
+</p>
+<h4><span class="mw-headline" id="SOURCE_ADDRESS">SOURCE ADDRESS</span></h4>
+<p>This 23-bit register contains the current address of the source field (only word addresses may be specified). It may be accessed using either word or longword instructions. The value read back is always the address of the next word to be used in a source operation. It will be updated by the amounts specified in the SOURCE X INCREMENT and the SOURCE Y INCREMENT registers as the transfer progresses.
+</p>
+<h4><span class="mw-headline" id="SOURCE_X_INCREMENT">SOURCE X INCREMENT</span></h4>
+<p>This is a signed 15-bit register, the least significant bit is ignored, specifying the offset in bytes to the address of the next source word in the  current line. This value will be sign-extended and added to the SOURCE ADDRESS register at the end of a source word fetch, whenever the X COUNT register does not contain a value of one. If the X COUNT register is loaded with a value of one this register is not used. Byte instructions can not be used to read or write this register.
+</p>
+<h4><span class="mw-headline" id="SOURCE_Y_INCREMENT">SOURCE Y INCREMENT</span></h4>
+<p>This is a signed 15-bit register, the least significant bit is ignored, specifying the offset in bytes to the address of the first source word in the next line. This value will be sign-extended and added to the SOURCE ADDRESS register at the end of the last source word fetch of each line (when the  X COUNT register contains a value of one). If the X COUNT register is loaded with a value of one this register is used exclusively. Byte instructions can not be used to read or write this register. 
+</p>
+<h4><span class="mw-headline" id="DESTINATION_ADDRESS">DESTINATION ADDRESS</span></h4>
+<p>This 23-bit register contains the current address of the destination field (only word addresses may be specified). It may be accessed using either
+word or long-word instructions. The value read back is always the address of the next word to be modified in the destination field. It will be updated by the amounts specified in the DESTINATION X INCREMENT and the DESTINATION Y INCREMENT registers as the transfer progresses.  
+</p>
+<h4><span class="mw-headline" id="DESTINATION_X_INCREMENT">DESTINATION X INCREMENT</span></h4>
+<p>This is a signed 15-bit register, the least significant bit is ignored, specifying the offset in bytes to the address of the next destination word in the current line. This value will be sign-extended and added to the DESTINATION ADDRESS register at the end of a destination word write, whenever the X COUNT register does not contain a value of one. If the X COUNT register is loaded with a value of one this register is not used. Byte instructions can not be used to read or write this register.
+</p>
+<h4><span class="mw-headline" id="DESTINATION_Y_INCREMENT">DESTINATION Y INCREMENT</span></h4>
+<p>This is a signed 15-bit register, the least significant bit is ignored, specifying the offset in bytes to the address of the first destination word in the next line. This value will be sign-extended and added to the DESTINATION ADDRESS register at the end of the last destination word write of each line (when the X COUNT register contains a value of one). If the X COUNT register is loaded with a value of one this register is used exclusively. Byte instructions cannot be used on this register.
+</p>
+<h4><span class="mw-headline" id="X_COUNT">X COUNT</span></h4>
+<p>This 16-bit register specifies the number of words contained in one destination line. The minimum number is one and the maximum is 65536 designated by zero. Byte instructions can not be used to read or write this register. Reading this register returns the number of destination words yet to be  written in the current line, NOT necessarily the value initially written to the register. Each time a destination word is written the value will be decremented until it reaches zero, at which time it will be returned to its initial value.
+</p>
+<h4><span class="mw-headline" id="Y_COUNT">Y COUNT</span></h4>
+<p>This 16-bit register specifies the number of lines in the destination field. The minimum number is one and the maximum is 65536 designated by zero.   Byte instructions can not be used to read or write this register. Reading this register returns the number of destination lines yet to be written,  NOT necessarily the value initially written to the register. Each time a destination line is completed the value will be decremented until it reaches zero, at which time the transfer is complete.
+</p>
+<h3><span class="mw-headline" id="BIT-BLOCK_ALIGNMENTS">BIT-BLOCK ALIGNMENTS</span></h3>
+<p>This subsection describes registers that specify bit-block end masks, source-to-destination skew, and source data fetching.
+</p>
+<h4><span id="ENDMASK_1.2C_2.2C_3"></span><span class="mw-headline" id="ENDMASK_1,_2,_3">ENDMASK 1, 2, 3</span></h4>
+<p>These 16-bit registers are used to mask destination writes. Bits of the destination word which correspond to ones in the current ENDMASK register will be modified. Bits of the destination word which correspond to zeros in the current ENDMASK register will remain unchanged. The current ENDMASK register is determined by position in the line. ENDMASK 1 is used only for the first write of a line. ENDMASK 3 is used only for the last write of a line. ENDMASK 2 is used in all other cases. In the case of a one word line ENDMASK 1 is used. Byte instructions can not be used to read or write these registers.
+</p>
+<h4><span class="mw-headline" id="SKEW">SKEW</span></h4>
+<p>The least significant four bits of the byte-wide register at FF 8A3D specify the source skew. This is the amount the data in the source data latch is shifted right before being combined with the halftone mask and destination data.
+</p>
+<h4><span class="mw-headline" id="FXSR">FXSR</span></h4>
+<p>FXSR stands for Force eXtra Source Read. When this bit is set one extra source read is performed at the start of each line to initialize the remainder portion source data latch.
+</p>
+<h4><span class="mw-headline" id="NFSR">NFSR</span></h4>
+<p>NFSR stands for No Final Source Read. When this bit is set the last source read of each line is not performed. Note that use of this and/or the FXSR  bit the requires an adjustment to the SOURCE Y INCREMENT and SOURCE ADDRESS registers.
+</p>
+<h3><span class="mw-headline" id="LOGIC_OPERATIONS">LOGIC OPERATIONS</span></h3>
+<p>This subsection describes registers that specify the logic combinations of source and destination bit-block data.
+</p><p>The least significant four bits of the byte-wide register at FF 8A3B specify the source/destination combination rule according to the following
+table:
+</p>
+<pre>           _______________________________________
+          |    |                                  |
+          | OP | COMBINATION RULE                 |
+          |    |                                  |
+          | 0  | all zeros                        |
+          | 1  | source AND destination           |
+          | 2  | source AND NOT destination       |
+          | 3  | source                           |
+          | 4  | NOT source AND destination       |
+          | 5  | destination                      |
+          | 6  | source XOR destination           |
+          | 7  | source OR destination            |
+          | 8  | NOT source AND NOT destination   |
+          | 9  | NOT source XOR destination       |
+          | A  | NOT destination                  |
+          | B  | source OR NOT destination        |
+          | C  | NOT source                       |
+          | D  | NOT source OR destination        |
+          | E  | NOT source OR NOT destination    |
+          | F  | all ones                         |
+          |____|__________________________________|
+
+</pre>
+<h3><span class="mw-headline" id="HALFTONE_OPERATIONS">HALFTONE OPERATIONS</span></h3>
+<p>This subsection describes registers that specify the halftone pattern memory, halftone word index, and combinations of source and halftone data.
+</p>
+<h4><span class="mw-headline" id="HALFTONE_RAM">HALFTONE RAM</span></h4>
+<p>This RAM holds a 16x16 halftone pattern mask. Each word is valid for one line of the destination field and is repeated every 16 lines. The current
+word is pointed to by the value in the LINE NUMBER register. These registers may be read, but can not be accessed using byte-wide instructions.
+</p>
+<h4><span class="mw-headline" id="LINE_NUMBER">LINE NUMBER</span></h4>
+<p>The least significant four bits of the byte-wide register at FF 8A3C specify the current halftone mask. The current value times two plus FF 8A00 gives the address of the current halftone mask. This value is incremented or decremented at the end of each line and will wrap through zero. The sign  of the DESTINATION Y INCREMENT determines if the line number is incremented or decremented (increment if positive, decrement if negative).
+</p>
+<h4><span class="mw-headline" id="SMUDGE">SMUDGE</span></h4>
+<p>The SMUDGE bit, when set, causes the least significant four bits of the skewed source data to be used as the address of the current halftone pattern.  Note that the halftone operation is still valid when SMUDGE is set.
+</p>
+<h4><span class="mw-headline" id="HALFTONE_OPERATIONS_2">HALFTONE OPERATIONS</span></h4>
+<p>The least significant two bits of the byte-wide register at FF 8A3A specify the source/halftone combination rule according to the following table:
+</p>
+<pre>           _____________________________
+          |    |                        |
+          | HOP| COMBINATION RULE       |
+          |    |                        |
+          | 0  | all ones               |
+          | 1  | halftone               |
+          | 2  | source                 |
+          | 3  | source AND halftone    |
+          |____|________________________|
+</pre>
+<h3><span class="mw-headline" id="BUS_ACCESSES">BUS ACCESSES</span></h3>
+<p>This subsection describes registers that specify bus access control and BLiTTER start/status.
+</p>
+<h4><span class="mw-headline" id="HOG">HOG</span></h4>
+<p>The HOG bit, when cleared, causes the processor and the blitter to share the bus equally. In this mode each will get 64 bus cycles while the other
+is halted. When set, the bit will cause the processor to be halted until the transfer is complete. In either case the BLiTTER will yield to other
+DMA devices. Bus arbitration may allow the processor to execute one or more instructions even in hog mode. Therefore, don't assume that the  instruction following the one which sets the BUSY bit will be executed only after the transfer is complete. The BUSY bit may be polled to achieve this kind of synchronization.
+</p>
+<h4><span class="mw-headline" id="BUSY">BUSY</span></h4>
+<p>The BUSY bit is set after all the other registers have been initialized to begin the transfer operation. It will remain set until the transfer is
+complete. The interrupt line is a duplicate of this bit. See the Programming Example for more details on how to use the BUSY bit.
+</p>
+<h2><span class="mw-headline" id="Appendix_A_--_Programming_Example">Appendix A -- Programming Example</span></h2>
+<p>In order to maintain software compatibility with new or upgraded Atari STs equipped with the BLiTTER, software developers need only follow guidelines
+set forth by the VDI and "LINE A" documents. Revised TOS ROMs will work in concert with the BLiTTER, enhancing the performance of many VDI and "LINE A" operations. This occurs in a manner transparent to an executing program. Thus no special actions need be taken to utilize the performance
+advantages of the BLiTTER.
+</p><p>As a rule of thumb, never make a VDI or "LINE A" call from within an interrupt context since unpredictable and potentially catastrophic results will  occur should one BLiTTER operation interrupt another BLiTTER operation.
+</p><p>The following program has not been optimized and is presented here for exemplary purposes only.
+</p>
+<pre>     * (c) 1987 Atari Corporation
+     *    All Rights Reserved.
+
+     * BLiTTER BASE ADDRESS
+
+          BLiTTER   equ  $FF8A00
+
+     * BLiTTER REGISTER OFFSETS
+
+     Halftone  equ  0
+     Src_Xinc  equ  32
+     Src_Yinc  equ  34
+     Src_Addr  equ  36
+     Endmask1  equ  40
+     Endmask2  equ  42
+     Endmask3  equ  44
+     Dst_Xinc  equ  46
+     Dst_Yinc  equ  48
+     Dst_Addr  equ  50
+     X_Count   equ  54
+     Y_Count   equ  56
+     HOP       equ  58
+     OP        equ  59
+     Line_Num  equ  60
+     Skew      equ  61
+
+     * BLiTTER REGISTER FLAGS
+
+     fHOP_Source    equ  1
+     fHOP_Halftone  equ  0
+
+     fSkewFXSR      equ  7
+     fSkewNFSR      equ  6
+
+     fLineBusy      equ  7
+     fLineHog       equ  6
+     fLineSmudge    equ  5
+
+     * BLiTTER REGISTER MASKS
+
+     mHOP_Source    equ  $02
+     mHOP_Halftone  equ  $01
+
+     mSkewFXSR      equ  $80
+     mSkewNFSR      equ  $40
+
+     mLineBusy      equ  $80
+     mLineHog       equ  $40
+     mLineSmudge    equ  $20
+
+     *         E n D m A s K   d A t A
+     *
+     * These tables are referenced by PC relative instructions.  Thus,
+     * the labels on these tables must remain within 128 bytes of the
+     * referencing instructions forever.  Amen.
+     *
+     * 0: Destination  1: Source   &lt;&lt;&lt; Invert right end mask data &gt;&gt;&gt;
+
+     lf_endmask:
+          dc.w $FFFF
+
+     rt_endmask:
+          dc.w $7FFF
+          dc.w $3FFF
+          dc.w $1FFF
+          dc.w $0FFF
+          dc.w $07FF
+          dc.w $03FF
+          dc.w $01FF
+          dc.w $00FF
+          dc.w $007F
+          dc.w $003F
+          dc.w $001F
+          dc.w $000F
+          dc.w $0007
+          dc.w $0003
+          dc.w $0001
+          dc.w $0000
+
+     * TiTLE:  BLiT_iT
+     *
+     * PuRPoSE:
+     *    Transfer a rectangular block of pixels located at an
+     *    arbitrary X,Y position in the source memory form to
+     *    another arbitrary X,Y position in the destination memory
+     *    form using replace mode (boolean operator 3).
+     *    The source and destination rectangles should not overlap.
+     *
+     * iN:
+     *    a4   pointer to 34 byte input parameter block
+     *
+     * Note: This routine must be executed in supervisor mode as
+     *    access is made to hardware registers in the protected region
+     *    of the memory map.
+     *
+     *
+     *    I n p u t   p a r a m e t e r   b l o c k   o f f s e t s
+
+     SRC_FORM  equ  0   &#160;; Base address of source memory form .l
+     SRC_NXWD  equ  4   &#160;; Offset between words in source plane .w
+     SRC_NXLN  equ  6   &#160;; Source form width .w
+     SRC_NXPL  equ  8   &#160;; Offset between source planes .w
+     SRC_XMIN  equ  10  &#160;; Source blt rectangle minimum X .w
+     SRC_YMIN  equ  12  &#160;; Source blt rectangle minimum Y .w
+
+     DST_FORM  equ  14  &#160;; Base address of destination memory form .l 
+     DST_NXWD  equ  18  &#160;; Offset between words in destination plane.w
+     DST_NXLN  equ  20  &#160;; Destination form width .w
+     DST_NXPL  equ  22  &#160;; Offset between destination planes .w
+     DST_XMIN  equ  24  &#160;; Destination blt rectangle minimum X .w
+     DST_YMIN  equ  26  &#160;; Destination blt rectangle minimum Y .w
+
+     WIDTH     equ  28  &#160;; Width of blt rectangle .w
+     HEIGHT    equ  30  &#160;; Height of blt rectangle .w
+     PLANES    equ  32  &#160;; Number of planes to blt .w
+
+     BLiT_iT:
+
+          lea  BLiTTER,a5         &#160;; a5-&gt; BLiTTER register block  
+
+     *
+     * Calculate Xmax coordinates from Xmin coordinates and width
+     *
+          move.w    WIDTH(a4),d6  
+          subq.w    #1,d6              &#160;; d6&lt;- width-1  
+
+          move.w    SRC_XMIN(a4),d0    &#160;; d0&lt;- src Xmin  
+          move.w    d0,d1
+          add.w     d6,d1              &#160;; d1&lt;- src Xmax=src Xmin+width-1
+
+          move.w    DST_XMIN(a4),d2    &#160;; d2&lt;- dst Xmin  
+          move.w    d2,d3
+          add.w     d6,d3              &#160;; d3&lt;- dst Xmax=dstXmin+width-1
+
+     *
+     * Endmasks are derived from source Xmin mod 16 and source Xmax
+     *    mod 16
+     *  
+          moveq.l   #$0F,d6  &#160;; d6&lt;- mod 16 mask
+
+          move.w    d2,d4         &#160;; d4&lt;- DST_XMIN
+          and.w     d6,d4         &#160;; d4&lt;- DST_XMIN mod 16
+          add.w     d4,d4         &#160;; d4&lt;- offset into left end mask tbl
+
+          move.w    lf_endmask(pc,d4.w),d4       &#160;; d4&lt;- left endmask
+
+          move.w    d3,d5         &#160;; d5&lt;- DST_XMAX
+          and.w     d6,d5         &#160;; d5&lt;- DST_XMAX mod 16
+          add.w     d5,d5         &#160;; d5&lt;- offset into right end mask tbl
+
+          move.w    rt_endmask(pc,d5.w),d5  &#160;; d5&lt;-inverted right end mask
+          not.w     d5                      &#160;; d5&lt;- right end mask
+
+     *  
+     * Skew value is (destination Xmin mod 16 - source Xmin mod 16)
+     * &amp;&amp; 0x000F.  Three discriminators are used to determine the
+     * states of FXSR and NFSR flags:
+     *
+     *    bit 0     0: Source Xmin mod 16 =&lt; Destination Xmin mod 16
+     *              1: Source Xmin mod 16 &gt;  Destination Xmin mod 16
+     *
+     *    bit 1     0: SrcXmax/16-SrcXmin/16 &lt;&gt; DstXmax/16-DstXmin/16
+     *                   Source span              Destination span
+     *              1: SrcXmax/16-SrcXmin/16 == DstXmax/16-DstXmin/16
+     *
+     *    bit 2     0: multiple word Destination span
+     *              1: single word Destination span
+     *
+     *    These flags form an offset into a skew flag table yielding
+     *    correct FXSR and NFSR flag states for the given source and
+     *    destination alignments
+     *
+
+          move.w    d2,d7    &#160;; d7&lt;- Dst Xmin
+          and.w     d6,d7    &#160;; d7&lt;- Dst Xmin mod16
+          and.w     d0,d6    &#160;; d6&lt;- Src Xmin mod16
+          sub.w     d6,d7    &#160;; d7&lt;- Dst Xmin mod16-Src Xmin mod16
+     *                       &#160;; if Sx&amp;F &gt; Dx&amp;F then cy:1 else cy:0
+          clr.w     d6       &#160;; d6&lt;- initial skew flag table index
+          addx.w    d6,d6    &#160;; d6[bit0]&lt;- intraword alignment flag
+
+          lsr.w     #4,d0    &#160;; d0&lt;- word offset to src Xmin
+          lsr.w     #4,d1    &#160;; d1&lt;- word offset to src Xmax
+          sub.w     d0,d1    &#160;; d1&lt;- Src span - 1
+
+          lsr.w     #4,d2    &#160;; d2&lt;- word offset to dst Xmin
+          lsr.w     #4,d3    &#160;; d3&lt;- word offset to dst Xmax
+          sub.w     d2,d3    &#160;; d3&lt;- Dst span - 1
+          bne       set_endmasks  &#160;; 2nd discriminator is one word dst  
+
+     * When destination spans a single word, both end masks are merged
+     * into Endmask1.  The other end masks will be ignored by the BLiTTER
+
+          and.w     d5,d4         &#160;; d4&lt;- single word end mask
+          addq.w    #4,d6         &#160;; d6[bit2]:1 =&gt; single word dst
+
+     set_endmasks:
+
+          move.w    d4,Endmask1(a5)    &#160;; left end mask
+          move.w    #$FFFF,Endmask2(a5)&#160;; center end mask
+          move.w    d5,Endmask3(a5)    &#160;; right end mask
+
+          cmp.w     d1,d3         &#160;; the last discriminator is the
+          bne       set_count     &#160;; equality of src and dst spans
+
+          addq.w    #2,d6         &#160;; d6[bit1]:1 =&gt; equal spans
+
+     set_count:
+          move.w    d3,d4
+          addq.w    #1,d4         &#160;; d4&lt;- number of words in dst line
+          move.w    d4,X_Count(a5)&#160;; set value in BLiTTER
+
+     * Calculate Source starting address:
+     *
+     *   Source Form address              +
+     *  (Source Ymin * Source Form Width) +
+     * ((Source Xmin/16) * Source Xinc)  
+
+          move.l    SRC_FORM(a4),a0    &#160;; a0-&gt; start of Src form
+          move.w    SRC_YMIN(a4),d4    &#160;; d4&lt;- offset in lines to Src Ymin
+          move.w    SRC_NXLN(a4),d5    &#160;; d5&lt;- length of Src form line
+          mulu      d5,d4              &#160;; d4&lt;- byte offset to (0, Ymin)
+          add.l     d4,a0              &#160;; a0-&gt; (0, Ymin)
+
+          move.w    SRC_NXWD(a4),d4;    d4&lt;- offset between consecutive
+          move.w    d4,Src_Xinc(a5)    &#160;;      words in Src plane
+
+          mulu      d4,d0         &#160;; d0&lt;- offset to word containing Xmin
+          add.l     d0,a0         &#160;; a0-&gt; 1st src word (Xmin, Ymin)
+
+     * Src_Yinc is the offset in bytes from the last word of one Source
+     * line to the first word of the next Source line
+
+          mulu      d4,d1              &#160;; d1&lt;- width of src line in bytes
+          sub.w     d1,d5              &#160;; d5&lt;- value added to ptr at end
+          move.w    d5,Src_Yinc(a5)    &#160;; of line to reach start of next
+
+     * Calculate Destination starting address
+
+          move.l    DST_FORM(a4),a1    &#160;; a1-&gt; start of dst form
+          move.w    DST_YMIN(a4),d4    &#160;; d4&lt;- offset in lines to dst Ymin
+          move.w    DST_NXLN(a4),d5    &#160;; d5&lt;- width of dst form
+
+          mulu      d5,d4    &#160;; d4&lt;- byte offset to (0, Ymin)
+          add.l     d4,a1    &#160;; a1-&gt; dst (0, Ymin)
+
+          move.w    DST_NXWD(a4),d4    &#160;; d4&lt;- offset between consecutive
+          move.w    d4,Dst_Xinc(a5)    &#160;;  words in dst plane
+
+          mulu      d4,d2              &#160;; d2&lt;- DST_NXWD * (DST_XMIN/16)
+          add.l     d2,a1              &#160;; a1-&gt; 1st dst word (Xmin, Ymin)
+
+     * Calculate Destination Yinc
+
+          mulu      d4,d3              &#160;; d3&lt;- width of dst line - DST_NXWD
+          sub.w     d3,d5              &#160;; d5&lt;- value added to dst ptr at
+          move.w    d5,Dst_Yinc(a5)    &#160;;  end of line to reach next line
+
+     * The low nibble of the difference in Source and Destination alignment
+     * is the skew value.  Use the skew flag index to reference FXSR and
+     * NFSR states in skew flag table.
+
+          and.b     #$0F,d7                 &#160;; d7&lt;- isolated skew count
+          or.b      skew_flags(pc,d6.w),d7&#160;; d7&lt;- necessary flags and skew
+          move.b    d7,Skew(a5)             &#160;; load Skew register  
+
+          move.b    #mHOP_Source,HOP(a5)    &#160;; set HOP to source only
+          move.b    #3,OP(a5)          &#160;; set OP to "replace" mode
+
+          lea       Line_Num(a5),a2    &#160;; fast refer to Line_Num register
+          move.b    #fLineBusy,d2      &#160;; fast refer to LineBusy flag
+          move.w    PLANES(a4),d7      &#160;; d7 &lt;- plane counter
+          bra       begin
+
+     *    T h e   s e t t i n g   o f   s k e w   f l a g s
+     *
+     *
+     * QUALIFIERS   ACTIONS           BITBLT DIRECTION: LEFT -&gt; RIGHT
+     *
+     * equal Sx&amp;F&gt;
+     * spans Dx&amp;F FXSR NFSR
+     *
+     * 0     0     0    1 |..ssssssssssssss|ssssssssssssss..|  
+     *   |......dddddddddd|dddddddddddddddd|dd..............|  
+     *  
+     * 0     1     1    0 |..dddddddddddddd|dddddddddddddd..|
+     *   |......ssssssssss|ssssssssssssssss|ss..............|  
+     *  
+     * 1     0     0    0 |..ssssssssssssss|ssssssssssssss..|  
+     *                    |...ddddddddddddd|ddddddddddddddd.|  
+     *  
+     * 1     1     1    1 |...sssssssssssss|sssssssssssssss.|  
+     *                    |..dddddddddddddd|dddddddddddddd..|  
+
+
+     skew_flags:
+
+          dc.b mSkewNFSR          &#160;; Source span &lt; Destination span
+          dc.b mSkewFXSR          &#160;; Source span &gt; Destination span
+          dc.b 0                  &#160;; Spans equal Shift Source right
+          dc.b mSkewNFSR+mSkewFXSR&#160;; Spans equal Shift Source left
+
+     * When Destination span is but a single word ...
+
+          dc.b 0        &#160;; Implies a Source span of no words
+          dc.b mSkewFXSR&#160;; Source span of two words
+          dc.b 0        &#160;; Skew flags aren't set if Source and
+          dc.b 0        &#160;; Destination spans are both one word
+
+     next_plane:
+          move.l    a0,Src_Addr(a5)    &#160;; load Source pointer to this plane
+
+          move.l    a1,Dst_Addr(a5)    &#160;; load Dest ptr to this plane  
+          move.w    HEIGHT(a4),Y_Count(a5)  &#160;; load the line count  
+
+          move.b    #mLineBusy,(a2)    &#160;; &lt;&lt;&lt; start the BLiTTER &gt;&gt;&gt;  
+
+          add.w     SRC_NXPL(a4),a0    &#160;; a0-&gt; start of next src plane  
+          add.w     DST_NXPL(a4),a1    &#160;; a1-&gt; start of next dst plane  
+
+
+     * The BLiTTER is usually operated with the HOG flag cleared.
+     * In this mode the BLiTTER and the ST's cpu share the bus equally,
+     * each taking 64 bus cycles while the other is halted.  This mode
+     * allows interrupts to be fielded by the cpu while an extensive
+     * BitBlt is being processed by the BLiTTER.  There is a drawback in
+     * that BitBlts in this shared mode may take twice as long as BitBlts
+     * executed in hog mode.  Ninety percent of hog mode performance is
+     * achieved while retaining robust interrupt handling via a method
+     * of prematurely restarting the BLiTTER.  When control is returned
+     * to the cpu by the BLiTTER, the cpu immediately resets the BUSY
+     * flag, restarting the BLiTTER after just 7 bus cycles rather than
+     * after the usual 64 cycles.  Interrupts pending will be serviced
+     * before the restart code regains control.  If the BUSY flag is
+     * reset when the Y_Count is zero, the flag will remain clear
+     * indicating BLiTTER completion and the BLiTTER won't be restarted.
+     *
+     * (Interrupt service routines may explicitly halt the BLiTTER
+     * during execution time critical sections by clearing the BUSY flag.
+     * The original BUSY flag state must be restored however, before
+     * termination of the interrupt service routine.)
+
+     restart:
+          bset.b    d2,(a2)       &#160;; Restart BLiTTER and test the BUSY
+          nop                     &#160;; flag state.  The "nop" is executed
+          bne  restart            &#160;; prior to the BLiTTER restarting.
+     *                            &#160;; Quit if the BUSY flag was clear.  
+
+     begin:
+          dbra d7,next_plane
+          rts
+</pre>
+<h2><span class="mw-headline" id="Appendix_B_--_References">Appendix B -- References</span></h2>
+<p>[1] Rob Pike, Leo Guibas and Dan Ingalls, 'SIGGRAPH'84 Course Notes: Bitmap Graphics', AT&amp;T Bell Laboratories 1984.
+</p><p>[2] William Newman and Robert Sproull, 'Principles of Interactive Computer Graphics', McGraw-Hill 1979, Chapter 18.
+</p><p>[3] John Atwood, '16160 RasterOp Chip Data Sheet', Silicon Compilers 1984. See also 'VL16160 RasterOp Graphics/Boolean Operation ALU', VLSI Technology 1986.
+</p><p>[4] Adele Goldberg and David Robson, 'Smalltalk-80: The Language and its Implementation', Addison-Wesley 1983, Chapter 18.
+</p>
+<!-- 
+NewPP limit report
+Cached time: 20261029093512
+Cache expiry: 86400
+Reduced expiry: false
+Complications: [show‐toc]
+CPU time usage: 0.015 seconds
+Real time usage: 0.016 seconds
+Preprocessor visited node count: 123/1000000
+Post‐expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/100
+Expensive parser function count: 0/100
+Unstrip recursion depth: 0/20
+Unstrip post‐expand size: 19393/5000000 bytes
+-->
+<!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%    0.000      1 -total
+-->
+
+<!-- Saved in parser cache with key damin_mw19268-mw1p_:pcache:idhash:1259-0!canonical and timestamp 20261029093512 and revision id 11382.
+ -->
+</div>
+<div class="printfooter" data-nosnippet="">Retrieved from "<a dir="ltr" href="https://www.temlib.org/AtariForumWiki/index.php?title=Blitter_manual&amp;oldid=11382">https://www.temlib.org/AtariForumWiki/index.php?title=Blitter_manual&amp;oldid=11382</a>"</div></div>
+		<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="/AtariForumWiki/index.php/Special:Categories" title="Special:Categories">Categories</a>: <ul><li><a href="/AtariForumWiki/index.php/Category:Blitter" title="Category:Blitter">Blitter</a></li><li><a href="/AtariForumWiki/index.php/Category:Programming" title="Category:Programming">Programming</a></li></ul></div></div>
+	</div>
+</div>
+
+<div id="mw-navigation">
+	<h2>Navigation menu</h2>
+	<div id="mw-head">
+		
+
+<nav id="p-personal" class="vector-menu mw-portlet mw-portlet-personal vector-user-menu-legacy" aria-labelledby="p-personal-label" role="navigation"  >
+	<h3
+		id="p-personal-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Personal tools</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="pt-login" class="mw-list-item"><a href="/AtariForumWiki/index.php?title=Special:UserLogin&amp;returnto=Blitter+manual" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o"><span>Log in</span></a></li></ul>
+		
+	</div>
+</nav>
+
+		<div id="left-navigation">
+			
+
+<nav id="p-namespaces" class="vector-menu mw-portlet mw-portlet-namespaces vector-menu-tabs vector-menu-tabs-legacy" aria-labelledby="p-namespaces-label" role="navigation"  >
+	<h3
+		id="p-namespaces-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Namespaces</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="ca-nstab-main" class="selected mw-list-item"><a href="/AtariForumWiki/index.php/Blitter_manual" title="View the content page [c]" accesskey="c"><span>Page</span></a></li><li id="ca-talk" class="new mw-list-item"><a href="/AtariForumWiki/index.php?title=Talk:Blitter_manual&amp;action=edit&amp;redlink=1" rel="discussion" title="Discussion about the content page (page does not exist) [t]" accesskey="t"><span>Discussion</span></a></li></ul>
+		
+	</div>
+</nav>
+
+			
+
+<nav id="p-variants" class="vector-menu mw-portlet mw-portlet-variants emptyPortlet vector-menu-dropdown" aria-labelledby="p-variants-label" role="navigation"  >
+	<input type="checkbox"
+		id="p-variants-checkbox"
+		role="button"
+		aria-haspopup="true"
+		data-event-name="ui.dropdown-p-variants"
+		class="vector-menu-checkbox"
+		aria-labelledby="p-variants-label"
+	/>
+	<label
+		id="p-variants-label"
+		 aria-label="Change language variant"
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">English</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"></ul>
+		
+	</div>
+</nav>
+
+		</div>
+		<div id="right-navigation">
+			
+
+<nav id="p-views" class="vector-menu mw-portlet mw-portlet-views vector-menu-tabs vector-menu-tabs-legacy" aria-labelledby="p-views-label" role="navigation"  >
+	<h3
+		id="p-views-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Views</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="ca-view" class="selected mw-list-item"><a href="/AtariForumWiki/index.php/Blitter_manual"><span>Read</span></a></li><li id="ca-viewsource" class="mw-list-item"><a href="/AtariForumWiki/index.php?title=Blitter_manual&amp;action=edit" title="This page is protected.&#10;You can view its source [e]" accesskey="e"><span>View source</span></a></li><li id="ca-history" class="mw-list-item"><a href="/AtariForumWiki/index.php?title=Blitter_manual&amp;action=history" title="Past revisions of this page [h]" accesskey="h"><span>View history</span></a></li></ul>
+		
+	</div>
+</nav>
+
+			
+
+<nav id="p-cactions" class="vector-menu mw-portlet mw-portlet-cactions emptyPortlet vector-menu-dropdown" aria-labelledby="p-cactions-label" role="navigation"  title="More options" >
+	<input type="checkbox"
+		id="p-cactions-checkbox"
+		role="button"
+		aria-haspopup="true"
+		data-event-name="ui.dropdown-p-cactions"
+		class="vector-menu-checkbox"
+		aria-labelledby="p-cactions-label"
+	/>
+	<label
+		id="p-cactions-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">More</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"></ul>
+		
+	</div>
+</nav>
+
+			
+<div id="p-search" role="search" class="vector-search-box-vue  vector-search-box-show-thumbnail vector-search-box-auto-expand-width vector-search-box">
+	<div>
+			<h3 >
+				<label for="searchInput">Search</label>
+			</h3>
+		<form action="/AtariForumWiki/index.php" id="searchform"
+			class="vector-search-box-form">
+			<div id="simpleSearch"
+				class="vector-search-box-inner"
+				 data-search-loc="header-navigation">
+				<input class="vector-search-box-input"
+					 type="search" name="search" placeholder="Search AtariForumWiki" aria-label="Search AtariForumWiki" autocapitalize="sentences" title="Search AtariForumWiki [f]" accesskey="f" id="searchInput"
+				>
+				<input type="hidden" name="title" value="Special:Search">
+				<input id="mw-searchButton"
+					 class="searchButton mw-fallbackSearchButton" type="submit" name="fulltext" title="Search the pages for this text" value="Search">
+				<input id="searchButton"
+					 class="searchButton" type="submit" name="go" title="Go to a page with this exact name if it exists" value="Go">
+			</div>
+		</form>
+	</div>
+</div>
+
+		</div>
+	</div>
+	
+
+<div id="mw-panel">
+	<div id="p-logo" role="banner">
+		<a class="mw-wiki-logo" href="/AtariForumWiki/index.php/Main_Page"
+			title="Visit the main page"></a>
+	</div>
+	
+
+<nav id="p-navigation" class="vector-menu mw-portlet mw-portlet-navigation vector-menu-portal portal" aria-labelledby="p-navigation-label" role="navigation"  >
+	<h3
+		id="p-navigation-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Navigation</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="n-mainpage-description" class="mw-list-item"><a href="/AtariForumWiki/index.php/Main_Page" title="Visit the main page [z]" accesskey="z"><span>Main page</span></a></li><li id="n-recentchanges" class="mw-list-item"><a href="/AtariForumWiki/index.php/Special:RecentChanges" title="A list of recent changes in the wiki [r]" accesskey="r"><span>Recent changes</span></a></li><li id="n-randompage" class="mw-list-item"><a href="/AtariForumWiki/index.php/Special:Random" title="Load a random page [x]" accesskey="x"><span>Random page</span></a></li><li id="n-help-mediawiki" class="mw-list-item"><a href="https://www.mediawiki.org/wiki/Special:MyLanguage/Help:Contents"><span>Help about MediaWiki</span></a></li></ul>
+		
+	</div>
+</nav>
+
+	
+
+<nav id="p-tb" class="vector-menu mw-portlet mw-portlet-tb vector-menu-portal portal" aria-labelledby="p-tb-label" role="navigation"  >
+	<h3
+		id="p-tb-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Tools</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="t-whatlinkshere" class="mw-list-item"><a href="/AtariForumWiki/index.php/Special:WhatLinksHere/Blitter_manual" title="A list of all wiki pages that link here [j]" accesskey="j"><span>What links here</span></a></li><li id="t-recentchangeslinked" class="mw-list-item"><a href="/AtariForumWiki/index.php/Special:RecentChangesLinked/Blitter_manual" rel="nofollow" title="Recent changes in pages linked from this page [k]" accesskey="k"><span>Related changes</span></a></li><li id="t-specialpages" class="mw-list-item"><a href="/AtariForumWiki/index.php/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q"><span>Special pages</span></a></li><li id="t-print" class="mw-list-item"><a href="javascript:print();" rel="alternate" title="Printable version of this page [p]" accesskey="p"><span>Printable version</span></a></li><li id="t-permalink" class="mw-list-item"><a href="/AtariForumWiki/index.php?title=Blitter_manual&amp;oldid=11382" title="Permanent link to this revision of this page"><span>Permanent link</span></a></li><li id="t-info" class="mw-list-item"><a href="/AtariForumWiki/index.php?title=Blitter_manual&amp;action=info" title="More information about this page"><span>Page information</span></a></li></ul>
+		
+	</div>
+</nav>
+
+	
+</div>
+
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" >
+	<ul id="footer-info">
+	<li id="footer-info-lastmod"> This page was last edited on 11 March 2015, at 11:20.</li>
+</ul>
+
+	<ul id="footer-places">
+	<li id="footer-places-privacy"><a href="/AtariForumWiki/index.php/AtariForumWiki:Privacy_policy">Privacy policy</a></li>
+	<li id="footer-places-about"><a href="/AtariForumWiki/index.php/AtariForumWiki:About">About AtariForumWiki</a></li>
+	<li id="footer-places-disclaimer"><a href="/AtariForumWiki/index.php/AtariForumWiki:General_disclaimer">Disclaimers</a></li>
+</ul>
+
+	<ul id="footer-icons" class="noprint">
+	<li id="footer-poweredbyico"><a href="https://www.mediawiki.org/"><img src="/AtariForumWiki/resources/assets/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" srcset="/AtariForumWiki/resources/assets/poweredby_mediawiki_132x47.png 1.5x, /AtariForumWiki/resources/assets/poweredby_mediawiki_176x62.png 2x" width="88" height="31" loading="lazy"/></a></li>
+</ul>
+
+</footer>
+
+<script>(RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgPageParseReport":{"limitreport":{"cputime":"0.015","walltime":"0.016","ppvisitednodes":{"value":123,"limit":1000000},"postexpandincludesize":{"value":0,"limit":2097152},"templateargumentsize":{"value":0,"limit":2097152},"expansiondepth":{"value":2,"limit":100},"expensivefunctioncount":{"value":0,"limit":100},"unstrip-depth":{"value":0,"limit":20},"unstrip-size":{"value":19393,"limit":5000000},"timingprofile":["100.00%    0.000      1 -total"]},"cachereport":{"timestamp":"20261029093512","ttl":86400,"transientcontent":false}}});mw.config.set({"wgBackendResponseTime":78});});</script>
+</body>
+</html>

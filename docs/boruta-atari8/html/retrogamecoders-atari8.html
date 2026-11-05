@@ -1,0 +1,1269 @@
+
+<!doctype html>
+<html lang=en class=no-js>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=description content="Atari 8-bit platform guide — ANTIC, GTIA, POKEY, and programming with CC65 in the RGC IDE.">
+<meta name=author content="Retro Game Coders">
+<link rel=canonical href="https://docs.retrogamecoders.com/platforms/atari8/">
+<link rel=prev href="../nes/">
+<link rel=next href="../apple2/">
+<link rel=icon href="https://retrogamecoders.com/wp-content/uploads/2021/03/cropped-RGC-32x32.png">
+<meta name=generator content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+<title>Atari 8-bit - Retro Game Coders Docs</title>
+<link rel=stylesheet href="https://docs.retrogamecoders.com/assets/stylesheets/main.484c7ddc.min.css+palette.ab4e12ef.min.css.pagespeed.cc.moA72Q50DM.css">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link rel=stylesheet href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<style>[data-md-color-primary="custom"]{--md-primary-fg-color:#152238;--md-primary-fg-color--light:#1e3250;--md-primary-fg-color--dark:#0f1828}[data-md-color-accent="custom"]{--md-accent-fg-color:#e8a317;--md-accent-bg-color:rgba(232,163,23,.12)}:root{--rgc-navy:#152238;--rgc-navy-light:#1e3250;--rgc-gold:#e8a317;--rgc-gold-muted:#c4890f;--rgc-cream:#f4f0e6;--rgc-ink:#0d1117}.md-nav--primary>label.md-nav__title[for="__drawer"],.md-nav--primary label.md-nav__title[for^="__nav_"],.md-nav--primary .md-nav__item--section.md-nav__item--nested>label.md-nav__link[for^="__nav_"]{background:transparent;color:rgba(255,255,255,.92);font-weight:600;font-size:22px;letter-spacing:.02em;padding:.65rem .5rem .75rem 0;box-shadow:0 0 0 0}.md-nav--primary label.md-nav__title[for^="__nav_"] .md-nav__icon{opacity:.85}.md-nav{border:1px solid rgba(5,239,247,.28)}[data-md-color-scheme="slate"]{--md-primary-fg-color:var(--rgc-navy-light);--md-primary-fg-color--light:#2a4060;--md-primary-fg-color--dark:var(--rgc-navy);--md-accent-fg-color:var(--rgc-gold);--md-typeset-a-color:#7cb9ff;--md-typeset-a-color--hover:var(--rgc-gold)}.md-header{background-color:var(--rgc-ink);box-shadow:0 .05rem .25rem rgba(0,0,0,.45)}.md-tabs{background-color:#161b22;border-bottom:1px solid rgba(232,163,23,.2)}.md-button--primary,.md-typeset .md-button--primary{background-color:var(--rgc-gold-muted);color:var(--rgc-ink)}.md-nav__link--active,.md-nav__link:focus{font-weight:600}.md-footer-meta{background-color:#0d1117;color:rgba(255,255,255,.85)}.md-footer-meta a{color:var(--rgc-gold)}.md-footer-meta a:hover{color:#ffd063}.rgc-family-banner{border-left:4px solid var(--rgc-gold);background:linear-gradient(90deg,rgba(232,163,23,.12),transparent);padding:.75rem 1rem;margin-bottom:1.5rem;border-radius:0 .25rem .25rem 0}.rgc-family-banner a{font-weight:600}</style>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+<link rel=icon type="image/png" sizes=192x192 href="https://retrogamecoders.com/wp-content/uploads/2021/03/cropped-RGC-192x192.png">
+<link rel=apple-touch-icon href="https://retrogamecoders.com/wp-content/uploads/2021/03/cropped-RGC-180x180.png">
+<meta name=msapplication-TileImage content="https://retrogamecoders.com/wp-content/uploads/2021/03/cropped-RGC-270x270.png">
+<meta property=og:type content=website>
+<meta property=og:image content="https://docs.retrogamecoders.com/images/og-image.jpg">
+<meta property=og:image:alt content="Retro Game Coders Docs">
+<meta name=twitter:card content=summary_large_image>
+<meta name=twitter:image content="https://docs.retrogamecoders.com/images/og-image.jpg">
+</head>
+<body dir=ltr data-md-color-scheme=slate data-md-color-primary=custom data-md-color-accent=custom><noscript><meta HTTP-EQUIV="refresh" content="0;url='http://docs.retrogamecoders.com/platforms/atari8/?PageSpeed=noscript'" /><style><!--table,div,span,font,p{display:none} --></style><div style="display:block">Please click <a href="http://docs.retrogamecoders.com/platforms/atari8/?PageSpeed=noscript">here</a> if you are not redirected within a few seconds.</div></noscript>
+<input class=md-toggle data-md-toggle=drawer type=checkbox id=__drawer autocomplete=off>
+<input class=md-toggle data-md-toggle=search type=checkbox id=__search autocomplete=off>
+<label class=md-overlay for=__drawer></label>
+<div data-md-component=skip>
+<a href="#atari-8-bit" class=md-skip>
+Skip to content
+</a>
+</div>
+<div data-md-component=announce>
+</div>
+<header class=md-header data-md-component=header>
+<nav class="md-header__inner md-grid" aria-label=Header>
+<a href="https://retrogamecoders.com/" title="Retro Game Coders Docs" class="md-header__button md-logo" aria-label="Retro Game Coders Docs" data-md-component=logo>
+<script data-pagespeed-no-defer>(function(){for(var g="function"==typeof Object.defineProperties?Object.defineProperty:function(b,c,a){if(a.get||a.set)throw new TypeError("ES3 does not support getters and setters.");b!=Array.prototype&&b!=Object.prototype&&(b[c]=a.value)},h="undefined"!=typeof window&&window===this?this:"undefined"!=typeof global&&null!=global?global:this,k=["String","prototype","repeat"],l=0;l<k.length-1;l++){var m=k[l];m in h||(h[m]={});h=h[m]}var n=k[k.length-1],p=h[n],q=p?p:function(b){var c;if(null==this)throw new TypeError("The 'this' value for String.prototype.repeat must not be null or undefined");c=this+"";if(0>b||1342177279<b)throw new RangeError("Invalid count value");b|=0;for(var a="";b;)if(b&1&&(a+=c),b>>>=1)c+=c;return a};q!=p&&null!=q&&g(h,n,{configurable:!0,writable:!0,value:q});var t=this;function u(b,c){var a=b.split("."),d=t;a[0]in d||!d.execScript||d.execScript("var "+a[0]);for(var e;a.length&&(e=a.shift());)a.length||void 0===c?d[e]?d=d[e]:d=d[e]={}:d[e]=c};function v(b){var c=b.length;if(0<c){for(var a=Array(c),d=0;d<c;d++)a[d]=b[d];return a}return[]};function w(b){var c=window;if(c.addEventListener)c.addEventListener("load",b,!1);else if(c.attachEvent)c.attachEvent("onload",b);else{var a=c.onload;c.onload=function(){b.call(this);a&&a.call(this)}}};var x;function y(b,c,a,d,e){this.h=b;this.j=c;this.l=a;this.f=e;this.g={height:window.innerHeight||document.documentElement.clientHeight||document.body.clientHeight,width:window.innerWidth||document.documentElement.clientWidth||document.body.clientWidth};this.i=d;this.b={};this.a=[];this.c={}}function z(b,c){var a,d,e=c.getAttribute("data-pagespeed-url-hash");if(a=e&&!(e in b.c))if(0>=c.offsetWidth&&0>=c.offsetHeight)a=!1;else{d=c.getBoundingClientRect();var f=document.body;a=d.top+("pageYOffset"in window?window.pageYOffset:(document.documentElement||f.parentNode||f).scrollTop);d=d.left+("pageXOffset"in window?window.pageXOffset:(document.documentElement||f.parentNode||f).scrollLeft);f=a.toString()+","+d;b.b.hasOwnProperty(f)?a=!1:(b.b[f]=!0,a=a<=b.g.height&&d<=b.g.width)}a&&(b.a.push(e),b.c[e]=!0)}y.prototype.checkImageForCriticality=function(b){b.getBoundingClientRect&&z(this,b)};u("pagespeed.CriticalImages.checkImageForCriticality",function(b){x.checkImageForCriticality(b)});u("pagespeed.CriticalImages.checkCriticalImages",function(){A(x)});function A(b){b.b={};for(var c=["IMG","INPUT"],a=[],d=0;d<c.length;++d)a=a.concat(v(document.getElementsByTagName(c[d])));if(a.length&&a[0].getBoundingClientRect){for(d=0;c=a[d];++d)z(b,c);a="oh="+b.l;b.f&&(a+="&n="+b.f);if(c=!!b.a.length)for(a+="&ci="+encodeURIComponent(b.a[0]),d=1;d<b.a.length;++d){var e=","+encodeURIComponent(b.a[d]);131072>=a.length+e.length&&(a+=e)}b.i&&(e="&rd="+encodeURIComponent(JSON.stringify(B())),131072>=a.length+e.length&&(a+=e),c=!0);C=a;if(c){d=b.h;b=b.j;var f;if(window.XMLHttpRequest)f=new XMLHttpRequest;else if(window.ActiveXObject)try{f=new ActiveXObject("Msxml2.XMLHTTP")}catch(r){try{f=new ActiveXObject("Microsoft.XMLHTTP")}catch(D){}}f&&(f.open("POST",d+(-1==d.indexOf("?")?"?":"&")+"url="+encodeURIComponent(b)),f.setRequestHeader("Content-Type","application/x-www-form-urlencoded"),f.send(a))}}}function B(){var b={},c;c=document.getElementsByTagName("IMG");if(!c.length)return{};var a=c[0];if(!("naturalWidth"in a&&"naturalHeight"in a))return{};for(var d=0;a=c[d];++d){var e=a.getAttribute("data-pagespeed-url-hash");e&&(!(e in b)&&0<a.width&&0<a.height&&0<a.naturalWidth&&0<a.naturalHeight||e in b&&a.width>=b[e].o&&a.height>=b[e].m)&&(b[e]={rw:a.width,rh:a.height,ow:a.naturalWidth,oh:a.naturalHeight})}return b}var C="";u("pagespeed.CriticalImages.getBeaconData",function(){return C});u("pagespeed.CriticalImages.Run",function(b,c,a,d,e,f){var r=new y(b,c,a,e,f);x=r;d&&w(function(){window.setTimeout(function(){A(r)},0)})});})();pagespeed.CriticalImages.Run('/ngx_pagespeed_beacon','http://docs.retrogamecoders.com/platforms/atari8/','g_3Y98dP_W',true,false,'tP_72f5fOjQ');</script><img src="https://retrogamecoders.com/wp-content/uploads/2021/03/cropped-Collect-%E2%80%A2-Play-%E2%80%A2-Refurb-%E2%80%A2-CreateRetro-Game-CodersRetro-Game-CodersRetro-Game-Coders-768x126.png" alt=logo data-pagespeed-url-hash=1736855717 onload="pagespeed.CriticalImages.checkImageForCriticality(this);">
+</a>
+<label class="md-header__button md-icon" for=__drawer>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+</label>
+<div class=md-header__title data-md-component=header-title>
+<div class=md-header__ellipsis>
+<div class=md-header__topic>
+<span class=md-ellipsis>
+Retro Game Coders Docs
+</span>
+</div>
+<div class=md-header__topic data-md-component=header-topic>
+<span class=md-ellipsis>
+Atari 8-bit
+</span>
+</div>
+</div>
+</div>
+<label class="md-header__button md-icon" for=__search>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+</label>
+<div class=md-search data-md-component=search role=dialog>
+<label class=md-search__overlay for=__search></label>
+<div class=md-search__inner role=search>
+<form class=md-search__form name=search>
+<input type=text class=md-search__input name=query aria-label=Search placeholder=Search autocapitalize=off autocorrect=off autocomplete=off spellcheck=false data-md-component=search-query required>
+<label class="md-search__icon md-icon" for=__search>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+</label>
+<nav class=md-search__options aria-label=Search>
+<button type=reset class="md-search__icon md-icon" title=Clear aria-label=Clear tabindex=-1>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</nav>
+<div class=md-search__suggest data-md-component=search-suggest></div>
+</form>
+<div class=md-search__output>
+<div class=md-search__scrollwrap tabindex=0 data-md-scrollfix>
+<div class=md-search-result data-md-component=search-result>
+<div class=md-search-result__meta>
+Initializing search
+</div>
+<ol class=md-search-result__list role=presentation></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class=md-header__source>
+<a href="https://github.com/omiq/retrodocs" title="Go to repository" class=md-source data-md-component=source>
+<div class="md-source__icon md-icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+</div>
+<div class=md-source__repository>
+retrodocs
+</div>
+</a>
+</div>
+</nav>
+</header>
+<div class=md-container data-md-component=container>
+<nav class=md-tabs aria-label=Tabs data-md-component=tabs>
+<div class=md-grid>
+<ul class=md-tabs__list>
+<li class=md-tabs__item>
+<a href="../.." class=md-tabs__link>
+Home
+</a>
+</li>
+<li class=md-tabs__item>
+<a href="../../ide/getting-started/" class=md-tabs__link>
+IDE
+</a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a href="../" class=md-tabs__link>
+Platforms
+</a>
+</li>
+<li class=md-tabs__item>
+<a href="../../assembly/" class=md-tabs__link>
+Assembly
+</a>
+</li>
+<li class=md-tabs__item>
+<a href="../../c/" class=md-tabs__link>
+C
+</a>
+</li>
+<li class=md-tabs__item>
+<a href="../../basic/" class=md-tabs__link>
+BASIC
+</a>
+</li>
+<li class=md-tabs__item>
+<a href="../../trse/" class=md-tabs__link>
+TRSE
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<main class=md-main data-md-component=main>
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component=sidebar data-md-type=navigation>
+<div class=md-sidebar__scrollwrap>
+<div class=md-sidebar__inner>
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label=Navigation data-md-level=0>
+<label class=md-nav__title for=__drawer>
+<a href="https://retrogamecoders.com/" title="Retro Game Coders Docs" class="md-nav__button md-logo" aria-label="Retro Game Coders Docs" data-md-component=logo>
+<img src="https://retrogamecoders.com/wp-content/uploads/2021/03/cropped-Collect-%E2%80%A2-Play-%E2%80%A2-Refurb-%E2%80%A2-CreateRetro-Game-CodersRetro-Game-CodersRetro-Game-Coders-768x126.png" alt=logo data-pagespeed-url-hash=1736855717 onload="pagespeed.CriticalImages.checkImageForCriticality(this);">
+</a>
+Retro Game Coders Docs
+</label>
+<div class=md-nav__source>
+<a href="https://github.com/omiq/retrodocs" title="Go to repository" class=md-source data-md-component=source>
+<div class="md-source__icon md-icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+</div>
+<div class=md-source__repository>
+retrodocs
+</div>
+</a>
+</div>
+<ul class=md-nav__list data-md-scrollfix>
+<li class=md-nav__item>
+<a href="../.." class=md-nav__link>
+<span class=md-ellipsis>
+Home
+</span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" type=checkbox id=__nav_2>
+<label class=md-nav__link for=__nav_2 id=__nav_2_label tabindex=0>
+<span class=md-ellipsis>
+IDE
+</span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav class=md-nav data-md-level=1 aria-labelledby=__nav_2_label aria-expanded=false>
+<label class=md-nav__title for=__nav_2>
+<span class="md-nav__icon md-icon"></span>
+IDE
+</label>
+<ul class=md-nav__list data-md-scrollfix>
+<li class=md-nav__item>
+<a href="../../ide/getting-started/" class=md-nav__link>
+<span class=md-ellipsis>
+Getting started with the IDE
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3 checked>
+<label class=md-nav__link for=__nav_3 id=__nav_3_label tabindex="">
+<span class=md-ellipsis>
+Platforms
+</span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav class=md-nav data-md-level=1 aria-labelledby=__nav_3_label aria-expanded=true>
+<label class=md-nav__title for=__nav_3>
+<span class="md-nav__icon md-icon"></span>
+Platforms
+</label>
+<ul class=md-nav__list data-md-scrollfix>
+<li class=md-nav__item>
+<a href="../" class=md-nav__link>
+<span class=md-ellipsis>
+Platforms
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../c64/" class=md-nav__link>
+<span class=md-ellipsis>
+Commodore 64
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../vic20/" class=md-nav__link>
+<span class=md-ellipsis>
+VIC-20
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../pet/" class=md-nav__link>
+<span class=md-ellipsis>
+Commodore PET
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../bbc-micro/" class=md-nav__link>
+<span class=md-ellipsis>
+BBC Micro
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../zx-spectrum/" class=md-nav__link>
+<span class=md-ellipsis>
+ZX Spectrum
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../zx81/" class=md-nav__link>
+<span class=md-ellipsis>
+ZX81
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../cpc/" class=md-nav__link>
+<span class=md-ellipsis>
+Amstrad CPC6128
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../msx/" class=md-nav__link>
+<span class=md-ellipsis>
+MSX
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../nes/" class=md-nav__link>
+<span class=md-ellipsis>
+NES / Famicom
+</span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" type=checkbox id=__toc>
+<label class="md-nav__link md-nav__link--active" for=__toc>
+<span class=md-ellipsis>
+Atari 8-bit
+</span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a href="./" class="md-nav__link md-nav__link--active">
+<span class=md-ellipsis>
+Atari 8-bit
+</span>
+</a>
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+<label class=md-nav__title for=__toc>
+<span class="md-nav__icon md-icon"></span>
+Table of contents
+</label>
+<ul class=md-nav__list data-md-component=toc data-md-scrollfix>
+<li class=md-nav__item>
+<a href="#languages-in-the-ide" class=md-nav__link>
+<span class=md-ellipsis>
+Languages in the IDE
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#quick-start" class=md-nav__link>
+<span class=md-ellipsis>
+Quick start
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#hardware-overview" class=md-nav__link>
+<span class=md-ellipsis>
+Hardware overview
+</span>
+</a>
+<nav class=md-nav aria-label="Hardware overview">
+<ul class=md-nav__list>
+<li class=md-nav__item>
+<a href="#the-custom-chips" class=md-nav__link>
+<span class=md-ellipsis>
+The custom chips
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#the-display-list" class=md-nav__link>
+<span class=md-ellipsis>
+The Display List
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#graphics-modes" class=md-nav__link>
+<span class=md-ellipsis>
+Graphics modes
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#memory-map" class=md-nav__link>
+<span class=md-ellipsis>
+Memory map
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#key-hardware-registers" class=md-nav__link>
+<span class=md-ellipsis>
+Key hardware registers
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class=md-nav__item>
+<a href="#players-and-missiles-sprites" class=md-nav__link>
+<span class=md-ellipsis>
+Players and Missiles (sprites)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#programming-with-cc65-c" class=md-nav__link>
+<span class=md-ellipsis>
+Programming with cc65 C
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#basic-quick-reference" class=md-nav__link>
+<span class=md-ellipsis>
+BASIC quick reference
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#display-list-interrupts-dli" class=md-nav__link>
+<span class=md-ellipsis>
+Display List Interrupts (DLI)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#tips" class=md-nav__link>
+<span class=md-ellipsis>
+Tips
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#see-also" class=md-nav__link>
+<span class=md-ellipsis>
+See also
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class=md-nav__item>
+<a href="../apple2/" class=md-nav__link>
+<span class=md-ellipsis>
+Apple II
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../dragon-coco/" class=md-nav__link>
+<span class=md-ellipsis>
+Dragon 32 / CoCo 2
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../vectrex/" class=md-nav__link>
+<span class=md-ellipsis>
+Vectrex
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../sega/" class=md-nav__link>
+<span class=md-ellipsis>
+Sega Master System / Game Gear
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../x86/" class=md-nav__link>
+<span class=md-ellipsis>
+x86 / DOSBox
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" type=checkbox id=__nav_4>
+<label class=md-nav__link for=__nav_4 id=__nav_4_label tabindex=0>
+<span class=md-ellipsis>
+Assembly
+</span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav class=md-nav data-md-level=1 aria-labelledby=__nav_4_label aria-expanded=false>
+<label class=md-nav__title for=__nav_4>
+<span class="md-nav__icon md-icon"></span>
+Assembly
+</label>
+<ul class=md-nav__list data-md-scrollfix>
+<li class=md-nav__item>
+<a href="../../assembly/" class=md-nav__link>
+<span class=md-ellipsis>
+Assembly
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../assembly/6502/" class=md-nav__link>
+<span class=md-ellipsis>
+6502 assembly
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../assembly/z80/" class=md-nav__link>
+<span class=md-ellipsis>
+Z80 assembly
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../assembly/6809/" class=md-nav__link>
+<span class=md-ellipsis>
+6809 assembly
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" type=checkbox id=__nav_5>
+<label class=md-nav__link for=__nav_5 id=__nav_5_label tabindex=0>
+<span class=md-ellipsis>
+C
+</span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav class=md-nav data-md-level=1 aria-labelledby=__nav_5_label aria-expanded=false>
+<label class=md-nav__title for=__nav_5>
+<span class="md-nav__icon md-icon"></span>
+C
+</label>
+<ul class=md-nav__list data-md-scrollfix>
+<li class=md-nav__item>
+<a href="../../c/" class=md-nav__link>
+<span class=md-ellipsis>
+C on retro systems
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../c/cc65/" class=md-nav__link>
+<span class=md-ellipsis>
+cc65 (6502)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../c/z88dk/" class=md-nav__link>
+<span class=md-ellipsis>
+z88dk (Z80)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../c/cmoc/" class=md-nav__link>
+<span class=md-ellipsis>
+CMOC (6809)
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" type=checkbox id=__nav_6>
+<label class=md-nav__link for=__nav_6 id=__nav_6_label tabindex=0>
+<span class=md-ellipsis>
+BASIC
+</span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav class=md-nav data-md-level=1 aria-labelledby=__nav_6_label aria-expanded=false>
+<label class=md-nav__title for=__nav_6>
+<span class="md-nav__icon md-icon"></span>
+BASIC
+</label>
+<ul class=md-nav__list data-md-scrollfix>
+<li class=md-nav__item>
+<a href="../../basic/" class=md-nav__link>
+<span class=md-ellipsis>
+BASIC dialects
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/commodore-basic-v2/" class=md-nav__link>
+<span class=md-ellipsis>
+Commodore BASIC V2
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/xc-basic-3/" class=md-nav__link>
+<span class=md-ellipsis>
+XC-BASIC 3
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/bbc-basic/" class=md-nav__link>
+<span class=md-ellipsis>
+BBC BASIC
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/zx-basic/" class=md-nav__link>
+<span class=md-ellipsis>
+ZX BASIC (Boriel)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/color-basic/" class=md-nav__link>
+<span class=md-ellipsis>
+Color BASIC
+</span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" type=checkbox id=__nav_6_7>
+<label class=md-nav__link for=__nav_6_7 id=__nav_6_7_label tabindex=0>
+<span class=md-ellipsis>
+RGC BASIC
+</span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav class=md-nav data-md-level=2 aria-labelledby=__nav_6_7_label aria-expanded=false>
+<label class=md-nav__title for=__nav_6_7>
+<span class="md-nav__icon md-icon"></span>
+RGC BASIC
+</label>
+<ul class=md-nav__list data-md-scrollfix>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/" class=md-nav__link>
+<span class=md-ellipsis>
+Overview
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/getting-started/" class=md-nav__link>
+<span class=md-ellipsis>
+Getting started
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/install/" class=md-nav__link>
+<span class=md-ellipsis>
+Install & platforms
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/web-ide/" class=md-nav__link>
+<span class=md-ellipsis>
+Web IDE (WASM)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/language/" class=md-nav__link>
+<span class=md-ellipsis>
+Language reference
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/terminal-petscii/" class=md-nav__link>
+<span class=md-ellipsis>
+Terminal & PETSCII
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/graphics-raylib/" class=md-nav__link>
+<span class=md-ellipsis>
+Graphics (Raylib)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/network-and-buffers/" class=md-nav__link>
+<span class=md-ellipsis>
+Network & buffers
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/level-authoring/" class=md-nav__link>
+<span class=md-ellipsis>
+Level authoring (MAPLOAD vs builder)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../basic/rgc-basic/rpg-tutorial/" class=md-nav__link>
+<span class=md-ellipsis>
+RPG tutorial (objects, loot, enemies, AI)
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" type=checkbox id=__nav_7>
+<label class=md-nav__link for=__nav_7 id=__nav_7_label tabindex=0>
+<span class=md-ellipsis>
+TRSE
+</span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav class=md-nav data-md-level=1 aria-labelledby=__nav_7_label aria-expanded=false>
+<label class=md-nav__title for=__nav_7>
+<span class="md-nav__icon md-icon"></span>
+TRSE
+</label>
+<ul class=md-nav__list data-md-scrollfix>
+<li class=md-nav__item>
+<a href="../../trse/" class=md-nav__link>
+<span class=md-ellipsis>
+TRSE (Turbo Rascal)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../trse/language/" class=md-nav__link>
+<span class=md-ellipsis>
+The TRSE language
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../trse/reference/methods-index/" class=md-nav__link>
+<span class=md-ellipsis>
+Methods (reference)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../trse/reference/units-index/" class=md-nav__link>
+<span class=md-ellipsis>
+Included units (.tru)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="../../trse/help-import/" class=md-nav__link>
+<span class=md-ellipsis>
+TRSE reference in these docs
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component=sidebar data-md-type=toc>
+<div class=md-sidebar__scrollwrap>
+<div class=md-sidebar__inner>
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+<label class=md-nav__title for=__toc>
+<span class="md-nav__icon md-icon"></span>
+Table of contents
+</label>
+<ul class=md-nav__list data-md-component=toc data-md-scrollfix>
+<li class=md-nav__item>
+<a href="#languages-in-the-ide" class=md-nav__link>
+<span class=md-ellipsis>
+Languages in the IDE
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#quick-start" class=md-nav__link>
+<span class=md-ellipsis>
+Quick start
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#hardware-overview" class=md-nav__link>
+<span class=md-ellipsis>
+Hardware overview
+</span>
+</a>
+<nav class=md-nav aria-label="Hardware overview">
+<ul class=md-nav__list>
+<li class=md-nav__item>
+<a href="#the-custom-chips" class=md-nav__link>
+<span class=md-ellipsis>
+The custom chips
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#the-display-list" class=md-nav__link>
+<span class=md-ellipsis>
+The Display List
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#graphics-modes" class=md-nav__link>
+<span class=md-ellipsis>
+Graphics modes
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#memory-map" class=md-nav__link>
+<span class=md-ellipsis>
+Memory map
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#key-hardware-registers" class=md-nav__link>
+<span class=md-ellipsis>
+Key hardware registers
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class=md-nav__item>
+<a href="#players-and-missiles-sprites" class=md-nav__link>
+<span class=md-ellipsis>
+Players and Missiles (sprites)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#programming-with-cc65-c" class=md-nav__link>
+<span class=md-ellipsis>
+Programming with cc65 C
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#basic-quick-reference" class=md-nav__link>
+<span class=md-ellipsis>
+BASIC quick reference
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#display-list-interrupts-dli" class=md-nav__link>
+<span class=md-ellipsis>
+Display List Interrupts (DLI)
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#tips" class=md-nav__link>
+<span class=md-ellipsis>
+Tips
+</span>
+</a>
+</li>
+<li class=md-nav__item>
+<a href="#see-also" class=md-nav__link>
+<span class=md-ellipsis>
+See also
+</span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class=md-content data-md-component=content>
+<article class="md-content__inner md-typeset">
+<a href="https://github.com/omiq/retrodocs/edit/main/docs/platforms/atari8.md" title="Edit this page" class="md-content__button md-icon" rel=edit>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+</a>
+<h1 id=atari-8-bit>Atari 8-bit</h1>
+<p>The <strong>Atari 8-bit family</strong> (400, 800, XL, XE — 1979 onwards) is built around a 1.79 MHz <strong>MOS 6502B</strong> CPU, but its real strength lies in the custom chips alongside it: <strong>ANTIC</strong> (graphics), <strong>GTIA</strong> (display), <strong>POKEY</strong> (sound + keyboard), and <strong>PIA</strong> (I/O). Together they give the Atari 8-bit hardware capabilities that rival the C64.</p>
+<p>The Atari 8-bit machines are well-documented, have an active community, and offer some genuinely unique features — particularly ANTIC's Display List, which allows multiple graphics modes to be mixed on the same screen.</p>
+<h2 id=languages-in-the-ide>Languages in the IDE</h2>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CC65 C</strong></td>
+<td>Structured programs targeting the Atari 8-bit</td>
+</tr>
+<tr>
+<td><strong>6502 assembly</strong></td>
+<td>Low-level hardware access and maximum performance</td>
+</tr>
+</tbody>
+</table>
+<h2 id=quick-start>Quick start</h2>
+<ol>
+<li>Select <strong>Atari 8-bit</strong> (or the specific model) as the platform.</li>
+<li>Choose <strong>C / cc65</strong> or <strong>Assembly</strong>.</li>
+<li>The IDE loads an Atari emulator (Altirra-based or similar) with your program.</li>
+</ol>
+<h2 id=hardware-overview>Hardware overview</h2>
+<h3 id=the-custom-chips>The custom chips</h3>
+<p>Unlike the C64, the Atari 8-bit doesn't map everything through one or two chips. Four custom chips each handle different roles:</p>
+<p><strong>ANTIC</strong> ($D400–$D41F) — the display processor. It reads a <strong>Display List</strong> from RAM and drives the electron beam independently of the 6502. The CPU can set up the Display List and then let ANTIC handle the video with minimal intervention.</p>
+<p><strong>GTIA</strong> ($C000–$C0FF) — the colour/priority chip. It translates ANTIC's output into colours, handles player/missile (sprite) priorities, and supports several colour interpretation modes.</p>
+<p><strong>POKEY</strong> ($D200–$D21F) — handles sound (4 channels), the keyboard, serial I/O (SIO bus), and timer interrupts. The 4-channel sound hardware is very capable.</p>
+<p><strong>PIA</strong> ($D300–$D3FF) — joystick ports and some I/O.</p>
+<h3 id=the-display-list>The Display List</h3>
+<p>ANTIC's <strong>Display List</strong> is a table in RAM that tells ANTIC what to draw on each line of the screen. Each entry is one byte (a mode command) or three bytes (a mode command + address of the data to display). ANTIC reads this table at 1.79 MHz while the CPU is doing something else.</p>
+<p>This is powerful: you can mix text and graphics modes on the same screen, change the colour of different parts of the screen by inserting wait-for-line-blank (DLI) instructions, or do raster effects without tying up the CPU.</p>
+<p>A minimal Display List:</p>
+<div class=highlight><pre><span></span><code><a id=__codelineno-0-1 name=__codelineno-0-1 href="#__codelineno-0-1"></a><span class=c1>; Display List for a 40-column text screen</span>
+<a id=__codelineno-0-2 name=__codelineno-0-2 href="#__codelineno-0-2"></a><span class=nl>display_list:</span>
+<a id=__codelineno-0-3 name=__codelineno-0-3 href="#__codelineno-0-3"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$70</span><span class=p>,</span><span class=w> </span><span class=no>$70</span><span class=p>,</span><span class=w> </span><span class=no>$70</span><span class=w>     </span><span class=c1>; 3 × 8 blank lines</span>
+<a id=__codelineno-0-4 name=__codelineno-0-4 href="#__codelineno-0-4"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$42</span><span class=w>               </span><span class=c1>; Mode 2 text + LMS (Load Memory Scan)</span>
+<a id=__codelineno-0-5 name=__codelineno-0-5 href="#__codelineno-0-5"></a><span class=w>    </span><span class=na>.word</span><span class=w> </span><span class=no>screen_ram</span><span class=w>        </span><span class=c1>; Address of first text line</span>
+<a id=__codelineno-0-6 name=__codelineno-0-6 href="#__codelineno-0-6"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span><span class=w>     </span><span class=c1>; Remaining text lines (24 total)</span>
+<a id=__codelineno-0-7 name=__codelineno-0-7 href="#__codelineno-0-7"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span>
+<a id=__codelineno-0-8 name=__codelineno-0-8 href="#__codelineno-0-8"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span>
+<a id=__codelineno-0-9 name=__codelineno-0-9 href="#__codelineno-0-9"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span>
+<a id=__codelineno-0-10 name=__codelineno-0-10 href="#__codelineno-0-10"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span>
+<a id=__codelineno-0-11 name=__codelineno-0-11 href="#__codelineno-0-11"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span>
+<a id=__codelineno-0-12 name=__codelineno-0-12 href="#__codelineno-0-12"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span><span class=p>,</span><span class=w> </span><span class=no>$02</span>
+<a id=__codelineno-0-13 name=__codelineno-0-13 href="#__codelineno-0-13"></a><span class=w>    </span><span class=na>.byte</span><span class=w> </span><span class=no>$41</span><span class=w>               </span><span class=c1>; Jump and wait for VBlank</span>
+<a id=__codelineno-0-14 name=__codelineno-0-14 href="#__codelineno-0-14"></a><span class=w>    </span><span class=na>.word</span><span class=w> </span><span class=no>display_list</span><span class=w>      </span><span class=c1>; Loop back to start</span>
+</code></pre></div>
+<h3 id=graphics-modes>Graphics modes</h3>
+<p>ANTIC supports multiple text and graphics modes, each with different resolutions and colour depths. The OS adds extra modes on top.</p>
+<p>From BASIC, modes are selected with <code>GRAPHICS n</code>:</p>
+<table>
+<thead>
+<tr>
+<th>GRAPHICS #</th>
+<th>ANTIC mode</th>
+<th>Pixels</th>
+<th>Colours</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>2</td>
+<td>40×24 text</td>
+<td>2+bg</td>
+</tr>
+<tr>
+<td>8</td>
+<td>F</td>
+<td>320×192</td>
+<td>2</td>
+</tr>
+<tr>
+<td>7</td>
+<td>D</td>
+<td>160×96</td>
+<td>4</td>
+</tr>
+<tr>
+<td>15</td>
+<td>F</td>
+<td>160×192</td>
+<td>4 (MultiColor)</td>
+</tr>
+</tbody>
+</table>
+<p>Graphics modes 1–6 and 9–15 offer various resolutions and colour depths. The GTIA can also apply three additional colour interpretation modes to ANTIC's output, creating the "GTIA modes" with unusual colour/resolution tradeoffs.</p>
+<h3 id=memory-map>Memory map</h3>
+<table>
+<thead>
+<tr>
+<th>Range</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$0000–$00FF</td>
+<td>Zero page (OS uses some — check the OS manual)</td>
+</tr>
+<tr>
+<td>$0100–$01FF</td>
+<td>Stack</td>
+</tr>
+<tr>
+<td>$0200–$02FF</td>
+<td>OS page 2</td>
+</tr>
+<tr>
+<td>$0300–$03FF</td>
+<td>OS page 3</td>
+</tr>
+<tr>
+<td>$0400–$04FF</td>
+<td>OS page 4 (floating point)</td>
+</tr>
+<tr>
+<td>$0600–$BFFF</td>
+<td>Free RAM (varies by model and cart)</td>
+</tr>
+<tr>
+<td>$C000–$CFFF</td>
+<td>GTIA registers</td>
+</tr>
+<tr>
+<td>$D000–$D0FF</td>
+<td>(Reserved)</td>
+</tr>
+<tr>
+<td>$D200–$D2FF</td>
+<td>POKEY registers</td>
+</tr>
+<tr>
+<td>$D300–$D3FF</td>
+<td>PIA registers</td>
+</tr>
+<tr>
+<td>$D400–$D4FF</td>
+<td>ANTIC registers</td>
+</tr>
+<tr>
+<td>$D800–$DFFF</td>
+<td>Floating point ROM</td>
+</tr>
+<tr>
+<td>$E000–$FFFF</td>
+<td>OS ROM</td>
+</tr>
+</tbody>
+</table>
+<h3 id=key-hardware-registers>Key hardware registers</h3>
+<p><strong>ANTIC:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Address</th>
+<th>Register</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$D400</td>
+<td>DMACTL</td>
+<td>DMA enable, display width</td>
+</tr>
+<tr>
+<td>$D402/$D403</td>
+<td>DLISTL/H</td>
+<td>Display List address</td>
+</tr>
+<tr>
+<td>$D407</td>
+<td>PMBASE</td>
+<td>Player/Missile base address</td>
+</tr>
+<tr>
+<td>$D40A</td>
+<td>WSYNC</td>
+<td>Write to halt CPU until end of scanline</td>
+</tr>
+<tr>
+<td>$D40B</td>
+<td>VCOUNT</td>
+<td>Current scanline counter</td>
+</tr>
+<tr>
+<td>$D40C</td>
+<td>PENH</td>
+<td>Light pen horizontal</td>
+</tr>
+<tr>
+<td>$D40E</td>
+<td>NMIEN</td>
+<td>NMI enable (VBlank and DLI)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>GTIA:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Address</th>
+<th>Register</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$C000–$C003</td>
+<td>M0PF–M3PF</td>
+<td>Missile/player collisions</td>
+</tr>
+<tr>
+<td>$C010–$C017</td>
+<td>COLPM0–COLPF3</td>
+<td>Player and playfield colours</td>
+</tr>
+<tr>
+<td>$C018</td>
+<td>COLBK</td>
+<td>Background colour</td>
+</tr>
+<tr>
+<td>$C01F</td>
+<td>CONSOL</td>
+<td>Console keys (Start/Select/Option)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>POKEY:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Address</th>
+<th>Register</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$D200/$D201</td>
+<td>AUDF1/AUDC1</td>
+<td>Channel 1 frequency/control</td>
+</tr>
+<tr>
+<td>$D202/$D203</td>
+<td>AUDF2/AUDC2</td>
+<td>Channel 2</td>
+</tr>
+<tr>
+<td>$D204/$D205</td>
+<td>AUDF3/AUDC3</td>
+<td>Channel 3</td>
+</tr>
+<tr>
+<td>$D206/$D207</td>
+<td>AUDF4/AUDC4</td>
+<td>Channel 4</td>
+</tr>
+<tr>
+<td>$D208</td>
+<td>AUDCTL</td>
+<td>Audio control (frequency base, poly clocks)</td>
+</tr>
+<tr>
+<td>$D209</td>
+<td>STIMER</td>
+<td>Start timers</td>
+</tr>
+<tr>
+<td>$D20E</td>
+<td>IRQEN</td>
+<td>IRQ enable</td>
+</tr>
+<tr>
+<td>$D20F</td>
+<td>SKCTL</td>
+<td>Serial/keyboard control</td>
+</tr>
+</tbody>
+</table>
+<h2 id=players-and-missiles-sprites>Players and Missiles (sprites)</h2>
+<p>Atari 8-bit "hardware sprites" are called <strong>Players</strong> (wide) and <strong>Missiles</strong> (narrow):</p>
+<ul>
+<li><strong>4 Players</strong>: each 8 pixels wide, 128/192/256 scanlines tall (selectable height), one colour per player</li>
+<li><strong>4 Missiles</strong>: each 2 pixels wide, associated with a player's colour, or combined into a 5th player</li>
+</ul>
+<p>Players and Missiles are defined as vertical byte strips in RAM, starting at the address specified by PMBASE. The horizontal position is set in GTIA registers.</p>
+<div class=highlight><pre><span></span><code><a id=__codelineno-1-1 name=__codelineno-1-1 href="#__codelineno-1-1"></a><span class=c1>; Position Player 0 at X=100</span>
+<a id=__codelineno-1-2 name=__codelineno-1-2 href="#__codelineno-1-2"></a><span class=nf>LDA</span><span class=w> </span><span class=mi>#100</span>
+<a id=__codelineno-1-3 name=__codelineno-1-3 href="#__codelineno-1-3"></a><span class=nf>STA</span><span class=w> </span><span class=no>$D000</span><span class=w>       </span><span class=c1>; HPOSP0 — Player 0 horizontal position</span>
+<a id=__codelineno-1-4 name=__codelineno-1-4 href="#__codelineno-1-4"></a>
+<a id=__codelineno-1-5 name=__codelineno-1-5 href="#__codelineno-1-5"></a><span class=c1>; Enable Player 0 DMA</span>
+<a id=__codelineno-1-6 name=__codelineno-1-6 href="#__codelineno-1-6"></a><span class=nf>LDA</span><span class=w> </span><span class=c1>#$0E        ; DMACTL: enable PM DMA, wide display</span>
+<a id=__codelineno-1-7 name=__codelineno-1-7 href="#__codelineno-1-7"></a><span class=nf>STA</span><span class=w> </span><span class=no>$D400</span>
+</code></pre></div>
+<h2 id=programming-with-cc65-c>Programming with cc65 C</h2>
+<p>cc65 includes an <code>atari</code> platform target with headers for all the hardware chips:</p>
+<div class=highlight><pre><span></span><code><a id=__codelineno-2-1 name=__codelineno-2-1 href="#__codelineno-2-1"></a><span class=cp>#include</span><span class=w> </span><span class=cpf>&lt;atari.h&gt;</span>
+<a id=__codelineno-2-2 name=__codelineno-2-2 href="#__codelineno-2-2"></a><span class=cp>#include</span><span class=w> </span><span class=cpf>&lt;stdio.h&gt;</span>
+<a id=__codelineno-2-3 name=__codelineno-2-3 href="#__codelineno-2-3"></a><span class=cp>#include</span><span class=w> </span><span class=cpf>&lt;conio.h&gt;</span>
+<a id=__codelineno-2-4 name=__codelineno-2-4 href="#__codelineno-2-4"></a>
+<a id=__codelineno-2-5 name=__codelineno-2-5 href="#__codelineno-2-5"></a><span class=kt>int</span><span class=w> </span><span class=nf>main</span><span class=p>(</span><span class=kt>void</span><span class=p>)</span><span class=w> </span><span class=p>{</span>
+<a id=__codelineno-2-6 name=__codelineno-2-6 href="#__codelineno-2-6"></a><span class=w>    </span><span class=cm>/* Change background colour */</span>
+<a id=__codelineno-2-7 name=__codelineno-2-7 href="#__codelineno-2-7"></a><span class=w>    </span><span class=n>GTIA_WRITE</span><span class=p>.</span><span class=n>colbk</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=mh>0x94</span><span class=p>;</span><span class=w>    </span><span class=cm>/* Blue-ish */</span>
+<a id=__codelineno-2-8 name=__codelineno-2-8 href="#__codelineno-2-8"></a>
+<a id=__codelineno-2-9 name=__codelineno-2-9 href="#__codelineno-2-9"></a><span class=w>    </span><span class=cm>/* Enable graphics mode 0 (text) */</span>
+<a id=__codelineno-2-10 name=__codelineno-2-10 href="#__codelineno-2-10"></a><span class=w>    </span><span class=cm>/* In cc65, use the OS screen() function or direct GTIA */</span>
+<a id=__codelineno-2-11 name=__codelineno-2-11 href="#__codelineno-2-11"></a>
+<a id=__codelineno-2-12 name=__codelineno-2-12 href="#__codelineno-2-12"></a><span class=w>    </span><span class=n>printf</span><span class=p>(</span><span class=s>&quot;Hello, Atari!</span><span class=se>\n</span><span class=s>&quot;</span><span class=p>);</span>
+<a id=__codelineno-2-13 name=__codelineno-2-13 href="#__codelineno-2-13"></a>
+<a id=__codelineno-2-14 name=__codelineno-2-14 href="#__codelineno-2-14"></a><span class=w>    </span><span class=cm>/* Read joystick 0 (PORTA on PIA) */</span>
+<a id=__codelineno-2-15 name=__codelineno-2-15 href="#__codelineno-2-15"></a><span class=w>    </span><span class=kt>unsigned</span><span class=w> </span><span class=kt>char</span><span class=w> </span><span class=n>joy</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>PIA</span><span class=p>.</span><span class=n>porta</span><span class=p>;</span>
+<a id=__codelineno-2-16 name=__codelineno-2-16 href="#__codelineno-2-16"></a><span class=w>    </span><span class=cm>/* Bits 0-3: Up/Down/Left/Right (active low) */</span>
+<a id=__codelineno-2-17 name=__codelineno-2-17 href="#__codelineno-2-17"></a><span class=w>    </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=o>!</span><span class=p>(</span><span class=n>joy</span><span class=w> </span><span class=o>&amp;</span><span class=w> </span><span class=mh>0x01</span><span class=p>))</span><span class=w> </span><span class=p>{</span>
+<a id=__codelineno-2-18 name=__codelineno-2-18 href="#__codelineno-2-18"></a><span class=w>        </span><span class=cm>/* Joystick up */</span>
+<a id=__codelineno-2-19 name=__codelineno-2-19 href="#__codelineno-2-19"></a><span class=w>    </span><span class=p>}</span>
+<a id=__codelineno-2-20 name=__codelineno-2-20 href="#__codelineno-2-20"></a>
+<a id=__codelineno-2-21 name=__codelineno-2-21 href="#__codelineno-2-21"></a><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=mi>0</span><span class=p>;</span>
+<a id=__codelineno-2-22 name=__codelineno-2-22 href="#__codelineno-2-22"></a><span class=p>}</span>
+</code></pre></div>
+<h2 id=basic-quick-reference>BASIC quick reference</h2>
+<p>In Atari BASIC (accessed via the OS ROM):</p>
+<div class=highlight><pre><span></span><code><a id=__codelineno-3-1 name=__codelineno-3-1 href="#__codelineno-3-1"></a><span class=nl>10</span><span class=w> </span><span class=vg>GRAPHICS</span><span class=w> </span><span class=il>7</span><span class=o>+</span><span class=il>16</span><span class=w>     </span><span class=o>:</span><span class=w> </span><span class=kr>REM</span><span class=w> </span><span class=vg>Mode</span><span class=w> </span><span class=il>7</span><span class=p>,</span><span class=w> </span><span class=vg>no</span><span class=w> </span><span class=vg>text</span><span class=w> </span><span class=vg>window</span><span class=w> </span><span class=p>(</span><span class=o>+</span><span class=il>16</span><span class=p>)</span>
+<a id=__codelineno-3-2 name=__codelineno-3-2 href="#__codelineno-3-2"></a><span class=nl>20</span><span class=w> </span><span class=vg>SETCOLOR</span><span class=w> </span><span class=il>2</span><span class=p>,</span><span class=il>4</span><span class=p>,</span><span class=il>6</span><span class=w>    </span><span class=o>:</span><span class=w> </span><span class=kr>REM</span><span class=w> </span><span class=vg>Set</span><span class=w> </span><span class=vg>playfield</span><span class=w> </span><span class=vg>colour</span><span class=w> </span><span class=il>2</span><span class=o>:</span><span class=w> </span><span class=vg>hue</span><span class=w> </span><span class=il>4</span><span class=p>,</span><span class=w> </span><span class=vg>lum</span><span class=w> </span><span class=il>6</span>
+<a id=__codelineno-3-3 name=__codelineno-3-3 href="#__codelineno-3-3"></a><span class=nl>30</span><span class=w> </span><span class=kr>COLOR</span><span class=w> </span><span class=il>1</span><span class=w>           </span><span class=o>:</span><span class=w> </span><span class=kr>REM</span><span class=w> </span><span class=vg>Set</span><span class=w> </span><span class=vg>drawing</span><span class=w> </span><span class=vg>colour</span><span class=w> </span><span class=vg>register</span><span class=w> </span><span class=il>1</span>
+<a id=__codelineno-3-4 name=__codelineno-3-4 href="#__codelineno-3-4"></a><span class=nl>40</span><span class=w> </span><span class=vg>PLOT</span><span class=w> </span><span class=il>80</span><span class=p>,</span><span class=il>48</span><span class=w>        </span><span class=o>:</span><span class=w> </span><span class=kr>REM</span><span class=w> </span><span class=vg>Plot</span><span class=w> </span><span class=vg>pixel</span><span class=w> </span><span class=vg>at</span><span class=w> </span><span class=p>(</span><span class=il>80</span><span class=p>,</span><span class=w> </span><span class=il>48</span><span class=p>)</span>
+<a id=__codelineno-3-5 name=__codelineno-3-5 href="#__codelineno-3-5"></a><span class=nl>50</span><span class=w> </span><span class=vg>DRAWTO</span><span class=w> </span><span class=il>100</span><span class=p>,</span><span class=il>80</span><span class=w>     </span><span class=o>:</span><span class=w> </span><span class=kr>REM</span><span class=w> </span><span class=vg>Draw</span><span class=w> </span><span class=vg>line</span><span class=w> </span><span class=vg>to</span><span class=w> </span><span class=p>(</span><span class=il>100</span><span class=p>,</span><span class=w> </span><span class=il>80</span><span class=p>)</span>
+<a id=__codelineno-3-6 name=__codelineno-3-6 href="#__codelineno-3-6"></a><span class=nl>60</span><span class=w> </span><span class=kr>STICK</span><span class=p>(</span><span class=il>0</span><span class=p>)</span><span class=w>          </span><span class=o>:</span><span class=w> </span><span class=kr>REM</span><span class=w> </span><span class=vg>Read</span><span class=w> </span><span class=vg>joystick</span><span class=w> </span><span class=il>0</span><span class=w> </span><span class=p>(</span><span class=vg>15</span><span class=o>=</span><span class=vg>centre</span><span class=p>,</span><span class=w> </span><span class=vg>bits</span><span class=w> </span><span class=vg>for</span><span class=w> </span><span class=vg>directions</span><span class=p>)</span>
+<a id=__codelineno-3-7 name=__codelineno-3-7 href="#__codelineno-3-7"></a><span class=nl>70</span><span class=w> </span><span class=kr>STRIG</span><span class=p>(</span><span class=il>0</span><span class=p>)</span><span class=w>          </span><span class=o>:</span><span class=w> </span><span class=kr>REM</span><span class=w> </span><span class=vg>Read</span><span class=w> </span><span class=vg>fire</span><span class=w> </span><span class=vg>button</span><span class=w> </span><span class=il>0</span><span class=w> </span><span class=p>(</span><span class=vg>1</span><span class=o>=</span><span class=vg>not</span><span class=w> </span><span class=vg>pressed</span><span class=p>,</span><span class=w> </span><span class=vg>0</span><span class=o>=</span><span class=vg>pressed</span><span class=p>)</span>
+</code></pre></div>
+<h2 id=display-list-interrupts-dli>Display List Interrupts (DLI)</h2>
+<p>DLIs are a powerful feature — the ANTIC chip can trigger an NMI on specific scanlines, allowing you to change colours, scroll positions, or switch modes mid-screen.</p>
+<div class=highlight><pre><span></span><code><a id=__codelineno-4-1 name=__codelineno-4-1 href="#__codelineno-4-1"></a><span class=c1>; Simple DLI — change background colour on a specific scanline</span>
+<a id=__codelineno-4-2 name=__codelineno-4-2 href="#__codelineno-4-2"></a><span class=nl>dli_handler:</span>
+<a id=__codelineno-4-3 name=__codelineno-4-3 href="#__codelineno-4-3"></a><span class=w>    </span><span class=nf>PHA</span><span class=w>                 </span><span class=c1>; Save A</span>
+<a id=__codelineno-4-4 name=__codelineno-4-4 href="#__codelineno-4-4"></a><span class=w>    </span><span class=nf>LDA</span><span class=w> </span><span class=c1>#$28            ; New background colour (orange)</span>
+<a id=__codelineno-4-5 name=__codelineno-4-5 href="#__codelineno-4-5"></a><span class=w>    </span><span class=nf>STA</span><span class=w> </span><span class=no>$C018</span><span class=w>           </span><span class=c1>; COLBK (WSYNC isn&#39;t needed here but helps timing)</span>
+<a id=__codelineno-4-6 name=__codelineno-4-6 href="#__codelineno-4-6"></a><span class=w>    </span><span class=nf>PLA</span>
+<a id=__codelineno-4-7 name=__codelineno-4-7 href="#__codelineno-4-7"></a><span class=w>    </span><span class=nf>RTI</span>
+<a id=__codelineno-4-8 name=__codelineno-4-8 href="#__codelineno-4-8"></a>
+<a id=__codelineno-4-9 name=__codelineno-4-9 href="#__codelineno-4-9"></a><span class=c1>; Set DLI handler address</span>
+<a id=__codelineno-4-10 name=__codelineno-4-10 href="#__codelineno-4-10"></a><span class=w>    </span><span class=nf>LDA</span><span class=w> </span><span class=c1>#&lt;dli_handler</span>
+<a id=__codelineno-4-11 name=__codelineno-4-11 href="#__codelineno-4-11"></a><span class=w>    </span><span class=nf>STA</span><span class=w> </span><span class=no>$0200</span><span class=w>           </span><span class=c1>; VDSLST (Display List IRQ vector, low byte)</span>
+<a id=__codelineno-4-12 name=__codelineno-4-12 href="#__codelineno-4-12"></a><span class=w>    </span><span class=nf>LDA</span><span class=w> </span><span class=c1>#&gt;dli_handler</span>
+<a id=__codelineno-4-13 name=__codelineno-4-13 href="#__codelineno-4-13"></a><span class=w>    </span><span class=nf>STA</span><span class=w> </span><span class=no>$0201</span><span class=w>           </span><span class=c1>; VDSLST high byte</span>
+<a id=__codelineno-4-14 name=__codelineno-4-14 href="#__codelineno-4-14"></a><span class=w>    </span><span class=nf>LDA</span><span class=w> </span><span class=c1>#$80            ; Enable DLI NMI</span>
+<a id=__codelineno-4-15 name=__codelineno-4-15 href="#__codelineno-4-15"></a><span class=w>    </span><span class=nf>STA</span><span class=w> </span><span class=no>$D40E</span><span class=w>           </span><span class=c1>; NMIEN</span>
+</code></pre></div>
+<p>Add <code>$80</code> to a Display List entry to trigger the DLI on that line.</p>
+<h2 id=tips>Tips</h2>
+<p><strong>Use WSYNC for timing</strong> — writing any value to $D40A (WSYNC) halts the CPU until the end of the current scanline. This is the easiest way to time hardware accesses precisely.</p>
+<p><strong>Use the OS SIO for storage</strong> — the Atari's Serial I/O (SIO) bus handles disk drives, cassette, and other peripherals through a clean OS interface. Don't bit-bang the hardware if you don't have to.</p>
+<p><strong>Collision detection is hardware</strong> — GTIA tracks collisions between players, missiles, and playfields automatically. Read the collision registers ($C000–$C00F) for zero-cost collision data.</p>
+<p><strong>POKEY has built-in serial</strong> — the SIO bus uses POKEY for clocking. If you're writing custom SIO-compatible hardware, POKEY handles the timing.</p>
+<h2 id=see-also>See also</h2>
+<ul>
+<li><a href="../../c/cc65/">cc65 / C</a> — C compilation targeting the Atari 8-bit</li>
+<li><a href="../../assembly/6502/">6502 assembly</a> — 6502 assembly language reference</li>
+<li><a href="../../ide/getting-started/">IDE getting started</a></li>
+</ul>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class=md-footer>
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class=md-copyright>
+<div class=md-copyright__highlight>
+Copyright &copy; Retro Game Coders
+</div>
+Made with
+<a href="https://squidfunk.github.io/mkdocs-material/" target=_blank rel=noopener>
+Material for MkDocs
+</a>
+</div>
+<div class=md-social>
+<a href="https://retrogamecoders.com/" target=_blank rel=noopener title="Retro Game Coders" class=md-social__link>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M277.8 8.6c-12.3-11.4-31.3-11.4-43.5 0l-224 208c-9.6 9-12.8 22.9-8 35.1S18.8 272 32 272h16v176c0 35.3 28.7 64 64 64h288c35.3 0 64-28.7 64-64V272h16c13.2 0 25-8.1 29.8-20.3s1.6-26.2-8-35.1zM240 320h32c26.5 0 48 21.5 48 48v96H192v-96c0-26.5 21.5-48 48-48"/></svg>
+</a>
+<a href="https://ide.retrogamecoders.com/" target=_blank rel=noopener title="Web IDE" class=md-social__link>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M64 96c0-35.3 28.7-64 64-64h384c35.3 0 64 28.7 64 64v240h-64V96H128v240H64zM0 403.2C0 392.6 8.6 384 19.2 384h601.6c10.6 0 19.2 8.6 19.2 19.2 0 42.4-34.4 76.8-76.8 76.8H76.8C34.4 480 0 445.6 0 403.2M281 209l-31 31 31 31c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-48-48c-9.4-9.4-9.4-24.6 0-33.9l48-48c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9zm112-34 48 48c9.4 9.4 9.4 24.6 0 33.9l-48 48c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l31-31-31-31c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0z"/></svg>
+</a>
+<a href="https://retrogamecoders.com/community/" target=_blank rel=noopener title=Community class=md-social__link>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M320 16a104 104 0 1 1 0 208 104 104 0 1 1 0-208M96 88a72 72 0 1 1 0 144 72 72 0 1 1 0-144M0 416c0-70.7 57.3-128 128-128 12.8 0 25.2 1.9 36.9 5.4C132 330.2 112 378.8 112 432v16c0 11.4 2.4 22.2 6.7 32H32c-17.7 0-32-14.3-32-32zm521.3 64c4.3-9.8 6.7-20.6 6.7-32v-16c0-53.2-20-101.8-52.9-138.6 11.7-3.5 24.1-5.4 36.9-5.4 70.7 0 128 57.3 128 128v32c0 17.7-14.3 32-32 32zM472 160a72 72 0 1 1 144 0 72 72 0 1 1-144 0M160 432c0-88.4 71.6-160 160-160s160 71.6 160 160v16c0 17.7-14.3 32-32 32H192c-17.7 0-32-14.3-32-32z"/></svg>
+</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class=md-dialog data-md-component=dialog>
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id=__config type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+<script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+</body>
+</html>

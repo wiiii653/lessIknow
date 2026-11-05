@@ -1,0 +1,197 @@
+Atari technical documents: Atari 8bits 
+ 
+ 
+ 
+ 
+ Atari 8-bit Computer 
+
+ Technical Documents Archive 
+
+ 
+
+ 
+
+ All documents below require
+Adobe 3.0 
+
+ Reader minimum to view,
+click the above 
+
+ link to download the latest
+version 
+
+ 
+
+ 
+ 
+ 
+ 
+ Atari
+Speech Handler ERS 
+
+ (715K Adobe 3.0 PDF) 
+ 
+
+ 
+
+ Detailed confidential document on the
+device handler program to control the speech sythesiser in the Atari 1400
+and 1450 computer systems 
+ 
+   
+ 
+
+ 
+ 
+ Antic
+Chip Technical Data 
+
+ (2.8mb
+Adobe PDF) 
+ 
+
+ 
+
+ Detailed technical document on the custom
+ANTIC processor chip used in the Atari 8bit computers and 5200 SuperSystem
+game console 
+
+   
+
+ 
+ 
+ Pokey
+Chip Data & Schematics 
+
+ (1.4mb
+Adobe PDF) 
+ 
+
+ 
+
+ Detailed technical document on the custom
+Pokey Sound/keyboard processor chip used in the Atari 8bit computers and
+5200 SuperSystem game console 
+
+   
+
+ 
+ 
+ GTIA
+Chip Data & Schematics 
+
+ (1.1mb
+Adobe PDF) 
+ 
+
+ 
+
+ Detailed technical document on the custom
+GTIA Graphics processor chip used in the Atari 8bit computers and 5200
+SuperSystem game console 
+
+   
+
+ 
+ 
+ Serial
+I/O Interface Handbook 
+
+ (638K
+Adobe PDF) 
+ 
+
+ 
+
+ Reference manual detailing the technical
+aspects of the SIO (Serial I/O) interface system used on the Atari 8bit
+computers and their peripherals. 
+
+   
+
+ 
+ 
+ Atari
+1400/1450 Modem 
+
+ (1.1MB Adobe 3.0 PDF) 
+ 
+
+ 
+
+ Detailed confidential technical documentation
+of the design and implementation of the internal Parallel Bus Interface
+modem in the Atari 1400/1450 computers 
+
+   
+
+ 
+ 
+ Atari
+1400 Telecommunicator 
+
+ (957K Adobe 3.0 PDF) 
+ 
+
+ 
+
+ Detailed confidential technical document
+detailed the design and implementation of the Atari 1400 Telecommunicator
+modem cartridge for use with the Voltrax SC01 Speech Synthesiser chip (1450XLD's
+used SC02 chip, not compatible) 
+
+ 
+ 
+ Atari
+CGIA Chip 
+
+ (90 pages, 4.4MB Adobe PDF) 
+ 
+
+ 
+
+ Detailed confidential Atari Semiconductor
+Group (ASG) document fully detailing all the technical specifications for
+a combined ANTIC/GTIA chip. 
+
+   
+
+ 
+ 
+ Atari
+FGTIA 
+
+ (56 pages, 2.3MB Adobe PDF ) 
+ 
+
+ 
+
+ Detailed confidential Atari Semiconductor
+Group (ASG) document fully detailing all the technical specifications for
+the SECAM version of the GTIA chip 
+
+   
+
+ 
+ 
+ SWP
+ATR8000 Manual 
+
+ (75 pages, 4.2MB Adobe PDF) 
+ 
+
+ 
+
+ The owners manual for one of the most
+powerful add-on devices for the Atari 8bit line of computers.  
+Covers operation, jumper settings, drive combinations (Atari and non-Atari)
+and upgrading for using CP/M 2.2 
+
+  
+
+ 
+
+ 
+ 
+ BACK   
+| MAIN MENU

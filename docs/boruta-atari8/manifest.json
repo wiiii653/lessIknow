@@ -1,0 +1,126 @@
+{
+  "source_archive": "/home/ognjen/Pobrane/atari8-docs-TEKST-2026-10-29.zip",
+  "archive_sha256": "c92652a5b6a79301ca7b49081af0cc3d4c2bb9cd760235ab064a9bb55ad46037",
+  "files": [
+    {
+      "path": "text/mapping-the-atari.txt",
+      "bytes": 671710,
+      "sha256": "108ca6eac8a378b3a77f08f6c89f63c0e8aa635d388d109389e675dd69e93600"
+    },
+    {
+      "path": "text/altirra-hardware-reference-manual.txt",
+      "bytes": 1479749,
+      "sha256": "855e3e7ca8fbb6f020624ff87c440a47f9a048c1c72962d1929c918e916565ed"
+    },
+    {
+      "path": "text/fine-scrolling-tutorial.txt",
+      "bytes": 68259,
+      "sha256": "fdeadf2c3f1bd1947ab6cadbe1085bf875cb8b056a727421eeaa865e5c3d7b32"
+    },
+    {
+      "path": "text/vbxe-blitter-manual.txt",
+      "bytes": 34532,
+      "sha256": "645a2c36507c27dc38263e2a96d83045ebdb19df1c50dd07186339272e9f4164"
+    },
+    {
+      "path": "text/atari-400-800-os-a-source-listing-1981.txt",
+      "bytes": 162,
+      "sha256": "b3e3d3382baf12258ab139565e5c6e48a293847878be6a73b53abdad92860d3e"
+    },
+    {
+      "path": "text/retrogamecoders-atari8.txt",
+      "bytes": 9290,
+      "sha256": "d228910e66917aacbf0adfa66b6ce2745517cb5cfdeed23297d3b404bfabf64e"
+    },
+    {
+      "path": "text/atari-graphics-and-arcade-game-design.txt",
+      "bytes": 1281935,
+      "sha256": "5311d163777e0d3645f30f388f9caaa87e81d565a5cd18e549bc3a81518a2a82"
+    },
+    {
+      "path": "text/atari-800-technical-reference-notes.txt",
+      "bytes": 275,
+      "sha256": "d4d4ea8dc13f48f9d6a03f52f5b32ff8ee05a80108e4efbfde05b7000e85f883"
+    },
+    {
+      "path": "text/dli-tutorial.txt",
+      "bytes": 85089,
+      "sha256": "ac9c2b63a9444531f11026d4e3b7a10e87be5554805e4f8373e7bdc26a3e430f"
+    },
+    {
+      "path": "text/tech-docs-index-pigwa.txt",
+      "bytes": 2552,
+      "sha256": "184c867991e9f5d8f9eff004b07268a698f4a6794d578edd32ddf88331d948d7"
+    },
+    {
+      "path": "text/avery-lee-reverse-engineering-atari-video.txt",
+      "bytes": 18471,
+      "sha256": "7a1cabea44e48e1f73ef8421df37c28072d67c963f45692424bc211acce59884"
+    },
+    {
+      "path": "text/player-missile-graphics-in-basic.txt",
+      "bytes": 247161,
+      "sha256": "8ff3d8e6d31e5565986129a1c97bb12629bb7c16f89d1fe445d0df2121e41ef8"
+    },
+    {
+      "path": "text/de-re-atari.txt",
+      "bytes": 543164,
+      "sha256": "8f80a609b99ae37fe2f1e27659f990d9ccfe8dbe5bb6917ee8532b7010d578a8"
+    },
+    {
+      "path": "text/vbxe-fx-programming-en.txt",
+      "bytes": 62207,
+      "sha256": "fc1d4a59ccf8edf87dc9a52c1b4258a8781b67929a496baa8091a3efb897c46a"
+    },
+    {
+      "path": "text/atari-400-800-tech-ref-notes-os-manual-os-source-hw-manual-553p.txt",
+      "bytes": 1249697,
+      "sha256": "d4dc5232d1aabb41702d387eb292ea33c7da6a4208400def8cf7ef449ccbf2ff"
+    },
+    {
+      "path": "text/mads-manual.txt",
+      "bytes": 156466,
+      "sha256": "ea9f6b4b51635d73a8b6ec592bbb451fe8c1a8d301f3baa60afcd941952a1ce4"
+    },
+    {
+      "path": "html/tech-docs-index-pigwa.html",
+      "bytes": 9074,
+      "sha256": "6c6359bb8547bde3feb2691a833d12f842e1f05fabfce9a17b8e0de527004c37"
+    },
+    {
+      "path": "html/avery-lee-reverse-engineering-atari-video.html",
+      "bytes": 21285,
+      "sha256": "622fb0c035e29e922387b7c2c1c3eff55fded41566d9cf4cb43cd124f69c7212"
+    },
+    {
+      "path": "html/vbxe-blitter-manual.html",
+      "bytes": 62423,
+      "sha256": "76820f93c352f9f08b5bcd73e78e964e44bc185974e78c14c252edf09f7a83be"
+    },
+    {
+      "path": "html/mads-manual.html",
+      "bytes": 200046,
+      "sha256": "ee21f0a6651e7ad3d96a131aa102fcd7e0a228d644cd1eece13cc8cc34ea39a5"
+    },
+    {
+      "path": "html/dli-tutorial.html",
+      "bytes": 171501,
+      "sha256": "7b78097dd05f8ab089565066be01cc84b071e979b3908cf86b0186a1ace654ea"
+    },
+    {
+      "path": "html/retrogamecoders-atari8.html",
+      "bytes": 61241,
+      "sha256": "38ce8a8824ee2adaf53b3204eff244ed4f3d369ad4e1c95f7e5ab56e4f6b2127"
+    },
+    {
+      "path": "html/fine-scrolling-tutorial.html",
+      "bytes": 144203,
+      "sha256": "3740660cb35a1e4c95d5480b9f94d2197a5fdc45c9f4c5d7fe681cab037a87c6"
+    },
+    {
+      "path": "INDEX.md",
+      "bytes": 5651,
+      "sha256": "d2aa5e4a8dd8ef8db0e560f805bc99d0e2f664805ed80742aaa14771949e5432"
+    }
+  ]
+}

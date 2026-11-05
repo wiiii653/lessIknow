@@ -1,0 +1,77 @@
+{
+  "source": "less-i-know-release-v035.xex",
+  "source_sha256": "6d5d9cf3004f9003ede8d91aa4891a100f672c5a0e9429a6ecf20d1f5fef0ff0",
+  "bank_size": 16384,
+  "banks": [
+    {
+      "file": "bank_01.bin",
+      "sha256": "b4ddf9d426e7ffe799de76a35ef8fae055f5721ab1260a591cabd7082936eee1",
+      "all_ff": false
+    },
+    {
+      "file": "bank_02.bin",
+      "sha256": "db3933877f95bdc79c1e024313b0d8d92839cccf076e15cbb6a4d7fae207b486",
+      "all_ff": false
+    },
+    {
+      "file": "bank_03.bin",
+      "sha256": "435cd56d2c80d9e8367442517d6b07e633ff3c51a193bb4b85bae75c085d7d37",
+      "all_ff": false
+    },
+    {
+      "file": "bank_04.bin",
+      "sha256": "e2665ae7f8036a695f205592f74ff0481015936e560d888981f263a4dd995f49",
+      "all_ff": false
+    },
+    {
+      "file": "bank_05.bin",
+      "sha256": "b4c1a9792d1e5a8292ce85b9ddcc693f50e6bd1ed3581a315f5b3dfad2090bc4",
+      "all_ff": false
+    },
+    {
+      "file": "bank_06.bin",
+      "sha256": "c2acd92fefa20a95a8e0b0d9e50b0c3110437a32aa2b14852486494443ae0b7e",
+      "all_ff": false
+    },
+    {
+      "file": "bank_07.bin",
+      "sha256": "d201d2e9f0d416d48965b7ac9a79795239d4b7c6c345ded4c73799a25a9f2ff5",
+      "all_ff": false
+    },
+    {
+      "file": "bank_08.bin",
+      "sha256": "e034b81909281234fc074c386bed557e08e3ede346924fd160b31236cccc6527",
+      "all_ff": false
+    },
+    {
+      "file": "bank_09.bin",
+      "sha256": "0fbba07a833d4dcfc7024eaf313661a0ba8f80a05c6d29b8801c612e10e60dee",
+      "all_ff": true
+    },
+    {
+      "file": "bank_10.bin",
+      "sha256": "0fbba07a833d4dcfc7024eaf313661a0ba8f80a05c6d29b8801c612e10e60dee",
+      "all_ff": true
+    },
+    {
+      "file": "bank_11.bin",
+      "sha256": "0fbba07a833d4dcfc7024eaf313661a0ba8f80a05c6d29b8801c612e10e60dee",
+      "all_ff": true
+    },
+    {
+      "file": "bank_12.bin",
+      "sha256": "0fbba07a833d4dcfc7024eaf313661a0ba8f80a05c6d29b8801c612e10e60dee",
+      "all_ff": true
+    },
+    {
+      "file": "bank_13.bin",
+      "sha256": "0fbba07a833d4dcfc7024eaf313661a0ba8f80a05c6d29b8801c612e10e60dee",
+      "all_ff": true
+    },
+    {
+      "file": "bank_14.bin",
+      "sha256": "0fbba07a833d4dcfc7024eaf313661a0ba8f80a05c6d29b8801c612e10e60dee",
+      "all_ff": true
+    }
+  ]
+}

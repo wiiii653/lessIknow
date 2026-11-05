@@ -1,0 +1,1946 @@
+
+
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atari 8-bit Fine Scrolling: A Complete(ish) Tutorial &#8212; Player/Missile Podcast</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/cloud.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/table_styling.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,i,b,bi|Open+Sans:400,i,b,bi|Roboto+Mono:400,i,b,bi&amp;display=swap" type="text/css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+
+    
+    
+     
+        <script src="../_static/jquery.cookie.js"></script>
+    
+
+    
+     
+        <script src="../_static/cloud.base.js"></script>
+    
+
+    
+     
+        <script src="../_static/cloud.js"></script>
+    
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Atari 8-bit Magazines" href="../magazines.html" />
+    <link rel="prev" title="Atari 8-bit Display List Interrupts: A Complete(ish) Tutorial" href="../dli_tutorial/index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+    <div class="relbar-top">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../podcast/index.html" title="Episodes" accesskey="E">episodes</a></li>
+<li class="right" style="margin-right: 10px"><a href="../magazines.html" title="magazines" accesskey="M">magazines</a></li>
+<li class="right" style="margin-right: 10px"><a href="../omnivore/" title="omnivore" accesskey="O">omnivore</a></li>
+<li class="right" style="margin-right: 10px"><a href="../jumpman/" title="jumpman" accesskey="J">jumpman</a></li>
+             
+        <li class="right" >
+          <a href="../index.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../magazines.html" title="Atari 8-bit Magazines"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../dli_tutorial/index.html" title="Atari 8-bit Display List Interrupts: A Complete(ish) Tutorial"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">Player/Missile Podcast</a> &#187;</li>
+
+        <li class="nav-item nav-item-this"><a href="">Atari 8-bit Fine Scrolling: A Complete(ish) Tutorial</a></li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="atari-8-bit-fine-scrolling-a-complete-ish-tutorial">
+<h1>Atari 8-bit Fine Scrolling: A Complete(ish) Tutorial<a class="headerlink" href="#atari-8-bit-fine-scrolling-a-complete-ish-tutorial" title="Permalink to this headline">¶</a></h1>
+<p><strong>Revision 6, updated 23 Dec 2019</strong></p>
+<p>This is a tutorial on fine scrolling for the Atari 8-bit series of computers.
+In a nutshell, the ANTIC coprocessor provides 2D hardware scrolling at very
+little computational expense.</p>
+<p>Scrolling means the display screen is a window or <em>viewport</em> on a larger map.
+At any moment in time, the user is looking at only a small portion of the
+overall area, and this viewport can be moved around. The Atari hardware
+provides for both coarse scrolling (that is, moving the viewport at byte or
+character boundaries) and fine scrolling (moving with higher resolution: scan
+lines vertically and color clocks horizontally). Fine scrolling on the Atari is
+built upon coarse scrolling, so we will first examine the latter before make
+the scrolling smooth by tackling the former.</p>
+<p>No prior knowledge of scrolling is necessary before reading this tutorial.
+However, this is advanced programming tutorial in the sense that the examples
+are written in assembly language, so the assumption will be that you are
+comfortable with that. All the examples here are assembled using the
+MAC/65-compatible assembler <a class="reference external" href="https://atari.miribilist.com/atasm/index.html">ATasm</a> (and more specifically to
+this tutorial, the version built-in to <a class="reference external" href="https://github.com/robmcmullen/omnivore">Omnivore</a>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All source code and XEX files are available in the <a class="reference external" href="https://github.com/playermissile/scrolling_tutorial">scrolling_tutorial source code repository</a> on github.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This tutorial is Copyright © 2019 and licensed under the <a class="reference external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, except for the <em>assembly language source code</em> (both in this tutorial and in the repository), which is placed in the public domain via <a class="reference external" href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Here are some resources for learning more about scrolling:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.atariarchives.org/dere/chapt02.php">De Re Atari, Chapter 2</a></p></li>
+<li><p><a class="reference external" href="https://archive.org/details/ataribooks-atari-graphics-and-arcade-game-design/page/n221">Atari Graphics &amp; Arcade Game Design, Chapter 7</a></p></li>
+<li><p>ANALOG Computing tutorial series: <a class="reference external" href="https://archive.org/details/analog-computing-magazine-13/page/n113">Part I</a> - <a class="reference external" href="https://archive.org/details/analog-computing-magazine-14/page/n25">Part II</a> - <a class="reference external" href="https://archive.org/details/analog-computing-magazine-15/page/n101">Part III</a> - <a class="reference external" href="https://archive.org/details/analog-computing-magazine-16/page/n99">Part IV</a></p></li>
+</ul>
+</div>
+<div class="section" id="a-refresher-on-display-lists">
+<h2>A Refresher on Display Lists<a class="headerlink" href="#a-refresher-on-display-lists" title="Permalink to this headline">¶</a></h2>
+<p>Display lists are an important topic for scrolling, because certain flags on
+display list commands tell ANTIC which lines get scrolled and which are left
+alone. For a summary, check out my <a class="reference internal" href="../dli_tutorial/index.html#dli-tutorial"><span class="std std-ref">tutorial on DLIs</span></a> which
+has a large section on display list instructions. A small amount of relevant
+detail is repeated here.</p>
+<p>An ANTIC display list instruction consists of 1 byte with an optional 2 byte
+address. There are 3 types of instructions: blank lines, graphics modes, and
+jump instructions. Instructions are encoded into the byte using a bitmask
+where low 4 bits encode the graphics mode or feature and the high 4 bits
+encode the flags that affect that instruction:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 19%" />
+<col style="width: 19%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>7</p></td>
+<td><p>6</p></td>
+<td><p>5</p></td>
+<td><p>4</p></td>
+<td><p>3</p></td>
+<td><p>2</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>DLI</p></td>
+<td><p>LMS</p></td>
+<td><p>VSCROLL</p></td>
+<td><p>HSCROLL</p></td>
+<td colspan="4"><p>Mode</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The 4 flags are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>DLI (<code class="docutils literal notranslate"><span class="pre">$80</span></code>): enable a display list interrupt when processing this instruction</p></li>
+<li><p>LMS (<code class="docutils literal notranslate"><span class="pre">$40</span></code>): trigger a Load Memory Scan, changing where ANTIC looks for screen data, and requires an additional 2 byte address immediately following this instruction byte.</p></li>
+<li><p>VSCROLL (<code class="docutils literal notranslate"><span class="pre">$20</span></code>): enable vertical scrolling for this mode line</p></li>
+<li><p>HSCROLL (<code class="docutils literal notranslate"><span class="pre">$10</span></code>): enable horizontal scrolling for this mode line</p></li>
+</ul>
+</div></blockquote>
+<p>There are 14 available graphics modes, which are encoded into low 4 bits. This
+tutorial is only going to focus on three of the text modes. Any mode can be
+scrolled horizontally, and modes taller than 1 scan line can also be scrolled
+vertically, but the combination of low memory usage and large height of the
+text modes make them ideal candidates for scrolling games.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Mode</p></td>
+<td><p>Decimal</p></td>
+<td><p>BASIC Mode</p></td>
+<td><p>Description</p></td>
+<td><p>Scan Lines</p></td>
+<td><p>Type</p></td>
+<td><p>Colors</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>02</p></td>
+<td><p>0</p></td>
+<td><p>40 x 24</p></td>
+<td><p>8</p></td>
+<td><p>text</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>04</p></td>
+<td><p>n/a</p></td>
+<td><p>40 x 24</p></td>
+<td><p>8</p></td>
+<td><p>text</p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>05</p></td>
+<td><p>n/a</p></td>
+<td><p>40 x 12</p></td>
+<td><p>16</p></td>
+<td><p>text</p></td>
+<td><p>5</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>More resources about display lists are available:</p>
+<ul class="simple">
+<li><p>The <a class="reference internal" href="../dli_tutorial/index.html#display-lists"><span class="std std-ref">Display Lists section</span></a> of my DLI tutorial</p></li>
+<li><p>The <a class="reference external" href="https://www.atariarchives.org/mapping/memorymap.php#560,561">SDLSTL memory location</a> in Mapping the Atari</p></li>
+<li><p><a class="reference external" href="https://www.atariarchives.org/mapping/appendix8.php">Appendix 8</a> of Mapping the Atari</p></li>
+<li><p><a class="reference external" href="https://www.atariarchives.org/dere/chapt02.php">De Re Atari, Chapter 2</a></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="introduction-to-scrolling">
+<h2>Introduction to Scrolling<a class="headerlink" href="#introduction-to-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>Scrolling on the Atari can be broken up into two categories: coarse scrolling
+and fine scrolling.</p>
+<p>Coarse scrolling is scrolling at character or byte boundaries and will appear
+on screen as large jumps in position. It can be accomplished without any use of
+the hardware scrolling registers. In fact, coarse scrolling falls out as a
+side- effect of the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> bit on display list commands. Being able to
+reposition the memory pointer for any display list instruction means that you
+can tell ANTIC where to look in memory when it draws a scan line. Simply by
+moving the address pointer to a different location, you can change the display.</p>
+<p>Fine scrolling is moving the viewport in steps that are smaller than a byte,
+giving the appearance of a smoothly sliding playfield, rather than one that
+jumps from position to position.</p>
+<p>First we will look at vertical coarse scrolling which is the simpler case than
+horizontal coarse scrolling. After examining horizontal coarse scrolling, we
+will combine the two which will give us unrestricted 2D scrolling. Fine
+scrolling is then built on top of coarse scrolling and will be addressed
+similarly: first horizontal, then vertical, and finally combined to give us an
+omnidirectional scrolled playfield.</p>
+<div class="section" id="definitions">
+<h3>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h3>
+<p>It helps to set up what we mean by the directions, because depending on your
+perspective, <strong>scrolling up</strong> and <strong>scrolling down</strong> (and similarly <strong>left</strong>
+and <strong>right</strong>) could mean exactly opposite things. Are the directions referring
+to which way the data is moving on the screen? Or which way the viewport is
+moving over the larger screen memory layout?</p>
+<p>The convention is to refer to the direction as the way the viewport is moving.
+So, <strong>scrolling up</strong> means the viewport is moving up over the screen memory
+layout, but what that means in terms of what’s displayed is that new data is
+appearing at the top of the screen, pushing everything else down the screen and
+old data is vanishing off the bottom of the screen.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Because there are so many types of lines, the word by itself can be ambiguous. In places where I use the word, I will attempt to clarify which sense of “line” I mean:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>scan lines on screen</p></li>
+<li><p>number of scan lines in a character cell</p></li>
+<li><p>lines of characters in the viewport</p></li>
+<li><p>lines of characters in the screen memory layout</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="topic-1-vertical-coarse-scrolling">
+<h2>Topic #1: Vertical Coarse Scrolling<a class="headerlink" href="#topic-1-vertical-coarse-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>Coarse scrolling vertically is moving the playfield data such that the user
+sees a new line of information on the top of the screen while the line that was
+previously on the on the bottom of the screen moves off, and all other visible
+lines move down one line. (Or vice-versa: new data appears on the bottom while
+a line is removed from the top.) This direction is simpler than horizontal
+because only a single <code class="docutils literal notranslate"><span class="pre">LMS</span></code> instruction needs to be updated, so that is where
+we will start.</p>
+<div class="section" id="memory-layout">
+<h3>Memory Layout<a class="headerlink" href="#memory-layout" title="Permalink to this headline">¶</a></h3>
+<p>To move a viewport window up or down over a larger map doesn’t require any
+difference in memory layout for the screen data, just more of it.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/memory_layout_vertical.png"><img alt="../_images/memory_layout_vertical.png" src="../_images/memory_layout_vertical.png" style="width: 50%;" /></a>
+</div>
+</div>
+<div class="section" id="preparing-the-display-list">
+<span id="coarse-no-scroll-dlist"></span><h3>Preparing the Display List<a class="headerlink" href="#preparing-the-display-list" title="Permalink to this headline">¶</a></h3>
+<p>Here is a display list without any scrolling, and just a single instruction
+with <code class="docutils literal notranslate"><span class="pre">LMS</span></code> set in the main region of mode 4 lines. That <code class="docutils literal notranslate"><span class="pre">LMS</span></code> tells ANTIC
+where to look in memory for that first line and all subsequent lines until another <code class="docutils literal notranslate"><span class="pre">LMS</span></code> instruction is encountered.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/coarse_no_scroll_dlist.png"><img alt="../_images/coarse_no_scroll_dlist.png" src="../_images/coarse_no_scroll_dlist.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/coarse_no_scroll_dlist.s">coarse_no_scroll_dlist.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/coarse_no_scroll_dlist.xex">coarse_no_scroll_dlist.xex</a></li>
+</ul><p>All this test program does is create a display list and show a simple test
+pattern. There is nothing special about this display list, no scrolling bits
+set on any display list instructions; only the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> instruction to set the
+initial memory location for the 22 lines of ANTIC Mode 4 that will become the
+scrolling region in further examples, and another <code class="docutils literal notranslate"><span class="pre">LMS</span></code> for the two lines of
+ANTIC mode 2 at the bottom for non-scrolling status lines.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; Simple display list to be used as coarse scrolling comparison</span>
+<span class="n">dlist_coarse_mode4</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>       <span class="c1">; 24 blank lines</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$80</span>       <span class="c1">; Mode 4 + LMS + address</span>
+        <span class="kp">.byte</span> <span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>   <span class="c1">; 21 more Mode 4 lines</span>
+        <span class="kp">.byte</span> <span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+        <span class="kp">.byte</span> <span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+        <span class="kp">.byte</span> <span class="mh">$42</span><span class="p">,</span><span class="o">&lt;</span><span class="n">static_text</span><span class="p">,</span> <span class="o">&gt;</span><span class="n">static_text</span> <span class="c1">; 2 Mode 2 lines + LMS + address</span>
+        <span class="kp">.byte</span> <span class="mh">$2</span>
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist_coarse_mode4</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist_coarse_mode4</span> <span class="c1">; JVB ends display list</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="coarse-scrolling-down">
+<span id="coarse-scroll-down"></span><h2>#1.1: Coarse Scrolling Down<a class="headerlink" href="#coarse-scrolling-down" title="Permalink to this headline">¶</a></h2>
+<p>Scrolling down means new data is appearing at the bottom of the screen, pushing
+data currently on the screen upwards and finally disappearing off the top of
+the screen:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/coarse_scroll_down.png"><img alt="../_images/coarse_scroll_down.png" src="../_images/coarse_scroll_down.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/coarse_scroll_down.s">coarse_scroll_down.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/coarse_scroll_down.xex">coarse_scroll_down.xex</a></li>
+</ul><p>This is accomplished by updating the start address that ANTIC sees for the
+first line.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; move viewport one line down by pointing display list start address</span>
+<span class="c1">; to the address 40 bytes further in memory</span>
+<span class="n">coarse_scroll_down</span>
+        <span class="k">clc</span>
+        <span class="k">lda</span> <span class="n">dlist_coarse_address</span>
+        <span class="k">adc</span> <span class="p">#</span><span class="mi">40</span>
+        <span class="k">sta</span> <span class="n">dlist_coarse_address</span>
+        <span class="k">lda</span> <span class="n">dlist_coarse_address</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">adc</span> <span class="p">#</span><span class="mi">0</span>
+        <span class="k">sta</span> <span class="n">dlist_coarse_address</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">rts</span>
+</pre></div>
+</div>
+<p>Adding 40 bytes to that address will move the starting point one
+line higher in memory, moving what was the 2nd line being displayed to the
+first line and a line previously off-screen to the 22nd line. This gives the
+appearance of the playfield window moving down across the map.</p>
+<p>The code needs a timing loop so the scrolling doesn’t happen too fast:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>loop
+        ldx #15         ; number of VBLANKs to wait
+?start  lda RTCLOK+2    ; check fastest moving RTCLOCK byte
+?wait   cmp RTCLOK+2    ; VBLANK will update this
+        beq ?wait       ; delay until VBLANK changes it
+        dex             ; delay for a number of VBLANKs
+        bpl ?start
+
+        ; enough time has passed, scroll one line
+        jsr coarse_scroll_down
+
+        jmp loop
+</pre></div>
+</div>
+<p>This delay loop simply waits for a number of vertical blank intervals to pass,
+then updates the screen memory pointer.</p>
+</div>
+<div class="section" id="coarse-scrolling-up">
+<h2>#1.2: Coarse Scrolling Up<a class="headerlink" href="#coarse-scrolling-up" title="Permalink to this headline">¶</a></h2>
+<p>Scrolling up means new data is appearing at the top of the screen, pushing data
+currently on the screen downwards and finally disappearing off the bottom of
+the screen:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/coarse_scroll_up.png"><img alt="../_images/coarse_scroll_up.png" src="../_images/coarse_scroll_up.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/coarse_scroll_up.s">coarse_scroll_up.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/coarse_scroll_up.xex">coarse_scroll_up.xex</a></li>
+</ul><p>This is accomplished using exactly the same method of changing the start
+address that ANTIC uses for the screen memory:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; move viewport one line up by pointing display list start address</span>
+<span class="c1">; to the address 40 bytes earlier in memory</span>
+<span class="n">coarse_scroll_up</span>
+        <span class="k">sec</span>
+        <span class="k">lda</span> <span class="n">dlist_coarse_address</span>
+        <span class="k">sbc</span> <span class="p">#</span><span class="mi">40</span>
+        <span class="k">sta</span> <span class="n">dlist_coarse_address</span>
+        <span class="k">lda</span> <span class="n">dlist_coarse_address</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">sbc</span> <span class="p">#</span><span class="mi">0</span>
+        <span class="k">sta</span> <span class="n">dlist_coarse_address</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">rts</span>
+</pre></div>
+</div>
+<p>But instead of adding 40 bytes, we subtract 40 bytes from the address to move
+the starting point one line prior in memory, moving what was the 1st line being
+displayed to the 2nd line and a line previously off-screen to the 1st line.
+This gives the appearance of the playfield window moving up across the map.</p>
+</div>
+<div class="section" id="topic-2-horizontal-coarse-scrolling">
+<h2>Topic #2: Horizontal Coarse Scrolling<a class="headerlink" href="#topic-2-horizontal-coarse-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>Horizontal coarse scrolling is only slightly more complicated than vertical
+coarse scrolling because multiple <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses need to be updated.</p>
+<div class="section" id="id2">
+<h3>Memory Layout<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>Scrolling left and right does present a different problem, because if only the
+first <code class="docutils literal notranslate"><span class="pre">LMS</span></code> address is updated, a subsequent line will use memory immediately
+following the previous line, resulting in a snake-like movement that doesn’t
+resemble scrolling.</p>
+<p>To remedy this, the memory should be thought of as individual horizontal
+strips, which for ANTIC to process correctly requires <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses on
+every display list line in the scrolling region.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/memory_layout_horizontal.png"><img alt="../_images/memory_layout_horizontal.png" src="../_images/memory_layout_horizontal.png" style="width: 80%;" /></a>
+</div>
+<p>For this tutorial, the horizontal memory layout is going to use an entire page
+of memory (256 bytes, so 256 characters) per line of screen memory. At the cost
+of some RAM, this will simplify our <code class="docutils literal notranslate"><span class="pre">LMS</span></code> modifications in that only the low
+byte will need to be modified in the case of pure horizontal scrolling, and
+only the high byte needs to change in the case of pure vertical scrolling.</p>
+<p>This is a tradeoff that is good for speed and reduced code complexity, but if
+your memory constraints outweigh your speed requirements, this may not be a
+tradeoff you are willing to make. The byte width of your screen memory layout
+is entirely arbitrary; the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> calculations will just be more complicated
+(and therefore slower) with widths where you must do arithmetic to calculate
+the addresses.</p>
+</div>
+</div>
+<div class="section" id="coarse-scrolling-left">
+<span id="coarse-scroll-left"></span><h2>#2.1: Coarse Scrolling Left<a class="headerlink" href="#coarse-scrolling-left" title="Permalink to this headline">¶</a></h2>
+<p>Scrolling left means new data is appearing on the left of the screen, pushing
+data currently on the screen to the right and finally disappearing off the
+right side of the screen. Every 16 bytes, the memory layout has been stamped
+with the hex addresses of the screen memory so you can tell where the viewport
+has scrolled to.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/coarse_scroll_left.png"><img alt="../_images/coarse_scroll_left.png" src="../_images/coarse_scroll_left.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/coarse_scroll_left.s">coarse_scroll_left.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/coarse_scroll_left.xex">coarse_scroll_left.xex</a></li>
+</ul><p>Because each <code class="docutils literal notranslate"><span class="pre">LMS</span></code> address in the scrolling region and the one-line buffer
+zone must be updated, a loop is used here. Moving to the left means moving
+lower in memory, in this case: one byte at a time:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; move viewport one byte to the left by pointing each display list start
+; address to one byte lower in memory
+coarse_scroll_left
+        ldy #22         ; 22 lines to modify
+        ldx #4          ; 4th byte after start of display list is low byte of address
+?loop   dec dlist_lms_mode4,x
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?loop
+        rts
+</pre></div>
+</div>
+<p>There’s no bounds checking in this example, so if you let it run long enough it
+will display  low byte address moves from <code class="docutils literal notranslate"><span class="pre">$00</span></code> to
+<code class="docutils literal notranslate"><span class="pre">$ff</span></code>. “Defender”-style wrapping, to make it appear like there is no start or
+end, takes some special preparations and will be discussed below.</p>
+<p>Here’s the display list:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; one page per line, used for coarse scrolling. Start visible region</span>
+<span class="c1">; in middle of each page so it can scroll either right or left immediately</span>
+<span class="c1">; without having to check for a border</span>
+<span class="n">dlist_lms_mode4</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$80</span>       <span class="c1">; first line of scrolling region</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$81</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$82</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$83</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$84</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$85</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$86</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$87</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$88</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$89</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$8a</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$8b</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$8c</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$8d</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$8e</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$8f</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$90</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$91</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$92</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$93</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$94</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$95</span>       <span class="c1">; last line with scroll bit set</span>
+        <span class="kp">.byte</span> <span class="mh">$42</span><span class="p">,</span><span class="o">&lt;</span><span class="n">hscroll_static_text</span><span class="p">,</span> <span class="o">&gt;</span><span class="n">hscroll_static_text</span> <span class="c1">; 2 Mode 2 lines + LMS + address</span>
+        <span class="kp">.byte</span> <span class="mh">$2</span>
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist_lms_mode4</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist_lms_mode4</span> <span class="c1">; JVB ends display list</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="coarse-scrolling-right">
+<h2>#2.2: Coarse Scrolling Right<a class="headerlink" href="#coarse-scrolling-right" title="Permalink to this headline">¶</a></h2>
+<p>Scrolling right means new data is appearing on the right of the screen, pushing
+data currently on the screen to the left and finally disappearing off the
+left side of the screen.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/coarse_scroll_right.png"><img alt="../_images/coarse_scroll_right.png" src="../_images/coarse_scroll_right.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/coarse_scroll_right.s">coarse_scroll_right.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/coarse_scroll_right.xex">coarse_scroll_right.xex</a></li>
+</ul><p>The code for this is exactly analogous to scrolling left, except we are
+incrementing the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> pointer, moving one byte higher in memory to push the
+viewport to the right.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; move viewport one byte to the right by pointing each display list start
+; address to one byte higher in memory
+coarse_scroll_right
+        ldy #22         ; 22 lines to modify
+        ldx #4          ; 4th byte after start of display list is low byte of address
+?loop   inc dlist_lms_mode4,x
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?loop
+        rts
+</pre></div>
+</div>
+<p>The display list is exactly the same as in the scrolling left example.</p>
+</div>
+<div class="section" id="topic-3-combined-coarse-scrolling">
+<h2>Topic #3: Combined Coarse Scrolling<a class="headerlink" href="#topic-3-combined-coarse-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>Simultaneous horizontal and vertical coarse scrolling is possible with very
+little additional effort over horizontal coarse scrolling alone.</p>
+<p>Adding vertical scrolling to a display list that uses <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses for
+every line means that, unlike the simple vertical scrolling that used a single
+<code class="docutils literal notranslate"><span class="pre">LMS</span></code> address for the whole screen, <em>every</em> display list line in the
+scrolling region will have to be modified to point to a new vertical location
+in the memory layout.</p>
+<div class="section" id="combined-memory-layout">
+<span id="id3"></span><h3>Memory Layout<a class="headerlink" href="#combined-memory-layout" title="Permalink to this headline">¶</a></h3>
+<p>Combining horizontal and vertical scrolling requires combining the memory
+layout ideas: wide horizontal lines coupled with lines above and below the
+viewport.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/memory_layout_2d.png"><img alt="../_images/memory_layout_2d.png" src="../_images/memory_layout_2d.png" style="width: 80%;" /></a>
+</div>
+<p>As in the horizontal scrolling examples above, the combined scrolling examples
+will also use the page-per-line memory layout: 256 bytes per line.</p>
+<p>Horizontal coarse scrolling requires an <code class="docutils literal notranslate"><span class="pre">LMS</span></code> address for every display list
+line in the scrolling region, and using this memory layout means that the low
+byte of that address is modified for every scroll. The high byte is unmodified.</p>
+<p>Vertical coarse scrolling using this display list and memory layout is
+convenient because the vertical position of the viewport is solely dependent on
+the high byte of the memory address; the low byte is unchanged.</p>
+<p>This memory layout simplifies combined scrolling because it decouples the
+vertical position and horizontal position! Combined scrolling is then reduced
+to changing the high byte of each <code class="docutils literal notranslate"><span class="pre">LMS</span></code> address to reflect the vertical
+location of the viewport, and changing the low byte to set the horizontal
+location.</p>
+</div>
+</div>
+<div class="section" id="d-coarse-scrolling">
+<h2>#3.1: 2D Coarse Scrolling<a class="headerlink" href="#d-coarse-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>This example scrolls the viewport simultaneously in the vertical and horizontal
+directions using the techniques described above.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/coarse_scroll_2d.png"><img alt="../_images/coarse_scroll_2d.png" src="../_images/coarse_scroll_2d.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/coarse_scroll_2d.s">coarse_scroll_2d.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/coarse_scroll_2d.xex">coarse_scroll_2d.xex</a></li>
+</ul><p>The display list is unchanged from the horizontal coarse scrolling examples.</p>
+<p>There are several differences in code from the horizontal scrolling version.
+First some variables are added to track the direction at which the viewport is
+moving (and they are initialized):</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">horz_dir</span> <span class="o">=</span> <span class="mh">$80</span>  <span class="c1">; 1 = right, $ff = left</span>
+<span class="n">vert_dir</span> <span class="o">=</span> <span class="mh">$81</span>  <span class="c1">; 1 = down, $ff = up</span>
+
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$ff</span>
+        <span class="k">sta</span> <span class="n">horz_dir</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mi">1</span>
+        <span class="k">sta</span> <span class="n">vert_dir</span>
+</pre></div>
+</div>
+<p>We will need to track where the viewport is on screen, and instead of creating
+extra variables for it, we can realize that the display list itself will tell
+us where the viewport is. Choosing the reference point to be the upper left
+corder of the viewport window means that the very first <code class="docutils literal notranslate"><span class="pre">LMS</span></code> instruction in
+the display list is exactly our reference point. The low byte of the <code class="docutils literal notranslate"><span class="pre">LMS</span></code>
+address is the horizontal position and the high byte is the vertical.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; representative values for vertical and horizontal scrolling: the pointers</span>
+<span class="c1">; to the display list LMS addresses themselves</span>
+<span class="n">horz_ref</span> <span class="o">=</span> <span class="n">dlist_lms_mode4</span> <span class="o">+</span> <span class="mi">4</span>
+<span class="n">vert_ref</span> <span class="o">=</span> <span class="n">dlist_lms_mode4</span> <span class="o">+</span> <span class="mi">5</span>
+</pre></div>
+</div>
+<p>The code that moves the viewport horizontally checks the horizontal direction
+before determining how to changing the low bytes of the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; move viewport one byte to the left/right by pointing each display list
+; address to one lower/byte higher in memory (i.e. changing low byte)
+coarse_scroll_horz
+        ldy #22         ; 22 lines to modify
+        ldx #0
+        lda horz_dir
+        bmi ?left
+?right  inc horz_ref,x  ; low bytes of display list referenced at this addr
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?right
+        rts
+
+?left   dec horz_ref,x  ; low bytes of display list referenced at this addr
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?left
+        rts
+</pre></div>
+</div>
+<p>Vertical scrolling changes the high bytes of the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses lines. The
+code is very similar to the above:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; move viewport one line up/down by pointing each display list address
+; one *page* lower/byte higher in memory (i.e. changing high byte)
+coarse_scroll_vert
+        ldy #22         ; 22 lines to modify
+        ldx #0
+        lda vert_dir
+        bmi ?up
+?down   inc vert_ref,x  ; high bytes of display list referenced at this addr
+        inx             ; skip to next high byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?down
+        rts
+
+?up     dec vert_ref,x  ; high bytes of display list referenced at this addr
+        inx             ; skip to next high byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?up
+        rts
+</pre></div>
+</div>
+<p>Some boundary checking is added referencing some constants describing the
+limits of the memory layout, and the viewport bounces off the sides as if it
+were a pong game.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>horz_min = 0    ; horizontal lower bound
+horz_max = 255-44 ; horizontal upper bound is page width, less some extra to prevent unintentional wraparound
+vert_min = $80  ; page $80 is first line in memory region
+vert_max = $80+52-22 ; 52 lines high and 22 visible at a time
+
+        ; check if horizontal direction needs updating
+        lda horz_ref    ; reference horizontal position
+        cmp #horz_max   ; too far to the right?
+        bcc ?ck_left
+        lda #$ff        ; yep, start scrolling left
+        sta horz_dir
+        bne ?ck_down
+?ck_left cmp #horz_min  ; at left boundary?
+        bne ?ck_down
+        lda #1          ; yep, start scrolling right
+        sta horz_dir
+
+        ; check if vertical direction needs updating
+?ck_down lda vert_ref   ; reference vertical position
+        cmp #vert_max   ; too far to down?
+        bcc ?ck_up
+        lda #$ff        ; yep, start scrolling up
+        sta vert_dir
+        bne ?scroll
+?ck_up cmp #vert_min+1  ; at top boundary?
+        bcs ?scroll
+        lda #1          ; yep, start scrolling down
+        sta vert_dir
+</pre></div>
+</div>
+</div>
+<div class="section" id="topic-4-vertical-fine-scrolling">
+<h2>Topic #4: Vertical Fine Scrolling<a class="headerlink" href="#topic-4-vertical-fine-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>Vertical fine scrolling is controlled by ANTIC’s <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> hardware register.
+The register can be any number from 0 - 15 representing the number of scan
+lines to scroll. ANTIC accomplishes scrolling not by moving the display list up
+and down by a number of scan lines, but by using the <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> value to <em>skip</em>
+that number of scan lines in the first line of the display list, essentially
+shortening the number of displayed lines.</p>
+<p>This will become more clear with an example. First, let’s see what happens just
+by turning on the vertical scrolling bit on a display list.</p>
+<div class="section" id="id4">
+<h3>Preparing the Display List<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>Here’s the same program used in the <a class="reference internal" href="#coarse-no-scroll-dlist"><span class="std std-ref">coarse vertical scrolling</span></a> section, except now the vertical scrolling bit has
+been set on the display list instructions for the scrolling region of lines A
+through V. Notice the first line of the mode 2 status lines at he bottom seems
+to be missing! Actually, it is still there, or more correctly: one scan line of
+it is still there.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_vscroll_dlist.png"><img alt="../_images/fine_vscroll_dlist.png" src="../_images/fine_vscroll_dlist.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_vscroll_dlist.s">fine_vscroll_dlist.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_vscroll_dlist.xex">fine_vscroll_dlist.xex</a></li>
+</ul><p>Note that the <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> hardware register is set to zero. Here’s the display list:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; Simple display list to be used as coarse scrolling comparison</span>
+<span class="n">dlist_coarse_mode4</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>       <span class="c1">; 24 blank lines</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$80</span>       <span class="c1">; Mode 4 + LMS + address</span>
+        <span class="kp">.byte</span> <span class="mh">$64</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$80</span>       <span class="c1">; Mode 4 + VSCROLL + LMS + address</span>
+        <span class="kp">.byte</span> <span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span>   <span class="c1">; 21 more Mode 4 + VSCROLL lines</span>
+        <span class="kp">.byte</span> <span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span>
+        <span class="kp">.byte</span> <span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span>
+        <span class="kp">.byte</span> <span class="mh">$42</span><span class="p">,</span><span class="o">&lt;</span><span class="n">static_text</span><span class="p">,</span> <span class="o">&gt;</span><span class="n">static_text</span> <span class="c1">; 2 Mode 2 lines + LMS + address</span>
+        <span class="kp">.byte</span> <span class="mh">$2</span>
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist_coarse_mode4</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist_coarse_mode4</span> <span class="c1">; JVB ends display list</span>
+</pre></div>
+</div>
+<p>So what is the mystery of the (mostly) missing mode 2 line at the bottom? ANTIC
+uses the first scan line that doesn’t have the vertical scrolling bit set as a
+sort-of <em>buffer zone</em> to the scrolling region.</p>
+<p>Here’s the same example, except the <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> register is set to 4:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_vscroll_4.png"><img alt="../_images/fine_vscroll_4.png" src="../_images/fine_vscroll_4.png" style="width: 90%;" /></a>
+</div>
+<p>where it shows that 4 scan lines of line A have been scrolled off the screen
+<strong>and</strong> the first ANTIC mode 2 line shows 4 of its 8 scan lines.</p>
+</div>
+<div class="section" id="the-vscrol-hardware-register">
+<span id="vscroll"></span><h3>The VSCROL Hardware Register<a class="headerlink" href="#the-vscrol-hardware-register" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> hardware register at <code class="docutils literal notranslate"><span class="pre">$d405</span></code> controls how many scan lines are
+shifted for fine scrolling. The value tells ANTIC on which scan line to start
+rendering for the first display list instruction it encounters with the
+vertical scrolling bit set. Subsequent lines in the display list that have the
+vertical scrolling bit set are fully rendered, but because that initial scan
+line was rendered with fewer scan lines, the display has appeared to move up.</p>
+<p>What confused the author until reading section 4.7 in the <a class="reference external" href="http://www.virtualdub.org/downloads/Altirra%20Hardware%20Reference%20Manual.pdf">Altirra Hardware Reference Manual</a>
+is that <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> value also controls where ANTIC <em>stops</em> rendering on that
+<em>buffer zone</em> display list instruction: it renders scan lines up to and
+including that value.</p>
+<p>In the first example, <code class="docutils literal notranslate"><span class="pre">VSCROL</span> <span class="pre">=</span> <span class="pre">0</span></code>. ANTIC mode 4 lines are 8 scan lines tall,
+and for scrolling purposes the height of a mode line is enumerated from 0, so
+an 8 scan line tall text mode has scan lines numbered 0 through 7. For the
+example, the rendering of line A starts at scan line zero of the text mode. The
+buffer zone mode 2 line that is only rendered with a single scan line: it
+stopped rendering after rendering scan line zero of that mode 2 line.</p>
+<p>The second example uses <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> set to 4, here shown in detail:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/detail_vscrol_4.png"><img alt="../_images/detail_vscrol_4.png" src="../_images/detail_vscrol_4.png" style="width: 80%;" /></a>
+</div>
+<p>The first display list line with the vertical scrolling bit set, Line A, is
+rendered starting from scan line 4 (again, as enumerated from zero: scan lines
+0, 1, 2, and 3 are skipped and 4, 5, 6, and 7 are rendered). All subsequent
+lines with their vertical scroll bit set have all 8 scan lines rendered. The
+buffer zone, that is: the first display list line without the scroll bit set,
+is rendered <em>through</em> scan line 4 as enumerated from zero, so scan lines 0, 1,
+2, 3, and 4. Scan lines 5 through 7 are not rendered.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>Section 4.7 in the <a class="reference external" href="http://www.virtualdub.org/downloads/Altirra%20Hardware%20Reference%20Manual.pdf">Altirra Hardware Reference Manual</a></p></li>
+<li><p><a class="reference external" href="https://www.atariarchives.org/dere/chapt02.php">De Re Atari, Chapter 2</a></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="fixing-the-last-scrolled-line">
+<span id="fixed-vscroll"></span><h3>Fixing the Last Scrolled Line<a class="headerlink" href="#fixing-the-last-scrolled-line" title="Permalink to this headline">¶</a></h3>
+<p>Having the scrolled region extend into the status lines at the bottom of the
+previous example is obviously not what’s intended. This example fixes that
+problem:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_vscroll_better_dlist.png"><img alt="../_images/fine_vscroll_better_dlist.png" src="../_images/fine_vscroll_better_dlist.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_vscroll_better_dlist.s">fine_vscroll_better_dlist.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_vscroll_better_dlist.xex">fine_vscroll_better_dlist.xex</a></li>
+</ul><p>The solution is to clear the vertical scrolling bit on the final mode 4 line in
+the scrolling region. Here’s the new display list with only a single byte
+changed: the final <code class="docutils literal notranslate"><span class="pre">$24</span></code> in the previous example is changed to a normal mode
+4 line:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; Simple display list to be used as coarse scrolling comparison</span>
+<span class="n">dlist_coarse_mode4</span>
+        <span class="kp">.byte</span> <span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$70</span>       <span class="c1">; 24 blank lines</span>
+        <span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$80</span>       <span class="c1">; Mode 4 + LMS + address</span>
+        <span class="kp">.byte</span> <span class="mh">$64</span><span class="p">,</span><span class="mh">$00</span><span class="p">,</span><span class="mh">$80</span>       <span class="c1">; Mode 4 + VSCROLL + LMS + address</span>
+        <span class="kp">.byte</span> <span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span>   <span class="c1">; 20 more Mode 4 + VSCROLL lines</span>
+        <span class="kp">.byte</span> <span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span>
+        <span class="kp">.byte</span> <span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span><span class="p">,</span><span class="mh">$24</span>
+        <span class="kp">.byte</span> <span class="mi">4</span>                 <span class="c1">; and the final Mode 4 without VSCROLL</span>
+        <span class="kp">.byte</span> <span class="mh">$42</span><span class="p">,</span><span class="o">&lt;</span><span class="n">static_text</span><span class="p">,</span> <span class="o">&gt;</span><span class="n">static_text</span> <span class="c1">; 2 Mode 2 lines + LMS + address</span>
+        <span class="kp">.byte</span> <span class="mh">$2</span>
+        <span class="kp">.byte</span> <span class="mh">$41</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dlist_coarse_mode4</span><span class="p">,</span><span class="o">&gt;</span><span class="n">dlist_coarse_mode4</span> <span class="c1">; JVB ends display list</span>
+</pre></div>
+</div>
+<p>This leaves the status lines with two complete mode 2 lines, and the scrolling
+playfield as 21 mode 4 lines, and a one line <em>buffer zone</em>, this time of mode
+4. In this case, <code class="docutils literal notranslate"><span class="pre">VSCROL</span> <span class="pre">=</span> <span class="pre">4</span></code>, so the first scrolled line is rendered
+starting at its scan line 4 and the buffer zone line is rendered through its
+scan line 4, we are missing 7 scan lines from the same display list without any
+vertical scrolling bits.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The number of scan lines ANTIC will generate is reduced by vertical scrolling. The total number of scan lines can be counted by setting <code class="docutils literal notranslate"><span class="pre">VSCROL</span> <span class="pre">=</span> <span class="pre">0</span></code>, meaning the buffer zone line will be reduced to a single scan line. Changes to <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> don’t change the total number of lines generated, for instance: setting <code class="docutils literal notranslate"><span class="pre">VSCROL</span> <span class="pre">=</span> <span class="pre">2</span></code> reduces the first scrolled line to 6 scan lines but increases the buffer zone to 3 scan lines, resulting in the same net number of scan lines in the scrolling + buffer zone regions.</p>
+</div>
+</div>
+</div>
+<div class="section" id="fine-scrolling-down">
+<span id="vscroll-down"></span><h2>#4.1: Fine Scrolling Down<a class="headerlink" href="#fine-scrolling-down" title="Permalink to this headline">¶</a></h2>
+<p>We can now add the <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> hardware register to the coarse scrolling demo to
+produce fine scrolling:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_down.png"><img alt="../_images/fine_scroll_down.png" src="../_images/fine_scroll_down.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_scroll_down.s">fine_scroll_down.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_scroll_down.xex">fine_scroll_down.xex</a></li>
+</ul><p>The code for this example is largely the same as the <a class="reference internal" href="#coarse-scroll-down"><span class="std std-ref">coarse scroll down</span></a> demo, which a few minor additions. We need one
+additional variable to keep our own copy of the hardware scrolling register,
+since <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> is a write-only register:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">vert_scroll</span> <span class="o">=</span> <span class="mh">$90</span>       <span class="c1">; variable used to store VSCROL value</span>
+<span class="n">vert_scroll_max</span> <span class="o">=</span> <span class="mi">8</span>     <span class="c1">; ANTIC mode 4 has 8 scan lines</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> code from the demo also needs to initialize the variable:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">lda</span> <span class="p">#</span><span class="mi">0</span>          <span class="c1">; initialize vertical scrolling value</span>
+<span class="k">sta</span> <span class="n">vert_scroll</span>
+<span class="k">sta</span> <span class="n">VSCROL</span>      <span class="c1">; initialize hardware register</span>
+</pre></div>
+</div>
+<p>and the main loop calls the fine scrolling routine instead of the coarse
+scrolling routine.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>loop    ldx #delay      ; number of VBLANKs to wait
+?start  lda RTCLOK+2    ; check fastest moving RTCLOCK byte
+?wait   cmp RTCLOK+2    ; VBLANK will update this
+        beq ?wait       ; delay until VBLANK changes it
+        dex             ; delay for a number of VBLANKs
+        bpl ?start
+
+        ; enough time has passed, scroll one scan line
+        jsr fine_scroll_down
+
+        jmp loop
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">fine_scroll_down</span></code> routine takes care of updating the fine scrolling
+variable and setting the hardware <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> register. If it has scrolled 8
+scan lines, it calls the <code class="docutils literal notranslate"><span class="pre">coarse_scroll_down</span></code> routine, which is unchanged
+from the coarse scrolling demo.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; scroll one scan line down and check if at VSCROL limit
+fine_scroll_down
+        inc vert_scroll
+        lda vert_scroll
+        cmp #vert_scroll_max ; check to see if we need to do a coarse scroll
+        bcc ?done       ; nope, still in the middle of the character
+        jsr coarse_scroll_down ; yep, do a coarse scroll...
+        lda #0          ;  ...followed by reseting the vscroll register
+        sta vert_scroll
+?done   sta VSCROL      ; store vertical scroll value in hardware register
+        rts
+</pre></div>
+</div>
+</div>
+<div class="section" id="fine-scrolling-up">
+<span id="vscroll-up"></span><h2>#4.2: Fine Scrolling Up<a class="headerlink" href="#fine-scrolling-up" title="Permalink to this headline">¶</a></h2>
+<p>The code for fine scrolling the viewport up has very few changes from the above.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_up.png"><img alt="../_images/fine_scroll_up.png" src="../_images/fine_scroll_up.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_scroll_up.s">fine_scroll_up.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_scroll_up.xex">fine_scroll_up.xex</a></li>
+</ul><p>The delay loop is the same, just calling the subroutine to do a fine scroll up
+instead of down. The logic does change a little bit, as we are now decrementing
+the <code class="docutils literal notranslate"><span class="pre">vert_scroll</span></code> variable. Since zero is a valid value for the <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code>
+hardware register, we check to see when the decrement wraps back to <code class="docutils literal notranslate"><span class="pre">$ff</span></code> to
+determine if a coarse scroll needs to happen:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; scroll one scan line up and check if at VSCROL limit
+fine_scroll_up
+        dec vert_scroll
+        lda vert_scroll
+        bpl ?done       ; if non-negative, still in the middle of the character
+        jsr coarse_scroll_up   ; wrapped to $ff, do a coarse scroll...
+        lda #vert_scroll_max-1 ;  ...followed by reseting the vscroll register
+        sta vert_scroll
+?done   sta VSCROL      ; store vertical scroll value in hardware register
+        rts
+</pre></div>
+</div>
+<p>The only other change is pointing the initial display list <code class="docutils literal notranslate"><span class="pre">LMS</span></code> address to a
+line further down in the memory layout so there is scrolling room as the
+viewport moves up.</p>
+</div>
+<div class="section" id="interlude-wide-and-narrow-playfields">
+<h2>Interlude: Wide and Narrow Playfields<a class="headerlink" href="#interlude-wide-and-narrow-playfields" title="Permalink to this headline">¶</a></h2>
+<p>Normal display lists for mode 4 are 40 bytes wide, producing 40 characters.
+This is equivalent to 160 color clocks, the standard playfield width. ANTIC is
+capable of drawing two other widths, however: a narrow playfield of 128 color
+clocks (32 bytes) and a wide playfield of 176 color clocks (48 bytes). This is
+controlled by two of the bits of the hardware register <code class="docutils literal notranslate"><span class="pre">DMACTL</span></code> at <code class="docutils literal notranslate"><span class="pre">$d400</span></code>
+and its shadow <code class="docutils literal notranslate"><span class="pre">SDMCTL</span></code> at <code class="docutils literal notranslate"><span class="pre">$22f</span></code>.</p>
+</div>
+<div class="section" id="topic-5-horizontal-fine-scrolling">
+<h2>Topic #5: Horizontal Fine Scrolling<a class="headerlink" href="#topic-5-horizontal-fine-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>Horizontal fine scrolling is controlled by ANTIC’s <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> hardware
+register. The register can be any number from 0 - 15 representing the number of
+color clocks to scroll. ANTIC accomplishes horizontal scrolling by, behind the
+scenes, reading data as if the playfield width was the next larger size, but
+continuing to display the screen with the nominal playfield width.</p>
+<p>For example, if ANTIC is scrolling the normal 40 byte playfield, it will
+process data as if it were displaying the wide playfield of 48 bytes per line.
+It will, however, only <em>display</em> 40 bytes worth of data: 160 color clocks.</p>
+<p>This will become more clear with an example. First, let’s see what happens just
+by turning on the horizontal scrolling bit on a display list.</p>
+<div class="section" id="id7">
+<h3>Preparing the Display List<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<p>This simple program shows the memory layout defined in the <a class="reference internal" href="#coarse-scroll-left"><span class="std std-ref">coarse
+scrolling</span></a> section, where lines are 256 bytes wide and
+every 16 bytes it is stamped with the address of that byte as a 4 digit hex
+value. For example, the left-most byte of the top line of the screen is at
+memory location <code class="docutils literal notranslate"><span class="pre">$8070</span></code>, so the memory layout is formatted to show the high
+nibble (the <code class="docutils literal notranslate"><span class="pre">8</span></code> from <code class="docutils literal notranslate"><span class="pre">8070</span></code>) directly on the address to be labeled, and the
+next 3 nibbles converted to digits displayed in the 3 subsequent columns.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/memory_layout_hscroll.png"><img alt="../_images/memory_layout_hscroll.png" src="../_images/memory_layout_hscroll.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/memory_layout_hscroll.s">memory_layout_hscroll.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/memory_layout_hscroll.xex">memory_layout_hscroll.xex</a></li>
+</ul><p>The display list used here does <em>not</em> have any scrolling bits set, it’s exactly
+the same as a coarse scrolling display list with a <code class="docutils literal notranslate"><span class="pre">LMS</span></code> instruction on each
+of the lines A through L. All of the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses have their low bytes set
+to <code class="docutils literal notranslate"><span class="pre">$70</span></code>, where the line at the top of the screen is set to <code class="docutils literal notranslate"><span class="pre">$8070</span></code> with
+the following display list instruction:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="kp">.byte</span> <span class="mh">$44</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$80</span>
+</pre></div>
+</div>
+<p>Below is almost the same program, the only difference being the horizontal
+scrolling bit has been set on the display list instructions for the scrolling
+region of lines A through V, so for example the first mode 4 line has both the
+<code class="docutils literal notranslate"><span class="pre">LMS</span></code> and <code class="docutils literal notranslate"><span class="pre">HSCROLL</span></code> bits set:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="kp">.byte</span> <span class="mh">$54</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$80</span>
+</pre></div>
+</div>
+<p>Notice the low byte of the display list <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses remain set at <code class="docutils literal notranslate"><span class="pre">$70</span></code>, so the the upper left corner of the screen address is supposed to start at <code class="docutils literal notranslate"><span class="pre">$8070</span></code>, but the resulting visible region looks like this:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_hscroll_dlist.png"><img alt="../_images/fine_hscroll_dlist.png" src="../_images/fine_hscroll_dlist.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_hscroll_dlist.s">fine_hscroll_dlist.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_hscroll_dlist.xex">fine_hscroll_dlist.xex</a></li>
+</ul><p>The first visible byte in the upper left corner of starts at <code class="docutils literal notranslate"><span class="pre">$8074</span></code>!</p>
+<p>This is a consequence of the wide playfield being used behind the scenes as a
+buffer for the extra data needed for the color clock shift.</p>
+</div>
+<div class="section" id="the-hscrol-hardware-register">
+<h3>The HSCROL Hardware Register<a class="headerlink" href="#the-hscrol-hardware-register" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> hardware register at <code class="docutils literal notranslate"><span class="pre">$d404</span></code> controls the horizontal shift for
+fine scrolling, measured in color clocks from 0 - 15.</p>
+<p>On display list instructions with the horizontal scrolling bit set, ANTIC
+automatically expands its screen memory use to the next larger playfield size,
+unless it is already using a wide playfield. Scrolling with a 32 byte narrow
+playfield will cause ANTIC to read memory as if it were using a normal 40 byte
+playfield, and scrolling a normal playfield will be processed as if it were a
+wide 48 byte playfield.</p>
+<p>It uses these extra bytes as the scrolling <em>buffer zone</em>, the horizontal
+equivalent of the vertical <a class="reference internal" href="#vscroll"><span class="std std-ref">buffer zone</span></a> that takes scan lines
+from the first display list instruction with the vertical scroll bit cleared
+after a scrolling section.</p>
+<p>Each playfield expansion results in 8 extra bytes of data being read. They are
+distributed with 4 bytes to the left of the playfield and 4 bytes to the right.
+Notice that 4 bytes corresponds to 16 color clocks, exactly the limit of the
+<code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> register.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value is the number of color clocks in this buffer zone that are
+shifted into the main view. The <em>size</em> of the display does not change, so for
+instance in a scrolled, normal playfield, the equivalent of 40 bytes worth of
+color clocks, 160, are still displayed, centered as normal in the TV display.
+But where those color clocks <em>start</em> is what’s controlled by <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code>.</p>
+<p>For example, here’s the previous example except with the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value set to 6:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_hscroll_6.png"><img alt="../_images/fine_hscroll_6.png" src="../_images/fine_hscroll_6.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_hscroll_6.s">fine_hscroll_6.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_hscroll_6.xex">fine_hscroll_6.xex</a></li>
+</ul><p>The value of <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> is the number of color clocks to scroll the viewport to
+the left. Equivalently, you can think of it as the number of color clocks in
+the left side buffer zone that are shifted to the right into the visible area.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>Section 4.7 in the <a class="reference external" href="http://www.virtualdub.org/downloads/Altirra%20Hardware%20Reference%20Manual.pdf">Altirra Hardware Reference Manual</a></p></li>
+<li><p><a class="reference external" href="https://www.atariarchives.org/dere/chapt02.php">De Re Atari, Chapter 2</a></p></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="fine-scrolling-left">
+<h2>#5.1: Fine Scrolling Left<a class="headerlink" href="#fine-scrolling-left" title="Permalink to this headline">¶</a></h2>
+<p>We can now add the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> hardware register to the coarse scrolling demo to
+produce fine scrolling:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_left.png"><img alt="../_images/fine_scroll_left.png" src="../_images/fine_scroll_left.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_scroll_left.s">fine_scroll_left.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_scroll_left.xex">fine_scroll_left.xex</a></li>
+</ul><p>The code for this example is largely the same as the <a class="reference internal" href="#coarse-scroll-left"><span class="std std-ref">coarse scroll down</span></a> demo, and like the vertical fine scrolling examples we
+need one additional variable to keep our own copy of the hardware scrolling
+register, since <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> is a write-only register:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">horz_scroll</span> <span class="o">=</span> <span class="mh">$91</span>       <span class="c1">; variable used to store HSCROL value</span>
+<span class="n">horz_scroll_max</span> <span class="o">=</span> <span class="mi">4</span>     <span class="c1">; ANTIC mode 4 has 4 color clocks</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> code from the demo also needs to initialize the variable:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">lda</span> <span class="p">#</span><span class="mi">0</span>          <span class="c1">; initialize horizontal scrolling value</span>
+<span class="k">sta</span> <span class="n">horz_scroll</span>
+<span class="k">sta</span> <span class="n">HSCROL</span>      <span class="c1">; initialize hardware register</span>
+</pre></div>
+</div>
+<p>and the main loop calls the fine scrolling routine instead of the coarse
+scrolling routine.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>loop    ldx #15         ; number of VBLANKs to wait
+?start  lda RTCLOK+2    ; check fastest moving RTCLOCK byte
+?wait   cmp RTCLOK+2    ; VBLANK will update this
+        beq ?wait       ; delay until VBLANK changes it
+        dex             ; delay for a number of VBLANKs
+        bpl ?start
+
+        ; enough time has passed, scroll one color clock
+        jsr fine_scroll_left
+
+        jmp loop
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">fine_scroll_left</span></code> routine update the fine scrolling variable and setting
+the hardware <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> register. If it has scrolled 4 color clocks, it calls
+the <code class="docutils literal notranslate"><span class="pre">coarse_scroll_left</span></code> routine, which is unchanged from the coarse
+scrolling demo.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; scroll one color clock left and check if at HSCROL limit
+fine_scroll_left
+        inc horz_scroll
+        lda horz_scroll
+        cmp #horz_scroll_max ; check to see if we need to do a coarse scroll
+        bcc ?done       ; nope, still in the middle of the character
+        jsr coarse_scroll_left ; yep, do a coarse scroll...
+        lda #0          ;  ...followed by reseting the HSCROL register
+        sta horz_scroll
+?done   sta HSCROL      ; store vertical scroll value in hardware register
+        rts
+</pre></div>
+</div>
+<p>But notice the difference between vertical scrolling and horizontal scrolling:
+For horizontal scrolling, <em>incrementing</em> the HSCROL value performs fine
+scrolling of the viewport to the left, but the coarse scrolling requires
+<em>decrementing</em> the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; move viewport one byte to the left by pointing each display list start
+; address to one byte lower in memory
+coarse_scroll_left
+        ldy #22         ; 22 lines to modify
+        ldx #4          ; 4th byte after start of display list is low byte of address
+?loop   dec dlist_hscroll_mode4,x
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?loop
+        rts
+</pre></div>
+</div>
+</div>
+<div class="section" id="fine-scrolling-right">
+<h2>#5.2: Fine Scrolling Right<a class="headerlink" href="#fine-scrolling-right" title="Permalink to this headline">¶</a></h2>
+<p>The code for fine scrolling the viewport to the right has only minor
+differences from the above.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_right.png"><img alt="../_images/fine_scroll_right.png" src="../_images/fine_scroll_right.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_scroll_right.s">fine_scroll_right.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_scroll_right.xex">fine_scroll_right.xex</a></li>
+</ul><p>The changes in the code are: the variable <code class="docutils literal notranslate"><span class="pre">vert_scroll</span></code> is decremented in the
+fine scrolling subroutine, and the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses in the coarse scrolling
+subroutine is incremented.</p>
+</div>
+<div class="section" id="fine-scrolling-with-wide-playfield">
+<h2>#5.3: Fine Scrolling with Wide Playfield<a class="headerlink" href="#fine-scrolling-with-wide-playfield" title="Permalink to this headline">¶</a></h2>
+<p>Since ANTIC expands the playfield to the next larger size when reading data for
+the scrolling region, there’s no real additional cost to also displaying the
+wider playfield. ANTIC is stealing the cycles as if it were the larger
+playfield anyway, we might as well see it:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_right_wide.png"><img alt="../_images/fine_scroll_right_wide.png" src="../_images/fine_scroll_right_wide.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_scroll_right_wide.s">fine_scroll_right_wide.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_scroll_right_wide.xex">fine_scroll_right_wide.xex</a></li>
+</ul><p>The only change to the example above is setting the DMA control variable:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">lda</span> <span class="p">#</span><span class="mh">$23</span>        <span class="c1">; enable wide playfield</span>
+<span class="k">sta</span> <span class="n">SDMCTL</span>      <span class="c1">;   by saving to shadow register</span>
+</pre></div>
+</div>
+<p>which sets the wide playfield bits forcing the display of the 48 byte wide
+playfield. But notice how the non-scrolling status area is now also 48 bytes
+wide, changing the text to wrap 8 bytes from the 2nd line onto the first.</p>
+</div>
+<div class="section" id="interlude-display-list-interrupts">
+<h2>Interlude: Display List Interrupts<a class="headerlink" href="#interlude-display-list-interrupts" title="Permalink to this headline">¶</a></h2>
+<p>Display list interrupts (DLIs) provide a notification to your program when
+ANTIC is about to process a particular scan line. By setting a bit on a display
+list instruction, ANTIC will interrupt the normal CPU processing and send
+control through a special vector that you can use to perform an actions at the
+location on screen corresponding to the last scan line generated by that
+display list instruction. See my <a class="reference internal" href="../dli_tutorial/index.html#dli-tutorial"><span class="std std-ref">complete(ish) tutorial</span></a>
+for lots more information.</p>
+</div>
+<div class="section" id="wide-scrolling-playfield-with-normal-status-lines">
+<span id="wide-dli"></span><h2>#5.4: Wide Scrolling Playfield with Normal Status Lines<a class="headerlink" href="#wide-scrolling-playfield-with-normal-status-lines" title="Permalink to this headline">¶</a></h2>
+<p>Using a simple DLI we can force the status lines back to their normal 40 byte
+width. This is a freeze-frame image showing the scrolling playfield using the
+wide, 48 byte playfield and the status lines back to the normal width:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_right_wide_dli.png"><img alt="../_images/fine_scroll_right_wide_dli.png" src="../_images/fine_scroll_right_wide_dli.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_scroll_right_wide_dli.s">fine_scroll_right_wide_dli.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_scroll_right_wide_dli.xex">fine_scroll_right_wide_dli.xex</a></li>
+</ul><p>The DLI bit must be set on the display list instruction immediately before the
+status line:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="kp">.byte</span> <span class="mh">$d4</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$95</span>       <span class="c1">; last line in scrolling region: HSCROLL + DLI</span>
+</pre></div>
+</div>
+<p>the DLI vector must be set to our routine and activated:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; load display list interrupt address</span>
+<span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">dli</span>
+<span class="k">sta</span> <span class="n">VDSLST</span>
+<span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">dli</span>
+<span class="k">sta</span> <span class="n">VDSLST</span><span class="o">+</span><span class="mi">1</span>
+
+<span class="c1">; activate display list interrupt</span>
+<span class="k">lda</span> <span class="p">#</span><span class="n">NMIEN_VBI</span> <span class="o">|</span> <span class="n">NMIEN_DLI</span>
+<span class="k">sta</span> <span class="n">NMIEN</span>
+</pre></div>
+</div>
+<p>and finally the DLI routine itself</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dli</span>     <span class="k">pha</span>             <span class="c1">; only using A register, so save old value to the stack</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$22</span>        <span class="c1">; normal playfield width</span>
+        <span class="k">sta</span> <span class="n">WSYNC</span>       <span class="c1">; any value saved to WSYNC will trigger the pause</span>
+        <span class="k">sta</span> <span class="n">DMACTL</span>      <span class="c1">; store it in the hardware register</span>
+        <span class="k">pla</span>             <span class="c1">; restore the A register</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+</pre></div>
+</div>
+<p>which sets the normal playfield width using the hardware register, which takes
+effect immediately. Recall that changes to the hardware registers produce
+immediate effect, while the shadow registers are restored at the vertical blank
+by the operating system. Therefore we do not have to restore the playfield
+width ourselves thanks to our use of the shadow register. The operating system
+will return the scrolling portion of the playfield back to 48 bytes wide.</p>
+</div>
+<div class="section" id="interlude-vertical-blank-interrupts">
+<h2>Interlude: Vertical Blank Interrupts<a class="headerlink" href="#interlude-vertical-blank-interrupts" title="Permalink to this headline">¶</a></h2>
+<p>In the previous examples, the technique for updating <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses and
+changing hardware scrolling registers has been waiting until the the vertical
+blank has passed, then performing the changes.</p>
+<p>This will quickly become insufficient as we move to horizontal scrolling, and
+further into more real-world examples. Looping until the value of <code class="docutils literal notranslate"><span class="pre">RTCLOK+2</span></code>
+changes doesn’t mean the vertical blank has <em>just</em> passed; rather, it means
+that all of the vertical blank code has executed and performed its <code class="docutils literal notranslate"><span class="pre">RTI</span></code>. The
+vertical blank may take many thousands of CPU cycles, and may not return until
+well into the visible part of the screen.</p>
+<p>In simple demos and toy examples, the <code class="docutils literal notranslate"><span class="pre">RTCLOK+2</span></code> technique <em>is</em> largely
+sufficient. But there are scenarios where problems can arise if updates to the hardware register happen at specific times.</p>
+<p>For instance, in an <a class="reference external" href="https://atariage.com/forums/topic/299468-wip-scrolling-tutorial/">AtariAge forum post</a>, the
+author of the Altirra emulator stated: “failing to synchronize [register
+changes] to the drawing can not only cause delays, it can seriously glitch the
+display list. Specifically, decreasing VSCROL around when ANTIC is processing
+the end of the vertical scrolling region can cause it to miss the vertical stop
+and wrap its 4-bit delta counter around, adding a dozen scanlines to the mode
+line.”</p>
+<p>Other unexpected effects like screen tearing could occur if changes happen to
+the hardware registers while ANTIC is drawing the scrolling region. There are
+cases, for instance <a class="reference internal" href="../dli_tutorial/index.html#parallax-scrolling"><span class="std std-ref">parallax scrolling</span></a> and
+multiple independent scrolling regions where it is desired that the registers
+be changed mid-screen, but these will be performed in a DLI where the change
+can occur on a particular scanline and during the horizontal blank.</p>
+<p>For all these reasons, and as the examples are becoming more complicated and
+applicable to real applications, the code to update the scrolling registers and
+<code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses will be moved into the vertical blank to avoid any potential
+mid-screen changes.</p>
+</div>
+<div class="section" id="topic-6-combined-fine-scrolling">
+<span id="combined-fine-scrolling"></span><h2>Topic #6: Combined Fine Scrolling<a class="headerlink" href="#topic-6-combined-fine-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>Notice the difference between vertical scrolling and horizontal scrolling: For
+horizontal scrolling, <em>incrementing</em> the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value performs fine
+scrolling of the viewport to the left, but the coarse scrolling left requires
+<em>decrementing</em> the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses.</p>
+<p>In vertical scrolling, <em>incrementing</em> the <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> value performs fine
+scrolling of the viewport down, and the coarse scrolling down also requires
+<em>incrementing</em> the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses.</p>
+<p>So, horizontal scrolling has the hardware register and the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> addresses
+requiring opposite mathematical operations, while vertical scrolling sees the
+hardware register and LMS addresses changing in the same direction.</p>
+<p>Another issue to be aware of is the difference in size of the “scrolling
+units”. Horizontal scrolling uses color clocks, while vertical scrolling uses
+scan lines. There are 160 color clocks in a normal width playfield. ANTIC mode
+4 characters are 4 color clocks wide, and there are 40 characters per line.</p>
+<p>ANTIC mode 4 characters are 8 scan lines tall, and on the TV screen the
+characters are roughly square. (They’re not exacly square; see the Altirra
+Hardware Reference Manual, Section 4.2, for more information.) If a program
+scrolls one unit horizontally and one unit vertically, the image will appear to
+move about twice as much horizontally as vertically. To move with a more “true”
+diagonal appearance would require a ratio of one unit horizontally and two
+vertically.</p>
+<div class="section" id="id10">
+<h3>Preparing the Display List<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<p>Scrolling both horizontally and vertically requires the memory layout described
+in the <a class="reference internal" href="#combined-memory-layout"><span class="std std-ref">combined coarse scrolling section</span></a>, lines
+wider than the visible playfield and more lines than the visible playfield is
+tall. Notice, as in the <a class="reference internal" href="#fixed-vscroll"><span class="std std-ref">vertical</span></a> <a class="reference internal" href="#vscroll-down"><span class="std std-ref">fine</span></a> <a class="reference internal" href="#vscroll-up"><span class="std std-ref">scrolling</span></a> examples, line <strong>V</strong> (the last
+line in the scrolling region) has been reduced to a single scan line:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_2d_dlist.png"><img alt="../_images/fine_scroll_2d_dlist.png" src="../_images/fine_scroll_2d_dlist.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_scroll_2d_dlist.s">fine_scroll_2d_dlist.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_scroll_2d_dlist.xex">fine_scroll_2d_dlist.xex</a></li>
+</ul><p>For fine scrolling, the display list requires the <code class="docutils literal notranslate"><span class="pre">HSCROLL</span></code> bit for all
+scrolled lines, and as <a class="reference internal" href="#fixed-vscroll"><span class="std std-ref">described above</span></a>, the <code class="docutils literal notranslate"><span class="pre">VSCROLL</span></code>
+bit set on all but the last line of the scrolled region. So, all the display
+list instructions in the scrolling region except the last line look like this:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="kp">.byte</span> <span class="mh">$74</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$80</span>       <span class="c1">; ANTIC mode 4 + VSCROLL + HSCROLL</span>
+</pre></div>
+</div>
+<p>and the last line in the scrolling region doesn’t set the <code class="docutils literal notranslate"><span class="pre">VSCROLL</span></code> bit:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="kp">.byte</span> <span class="mh">$54</span><span class="p">,</span><span class="mh">$70</span><span class="p">,</span><span class="mh">$95</span>       <span class="c1">; last line in scrolling region, HSCROLL only</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="d-scrolling-with-dli">
+<h2>#6.1: 2D Scrolling with DLI<a class="headerlink" href="#d-scrolling-with-dli" title="Permalink to this headline">¶</a></h2>
+<p>In the <a class="reference internal" href="#wide-dli"><span class="std std-ref">example with the DLI</span></a> for the wide scrolling playfield
+and narrow status, the DLI occurred on the last scan line of the last ANTIC
+mode 4 line in the scrolling playfield, leaving plenty of time for the DLI to
+change the <code class="docutils literal notranslate"><span class="pre">DMACTL</span></code> register before ANTIC started drawing the first line of
+the status area.</p>
+<p>However, trying to use the same DLI on the same display list instruction (line
+<strong>V</strong>) creates a problem when adding vertical scrolling to the playfield: that
+bit is cleared on the display list instruction for last line of the scrolling
+region, reducing it to a single scan line when the hardware register <code class="docutils literal notranslate"><span class="pre">VSCROL</span> <span class="pre">=</span>
+<span class="pre">0</span></code>. However, almost no CPU cycles are available on the first scan line of
+ANTIC mode 4, as ANTIC steals so many to prepare the font glyphs:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_2d_joystick_vscroll0.png"><img alt="../_images/fine_scroll_2d_joystick_vscroll0.png" src="../_images/fine_scroll_2d_joystick_vscroll0.png" style="width: 90%;" /></a>
+</div>
+<p>Notice that it doesn’t happen when the screen is scrolled to any scan line
+other than the first scan line, so whenever <code class="docutils literal notranslate"><span class="pre">VSCROL</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> it works fine.
+Recall as described in the <a class="reference internal" href="#vscroll"><span class="std std-ref">VSCROLL Hardware Register</span></a> section
+above, <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> controls the start &amp; stop scan lines of the first display
+list instruction <em>after</em> the vertical scrolling bit is cleared. <code class="docutils literal notranslate"><span class="pre">VSCROL</span> <span class="pre">=</span> <span class="pre">0</span></code>
+produces one scan line, which in turn produces the DLI problem shown above.
+<code class="docutils literal notranslate"><span class="pre">VSCROL</span> <span class="pre">=</span> <span class="pre">1</span></code> produces <em>two</em> scan lines, giving the DLI time to complete while
+still processing the 2nd scan line, before reaching the status text area:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_2d_joystick_vscroll1.png"><img alt="../_images/fine_scroll_2d_joystick_vscroll1.png" src="../_images/fine_scroll_2d_joystick_vscroll1.png" style="width: 90%;" /></a>
+</div>
+<p>The problem is not present when the scrolled area is set to normal width
+regardless of the value of <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code>, despite the DLI still happening on the
+first scan line of a mode 4 line. It turns out there are enough cycles
+available on the first line of a normal playfield (ANTIC steals 8 fewer cycles,
+and as it happens that that’s <em>just</em> enough for the code in this simple DLI):</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_2d_joystick_normal.png"><img alt="../_images/fine_scroll_2d_joystick_normal.png" src="../_images/fine_scroll_2d_joystick_normal.png" style="width: 90%;" /></a>
+</div>
+<p>This is the most complete example in this tutorial, so it will be dissected
+thoroughly in the next section.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../_images/fine_scroll_2d_joystick.png"><img alt="../_images/fine_scroll_2d_joystick.png" src="../_images/fine_scroll_2d_joystick.png" style="width: 90%;" /></a>
+</div>
+<ul>
+<li><b>Source Code:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/fine_scroll_2d_joystick.s">fine_scroll_2d_joystick.s</a></li>
+<li><b>Executable:</b> <a href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/xex/fine_scroll_2d_joystick.xex">fine_scroll_2d_joystick.xex</a></li>
+</ul><p>The program is controlled using the joystick to scroll the playfield in any of
+the 8 directions. The wide/normal playfield effect can be experimented with by
+pressing the <strong>Option</strong> key to change back and forth between them. Only when in
+wide playfield mode <em>and</em> <code class="docutils literal notranslate"><span class="pre">VSCROL</span> <span class="pre">=</span> <span class="pre">0</span></code> will the DLI problem appear.</p>
+<p>Initially, diagonal scrolling modifies the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> and <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code> registers
+at the same rate, which (as described <a class="reference internal" href="#combined-fine-scrolling"><span class="std std-ref">above</span></a>)
+means tat it appears to scroll faster horizontally than vertically. Pressing
+the <strong>Select</strong> key will change that to double the vertical scrolling rate,
+making it appear much closer to a 45 degree angle when scrolling diagonally.</p>
+</div>
+<div class="section" id="code-walkthrough-2d-scrolling-with-dli">
+<span id="code-walkthrough"></span><h2>Code Walkthrough: 2D Scrolling with DLI<a class="headerlink" href="#code-walkthrough-2d-scrolling-with-dli" title="Permalink to this headline">¶</a></h2>
+<p>The main part of the code is assembled at <code class="docutils literal notranslate"><span class="pre">$3000</span></code> and imports the contents
+of the file
+<a class="reference external" href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/hardware.s">hardware.s</a>
+which defines all of the shadow and hardware registers an listed in Mapping the
+Atari.:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>        <span class="o">*=</span> <span class="mh">$3000</span>
+
+<span class="kp">.include</span> <span class="s">&quot;hardware.s&quot;</span>
+</pre></div>
+</div>
+<p>There are a few local constants:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">delay</span> <span class="o">=</span> <span class="mi">5</span>               <span class="c1">; number of VBLANKs between scrolling updates</span>
+<span class="n">vert_scroll_max</span> <span class="o">=</span> <span class="mi">8</span>     <span class="c1">; ANTIC mode 4 has 8 scan lines</span>
+<span class="n">horz_scroll_max</span> <span class="o">=</span> <span class="mi">4</span>     <span class="c1">; ANTIC mode 4 has 4 color clocks</span>
+</pre></div>
+</div>
+<p>where the <code class="docutils literal notranslate"><span class="pre">delay</span></code> value essentially controls how fast the screen scrolls.
+Here, it takes 5 VBLANK intervals before it will be moved. The page zero
+variables are then defined:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">delay_count</span> <span class="o">=</span> <span class="mh">$80</span>       <span class="c1">; counter for scrolling updates</span>
+
+<span class="n">vert_scroll</span> <span class="o">=</span> <span class="mh">$90</span>       <span class="c1">; variable used to store VSCROL value</span>
+<span class="n">horz_scroll</span> <span class="o">=</span> <span class="mh">$91</span>       <span class="c1">; variable used to store HSCROL value</span>
+
+<span class="n">pressed</span> <span class="o">=</span> <span class="mh">$a0</span>           <span class="c1">; user still pressing button?</span>
+<span class="n">latest_joystick</span> <span class="o">=</span> <span class="mh">$a1</span>   <span class="c1">; last joystick direction processed</span>
+<span class="n">joystick_y</span> <span class="o">=</span> <span class="mh">$a2</span>        <span class="c1">; down = 1, up=$ff, no movement = 0</span>
+<span class="n">joystick_x</span> <span class="o">=</span> <span class="mh">$a3</span>        <span class="c1">; right = 1, left=$ff, no movement = 0</span>
+<span class="n">vscroll_x2</span> <span class="o">=</span> <span class="mh">$a4</span>        <span class="c1">; twice vertical scrolling? no = 0, yes = $ff</span>
+</pre></div>
+</div>
+<p>and the initialization starts with the assignment of values to all the zero
+page variables described above:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">init</span>    <span class="k">lda</span> <span class="p">#</span><span class="mi">0</span>          <span class="c1">; initialize horizontal scrolling value</span>
+        <span class="k">sta</span> <span class="n">horz_scroll</span>
+        <span class="k">sta</span> <span class="n">HSCROL</span>      <span class="c1">; initialize hardware register</span>
+
+        <span class="k">lda</span> <span class="p">#</span><span class="mi">0</span>          <span class="c1">; initialize vertical scrolling value</span>
+        <span class="k">sta</span> <span class="n">vert_scroll</span>
+        <span class="k">sta</span> <span class="n">VSCROL</span>      <span class="c1">; initialize hardware register</span>
+
+        <span class="k">lda</span> <span class="p">#</span><span class="mi">0</span>
+        <span class="k">sta</span> <span class="n">pressed</span>
+
+        <span class="k">lda</span> <span class="p">#</span><span class="n">delay</span>      <span class="c1">; number of VBLANKs to wait</span>
+        <span class="k">sta</span> <span class="n">delay_count</span>
+        <span class="k">sta</span> <span class="n">latest_joystick</span>
+        <span class="k">sta</span> <span class="n">joystick_y</span>
+        <span class="k">sta</span> <span class="n">joystick_x</span>
+</pre></div>
+</div>
+<p>The special drawing features (the wide/narrow playfield option and the vertical scrolling step size) are initialized:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">jsr</span> <span class="n">to_wide</span>
+<span class="k">jsr</span> <span class="n">to_1x</span>
+</pre></div>
+</div>
+<p>Next, the display system is set up:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">jsr</span> <span class="n">init_font</span>
+
+<span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">dlist_2d_mode4</span>
+<span class="k">sta</span> <span class="n">SDLSTL</span>
+<span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">dlist_2d_mode4</span>
+<span class="k">sta</span> <span class="n">SDLSTL</span><span class="o">+</span><span class="mi">1</span>
+
+<span class="c1">; set DLI bit on last scrolling line before status line</span>
+<span class="k">lda</span> <span class="n">dlist_2d_mode4_last_scrolling_line</span>
+<span class="k">ora</span> <span class="p">#</span><span class="mh">$80</span>
+<span class="k">sta</span> <span class="n">dlist_2d_mode4_last_scrolling_line</span>
+
+<span class="c1">; load display list interrupt address</span>
+<span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">dli</span>
+<span class="k">sta</span> <span class="n">VDSLST</span>
+<span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">dli</span>
+<span class="k">sta</span> <span class="n">VDSLST</span><span class="o">+</span><span class="mi">1</span>
+
+<span class="c1">; load deferred vertical blank address</span>
+<span class="k">ldx</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">vbi</span>
+<span class="k">ldy</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">vbi</span>
+<span class="k">lda</span> <span class="p">#</span><span class="mi">7</span>
+<span class="k">jsr</span> <span class="n">SETVBV</span>
+
+<span class="c1">; activate display list interrupt</span>
+<span class="k">lda</span> <span class="p">#</span><span class="n">NMIEN_VBI</span> <span class="o">|</span> <span class="n">NMIEN_DLI</span>
+<span class="k">sta</span> <span class="n">NMIEN</span>
+</pre></div>
+</div>
+<p>where the ANTIC 4 font is loaded (subroutine defined in
+<a class="reference external" href="https://raw.githubusercontent.com/playermissile/scrolling_tutorial/master/src/util_font.s">util_font.s</a>),
+the display list is registered, and the DLI location is set. The display list
+interrupt and vertical blank interrupt are also set, and the DLI/VBI are
+activated in that store to <code class="docutils literal notranslate"><span class="pre">NMIEN</span></code>. (The DLI and VBI subroutines are listed
+below.)</p>
+<p>The test pattern that fills the scrollable area is set up next</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="k">jsr</span> <span class="n">fillscreen_test_pattern</span>
+<span class="k">lda</span> <span class="p">#</span><span class="mh">$80</span>
+<span class="k">ldx</span> <span class="p">#</span><span class="mh">$38</span>        <span class="c1">; 56 pages; bytes $8000 - $b7ff</span>
+<span class="k">jsr</span> <span class="n">label_pages</span>
+</pre></div>
+</div>
+<p>and … that’s it for the main program. Everything else is driven by the
+vertical blank and processed there or in the DLI. So, the main program just
+loops forever:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">forever</span> <span class="k">jmp</span> <span class="n">forever</span>
+</pre></div>
+</div>
+<p>The bulk of the action happens in the (deferred) vertical blank interrupt. It
+is a driver routine that checks the status of the console keys and joystick,
+and operates on them if required. It also performs the graphics updates,
+waiting until a number of vertical blanks have passed (the <code class="docutils literal notranslate"><span class="pre">delay_count</span></code>
+variable) and updates the scrolling screen position.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>vbi     jsr check_console ; handle OPTION &amp; SELECT keys for control changes
+        jsr record_joystick ; check joystick for scrolling direction
+        dec delay_count ; wait for number of VBLANKs before updating
+        bne ?exit       ;   fine/coarse scrolling
+
+        jsr process_joystick ; update scrolling position based on current joystick direction
+
+        lda #delay      ; reset counter
+        sta delay_count
+?exit   jmp XITVBV      ; exit VBI through operating system routine
+</pre></div>
+</div>
+<p>It uses the delay count so that the screen is scrolled slowly enough to allow
+reasonable control with a joystick. Experimentation resulted in 5 being the
+lowest number of vertical blanks between updates; fewer frames between updates
+(meaning the scrolling gets updated faster) made precise controlling of the
+movement very difficult.</p>
+<p>The console key handling subroutine checks for <strong>Option</strong> or <strong>Select</strong> being
+pressed:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>check_console
+        lda CONSOL
+        cmp #7          ; are no console keys pressed?
+        beq ?not_anything ; yep, skip all checks
+        bit pressed     ; something already pressed? Wait until released
+        bmi ?exit       ;   before allowing anything new
+        cmp #3          ; is OPTION pressed by itself?
+        bne ?not_option ; nope, not that; check something else
+        lda #$ff        ; store value to indicate console key is pressed
+        sta pressed
+        lda SDMCTL      ; check current playfield width
+        cmp #$22        ; is it normal width?
+        beq to_wide     ; it&#39;s currently normal, switch to wide
+        bne to_narrow   ; otherwise it&#39;s wide, switch to normal
+?not_option
+        cmp #5          ; is SELECT pressed by itself?
+        bne ?not_anything ; nope, not that; check something else
+        lda #$ff        ; store value to indicate console key is pressed
+        sta pressed
+        lda vscroll_x2  ; check current step size
+        beq to_2x       ; zero is 1x, switch to 2x
+        bne to_1x       ; non-zero is 2x, switch to 1x
+?not_anything
+        lda #0          ; no console key pressed, so clear the variable
+        sta pressed     ;   to allow a new press
+?exit   rts
+</pre></div>
+</div>
+<p>which controls two variables: the playfield width of the scrolling area, and
+the vertical scrolling step size. For each of those variables there are two
+possible choices, so two subroutines are needed: one for each choice. For the
+playfield width, there is one to change to the wide playfield and one to the
+normal playfield:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">to_wide</span> <span class="k">lda</span> <span class="p">#</span><span class="mh">$23</span>        <span class="c1">; enable wide playfield</span>
+        <span class="k">sta</span> <span class="n">SDMCTL</span>      <span class="c1">;   by saving to shadow register</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">wide_text</span> <span class="c1">; change status text</span>
+        <span class="k">sta</span> <span class="n">dlist_2d_mode4_status_line2</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">wide_text</span>
+        <span class="k">sta</span> <span class="n">dlist_2d_mode4_status_line2</span><span class="o">+</span><span class="mi">2</span>
+        <span class="k">rts</span>
+
+<span class="n">to_narrow</span> <span class="k">lda</span> <span class="p">#</span><span class="mh">$22</span>      <span class="c1">; enable narrow playfield</span>
+        <span class="k">sta</span> <span class="n">SDMCTL</span>      <span class="c1">;   by saving to shadow register</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">normal_text</span> <span class="c1">; change status text</span>
+        <span class="k">sta</span> <span class="n">dlist_2d_mode4_status_line2</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">normal_text</span>
+        <span class="k">sta</span> <span class="n">dlist_2d_mode4_status_line2</span><span class="o">+</span><span class="mi">2</span>
+        <span class="k">rts</span>
+</pre></div>
+</div>
+<p>Each subroutine stores the new value into the shadow register and changes the
+status text on screen by updating the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> address of that line in the
+display list.</p>
+<p>Notice also that the <code class="docutils literal notranslate"><span class="pre">RTS</span></code> in that subroutine actually returns control, not
+to the <code class="docutils literal notranslate"><span class="pre">check_console</span></code> subroutine itself, but to the bit of code that
+<em>called</em> the <code class="docutils literal notranslate"><span class="pre">check_console</span></code> subroutine. This is a commonly used idea: jump
+to a subroutine and use that subroutine’s <code class="docutils literal notranslate"><span class="pre">RTS</span></code> as the return, rather than
+<code class="docutils literal notranslate"><span class="pre">JSR</span></code> to that subroutine and then include a <code class="docutils literal notranslate"><span class="pre">RTS</span></code> that returns after the
+subroutine returns. (In this case the jump is a branch instruction, but the
+idea is the same.)</p>
+<p>The subroutines for the vertical scrolling step size are similar:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">to_2x</span>   <span class="k">lda</span> <span class="p">#</span><span class="mh">$ff</span>        <span class="c1">; enable 2x vertical scrolling</span>
+        <span class="k">sta</span> <span class="n">vscroll_x2</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">x2_text</span> <span class="c1">; change status text</span>
+        <span class="k">sta</span> <span class="n">dlist_2d_mode4_status_line3</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">x2_text</span>
+        <span class="k">sta</span> <span class="n">dlist_2d_mode4_status_line3</span><span class="o">+</span><span class="mi">2</span>
+        <span class="k">rts</span>
+
+<span class="n">to_1x</span>   <span class="k">lda</span> <span class="p">#</span><span class="mi">0</span>          <span class="c1">; enable 1x vertical scrolling</span>
+        <span class="k">sta</span> <span class="n">vscroll_x2</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&lt;</span><span class="n">x1_text</span>   <span class="c1">; change status text</span>
+        <span class="k">sta</span> <span class="n">dlist_2d_mode4_status_line3</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="o">&gt;</span><span class="n">x1_text</span>
+        <span class="k">sta</span> <span class="n">dlist_2d_mode4_status_line3</span><span class="o">+</span><span class="mi">2</span>
+        <span class="k">rts</span>
+</pre></div>
+</div>
+<p>where the new values are stored in the <code class="docutils literal notranslate"><span class="pre">vscroll_x2</span></code> variable and the status
+line is updated by changing the display list <code class="docutils literal notranslate"><span class="pre">LMS</span></code> address.</p>
+<p>The joystick control in the vertical blank is broken into two parts: the
+<code class="docutils literal notranslate"><span class="pre">record_joystick</span></code> subroutine that checks the joystick direction during every
+vertical blank, and <code class="docutils literal notranslate"><span class="pre">process_joystick</span></code> subroutine that updates the scrolling
+screen that only happens once every <code class="docutils literal notranslate"><span class="pre">delay_count</span></code> vertical blanks.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">record_joystick</span></code> routine simply records the value it sees in the
+<code class="docutils literal notranslate"><span class="pre">STICK0</span></code> shadow register, <em>if</em> the joystick is not centered; that is, if the
+user is pressing it in a direction.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>record_joystick
+        lda STICK0      ; check joystick
+        cmp #$0f
+        bcs ?fast       ; only store if a direction is pressed
+        sta latest_joystick
+?fast   lda STRIG0      ; easter egg: check trigger
+        bne ?done       ; not pressed
+        lda #1          ; pressed = ludicrous speed!
+        sta delay_count
+?done   rts
+</pre></div>
+</div>
+<p>It is possible that the user can press a direction and within the interval
+before <code class="docutils literal notranslate"><span class="pre">delay_count</span></code> decreases to zero and the display is scrolled, release
+the joystick. If the joystick direction were only checked at the end of the
+delay interval, the program would miss the user input entirely and the display
+would not scroll.</p>
+<p>Instead, it was coded this way to appear to react better to the user because it
+will at least record some event if the user presses any direction during the
+interval.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <span class="xref std std-ref">fine scrolling game engine</span> handles this a different way: the joystick direction is read every vertical blank and the display has the potential to be scrolled every vertical blank, but the scrolling position is recorded in fractions of pixels (or scan lines) using fixed-point math. Not every change in scrolling position updates the screen, it is only scrolled if the cumulative change is at least a pixel (scan line).</p>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">process_joystick</span></code> routine takes the <code class="docutils literal notranslate"><span class="pre">latest_joystick</span></code> value and
+determines which direction the display needs to be scrolled by examining the
+bits recorded in that variable:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>process_joystick
+        lda #0                  ; clear joystick movement vars
+        sta joystick_x
+        sta joystick_y
+        lda latest_joystick     ; bits 3 - 0 = right, left, down, up
+        ror a                   ; put bit 0 (UP) in carry
+        bcs ?down               ; carry clear = up, set = not pressed
+        dec joystick_y
+?down   ror a                   ; put bit 1 (DOWN) in carry
+        bcs ?left
+        inc joystick_y
+?left   ror a                   ; put bit 2 (LEFT) in carry
+        bcs ?right
+        dec joystick_x
+?right  ror a                   ; put bit 3 (RIGHT) in carry
+        bcs ?next
+        inc joystick_x
+?next   lda #0
+        sta latest_joystick     ; reset joystick
+</pre></div>
+</div>
+<p>It does this by examining each bit using the <code class="docutils literal notranslate"><span class="pre">ROR</span></code> opcode to check each bit
+individually. Each bit of the joystick indicates whether or not one direction
+is being pressed:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 13%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>7</p></td>
+<td><p>6</p></td>
+<td><p>5</p></td>
+<td><p>4</p></td>
+<td><p>3</p></td>
+<td><p>2</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td colspan="4"><p>unused</p></td>
+<td><p>Right</p></td>
+<td><p>Left</p></td>
+<td><p>Down</p></td>
+<td><p>Up</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Obviously, some combinations are not allowed: like right and left
+simultaneously. But others like left and up simultaneously are how diagonal
+directions are indicated.</p>
+<p>The variable <code class="docutils literal notranslate"><span class="pre">joystick_y</span></code> is set to zero initially, indicating no vertical
+movement, then decreased to <code class="docutils literal notranslate"><span class="pre">$ff</span></code> if the joystick is up or increased to <code class="docutils literal notranslate"><span class="pre">1</span></code>
+if down. Similarly,  <code class="docutils literal notranslate"><span class="pre">joystick_x</span></code> is set to zero initially, indicating no
+horizontal movement, then decreased to <code class="docutils literal notranslate"><span class="pre">$ff</span></code> if the joystick is left or
+increased to <code class="docutils literal notranslate"><span class="pre">1</span></code> if right.</p>
+<p>The code is written this way to decouple the horizontal and vertical
+directions, so the following code to actually perform the scrolling can be
+written with fewer checks:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>        lda joystick_x  ; check horizontal scrolling
+        beq ?updown     ; zero means no movement, move on to vert
+        bmi ?left1      ; bit 7 set ($ff) means left
+        jsr fine_scroll_right ; otherwise, it&#39;s right
+        jmp ?storeh
+?left1  jsr fine_scroll_left
+?storeh sta HSCROL      ; store vertical scroll value in hardware register
+        clc             ; convert scroll value...
+        adc #$90        ;   to ATASCII text and...
+        sta joystick_text+29 ;   store on screen
+
+?updown lda joystick_y  ; check vertical scrolling
+        beq ?done       ; zero means no movement, we&#39;re done
+        bmi ?up1        ; bit 7 set ($ff) means up
+        jsr fine_scroll_down ; otherwise, it&#39;s down
+        jmp ?storev
+?up1    jsr fine_scroll_up
+?storev sta VSCROL      ; store vertical scroll value in hardware register
+        clc             ; convert scroll value...
+        adc #$90        ;   to ATASCII text and...
+        sta joystick_text+38 ;   store on screen
+?done   rts
+</pre></div>
+</div>
+<p>Each direction is checked, the corresponding fine scrolling subroutine is
+called, and the hardware scrolling register is updated on screen for feedback
+to the user. It then returns control through the <code class="docutils literal notranslate"><span class="pre">RTS</span></code>, back to the vertical
+blank driver routine (which resets the delay count variable and exits the
+vertical blank by jumping through the <code class="docutils literal notranslate"><span class="pre">XITVBV</span></code> operating system routine).</p>
+<p>As far as this joystick processing routine goes, it only knows to call the fine
+scrolling subroutines. It is only within the fine scrolling routines that it
+will perform coarse scrolling if necessary.</p>
+<p>This is the culmination of the tutorial: there are separate routines for
+scrolling in the four directions. The variable holding the fine scrolling value
+is updated, and if the limit in that direction is reached and coarse scroll is
+needed, the coarse scrolling is performed and the fine scrolling value is reset
+to show the coarse scroll has happened. In each case, the value of the hardware
+scrolling register is returned so the joystick processing routine above can
+store the scrolling value in the hardware register and update the status
+display to reflect the new value.</p>
+<p>Scrolling to the right means <em>decreasing</em> the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value, and if it
+becomes less than zero, resetting it to the max value followed by <em>increasing</em>
+the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> low byte address of each display list command in the scrolling
+region:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; scroll one color clock right and check if at HSCROL limit, returns
+; HSCROL value in A
+fine_scroll_right
+        dec horz_scroll
+        lda horz_scroll
+        bpl ?done       ; if non-negative, still in the middle of the character
+        jsr coarse_scroll_right ; wrapped to $ff, do a coarse scroll...
+        lda #horz_scroll_max-1  ;  ...followed by reseting the HSCROL register
+        sta horz_scroll
+?done   rts
+
+; move viewport one byte to the right by pointing each display list start
+; address to one byte higher in memory
+coarse_scroll_right
+        ldy #22         ; 22 lines to modify
+        ldx #4          ; 4th byte after start of display list is low byte of address
+?loop   inc dlist_2d_mode4,x
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?loop
+        rts
+</pre></div>
+</div>
+<p>Scrolling left means <em>increasing</em> the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value, and if greater than the
+limit of 3, resetting it to zero and <em>decreasing</em> the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> low byte address
+of each display list command in the scrolling region:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; scroll one color clock left and check if at HSCROL limit, returns
+; HSCROL value in A
+fine_scroll_left
+        inc horz_scroll
+        lda horz_scroll
+        cmp #horz_scroll_max ; check to see if we need to do a coarse scroll
+        bcc ?done       ; nope, still in the middle of the character
+        jsr coarse_scroll_left ; yep, do a coarse scroll...
+        lda #0          ;  ...followed by reseting the HSCROL register
+        sta horz_scroll
+?done   rts
+
+; move viewport one byte to the left by pointing each display list start
+; address to one byte lower in memory
+coarse_scroll_left
+        ldy #22         ; 22 lines to modify
+        ldx #4          ; 4th byte after start of display list is low byte of address
+?loop   dec dlist_2d_mode4,x
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?loop
+        rts
+</pre></div>
+</div>
+<p>Scrolling up means <em>decreasing</em> the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value, and if it becomes less
+than zero, resetting it to the max value followed by <em>decreasing</em> the <code class="docutils literal notranslate"><span class="pre">LMS</span></code>
+high byte address of each display list command in the scrolling region:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; scroll one scan line up and check if at VSCROL limit, returns
+; VSCROL value in A
+fine_scroll_up
+        dec vert_scroll
+        bit vscroll_x2
+        bpl ?not_2x
+        dec vert_scroll
+?not_2x lda vert_scroll
+        bpl ?done       ; if non-negative, still in the middle of the character
+        jsr coarse_scroll_up   ; wrapped to $ff, do a coarse scroll...
+        lda #vert_scroll_max-1 ;  ...followed by reseting the vscroll register
+        sta vert_scroll
+?done   rts
+
+; move viewport one line up by pointing display list start address
+; to the address one page earlier in memory
+coarse_scroll_up
+        ldy #22         ; 22 lines to modify
+        ldx #5          ; 5th byte after start of display list is high byte of address
+?loop   dec dlist_2d_mode4,x
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?loop
+        rts
+</pre></div>
+</div>
+<p>And finally, scrolling down means <em>increasing</em> the <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> value, and if
+greater than the limit of 7, resetting it to zero value followed by
+<em>increasing</em> the <code class="docutils literal notranslate"><span class="pre">LMS</span></code> high byte address of each display list command in the
+scrolling region:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span>; scroll one scan line down and check if at VSCROL limit, returns
+; VSCROL value in A
+fine_scroll_down
+        inc vert_scroll
+        bit vscroll_x2
+        bpl ?not_2x
+        inc vert_scroll
+?not_2x lda vert_scroll
+        cmp #vert_scroll_max ; check to see if we need to do a coarse scroll
+        bcc ?done       ; nope, still in the middle of the character
+        jsr coarse_scroll_down ; yep, do a coarse scroll...
+        lda #0          ;  ...followed by reseting the vscroll register
+        sta vert_scroll
+?done   rts
+
+; move viewport one line down by pointing display list start address
+; to the address one page later in memory
+coarse_scroll_down
+        ldy #22         ; 22 lines to modify
+        ldx #5          ; 5th byte after start of display list is high byte of address
+?loop   inc dlist_2d_mode4,x
+        inx             ; skip to next low byte which is 3 bytes away
+        inx
+        inx
+        dey
+        bne ?loop
+        rts
+</pre></div>
+</div>
+<p>The only remaining bit of code is the simple display list interrupt:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="n">dli</span>     <span class="k">pha</span>             <span class="c1">; only using A register, so save old value to the stack</span>
+        <span class="k">lda</span> <span class="p">#</span><span class="mh">$22</span>        <span class="c1">; normal playfield width</span>
+        <span class="k">sta</span> <span class="n">WSYNC</span>       <span class="c1">; any value saved to WSYNC will trigger the pause</span>
+        <span class="k">sta</span> <span class="n">DMACTL</span>      <span class="c1">; store it in the hardware register</span>
+        <span class="k">pla</span>             <span class="c1">; restore the A register</span>
+        <span class="k">rti</span>             <span class="c1">; always end DLI with RTI!</span>
+</pre></div>
+</div>
+<p>which exists only to change the playfield width back to normal (40 bytes wide)
+for the status area. The playfield width of the scrolling portion of the
+display is set every vertical blank from the shadow value stored in <code class="docutils literal notranslate"><span class="pre">SDMCTL</span></code>
+when it is changed by the <strong>Option</strong> key.</p>
+<p>The common subroutines used by this program are defined here, and they are
+included last because several of them set the origin higher in memory. If we
+added code after the include statements, that code would start assembling after
+the most recent origin, which is probably not what we want.</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="kp">.include</span> <span class="s">&quot;util_font.s&quot;</span>
+<span class="kp">.include</span> <span class="s">&quot;util_scroll.s&quot;</span>
+<span class="kp">.include</span> <span class="s">&quot;font_data_antic4.s&quot;</span>
+</pre></div>
+</div>
+<p>Finally, the last few lines of code:</p>
+<div class="highlight-ca65 notranslate"><div class="highlight"><pre><span></span><span class="c1">; tell DOS where to run the program when loaded</span>
+        <span class="o">*</span> <span class="o">=</span> <span class="mh">$2e0</span>
+        <span class="kp">.word</span> <span class="n">init</span>
+</pre></div>
+</div>
+<p>puts the 2 byte address of the <code class="docutils literal notranslate"><span class="pre">init</span></code> subroutine into the DOS startup vector,
+so after the XEX is loaded, DOS will jump to the correct address to start the
+program.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In my first draft of all these examples, I had left this vector out because all emulators seem to default to start at the first loaded address in the file, which was at <code class="docutils literal notranslate"><span class="pre">$3000</span></code> and coincidently happened to be pointing to the <code class="docutils literal notranslate"><span class="pre">init</span></code> code.</p>
+</div>
+</div>
+<div class="section" id="further-ideas">
+<h2>Further Ideas<a class="headerlink" href="#further-ideas" title="Permalink to this headline">¶</a></h2>
+<p>I’m planning on writing a fine scrolling game engine that will take the ideas
+presented here and apply it to real world problem, or a real world problem
+circa 1984.</p>
+<p>My goals are omni-directional 2D scrolling, so not just 8-way scrolling but at
+any angle with a fixed-point integer math that will keep track of fractional
+parts of <code class="docutils literal notranslate"><span class="pre">HSCROL</span></code> and <code class="docutils literal notranslate"><span class="pre">VSCROL</span></code>. At this point, I’m not sure about making
+the wraparound world like Mountain King or a world with limits like Nautilus.</p>
+<p>But, when written, the fine scrolling engine will be large, so I’m moving it to
+a separate tutorial: <span class="xref std std-ref">Atari 8-bit Fine Scrolling Game Engine</span></p>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="../index.html" title="index">
+          <img class="logo" src="../_static/logo-200.png" alt="Logo"/>
+        </a></p>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="../dli_tutorial/index.html"
+                          title="Previous page">&larr; Atari 8-bit Display List Interrupts: A Complete(ish) Tutorial</a></p>
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="../magazines.html"
+                          title="Next page">&rarr; Atari 8-bit Magazines</a></p>
+  </div><div class="sphinx-toc sphinxlocaltoc">
+    <h3><a href="../index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Atari 8-bit Fine Scrolling: A Complete(ish) Tutorial</a><ul>
+<li><a class="reference internal" href="#a-refresher-on-display-lists">A Refresher on Display Lists</a></li>
+<li><a class="reference internal" href="#introduction-to-scrolling">Introduction to Scrolling</a><ul>
+<li><a class="reference internal" href="#definitions">Definitions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#topic-1-vertical-coarse-scrolling">Topic #1: Vertical Coarse Scrolling</a><ul>
+<li><a class="reference internal" href="#memory-layout">Memory Layout</a></li>
+<li><a class="reference internal" href="#preparing-the-display-list">Preparing the Display List</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#coarse-scrolling-down">#1.1: Coarse Scrolling Down</a></li>
+<li><a class="reference internal" href="#coarse-scrolling-up">#1.2: Coarse Scrolling Up</a></li>
+<li><a class="reference internal" href="#topic-2-horizontal-coarse-scrolling">Topic #2: Horizontal Coarse Scrolling</a><ul>
+<li><a class="reference internal" href="#id2">Memory Layout</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#coarse-scrolling-left">#2.1: Coarse Scrolling Left</a></li>
+<li><a class="reference internal" href="#coarse-scrolling-right">#2.2: Coarse Scrolling Right</a></li>
+<li><a class="reference internal" href="#topic-3-combined-coarse-scrolling">Topic #3: Combined Coarse Scrolling</a><ul>
+<li><a class="reference internal" href="#combined-memory-layout">Memory Layout</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#d-coarse-scrolling">#3.1: 2D Coarse Scrolling</a></li>
+<li><a class="reference internal" href="#topic-4-vertical-fine-scrolling">Topic #4: Vertical Fine Scrolling</a><ul>
+<li><a class="reference internal" href="#id4">Preparing the Display List</a></li>
+<li><a class="reference internal" href="#the-vscrol-hardware-register">The VSCROL Hardware Register</a></li>
+<li><a class="reference internal" href="#fixing-the-last-scrolled-line">Fixing the Last Scrolled Line</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fine-scrolling-down">#4.1: Fine Scrolling Down</a></li>
+<li><a class="reference internal" href="#fine-scrolling-up">#4.2: Fine Scrolling Up</a></li>
+<li><a class="reference internal" href="#interlude-wide-and-narrow-playfields">Interlude: Wide and Narrow Playfields</a></li>
+<li><a class="reference internal" href="#topic-5-horizontal-fine-scrolling">Topic #5: Horizontal Fine Scrolling</a><ul>
+<li><a class="reference internal" href="#id7">Preparing the Display List</a></li>
+<li><a class="reference internal" href="#the-hscrol-hardware-register">The HSCROL Hardware Register</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fine-scrolling-left">#5.1: Fine Scrolling Left</a></li>
+<li><a class="reference internal" href="#fine-scrolling-right">#5.2: Fine Scrolling Right</a></li>
+<li><a class="reference internal" href="#fine-scrolling-with-wide-playfield">#5.3: Fine Scrolling with Wide Playfield</a></li>
+<li><a class="reference internal" href="#interlude-display-list-interrupts">Interlude: Display List Interrupts</a></li>
+<li><a class="reference internal" href="#wide-scrolling-playfield-with-normal-status-lines">#5.4: Wide Scrolling Playfield with Normal Status Lines</a></li>
+<li><a class="reference internal" href="#interlude-vertical-blank-interrupts">Interlude: Vertical Blank Interrupts</a></li>
+<li><a class="reference internal" href="#topic-6-combined-fine-scrolling">Topic #6: Combined Fine Scrolling</a><ul>
+<li><a class="reference internal" href="#id10">Preparing the Display List</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#d-scrolling-with-dli">#6.1: 2D Scrolling with DLI</a></li>
+<li><a class="reference internal" href="#code-walkthrough-2d-scrolling-with-dli">Code Walkthrough: 2D Scrolling with DLI</a></li>
+<li><a class="reference internal" href="#further-ideas">Further Ideas</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+        </div>
+      </div>
+    
+    
+        <div class="sidebar-toggle-group no-js">
+            
+            <button class="sidebar-toggle" id="sidebar-hide" title="Hide the sidebar menu">
+                 «
+                <span class="show-for-small">hide menu</span>
+                
+            </button>
+            <button class="sidebar-toggle" id="sidebar-show" title="Show the sidebar menu">
+                
+                <span class="show-for-small">menu</span>
+                <span class="hide-for-small">sidebar</span>
+                 »
+            </button>
+        </div>
+    
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../podcast/index.html" title="Episodes" accesskey="E">episodes</a></li>
+<li class="right" style="margin-right: 10px"><a href="../magazines.html" title="magazines" accesskey="M">magazines</a></li>
+<li class="right" style="margin-right: 10px"><a href="../omnivore/" title="omnivore" accesskey="O">omnivore</a></li>
+<li class="right" style="margin-right: 10px"><a href="../jumpman/" title="jumpman" accesskey="J">jumpman</a></li>
+             
+        <li class="right" >
+          <a href="../index.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../magazines.html" title="Atari 8-bit Magazines"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../dli_tutorial/index.html" title="Atari 8-bit Display List Interrupts: A Complete(ish) Tutorial"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">Player/Missile Podcast</a> &#187;</li>
+
+        <li class="nav-item nav-item-this"><a href="">Atari 8-bit Fine Scrolling: A Complete(ish) Tutorial</a></li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2024 Rob McMullen, Licensed under the <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC A-SA 4.0 Intl</a>.
+      Last updated on Jan 03 2024.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>
