@@ -267,3 +267,6 @@ the same PMG ball phase. The 308-byte arm patch and stable background remain.
 Title v117 uses large two-line TAME / IMPALA and taller song-title lettering.
 Solid per-letter inks and a narrow coloured extrusion remain readable over
 the moving, dithered plasma; transparent pixels preserve the background.
+
+For a current checklist against the original timeline and V1–V7 verification
+items, see `docs/PLAN_STATUS.md`.
