@@ -24,7 +24,7 @@ if sequence.MPU is not None:
 @unittest.skipIf(sequence.MPU is None, 'install requirements-dev.txt')
 class CacheTests(unittest.TestCase):
     def cpu(self):
-        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v070.xex').read_bytes()))
+        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v076.xex').read_bytes()))
 
     def step(self, cpu, tick):
         cpu.memory.writes.clear()

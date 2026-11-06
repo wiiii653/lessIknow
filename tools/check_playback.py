@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--config', type=Path, default=Path.home() / '.atari800.cfg')
     parser.add_argument('--seconds', type=int, default=10,
                         help='host seconds to record each turbo emulator run')
-    parser.add_argument('--demo', type=Path, default=Path('build/visual-prototype-v072.xex'))
+    parser.add_argument('--demo', type=Path, default=Path('build/visual-prototype-v076.xex'))
     args = parser.parse_args()
     env = dict(os.environ, SDL_VIDEODRIVER='dummy', SDL_AUDIODRIVER='dummy')
     with tempfile.TemporaryDirectory(prefix='tliktb-playback-') as directory:

@@ -16,7 +16,7 @@ class TrevorBangTests(unittest.TestCase):
         cpu=None
         for offset,letters in ((0,False),(16,True),(32,True),(80,True)):
             cpu=sequence.execute(27136+offset,cpu);m=cpu.memory
-            dx,dy=4,2  # per-punch offset for tick 27136
+            dx,dy=0,0  # bubble offset for tick 27136
             self.assertEqual(m[0x83ed],2)
             self.assertEqual(m[0xd01b],0x11)
             self.assertEqual(m[0xd01d],3)
@@ -56,10 +56,10 @@ class TrevorBangTests(unittest.TestCase):
         for tick in (27152,27664,28176,28688):
             cpu=sequence.execute(tick);m=cpu.memory
             self.assertEqual(m[0x83ed],2)
-            positions.add((m[0xd000],m[0x83e9]))
+            positions.add((m[0xd000],m[0x83ef]))
             self.assertEqual(m[0xd000:0xd004],m[0xd004:0xd008])
             for plane,glyph in enumerate(bang_art()[1]):
-                dy=m[0x83e9] if m[0x83e9]<128 else m[0x83e9]-256
+                dy=m[0x83ef] if m[0x83ef]<128 else m[0x83ef]-256
                 self.assertEqual(bytes(m[0xa00+plane*128+45+dy:0xa00+plane*128+59+dy]),glyph)
         self.assertGreater(len(positions),1)
 
