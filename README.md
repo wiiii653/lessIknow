@@ -3,11 +3,18 @@
 ## Build and run
 
 Run `make` with Python 3 and ImageMagick installed to produce
-`build/visual-prototype-v126.xex`. Run Atari800 with stereo POKEY enabled:
+`build/visual-prototype-dev.xex` (replaceable working build). Run Atari800 with stereo POKEY enabled:
 
 ```sh
-atari800 -1088xe -pal -nobasic -run build/visual-prototype-v126.xex
+atari800 -1088xe -pal -nobasic -run build/visual-prototype-dev.xex
 ```
+
+Install `requirements-dev.txt` in a virtual environment and run
+`make check PYTHON=/path/to/venv/bin/python` for the required 6502 tests.
+Numbered releases remain preserved; the optimized release is
+`build/visual-prototype-v127.xex`. See `docs/V127_OPTYMALIZACJE.md` for
+CPU measurements and validation. To test an archived build, set
+`ATARI_TEST_XEX=build/visual-prototype-v127.xex`; its matching JSON is required.
 
 ## Opening sequence
 

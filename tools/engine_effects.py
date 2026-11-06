@@ -141,3 +141,77 @@ def pmg_art():
         for y in range(row - 3, row):
             missiles[y] |= 3 << (2 * i)
     return bytes(missiles), bytes(players)
+
+# Reserved independently of the packed scanline pool. Both bytes describe the
+# LMS mapping of an entire display list, never the framebuffer's pixel content.
+RUNTIME_ORIGIN = 0x0c00
+RUNTIME_END = 0x0e00
+DL_KEYS = 0x0dfe
+COPY_PAGES = RUNTIME_ORIGIN
+DL_CHECK = 0x0d40
+
+
+def runtime_helper():
+    """Copy 5*X aligned pages from A:$00 to STATE+30:$00, preserving banks.
+
+    Only call with X=2 or 3. Code and operands are unbanked so music NMIs may
+    switch banks safely. Source and target must not overlap this helper.
+    """
+    c = Code(RUNTIME_ORIGIN)
+    def a(op, addr): c.emit(op, addr & 255, addr >> 8)
+    for page in range(5):
+        c.jump(0x8d, f'read{page}_hi')
+        c.emit(0x18, 0x69, 1)
+    a(0xad, 0x83fe)
+    for page in range(5):
+        c.jump(0x8d, f'write{page}_hi')
+        c.emit(0x18, 0x69, 1)
+    c.emit(0xa0, 0)
+    c.label('copy')
+    for page in range(5):
+        c.label(f'read{page}'); c.emit(0xb9, 0, 0x40)
+        c.label(f'write{page}'); c.emit(0x99, 0, 0x90)
+    c.emit(0xc8); c.branch(0xd0, 'copy')
+    c.emit(0xca); c.branch(0xf0, 'copied')
+    for page in range(5):
+        for op in ('read', 'write'):
+            c.jump(0xad, f'{op}{page}_hi'); c.emit(0x18, 0x69, 5)
+            c.jump(0x8d, f'{op}{page}_hi')
+    c.jump(0x4c, 'copy')
+    c.label('copied'); c.emit(0x60)
+    for page in range(5):
+        for op in ('read', 'write'):
+            c.labels[f'{op}{page}_hi'] = c.labels[f'{op}{page}'] + 2
+    code = c.finish()
+    if RUNTIME_ORIGIN + len(code) > DL_CHECK:
+        raise ValueError('copy helper overlaps DL cache helper')
+    code.extend(bytes(DL_CHECK - RUNTIME_ORIGIN - len(code)))
+    d = Code(DL_CHECK)
+    # A = layout key. Return A=0/Z if already built; A=1 otherwise.
+    d.emit(0x48, 0xad, 0xe6, 0x83, 0x29, 4, 0x4a, 0x4a, 0xaa, 0x68,
+           0xdd, DL_KEYS & 255, DL_KEYS >> 8)
+    d.branch(0xf0, 'hit')
+    d.emit(0x9d, DL_KEYS & 255, DL_KEYS >> 8, 0xa9, 1, 0x60)
+    d.label('hit'); d.emit(0xa9, 0, 0x60)
+    code.extend(d.finish())
+    assert len(code) <= DL_KEYS - RUNTIME_ORIGIN
+    code.extend(bytes(RUNTIME_END - RUNTIME_ORIGIN - len(code)))
+    return code
+
+
+def cached_display_list(c, key):
+    """Guard the caller's existing row builder using the inactive DL's key."""
+    c.emit(0xa9, key, 0x20, DL_CHECK & 255, DL_CHECK >> 8)
+    c.branch(0xd0, 'build_rows')
+    c.jump(0x4c, 'swap')
+    c.label('build_rows')
+
+
+def clear_pmg(c, label):
+    """Clear $0980–$0BFF once each, five 128-byte spans per iteration."""
+    c.emit(0xa9, 0, 0xa2, 127)
+    c.label(label)
+    for base in (0x0980, 0x0a00, 0x0a80, 0x0b00, 0x0b80):
+        c.emit(0x9d, base & 255, base >> 8)
+    c.emit(0xca)
+    c.branch(0x10, label)

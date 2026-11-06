@@ -6,6 +6,7 @@ framebuffer is written; ANTIC never fetches from a banked window.
 import math
 from pmg_preview import atari_rgb
 from functools import lru_cache
+from engine_effects import COPY_PAGES, cached_display_list
 from build_sequence import Code
 from music_timing import tick_at_bar
 ENTRY=0x7c00
@@ -74,12 +75,11 @@ def helper():
     a(0xad,0x83ed);c.emit(0x09,0x80);a(0xcd,0x83fa)
     c.branch(0xd0,'changed');c.jump(0x4c,'colors')
     c.label('changed');a(0x8d,0x83fa)
-    a(0xad,0x83ed);c.emit(0x29,3,0xaa);c.jump(0xbd,'source_hi');c.jump(0x8d,'read_hi')
-    c.emit(0xa9,0);c.jump(0x8d,'read_lo');c.jump(0x8d,'write_lo')
-    a(0xad,0x83e6);c.emit(0x29,4,0x0a,0x0a,0x0a,0x49,0xb0);a(0x8d,0x83fe);c.jump(0x8d,'write_hi')
-    c.emit(0xa2,15,0xa0,0)
-    c.label('copy');c.label('read');c.emit(0xb9,0,0);c.label('write');c.emit(0x99,0,0,0xc8);c.branch(0xd0,'copy')
-    c.jump(0xee,'read_hi');c.jump(0xee,'write_hi');c.emit(0xca);c.branch(0xd0,'copy')
+    a(0xad,0x83ed);c.emit(0x29,3,0xaa)
+    c.jump(0xbd,'source_hi');c.emit(0x48)
+    a(0xad,0x83e6);c.emit(0x29,4,0x0a,0x0a,0x0a,0x49,0xb0);a(0x8d,0x83fe)
+    c.emit(0x68,0xa2,3);a(0x20,COPY_PAGES)
+    cached_display_list(c, 1)
     a(0xad,0x83e6);c.jump(0x8d,'dl1_hi');c.jump(0x8d,'dl2_hi')
     c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');c.emit(0xa9,4);c.jump(0x8d,'dl2_lo');c.emit(0xa0,0)
     c.label('rows');c.jump(0xb9,'row_lo');c.label('dl1');c.emit(0x8d,0,0)
@@ -99,8 +99,15 @@ def helper():
     c.label('intro_base');c.emit(0xa2,0);a(0xad,0x83e2);c.emit(0x38,0xe9,11968&255);a(0x8d,0x83ea)
     a(0xad,0x83e3);c.emit(0xe9,11968>>8);a(0x8d,0x83eb);c.branch(0xb0,'mod')
     c.emit(0xa9,0);a(0x8d,0x83ea);a(0x8d,0x83eb)
-    c.label('mod');a(0xad,0x83eb);c.branch(0xd0,'sub');a(0xad,0x83ea);c.emit(0xc9,187);c.branch(0x90,'beat')
-    c.label('sub');a(0xad,0x83ea);c.emit(0x38,0xe9,187);a(0x8d,0x83ea);a(0xad,0x83eb);c.emit(0xe9,0);a(0x8d,0x83eb);c.emit(0xe8);c.jump(0x4c,'mod')
+    c.label('mod');c.emit(0xa0,7)
+    c.label('divide')
+    a(0xad,0x83eb);c.jump(0xd9,'divisor_hi');c.branch(0x90,'divide_next');c.branch(0xd0,'divide_sub')
+    a(0xad,0x83ea);c.jump(0xd9,'divisor_lo');c.branch(0x90,'divide_next')
+    c.label('divide_sub');c.emit(0x38);a(0xad,0x83ea);c.jump(0xf9,'divisor_lo');a(0x8d,0x83ea)
+    a(0xad,0x83eb);c.jump(0xf9,'divisor_hi');a(0x8d,0x83eb)
+    c.emit(0x8a,0x18);c.jump(0x79,'quotient_bits');c.emit(0xaa)
+    c.label('divide_next');c.emit(0x88);c.branch(0x10,'divide')
+    a(0xad,0x83ea)
     c.label('beat');c.emit(0xc9,24,0xa9,8);c.branch(0xb0,'luma');c.emit(0xa9,12)
     c.label('luma');a(0x8d,0x83ea)
     c.label('color_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'color_wait')
@@ -122,9 +129,12 @@ def helper():
     for addr,val in ((0xd01a,0),(0xd01d,0),(0xd400,0x22)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
-    for label in ('read','write','dl1','dl2'):
+    for label in ('dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     c.label('source_hi');c.emit(0x40,0x4f,0x5e,0x6d)
+    c.label('divisor_lo');c.emit(*((187<<i)&255 for i in range(8)))
+    c.label('divisor_hi');c.emit(*((187<<i)>>8 for i in range(8)))
+    c.label('quotient_bits');c.emit(*(1<<i for i in range(8)))
     c.label('contrast_indices');c.emit(*contrast_indices())
     c.label('hue_pairs');c.emit(*((a<<4)|b for a,b in palette_pairs()))
     c.label('row_lo');c.emit(*((y//2*40)&255 for y in range(192)))

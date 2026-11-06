@@ -1,4 +1,5 @@
 """Exercise warm caches, per-buffer ownership, partial copies and PMG accents."""
+from artifact import XEX, METADATA
 from pathlib import Path
 import unittest
 
@@ -24,7 +25,7 @@ if sequence.MPU is not None:
 @unittest.skipIf(sequence.MPU is None, 'install requirements-dev.txt')
 class CacheTests(unittest.TestCase):
     def cpu(self):
-        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v126.xex').read_bytes()))
+        return sequence.MPU(memory=TrackedMemory(XEX.read_bytes()))
 
     def step(self, cpu, tick):
         cpu.memory.writes.clear()

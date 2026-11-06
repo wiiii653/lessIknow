@@ -1,4 +1,5 @@
 """Trevor staging, hardware sprites and safe allocation of the seventeenth bank."""
+from artifact import XEX, METADATA
 import unittest
 import test_sequence as sequence
 from trevor_awakens import START,MIDPOINT,HIT,END
@@ -171,7 +172,7 @@ class TrevorTests(unittest.TestCase):
         from extract_music import segments
         from scene_memory import RuntimeMemory
         from pathlib import Path
-        m=RuntimeMemory((sequence.ROOT/'build/visual-prototype-v126.xex').read_bytes())
+        m=RuntimeMemory(XEX.read_bytes())
         m.banks[0][0]=0x55 # The second marker must disambiguate this coincidence.
         saved=[bytes(bank) for bank in m.banks[:16]]
         frame=bytes((i*17+i//256)&255 for i in range(16384))

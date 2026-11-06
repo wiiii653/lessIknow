@@ -1,5 +1,6 @@
 """Act 3: low-angle dribble then slow-motion dunk, with a PMG ball."""
 from pathlib import Path
+from engine_effects import cached_display_list, clear_pmg
 from build_sequence import Code
 from music_timing import tick_at_bar
 from trevor_awakens import HIT as TREVOR_HIT
@@ -162,8 +163,11 @@ def helper(bank_wrapper=0, bank_operand=0):
     c.label('copy');c.label('read');c.emit(0xb9,0,0);c.label('write');c.emit(0x99,0,0,0xc8);c.branch(0xd0,'copy')
     for label in ('read_hi','write_hi'):c.jump(0xee,label)
     c.emit(0xca);c.branch(0xd0,'copy')
-    # Copy the remaining 192 bytes through the same operands with a local JSR.
-    c.label('tail');c.jump(0x20,'tail_byte');c.emit(0xc8,0xc0,192);c.branch(0xd0,'tail')
+    # Patch the tail once, then copy its 192 bytes inline.
+    for source,target in (('read','tail_read'),('write','tail_write')):
+        c.jump(0xad,source+'_lo');c.jump(0x8d,target+'_lo');c.jump(0xad,source+'_hi');c.jump(0x8d,target+'_hi')
+    c.label('tail');c.label('tail_read');c.emit(0xb9,0,0)
+    c.label('tail_write');c.emit(0x99,0,0,0xc8,0xc0,192);c.branch(0xd0,'tail')
     a(0xad,0x83ed);c.branch(0xd0,'bitmap_ready')
     c.label('dribble_patch');a(0xae,0x83ec)
     for table, operand in (('patch_lo','patch_read_lo'),('patch_hi','patch_read_hi'),('patch_stride','patch_step')):
@@ -183,6 +187,7 @@ def helper(bank_wrapper=0, bank_operand=0):
     a(0xad,0x83e6);c.emit(0x29,4,0x4a,0x4a,0x49,1,0xaa)
     a(0xad,0x83ec);c.emit(0x09,0x40);a(0x9d,0x83f8)
     c.label('bitmap_ready')
+    cached_display_list(c, 3)
     a(0xad,0x83e6);c.jump(0x8d,'dl1_hi');c.jump(0x8d,'dl2_hi')
     c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');c.emit(0xa9,4);c.jump(0x8d,'dl2_lo');c.emit(0xa0,0)
     c.label('rows');c.jump(0xb9,'row_lo');c.label('dl1');c.emit(0x8d,0,0)
@@ -196,10 +201,7 @@ def helper(bank_wrapper=0, bank_operand=0):
     c.emit(0xa9,255);a(0x8d,0x83f8);a(0x8d,0x83f9)
     c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait')
     # Four rainbow bands and missile droplets use the existing PMG buffer.
-    c.emit(0xa9,0,0xa2,0)
-    c.label('clear');
-    for base in (0x0980,0x0a00,0x0b00):a(0x9d,base)
-    c.emit(0xe8);c.branch(0xd0,'clear')
+    clear_pmg(c, 'clear')
     a(0xae,0x83ff);a(0xad,0x83ed);c.branch(0xd0,'dunk_ball')
     c.jump(0xbd,'dribble_x');a(0x8d,0x83e8);c.jump(0xbd,'dribble_y');c.jump(0x4c,'ball_position')
     c.label('dunk_ball');c.jump(0xbd,'dunk_x');a(0x8d,0x83e8);c.jump(0xbd,'dunk_y')
@@ -222,11 +224,6 @@ def helper(bank_wrapper=0, bank_operand=0):
     a(0xad,0x83ed);c.branch(0xf0,'no_flash');a(0xad,0x83ff);c.emit(0xc9,82);c.branch(0x90,'no_flash');c.emit(0xc9,85);c.branch(0xb0,'no_flash');c.emit(0xa9,14);a(0x8d,0xd017)
     c.label('no_flash');c.emit(0xa9,1,0xa2,3)
     c.label('sizes');a(0x9d,0xd008);c.emit(0xca);c.branch(0x10,'sizes');c.emit(0x60)
-    # Tail helper borrows the already incremented copy operands.
-    c.label('tail_byte')
-    for source,target in (('read','tail_read'),('write','tail_write')):
-        c.jump(0xad,source+'_lo');c.jump(0x8d,target+'_lo');c.jump(0xad,source+'_hi');c.jump(0x8d,target+'_hi')
-    c.label('tail_read');c.emit(0xb9,0,0);c.label('tail_write');c.emit(0x99,0,0,0x60)
     for label in ('read','write','dl1','dl2','tail_read','tail_write'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     for label in ('patch_read','patch_write'):

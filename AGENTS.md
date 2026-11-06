@@ -2,17 +2,17 @@
 
 ## Project Structure & Module Organization
 
-This project is an Atari XE 1 MB audiovisual demo for “The Less I Know The Better.” The current checkout contains planning documents and a prebuilt player:
+This project is an Atari XE 1 MB audiovisual demo for “The Less I Know The Better.” The checkout contains planning documents, a source pipeline, tests and a prebuilt player:
 
 - `TLIKTB_Atari_Timeline_v2.md`: act boundaries, musical events, and player tick synchronization.
 - `TLIKTB_Technical_Constraints.md`: hardware limits, memory layout, proposed asset formats, and verification tasks V1–V7.
 - `less-i-know-release-v035.xex`: the supplied executable.
 
-There are currently no source, test, or asset directories. The referenced `TLIKTB_Asset_List.md` and older v024 executable are absent; do not assume they are available.
+`tools/` generates NMOS 6502 code and assets; `tests/` executes callbacks with py65; `assets/` contains source artwork. `build/visual-prototype-dev.xex` and its JSON are working artifacts. Preserve numbered releases; use a new output name for each release.
 
 ## Build, Test, and Development Commands
 
-No build scripts, dependency manifests, or automated test commands are provided. Document the assembler, dependencies, and exact commands when introducing a source pipeline.
+Install `requirements-dev.txt` into a virtual environment. Run `make all PYTHON=/path/to/venv/bin/python` for the replaceable working build and `make check PYTHON=/path/to/venv/bin/python` for required tests. Run `tools/check_playback.py` to compare full-track stereo POKEY in Atari800. `ATARI_TEST_XEX` selects another XEX (with matching JSON) for tests and the CPU profiler.
 
 - `ls -lh *.xex`: inspect available executables and sizes.
 - `sha256sum less-i-know-release-v035.xex`: record the binary checksum before comparisons.
@@ -27,7 +27,7 @@ No formatter, linter, or source indentation standard is configured. Establish co
 
 ## Testing Guidelines
 
-Validation currently relies on emulator checks; no automated framework or coverage threshold exists. Complete and document V1–V7 before building the video engine. Verify v035 addresses instead of reusing v024 addresses without checking.
+Run automated tests and emulator playback comparisons for engine changes. py65 does not model ANTIC DMA or real raster deadlines; distinguish CPU costs from observed FPS. Keep V1–V7 status in `docs/PLAN_STATUS.md` accurate. Verify v035 addresses instead of reusing v024 addresses without checking.
 
 Test each build in the target configuration and listen for missed music ticks throughout playback. Record results under the relevant V-number, distinguishing direct observations (`[ODCZYT]`), inferences (`[WNIOSEK]`), and assumptions (`[ZAŁOŻENIE]`).
 

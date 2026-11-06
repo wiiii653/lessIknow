@@ -10,7 +10,7 @@ from music_timing import tick_at_bar
 from build_title import ROWS, gtia11_pixels
 from title_mode import ENTRY as TITLE_MODE_ENTRY, helper as title_mode_helper
 from title_plasma import build as plasma_build, artwork as plasma_artwork, SIZE as PLASMA_SIZE, FIRST_BANK as PLASMA_FIRST_BANK
-from engine_effects import copy_helper, effects_helper, pmg_art, COPY_ORIGIN, EFFECT_ORIGIN
+from engine_effects import copy_helper, effects_helper, pmg_art, COPY_ORIGIN, EFFECT_ORIGIN, RUNTIME_ORIGIN, RUNTIME_END, DL_KEYS, runtime_helper
 from dance_banks import FRAME_BASES, frame_address, frame_blob
 from gym_practice import practice_pixels, PRACTICE_TICK, PRACTICE_SCENE, BALL_PATH, PRACTICE_CUTS
 from build_visual_prototype import xex_segment
@@ -44,8 +44,8 @@ def packed_rows(pixels):
             for y in range(192)]
 
 
-def build(output_path=Path('build/visual-prototype-v126.xex')):
-    if output_path.exists():
+def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
+    if output_path.exists() and not replace:
         raise FileExistsError(f'Preserving existing XEX: {output_path}; choose --output with a new name')
     copy_code, copy_labels = copy_helper()
     effect_code = effects_helper()
@@ -90,7 +90,7 @@ def build(output_path=Path('build/visual-prototype-v126.xex')):
     # Bitmap rows remain contiguous for ANTIC, but adjacent stored rows may
     # share identical suffix/prefix bytes (notably the dancer's black margins).
     # This is lossless and adds no work to the Atari's playback routine.
-    regions = ((0x0400, 0x0800), (0x0900, 0x0980), (0x0c00, RUN), (POOL_LOW, 0x2000), (0x3300, 0x3c00), (0x824a, 0x8300),
+    regions = ((0x0400, 0x0800), (0x0900, 0x0980), (RUNTIME_END, RUN), (POOL_LOW, 0x2000), (0x3300, 0x3c00), (0x824a, 0x8300),
                (0x8340, 0x83e0), (0x864a, 0x9000),
                (EFFECT_ORIGIN + len(effect_code), 0xb000),
                (COPY_ORIGIN + len(copy_code), 0xd000),
@@ -505,6 +505,9 @@ def build(output_path=Path('build/visual-prototype-v126.xex')):
     check_cached('static_changed')
     absolute(0xae, SCENE)
     c.label('resolve_lookup')
+    c.emit(0xa9, 0)
+    absolute(0x8d, DL_KEYS)
+    absolute(0x8d, DL_KEYS + 1)
     lookup_fixups = []
     for table, part in ((0x8300, 1), (0x8310, 2), (0x8320, 1), (0x8330, 2)):
         absolute(0xbd, table)
@@ -698,7 +701,7 @@ def build(output_path=Path('build/visual-prototype-v126.xex')):
         descriptors[address - 0x8300] = 255
 
     missiles, players = pmg_art()
-    inserts = [(0x0800, bytes(y // 3 for y in range(192))), (0x0980, missiles),
+    inserts = [(RUNTIME_ORIGIN, runtime_helper()), (0x0800, bytes(y // 3 for y in range(192))), (0x0980, missiles),
                (0x0a00, players), (TABLE_BASE, tables), (ORIGIN, code), (RUN, run_stub()),
                (EFFECT_ORIGIN, effect_code), (COPY_ORIGIN, copy_code),
                (0x8000, display(0x8000)),
@@ -789,7 +792,7 @@ def build(output_path=Path('build/visual-prototype-v126.xex')):
         output.extend(xex_segment(start, payload))
     if not patched or not inserted:
         raise ValueError('missing v035 code or RUN vector')
-    with output_path.open('xb') as stream:
+    with output_path.open('wb' if replace else 'xb') as stream:
         stream.write(output)
     output_path.with_suffix('.json').write_text(json.dumps({
         'title_tick': TITLE_TICK, 'school_tick': SCHOOL_TICK,
@@ -807,6 +810,8 @@ def build(output_path=Path('build/visual-prototype-v126.xex')):
         'unique_rows': len(unique), 'row_addresses': addresses,
         'row_storage_bytes': sum(len(blob) for blob in blobs),
         'row_unpacked_bytes': len(unique) * 40,
+        'runtime_helper': RUNTIME_ORIGIN, 'runtime_end': RUNTIME_END,
+        'display_layout_keys': DL_KEYS,
         'cache_keys': BUFKEYS, 'last_visual_key': LASTKEY,
         'copy_helper': COPY_ORIGIN, 'effects_helper': EFFECT_ORIGIN,
         'dirty_pages': [4, 24], 'full_copy_bytes': 7936, 'dirty_copy_bytes': 5376,
@@ -821,5 +826,7 @@ def build(output_path=Path('build/visual-prototype-v126.xex')):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v126.xex'))
-    build(parser.parse_args().output)
+    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-dev.xex'))
+    parser.add_argument('--replace', action='store_true', help='replace a working build; omit for archived releases')
+    args = parser.parse_args()
+    build(args.output, replace=args.replace)

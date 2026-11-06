@@ -26,6 +26,8 @@ class Code:
         self.data.extend(values)
 
     def label(self, name):
+        if name in self.labels:
+            raise ValueError(f'duplicate label: {name}')
         self.labels[name] = self.origin + len(self.data)
 
     def branch(self, opcode, name):

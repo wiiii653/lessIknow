@@ -1,6 +1,7 @@
 """Trevor reveal, alternating punches and synchronized comic impacts."""
 import math
 from pathlib import Path
+from engine_effects import COPY_PAGES, cached_display_list, clear_pmg
 from build_sequence import Code
 from trevor_awakens import COLORS, HIT as TREVOR_HIT, END as TREVOR_END, MIDPOINT as TREVOR_MIDPOINT
 from music_timing import tick_at_beat
@@ -181,12 +182,11 @@ def helper():
     c.label('check_key');a(0x8d,0x83e7);a(0xcd,0x83fa);c.branch(0xd0,'changed')
     a(0xad,0x83ed);a(0xcd,0x83fb);c.branch(0xd0,'changed');c.jump(0x4c,'colors')
     c.label('changed');a(0xad,0x83e7);a(0x8d,0x83fa);a(0xad,0x83ed);a(0x8d,0x83fb)
-    a(0xae,0x83ed);c.jump(0xbd,'source_hi');c.jump(0x8d,'read_hi')
-    c.emit(0xa9,0);c.jump(0x8d,'read_lo');c.jump(0x8d,'write_lo')
-    a(0xad,0x83e6);c.emit(0x29,4,0x0a,0x0a,0x0a,0x49,0xb0);a(0x8d,0x83fe);c.jump(0x8d,'write_hi')
-    c.emit(0xa2,10,0xa0,0)
-    c.label('copy');c.label('read');c.emit(0xb9,0,0);c.label('write');c.emit(0x99,0,0,0xc8);c.branch(0xd0,'copy')
-    c.jump(0xee,'read_hi');c.jump(0xee,'write_hi');c.emit(0xca);c.branch(0xd0,'copy')
+    a(0xae,0x83ed)
+    c.jump(0xbd,'source_hi');c.emit(0x48)
+    a(0xad,0x83e6);c.emit(0x29,4,0x0a,0x0a,0x0a,0x49,0xb0);a(0x8d,0x83fe)
+    c.emit(0x68,0xa2,2);a(0x20,COPY_PAGES)
+    cached_display_list(c, 2)
     a(0xad,0x83e6);c.jump(0x8d,'dl1_hi');c.jump(0x8d,'dl2_hi')
     c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');c.emit(0xa9,4);c.jump(0x8d,'dl2_lo');c.emit(0xa0,0)
     c.label('rows');c.jump(0xb9,'row_lo');c.label('dl1');c.emit(0x8d,0,0)
@@ -220,10 +220,7 @@ def helper():
     c.emit(0x60)
     c.label('bang')
     # Clear all players: their old RAM may contain art from preceding scenes.
-    c.emit(0xa9,0,0xa2,0)
-    c.label('bang_clear')
-    for base in (0x0980,0x0a00,0x0b00):a(0x9d,base)
-    c.emit(0xe8);c.branch(0xd0,'bang_clear')
+    clear_pmg(c, 'bang_clear')
     # The hand chooses the side; two small variants use the same origin
     # for lettering, burst and departing fragments.
     c.jump(0xad,'hit_index');c.emit(0x29,1);a(0x8d,0x83e8)
@@ -272,7 +269,7 @@ def helper():
                      (0xd407,8),(0xd01b,1),(0xd01d,1),(0xd400,0x26),(0xd00c,0x55)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
-    for label in ('read','write','dl1','dl2'):
+    for label in ('dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     c.label('pose_pf0');c.emit(0x46,0x48,0x48,0x48,0x48,0x48)
     c.label('pose_pf1');c.emit(0x66,0x68,0x68,0x66,0x68,0x66)

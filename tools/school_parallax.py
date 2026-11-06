@@ -1,5 +1,6 @@
 """Precomposed independent layers for school pan, 18 clocked frames."""
 from pathlib import Path
+from engine_effects import COPY_PAGES, cached_display_list
 from build_sequence import Code, PALETTE
 from music_timing import tick_at_bar
 from school_story import color
@@ -55,12 +56,11 @@ def helper():
     a(0xad,0x83ed);c.emit(0x09,0xc0);a(0xcd,0x83fa)
     c.branch(0xd0,'changed');c.jump(0x4c,'colors')
     c.label('changed');a(0x8d,0x83fa)
-    a(0xad,0x83ed);c.emit(0x29,3,0xaa);c.jump(0xbd,'source_hi');c.jump(0x8d,'read_hi')
-    c.emit(0xa9,0);c.jump(0x8d,'read_lo');c.jump(0x8d,'write_lo')
-    a(0xad,0x83e6);c.emit(0x29,4,0x0a,0x0a,0x0a,0x49,0xb0);a(0x8d,0x83fe);c.jump(0x8d,'write_hi')
-    c.emit(0xa2,10,0xa0,0)
-    c.label('copy');c.label('read');c.emit(0xb9,0,0);c.label('write');c.emit(0x99,0,0,0xc8);c.branch(0xd0,'copy')
-    c.jump(0xee,'read_hi');c.jump(0xee,'write_hi');c.emit(0xca);c.branch(0xd0,'copy')
+    a(0xad,0x83ed);c.emit(0x29,3,0xaa)
+    c.jump(0xbd,'source_hi');c.emit(0x48)
+    a(0xad,0x83e6);c.emit(0x29,4,0x0a,0x0a,0x0a,0x49,0xb0);a(0x8d,0x83fe)
+    c.emit(0x68,0xa2,2);a(0x20,COPY_PAGES)
+    cached_display_list(c, 2)
     a(0xad,0x83e6);c.jump(0x8d,'dl1_hi');c.jump(0x8d,'dl2_hi')
     c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');c.emit(0xa9,4);c.jump(0x8d,'dl2_lo');c.emit(0xa0,0)
     c.label('rows');c.jump(0xb9,'row_lo');c.label('dl1');c.emit(0x8d,0,0)
@@ -76,7 +76,7 @@ def helper():
     for addr,val in ((0xd01a,0),(0xd016,0x48),(0xd017,0x9a),(0xd018,0x2c),(0xd01d,0),(0xd400,0x22)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
-    for label in ('read','write','dl1','dl2'):
+    for label in ('dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     c.label('source_hi');c.emit(0x40,0x4a,0x54,0x5e)
     c.label('row_lo');c.emit(*((y//3*40)&255 for y in range(192)))

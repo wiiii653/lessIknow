@@ -1,5 +1,6 @@
 """Bank-eight portrait renderer; music owns offsets below $0B10."""
 from pathlib import Path
+from engine_effects import cached_display_list, clear_pmg
 from build_sequence import Code
 from music_timing import tick_at_bar
 START, END = tick_at_bar(40), tick_at_bar(56)
@@ -45,6 +46,7 @@ def helper(eyes=None, effects_address=0):
     for label in ('dst1','dst2'):
         c.emit(0x18);c.jump(0xad,label+'lo');c.emit(0x69,2);c.jump(0x8d,label+'lo');c.branch(0x90,label+'ok');c.jump(0xee,label+'hi');c.label(label+'ok')
     a(0xce,0x83fd);c.branch(0xd0,'pixel');c.emit(0x88);c.branch(0xd0,'copyrow')
+    cached_display_list(c, 4)
     # Inactive display list: portrait lines are repeated to fill 192 scanlines.
     a(0xad,0x83e6);c.jump(0x8d,'dl1hi');c.jump(0x8d,'dl2hi')
     c.emit(0xa9,3);c.jump(0x8d,'dl1lo');c.emit(0xa9,4);c.jump(0x8d,'dl2lo');c.emit(0xa0,0)
@@ -53,7 +55,7 @@ def helper(eyes=None, effects_address=0):
     for label in ('dl1','dl2'):
         c.emit(0x18);c.jump(0xad,label+'lo');c.emit(0x69,3);c.jump(0x8d,label+'lo');c.branch(0x90,label+'ok');c.jump(0xee,label+'hi');c.label(label+'ok')
     c.emit(0xc8,0xc0,192);c.branch(0xd0,'rows')
-    a(0x20,effects_address)
+    c.label('swap');a(0x20,effects_address)
     c.label('swapwait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'swapwait')
     c.emit(0xa9,0);a(0x8d,0xd402);a(0xad,0x83e6);a(0x8d,0xd403);c.emit(0x49,4);a(0x8d,0x83e6)
     c.emit(0xa9,255);a(0x8d,0x83f8);a(0x8d,0x83f9)
@@ -66,10 +68,7 @@ def helper(eyes=None, effects_address=0):
     for i in range(2):
         c.jump(0xbd,f'palette{i}');a(0x8d,0xd016+i)
     # Fresh masks use the same double-line PMG buffer as the dance accents.
-    c.emit(0xa9,0,0xa2,0)
-    c.label('clearpmg')
-    for base in (0x0a00,0x0b00,0x0980):a(0x9d,base)
-    c.emit(0xe8);c.branch(0xd0,'clearpmg')
+    clear_pmg(c, 'clearpmg')
     a(0xae,0x83ff)
     for index in range(2):
         c.jump(0xbd,f'eye_y{index}');c.emit(0xa8,0xa9,0xff)
