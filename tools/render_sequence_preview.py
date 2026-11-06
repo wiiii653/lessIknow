@@ -17,8 +17,8 @@ from mosaic import KALEIDO_START
 
 
 def preview(tick, name):
-    info = json.loads(Path('build/visual-prototype-v070.json').read_text())
-    cpu = MPU(memory=RuntimeMemory(Path('build/visual-prototype-v070.xex').read_bytes()))
+    info = json.loads(Path('build/visual-prototype-v072.json').read_text())
+    cpu = MPU(memory=RuntimeMemory(Path('build/visual-prototype-v072.xex').read_bytes()))
     cpu.memory[0x23cd] = 0x60
     cpu.memory[0xd40b] = 124
     for offset in range(3):
