@@ -16,9 +16,10 @@ from pmg_preview import player_masks, atari_rgb
 from mosaic import KALEIDO_START
 
 
-def preview(tick, name):
-    info = json.loads(Path('build/visual-prototype-v079.json').read_text())
-    cpu = MPU(memory=RuntimeMemory(Path('build/visual-prototype-v079.xex').read_bytes()))
+def preview(tick, name, cpu=None):
+    info = json.loads(Path('build/visual-prototype-v117.json').read_text())
+    if cpu is None:
+        cpu = MPU(memory=RuntimeMemory(Path('build/visual-prototype-v117.xex').read_bytes()))
     cpu.memory[0x23cd] = 0x60
     cpu.memory[0xd40b] = 124
     for offset in range(3):
@@ -69,6 +70,8 @@ def preview(tick, name):
     if not gtia11:
         indices = player_masks(indices, memory, height, raster_start=8)
     original={0:PALETTE[0],0x48:PALETTE[1],0x9a:PALETTE[2],0x2c:PALETTE[3],0x82:(12,24,48)}
+    if memory[0x83e0] == 16:
+        original = {}  # consistent GTIA approximation across every Trevor pose
     palette=tuple(original.get(color,atari_rgb(color)) for color in
                   (memory[0xd01a],memory[0xd016],memory[0xd017],memory[0xd018]))
     pixels = bytes(channel for index in indices for channel in
@@ -77,6 +80,7 @@ def preview(tick, name):
     path = Path(f'build/{name}-raster.ppm')
     path.write_bytes(f'P6\n160 {height}\n255\n'.encode() + pixels)
     print(path)
+    return cpu
 
 
 if __name__ == '__main__':

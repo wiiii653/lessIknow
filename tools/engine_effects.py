@@ -28,7 +28,7 @@ def copy_helper():
     return data, c.labels
 
 
-def effects_helper(state=0x83e0):
+def effects_helper(state=0x83e0, intro_color=0):
     c = Code(EFFECT_ORIGIN)
     def absop(op, address):
         c.emit(op, address & 255, address >> 8)
@@ -44,9 +44,8 @@ def effects_helper(state=0x83e0):
     # GTIA 11: sixteen hues at one luminance for the two opening cards.
     c.emit(0xa9, 0xc0)
     absop(0x8d, 0xd01b)
-    absop(0xad, state + 2)
-    c.emit(0x29, 0x80, 0x4a, 0x4a, 0x4a, 0x4a, 0x4a, 0x4a, 0x09, 0x0a)
-    absop(0x8d, 0xd01a)
+    absop(0x20, intro_color)
+    c.emit(*([0xea] * 12))
     c.emit(0x60)
     c.label('check_dance')
     c.emit(0xc9, 6)

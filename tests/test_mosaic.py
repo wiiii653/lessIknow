@@ -10,7 +10,7 @@ from extract_music import segments
 @unittest.skipIf(sequence.MPU is None, 'py65 required')
 class MosaicTests(unittest.TestCase):
     def test_all_frames_and_inactive_buffer_ownership(self):
-        cpu=sequence.MPU(memory=TrackedMemory((sequence.ROOT/'build/visual-prototype-v079.xex').read_bytes()))
+        cpu=sequence.MPU(memory=TrackedMemory((sequence.ROOT/'build/visual-prototype-v117.xex').read_bytes()))
         for frame in range(64):
             tick=33792+(frame&31)*16+(1024 if frame>=32 else 0)
             # Inverse of ((tick>>4)&31) | ((tick>>5)&32).

@@ -9,6 +9,7 @@ from build_sequence import Code, text_pixels, dance_pixels, TITLE_TICK, DANCE_TI
 from music_timing import tick_at_bar
 from build_title import ROWS, gtia11_pixels
 from title_mode import ENTRY as TITLE_MODE_ENTRY, helper as title_mode_helper
+from title_plasma import build as plasma_build, artwork as plasma_artwork, SIZE as PLASMA_SIZE, FIRST_BANK as PLASMA_FIRST_BANK
 from engine_effects import copy_helper, effects_helper, pmg_art, COPY_ORIGIN, EFFECT_ORIGIN
 from dance_banks import FRAME_BASES, frame_address, frame_blob
 from gym_practice import practice_pixels, PRACTICE_TICK, PRACTICE_SCENE, BALL_PATH, PRACTICE_CUTS
@@ -32,7 +33,7 @@ from crush_portraits import START as CRUSH_TICK, END as CRUSH_END, ENTRY as CRUS
 KALEIDO_TICK = tick_at_bar(32)  # eight bars / 15 seconds after the dancer enters
 SCHOOL_TICK = tick_at_bar(8)  # equal 7.5-second artist and title screens
 ORIGIN = 0x1400
-POOL_LOW = 0x1b00
+POOL_LOW = 0x1b50
 TABLE_BASE = 0xd800
 STATE = 0x83e0
 
@@ -43,12 +44,12 @@ def packed_rows(pixels):
             for y in range(192)]
 
 
-def build(output_path=Path('build/visual-prototype-v079.xex')):
+def build(output_path=Path('build/visual-prototype-v117.xex')):
     if output_path.exists():
         raise FileExistsError(f'Preserving existing XEX: {output_path}; choose --output with a new name')
     copy_code, copy_labels = copy_helper()
     effect_code = effects_helper()
-    scenes = [gtia11_pixels((('TAME', 4, 47), ('IMPALA', 4, 111))), gtia11_pixels(ROWS)]
+    scenes = [bytes(160 * 192), bytes(160 * 192)]  # intro rendered into framebuffers
     # Keep every source scanline, especially the small facial features.
     dance_frames = [frame_blob(packed_rows(dance_group_pixels(frame, count)))
                     for count in (1, 2, 3) for frame in range(4)]
@@ -93,7 +94,7 @@ def build(output_path=Path('build/visual-prototype-v079.xex')):
                (0x8340, 0x83e0), (0x864a, 0x9000),
                (EFFECT_ORIGIN + len(effect_code), 0xb000),
                (COPY_ORIGIN + len(copy_code), 0xd000),
-               (table_end, TITLE_MODE_ENTRY))
+               (table_end + PLASMA_SIZE, TITLE_MODE_ENTRY))
     region = 0
     blobs = [bytearray() for _ in regions]
     # Join rows with the strongest suffix/prefix overlaps first. Chains are
@@ -159,6 +160,8 @@ def build(output_path=Path('build/visual-prototype-v079.xex')):
                     raise ValueError(f'shared scanlines exceed unbanked RAM budget: {len(unique)} of {len(ordered_rows)} stored')
     chunks = [(regions[index][0], blob) for index, blob in enumerate(blobs) if blob]
     blank = unique[bytes(40)]
+    plasma_code, plasma_labels = plasma_build(table_end, blank)
+    effect_code = effects_helper(intro_color=plasma_labels['color'])
     addresses = [[unique[row] for row in scene] for scene in rows]
     for frame in range(2, 6):
         addresses[frame] = [frame_address(FRAME_BASES[frame & 1], y) for y in range(192)]
@@ -226,6 +229,7 @@ def build(output_path=Path('build/visual-prototype-v079.xex')):
         absolute(0xad, 0x24a7 + offset)
         absolute(0xcd, TICK + offset)
         c.branch(0xd0, 'snapshot')
+    absolute(0x20, plasma_labels['invalidate'])
     compare_tick(TREVOR_END, 'kaleido', 'before_hero_end')
     c.label('before_hero_end')
     compare_tick(CRUSH_END, 'hero', 'before_crush_end')
@@ -489,6 +493,12 @@ def build(output_path=Path('build/visual-prototype-v079.xex')):
     # Initialize both display lists while the ordinary intro/school scene is
     # active; banked effects then run without a per-frame timing surcharge.
     absolute(0x20, TITLE_MODE_ENTRY)
+    absolute(0x20, plasma_labels['prepare'])
+    c.branch(0xf0, 'regular_static')
+    check_cached('plasma_changed')
+    absolute(0x20, plasma_labels['draw'])
+    c.jump(0x4c, 'resolve_lookup')
+    c.label('regular_static')
     absolute(0xad, SCENE)
     c.emit(0x09, 0x20)
     absolute(0x8d, NEWKEY)
@@ -540,7 +550,8 @@ def build(output_path=Path('build/visual-prototype-v079.xex')):
         c.emit(0xc9, 7)
         c.branch(0xb0, f'school_row{block}')
         c.emit(0xc9, 2)
-        c.branch(0x90, f'lookup{block}_lo')
+        c.branch(0xb0, f'lookup{block}_lo')
+        c.emit(0xb9, 0, 8, 0xa8)  # intro uses 64 rows, each tripled
         c.jump(0x4c, f'lookup{block}_lo')
         c.label(f'school_row{block}')
         c.emit(0xb9, 0, 8, 0xa8)
@@ -692,7 +703,8 @@ def build(output_path=Path('build/visual-prototype-v079.xex')):
                (EFFECT_ORIGIN, effect_code), (COPY_ORIGIN, copy_code),
                (0x8000, display(0x8000)),
                (0x8300, descriptors[:0x3f]), (STATE, descriptors[0xe0:]),
-               (0x8400, display(0x8400)), (TITLE_MODE_ENTRY, title_mode_helper())] + chunks
+               (0x8400, display(0x8400)), (TITLE_MODE_ENTRY, title_mode_helper()),
+               (table_end, plasma_code)] + chunks
     # Reject every overlap, including accidental code/data growth.
     ordered = sorted(inserts)
     for (start, data), (next_start, _) in zip(ordered, ordered[1:]):
@@ -765,6 +777,9 @@ def build(output_path=Path('build/visual-prototype-v079.xex')):
                 output.extend(school_bank_loader(frame,index=index))
             for phase in range(16):
                 output.extend(school_bank_loader(polished_trevor_bank(phase),index=24+phase))
+            for index, bank in enumerate(plasma_artwork(), PLASMA_FIRST_BANK):
+                output.extend(school_bank_loader(bank, index=index))
+            output.extend(school_bank_loader(polished_trevor_bank(0, quiet=True), index=49))
             output.extend(loader(rom))
             for address, data in inserts:
                 if address < 0xc000:
@@ -806,5 +821,5 @@ def build(output_path=Path('build/visual-prototype-v079.xex')):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v079.xex'))
+    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v117.xex'))
     build(parser.parse_args().output)

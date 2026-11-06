@@ -3,18 +3,18 @@
 ## Build and run
 
 Run `make` with Python 3 and ImageMagick installed to produce
-`build/visual-prototype-v079.xex`. Run Atari800 with stereo POKEY enabled:
+`build/visual-prototype-v117.xex`. Run Atari800 with stereo POKEY enabled:
 
 ```sh
-atari800 -1088xe -pal -nobasic -run build/visual-prototype-v079.xex
+atari800 -1088xe -pal -nobasic -run build/visual-prototype-v117.xex
 ```
 
 ## Opening sequence
 
 | Music ticks | Approximate time | Scene |
 | --- | --- | --- |
-| 0–1495 | 0–7.5 s | TAME IMPALA, sliding entrance |
-| 1496–2991 | 7.5–15 s | THE LESS / I KNOW / THE BETTER, sliding entrance |
+| 0–1495 | 0–7.5 s | TAME IMPALA, plasma and successive text reveal |
+| 1496–2991 | 7.5–15 s | THE LESS / I KNOW / THE BETTER, plasma and successive text reveal |
 | 2992–3552 | 15–17.8 s | Boy facing camera |
 | 3553–4113 | 17.8–20.6 s | Blonde girl portrait outside school |
 | 4114–4487 | 20.6–22.5 s | Boy facing camera again |
@@ -30,10 +30,10 @@ atari800 -1088xe -pal -nobasic -run build/visual-prototype-v079.xex
 | 20942–22437 | 105–112.5 s | Low-angle basketball dribble, animated PMG ball |
 | 22438–23933 | 112.5–120 s | Four-stage dunk, spinning rainbow ball and light flash |
 | 23934–26924 | 120–135 s | Trevor emerges in the dark gym, growing PMG silhouette |
-| 26925–32908 | 135–165 s | Neon zoom, sinusoidal motion and orbital accents |
+| 26925–32908 | 135–165 s | Neon tunnel, rapid punch combinations and BANG particle bursts |
 | 32909 onward | 165 s onward | Existing kaleidoscope; later acts remain to be developed |
 
-The artist name, title and dancer slide in over 96 playback ticks (~0.48 s).
+The opening cards emerge from dark as full-screen GTIA 11 plasma with ordered dithering between hues. Color alone separates the multicolored slab-serif lettering from the moving blobs; each word emerges through an ordered raster, which dissolve unevenly at the end. The artist lettering changes into the title through an ordered pixel dissolve while the same plasma continues behind it. Sixteen phases, cumulative text masks and dissolve masks occupy nine additional expansion banks; the current demo uses all 64 banks available on the tested 1 MB configuration. The dancer slides in over 96 playback ticks (~0.48 s).
 Artist and title each last 1496 ticks. The school exterior lasts 15 seconds, followed by 15 seconds of gym practice;
 its four depth placements (position and decreasing scale) are staged in
 `tools/school_story.py`. She stays left of the portrait and approaches the
@@ -106,15 +106,15 @@ Runtime layout:
 - `$0400–$07FF`, `$0C00–$13DF`: shared bitmap rows after asset INIT.
 - `$0800–$08BF`: school row-index LUT; `$08C0–$097F`: shared bitmap rows; `$0980–$09FF`: missile data.
 - `$0A00–$0BFF`: four preloaded star players.
-- `$13E0`: OS-off entry; `$1400–$1AFC`: scene callback and NMI wrapper.
-- `$1B00–$1FFF`, `$3300–$3BFF`, `$824A–$82FF`, `$8340–$83DF`, `$864A–$8FFF`: shared rows.
+- `$13E0`: OS-off entry; `$1400–$1B1E`: scene callback and NMI wrapper.
+- `$1B50–$1FFF`, `$3300–$3BFF`, `$824A–$82FF`, `$8340–$83DF`, `$864A–$8FFF`: shared rows.
 - `$9000–$AEFF`, `$B000–$CEFF`: alternating practice/dance framebuffers.
-- `$AF00–$AFF8`: PMG helper; `$CF00–$CFC3`: copy helper; remaining tails hold shared bitmap rows.
+- `$AF00–$AFF7`: PMG helper; `$CF00–$CFC3`: copy helper; remaining tails hold shared bitmap rows.
 - `$FEF0–$FF92`: intro display-list mode helper in RAM under OS ROM.
 - `$8000`, `$8400`: double-buffered display lists, each within one 1 KiB page.
 - `$8300–$833F`: row-table descriptors; `$83E0–$83FF`: scene state.
 - `$D800–$E4BF`: compact scanline-address tables (3,264 bytes).
-- `$E4C0–$FFEF`: remaining bitmap rows; `$FFFA–$FFFF`: hardware vectors.
+- `$E4C0–$ECBF`: reserved intro plasma code and data; `$ECC0–$FEEF`: remaining bitmap rows; `$FFFA–$FFFF`: hardware vectors.
 
 Each 40-byte bitmap row stays within a 4 KiB DMA page. During dance, the CPU reads video banks through `$4000–$7FFF`; the NMI wrapper
 restores bank ownership around every music update. ANTIC always reads unbanked RAM. The older standalone kaleidoscope can
@@ -234,3 +234,36 @@ tunnel; see `docs/V049_TREVOR_TUNNEL.md` and `build/v049-trevor-tunnel.gif`.
 
 In v051 Trevor’s punch produces an animated PMG comic BANG splash. See
 `docs/V051_TREVOR_BANG.md` and `build/v051-trevor-bang.gif`.
+
+Trevor raises the appropriate fist before fast combinations of right and left punches,
+including repeated strikes from the same hand. The rhythm mixes one-and-a-half- and two-beat intervals; the comic burst and particles have longer holds. Mirrored wind-up and forward punch frames reuse established artwork; the BANG burst and departing
+particles share one position, and the tunnel has moving edge glints.
+See `docs/V090_TREVOR_ZAMACHY.md`.
+
+Dribbling now shares one gym background. Once both display buffers are prepared,
+pose changes update a 76×56 region containing the boy (1,064 packed bytes).
+The second full-screen dribble bitmap is replaced by that region, freeing
+1,176 bytes inside the hero bank. Trevor action poses use matching skin
+brightness and stable rim lighting; see `docs/V106_TREVOR_I_KOZLOWANIE.md`.
+
+Dribble correction v110: four articulated arm poses follow contact, push,
+release and recovery, while the body and gym stay fixed. The patch is now
+44×28 (308 bytes). The display-list buffer base is refreshed on every patch
+update; live sequential playback is tested over two bounces.
+
+Trevor v111 keeps the body registered across tunnel phases, cleans isolated
+fist pixels, and uses a darker tunnel for contrast. The full 40-impact
+sequence is checked on live alternating buffers; the final hit ends without
+a wind-up for a nonexistent next punch.
+
+The entrance now stays in the quiet poses until the action boundary. The first
+wind-up begins at that boundary and the first impact follows 32 ticks later.
+See `docs/V112_TREVOR_KOLEJNOSC.md`.
+
+Dribbling v115 uses arm cutouts from the original illustrated v024/v100 poses,
+preserving elbow, wrist and fingers. Two eased intermediate samples follow
+the same PMG ball phase. The 308-byte arm patch and stable background remain.
+
+Title v117 uses large two-line TAME / IMPALA and taller song-title lettering.
+Solid per-letter inks and a narrow coloured extrusion remain readable over
+the moving, dithered plasma; transparent pixels preserve the background.

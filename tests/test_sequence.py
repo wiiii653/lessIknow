@@ -27,14 +27,14 @@ from gym_practice import PRACTICE_TICK, PRACTICE_SCENE, practice_pixels, BALL_PA
 
 def execute(tick, cpu=None):
     if cpu is None:
-        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v079.xex').read_bytes()))
+        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v117.xex').read_bytes()))
     cpu.memory[0x23cd] = 0x60  # UI callback isolated from the scene routine
     cpu.memory[0xd40b] = 124  # VCOUNT already in vertical blank
     for byte in range(3):
         cpu.memory[0x24a7 + byte] = (tick >> (8 * byte)) & 255
     cpu.sp = 0xfd
     cpu.memory[0x1fe:0x200] = [0xfe, 0x7f]
-    cpu.pc = json.loads((ROOT / 'build/visual-prototype-v079.json').read_text())['callback']
+    cpu.pc = json.loads((ROOT / 'build/visual-prototype-v117.json').read_text())['callback']
     for _ in range(100000):
         if cpu.pc == 0x7fff:
             return cpu
@@ -116,7 +116,7 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(bytes(memory[0xfffa:0xfffc]), b'\x10\x22')
         self.assertEqual(bytes(memory[0x26fc:0x270a]), bytes(v & 0xfe for v in bank_values))
         self.assertEqual(memory[0xd301], 0xff)  # OS restored before INIT returns
-        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v079.xex').read_bytes()))
+        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v117.xex').read_bytes()))
         cpu.pc = RUN
         for _ in range(20):
             if cpu.pc == 0x2146:
@@ -174,12 +174,12 @@ class SequenceTests(unittest.TestCase):
                             self.assertEqual(group[y * 160 + left + x], color)
 
     def test_banked_frame_copy_survives_music_interrupts(self):
-        info = json.loads((ROOT / 'build/visual-prototype-v079.json').read_text())
+        info = json.loads((ROOT / 'build/visual-prototype-v117.json').read_text())
         # Interrupt each dance bank and the practice bank's shared music tail.
         for pose in (0, 2, 4, 6, 8, 10, 12, 13, 14):
             count, frame = pose // 4 + 1, pose % 4
             tick = (11968 if pose == 13 else 34288) if pose > 12 else PRACTICE_TICK if pose == 12 else (9216, 9856, 10624)[count - 1] + frame * 32
-            cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v079.xex').read_bytes()))
+            cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v117.xex').read_bytes()))
             m = cpu.memory
             m[0xd40b] = 124
             m[0xd301] = m.values[3]
@@ -246,7 +246,7 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(cpu.memory[0x83e0], 2 + ((DANCE_TICK >> 5) & 3))
         self.assertEqual(cpu.memory[0x83e1], 192)
         self.assertEqual(cpu.memory[0xd01d], 0)
-        info = json.loads((ROOT / 'build/visual-prototype-v079.json').read_text())
+        info = json.loads((ROOT / 'build/visual-prototype-v117.json').read_text())
         self.assertEqual(info['dance_tick'], DANCE_TICK)
         self.assertEqual(info['dance_second_tick'], DANCE_SECOND_TICK)
         self.assertEqual(info['dance_third_tick'], DANCE_THIRD_TICK)
@@ -261,7 +261,7 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(cpu.memory[0xd01d], 3)
 
     def test_intro_timing_and_matching_entrances(self):
-        info = json.loads((ROOT / 'build/visual-prototype-v079.json').read_text())
+        info = json.loads((ROOT / 'build/visual-prototype-v117.json').read_text())
         self.assertEqual(info['school_tick'], 2 * info['title_tick'])
         for elapsed in (0, 4, 24, 48, 92, 96):
             artist = execute(elapsed)
@@ -288,14 +288,121 @@ class SequenceTests(unittest.TestCase):
                     for byte in m[address:address+40]:
                         colors.add(byte >> 4)
                         colors.add(byte & 15)
-                self.assertIn(0, colors)
-                self.assertGreaterEqual(len(colors), 10)
+                if tick == 96:
+                    self.assertIn(0, colors)
+                self.assertGreaterEqual(len(colors), 6)
             else:
                 self.assertEqual(m[0xd01b] & 0xc0, 0)
 
+    def test_plasma_dither_mixes_adjacent_hues_and_preserves_text_bit(self):
+        from collections import Counter
+        from title_plasma import dither_hue
+        # A field exactly at a hue boundary splits a full Bayer cell evenly.
+        value = 3 * 5.1 / 6 - 2.55
+        cell = [dither_hue(value, x, y) for y in range(4) for x in range(4)]
+        self.assertEqual(Counter(cell), {4: 8, 5: 8})
+        self.assertEqual([dither_hue(value, x + 4, y + 4)
+                          for y in range(4) for x in range(4)], cell)
+        for value in (-100, -2.55, -.425, 0, 2.55, 100):
+            for y in range(4):
+                for x in range(4):
+                    hue = dither_hue(value, x, y)
+                    self.assertGreaterEqual(hue, 2)
+                    self.assertLessEqual(hue, 7)
+                    self.assertFalse(hue & 8)
+
+    def test_title_letter_masks_are_multicolored_and_evolve_by_word(self):
+        from title_plasma import artwork, FRAME_BYTES, TITLE_GLYPHS
+        self.assertNotEqual(TITLE_GLYPHS['T'], TITLE_GLYPHS['I'])
+        self.assertNotEqual(TITLE_GLYPHS['N'], TITLE_GLYPHS['M'])
+        bank = artwork()[4]
+        first, second = bank[:FRAME_BYTES], bank[FRAME_BYTES:2*FRAME_BYTES]
+        values = [nibble for byte in second for nibble in (byte >> 4, byte & 15)]
+        colors = {n for n in values if n}
+        self.assertGreaterEqual(len(colors), 4)
+        self.assertTrue(all(n == 1 or n & 8 for n in colors))
+        self.assertGreater(sum(n != 0 for n in second), sum(n != 0 for n in first))
+        partial = artwork()[7][4*FRAME_BYTES:5*FRAME_BYTES]
+        populated = lambda b: sum((v >> 4 != 0) + ((v & 15) != 0) for v in b)
+        self.assertGreater(populated(partial), 0)
+        self.assertLess(populated(partial), populated(first))
+
+    def test_solid_letter_inks_remain_readable_over_every_plasma_hue(self):
+        from title_plasma import compose_byte, LETTER_HUES
+        for code in range(8,16):
+            for bg in range(2,8):
+                self.assertEqual(compose_byte(bg*17, code*17),LETTER_HUES[code&7]*17)
+                self.assertEqual(compose_byte(bg*17, code<<4),LETTER_HUES[code&7]*16+bg)
+        from title_plasma import artwork, FRAME_BYTES
+        mask=artwork()[4][FRAME_BYTES:2*FRAME_BYTES]
+        rows=[y for y in range(64) if any(mask[y*40:(y+1)*40])]
+        # Two large, separate words, rather than the old small single line.
+        self.assertGreaterEqual(len(rows),28)
+        self.assertTrue(any(y<30 for y in rows))
+        self.assertTrue(any(y>=36 for y in rows))
+
+    def test_plasma_composites_hue_only_text_and_spatial_fades(self):
+        from title_plasma import artwork, FRAME_BYTES, TRANSITION_START, compose_byte
+        banks = artwork()
+        def picture(cpu):
+            m = cpu.memory
+            display = m[0xd402] | m[0xd403] << 8
+            base = m[display + 3] | m[display + 4] << 8
+            return bytes(m[base:base + FRAME_BYTES])
+        for start, card in ((0, 0), (1496, 1)):
+            for elapsed in (32, 96, 192, 256, 512, 768, 1024, 1280, 1344, 1408):
+                with self.subTest(start=start, elapsed=elapsed):
+                    cpu = execute(start + elapsed)
+                    phase = elapsed // 32
+                    frame = ((start + elapsed) // 32) & 15
+                    background = banks[frame // 4][frame % 4 * FRAME_BYTES:(frame % 4 + 1) * FRAME_BYTES]
+                    tick = start + elapsed
+                    stage = min(elapsed // 256, 3)
+                    if card:
+                        stage = max(stage, 1)
+                    if TRANSITION_START <= tick < TRANSITION_START + 256:
+                        step = (tick - TRANSITION_START) // 32
+                        mask = banks[7 + step // 4][step % 4 * FRAME_BYTES:(step % 4 + 1) * FRAME_BYTES]
+                    else:
+                        reveal = ({(0,1): 0, (0,2): 1, (1,2): 2, (1,3): 3}.get((card, stage))
+                                  if elapsed % 256 < 64 else None)
+                        if reveal is not None:
+                            bank = banks[7 + reveal // 2]
+                            offset = (4 + reveal % 2) * FRAME_BYTES
+                            mask = bank[offset:offset + FRAME_BYTES]
+                        else:
+                            mask = (bytes(FRAME_BYTES) if not stage else
+                                    banks[4][(card * 3 + stage - 1) * FRAME_BYTES:(card * 3 + stage) * FRAME_BYTES])
+                    expected = bytes(compose_byte(a, b) for a, b in zip(background, mask))
+                    level = phase if card == 0 and phase < 7 else 46 - phase if card == 1 and phase >= 39 else 7
+                    if 1 <= level <= 6:
+                        index = level - 1
+                        fade = banks[5 + index // 4][index % 4 * FRAME_BYTES:(index % 4 + 1) * FRAME_BYTES]
+                        expected = bytes(a & b for a, b in zip(expected, fade))
+                    self.assertEqual(picture(cpu), expected)
+                    self.assertEqual(cpu.memory[0xd301], 0xff)
+            self.assertEqual(execute(start).memory[0xd01a] & 15, 0 if card == 0 else 8)
+            self.assertEqual(execute(start + 1495).memory[0xd01a] & 15, 8 if card == 0 else 0)
+        # Changing the opaque lettering must not reset background pixels
+        # outside either silhouette or alter the shared luminance.
+        before, after = execute(1495), execute(1496)
+        self.assertEqual(before.memory[0xd01a], after.memory[0xd01a])
+        old_mask = banks[7][3*FRAME_BYTES:4*FRAME_BYTES]
+        new_mask = banks[8][:FRAME_BYTES]
+        first,second=picture(before),picture(after)
+        for index,(a,b) in enumerate(zip(old_mask,new_mask)):
+            for shift in (4,0):
+                if not ((a|b)>>shift)&15:
+                    self.assertEqual((first[index]>>shift)&15,(second[index]>>shift)&15)
+        cpu = execute(768)
+        first = picture(cpu)
+        execute(9000, cpu)
+        self.assertEqual(picture(execute(768, cpu)), first)
+        self.assertNotEqual(picture(execute(800, cpu)), first)
+
     def test_startup_picture_is_blank_before_artist_entrance(self):
-        info = json.loads((ROOT / 'build/visual-prototype-v079.json').read_text())
-        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v079.xex').read_bytes()))
+        info = json.loads((ROOT / 'build/visual-prototype-v117.json').read_text())
+        cpu = MPU(memory=RuntimeMemory((ROOT / 'build/visual-prototype-v117.xex').read_bytes()))
         for display in info['display_lists']:
             for row in range(192):
                 operand = display + 3 + row * 3
@@ -303,8 +410,8 @@ class SequenceTests(unittest.TestCase):
                 self.assertEqual(address, info['blank_row'])
 
     def test_scene_boundaries(self):
-        for tick, frame, shift in ((0, 0, 192), (48, 0, 96), (96, 0, 0), (1495, 0, 0), (1496, 1, 192),
-                                   (1544, 1, 96), (1592, 1, 0), (2991, 1, 0),
+        for tick, frame, shift in ((0, 0, 0), (48, 0, 0), (96, 0, 0), (1495, 0, 0), (1496, 1, 0),
+                                   (1544, 1, 0), (1592, 1, 0), (2991, 1, 0),
                                    (2992, 8, 0), (4487, 8, 0), (4488, 9, 0),
                                    (4862, 10, 0), (5236, 11, 0), (5610, 12, 0),
                                    (5984, 13, 0), (DANCE_TICK-1, 13, 0),
@@ -319,7 +426,7 @@ class SequenceTests(unittest.TestCase):
                 self.assertEqual(cpu.memory[0x83e1], shift)
 
     def test_live_scanlines_and_budget(self):
-        info = json.loads((ROOT / 'build/visual-prototype-v079.json').read_text())
+        info = json.loads((ROOT / 'build/visual-prototype-v117.json').read_text())
         blank = info['blank_row']
         for tick in (0, 48, 96, 1496, 1544, 1592, 2992, 4488, 4862, 5236, 5610, 5984,
                      DANCE_TICK-1, DANCE_TICK, DANCE_TICK+48, DANCE_TICK+96,
@@ -338,9 +445,12 @@ class SequenceTests(unittest.TestCase):
                 expected = blank if source < 0 else info['row_addresses'][lookup][source]
                 if frame == 6:
                     expected = 0x9000 + row//2*40
-                self.assertEqual(actual, expected, (tick, row))
+                if frame < 2:
+                    self.assertEqual(actual, 0x9000 + (row // 3) * 40)
+                else:
+                    self.assertEqual(actual, expected, (tick, row))
                 self.assertEqual(actual // 4096, (actual + 39) // 4096)
-            limit = 110000 if 2 <= frame <= 6 or frame == PRACTICE_SCENE else 26000 if frame < 2 else 21000
+            limit = 110000 if 2 <= frame <= 6 or frame == PRACTICE_SCENE else 140000 if frame < 2 else 21000
             self.assertLess(cpu.processorCycles, limit)
 
     def test_inactive_buffer_is_updated_then_swapped(self):

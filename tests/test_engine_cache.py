@@ -24,7 +24,7 @@ if sequence.MPU is not None:
 @unittest.skipIf(sequence.MPU is None, 'install requirements-dev.txt')
 class CacheTests(unittest.TestCase):
     def cpu(self):
-        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v079.xex').read_bytes()))
+        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v117.xex').read_bytes()))
 
     def step(self, cpu, tick):
         cpu.memory.writes.clear()
@@ -39,7 +39,7 @@ class CacheTests(unittest.TestCase):
         return sum(0x9000 <= a < 0xaf00 or 0xb000 <= a < 0xcf00 for a in cpu.memory.writes)
 
     def test_static_picture_skips_framebuffer_and_display_list_writes(self):
-        for tick in (1592, 4496, 6000, 6500, 8000):
+        for tick in (4496, 6000, 6500, 8000):
             cpu = self.cpu()
             self.step(cpu, tick)
             pixels = self.pixels(cpu)

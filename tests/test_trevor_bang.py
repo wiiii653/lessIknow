@@ -1,7 +1,7 @@
 """PMG comic splash phases, visible lettering and safe scene handoffs."""
 import unittest
 import test_sequence as sequence
-from trevor_polished import bang_art
+from trevor_polished import bang_art, HITS, HANDS
 from engine_effects import pmg_art
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
@@ -14,9 +14,9 @@ class TrevorBangTests(unittest.TestCase):
         self.assertGreater(len(set(burst[72:88])),1)
         self.assertTrue(all((row & 0x03)==0 for row in glyphs[3]))
         cpu=None
-        for offset,letters in ((0,False),(16,True),(32,True),(80,True)):
-            cpu=sequence.execute(27136+offset,cpu);m=cpu.memory
-            dx,dy=0,0  # bubble offset for tick 27136
+        for offset,letters in ((0,False),(8,True),(16,True),(24,True),(40,True),(47,True)):
+            cpu=sequence.execute(HITS[0]+offset,cpu);m=cpu.memory
+            dx,dy=0,0  # first punch is right-handed
             self.assertEqual(m[0x83ed],2)
             self.assertEqual(m[0xd01b],0x11)
             self.assertEqual(m[0xd01d],3)
@@ -31,8 +31,8 @@ class TrevorBangTests(unittest.TestCase):
             if letters:
                 self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),sequence.SequenceTests().raster(cpu))
         starts=[]; rows=[]
-        for offset in (96,112,124,144,160,188):
-            cpu=sequence.execute(27136+offset,cpu);m=cpu.memory
+        for offset in (48,56,64,72,80,95):
+            cpu=sequence.execute(HITS[0]+offset,cpu);m=cpu.memory
             self.assertEqual(m[0xd01b],1)
             self.assertEqual(m[0xd01d],1)
             self.assertEqual(m[0xd00c],0x55)
@@ -46,16 +46,16 @@ class TrevorBangTests(unittest.TestCase):
         self.assertGreater(starts[-1][3],starts[0][3])
         for i in (0,2): self.assertLess(rows[-1][i],rows[0][i])
         for i in (1,3): self.assertGreater(rows[-1][i],rows[0][i])
-        for tick in (27328,27360,27391,27392,27420):
+        for tick in (HITS[0]+96,HITS[0]+104,HITS[0]+112,HITS[0]+120):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0xd01d],0)
             self.assertEqual(cpu.memory[0xd400],0x22)
 
     def test_punch_position_varies_as_one_composition(self):
         positions=set()
-        for tick in (27152,27664,28176,28688):
+        for tick in (t+16 for t in HITS[:8]):
             cpu=sequence.execute(tick);m=cpu.memory
-            self.assertEqual(m[0x83ed],2)
+            self.assertIn(m[0x83ed], (2,4))
             positions.add((m[0xd000],m[0x83ef]))
             self.assertEqual(m[0xd000:0xd004],m[0xd004:0xd008])
             for plane,glyph in enumerate(bang_art()[1]):
@@ -63,8 +63,25 @@ class TrevorBangTests(unittest.TestCase):
                 self.assertEqual(bytes(m[0xa00+plane*128+45+dy:0xa00+plane*128+59+dy]),glyph)
         self.assertGreater(len(positions),1)
 
+    def test_scatter_starts_at_bang_for_both_hands(self):
+        for tick in HITS[:8]:
+            with self.subTest(tick=tick):
+                cpu=sequence.execute(tick+44)
+                m=cpu.memory
+                bubble_x = (m[0xd000] + m[0xd003] + 8) // 2
+                dy = m[0x83ef] if m[0x83ef] < 128 else m[0x83ef]-256
+                bubble_y = 52 + dy
+                sequence.execute(tick+48,cpu)
+                xs=m[0xd004:0xd008]
+                ys=[next(row for row,b in enumerate(m[0x980:0xa00]) if b & (3 << (2*i))) for i in range(4)]
+                self.assertLessEqual(max(abs(x-bubble_x) for x in xs), 6)
+                self.assertLessEqual(max(abs(y-bubble_y) for y in ys), 1)
+                sequence.execute(tick+88,cpu)
+                self.assertLess(m[0xd004], xs[0])
+                self.assertGreater(m[0xd007], xs[3])
+
     def test_bang_then_restart_restores_dance(self):
-        cpu=sequence.execute(27152)
+        cpu=sequence.execute(HITS[0]+16)
         sequence.execute(9163,cpu)
         missiles,players=pmg_art()
         self.assertEqual(bytes(cpu.memory[0x980:0xa00]),missiles)
