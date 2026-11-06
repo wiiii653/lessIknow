@@ -19,6 +19,30 @@ HANDS = COMBO_HANDS * 8
 assert HITS[0] == TREVOR_HIT + 32 and HITS[-1] < TREVOR_END
 
 
+# Near entrance pose is composited over the same gym as the distant pose.
+# Black pixels inside the actor stay opaque; the old rectangular black gym
+# backing must not cover the doorway and wall behind his shoulders.
+ENTRANCE_OUTLINE = (
+ (65,13),(70,13),(75,12),(78,10),(81,12),(87,12),(89,14),
+ (91,14),(92,17),(93,19),(97,19),(99,21),(99,24),(96,26),
+ (94,26),(95,29),(102,30),(108,32),(113,35),(117,39),
+ (125,42),(129,47),(131,52),(132,57),(130,61),(130,64),
+ (29,64),(29,60),(27,57),(27,53),(30,48),(33,44),(38,40),
+ (41,36),(45,32),(52,29),(61,28),(65,27),(62,25),(60,25),
+ (60,21),(62,19),(65,19),(66,17),(65,16),
+)
+_ENTRANCE_LEFT_GAP = ((44,64),(46,58),(50,55),(50,51),(56,47),
+                      (60,48),(61,54),(57,57),(54,64))
+ENTRANCE_GAPS = (_ENTRANCE_LEFT_GAP,
+                 tuple((159-x,y) for x,y in reversed(_ENTRANCE_LEFT_GAP)))
+
+
+def entrance_mask():
+    return bytes(inside(x+.5,y+.5,ENTRANCE_OUTLINE) and
+                 not any(inside(x+.5,y+.5,gap) for gap in ENTRANCE_GAPS)
+                 for y in range(64) for x in range(160))
+
+
 def frames():
     out=[]
     for i in range(4):
@@ -45,20 +69,50 @@ def frames():
                     for x in (7, 8, 151, 152):
                         pixels[y*160+x] = 3
         out.append(bytes(pixels))
+    mask = entrance_mask()
+    near = out[1]
+    composite = bytearray(out[0])
+    for pos, keep in enumerate(mask):
+        if not keep:
+            continue
+        y, x = divmod(pos, 160)
+        # Discard isolated black backing at the traced boundary. Preserve a
+        # one-pixel black contour beside colored art and all interior details.
+        supported = any(near[yy*160+xx] for yy in range(max(0,y-1),min(64,y+2))
+                        for xx in range(max(0,x-1),min(160,x+2)))
+        boundary = any(not mask[yy*160+xx]
+                       for yy in range(max(0,y-3),min(64,y+4))
+                       for xx in range(max(0,x-3),min(160,x+4)))
+        if near[pos] or supported or not boundary:
+            composite[pos] = near[pos]
+    out[1] = bytes(composite)
     return out
 
 
 # Outlines trace Trevor himself in the two existing 160x64 source frames.
 # Everything outside is replaced by a perspective tunnel.
 POLYGONS=(
- ((77,0),(85,1),(94,4),(99,9),(100,19),(112,20),(122,24),(130,30),(134,40),(132,48),(126,56),(114,63),(22,63),(11,58),(11,51),(18,46),(27,38),(38,32),(45,26),(58,23),(61,18),(60,13),(62,8),(67,5),(73,3)),
- ((68,2),(78,2),(87,5),(92,10),(92,12),(105,12),(109,6),(118,4),(130,5),(138,8),(143,13),(144,20),(147,26),(146,36),(141,43),(128,47),(116,49),(110,63),(19,63),(8,58),(7,49),(14,43),(24,38),(35,33),(47,30),(54,25),(50,21),(48,15),(49,12),(54,8),(60,5))
+ ((59,9),(62,5),(70,3),(79,2),(80,0),(87,2),(95,7),(99,11),
+  (100,17),(99,21),(109,21),(117,24),(124,28),(130,33),(134,39),
+  (134,44),(131,48),(123,52),(117,56),(109,58),(114,64),(47,64),
+  (44,60),(48,57),(54,54),(52,52),(46,54),(39,57),(34,60),
+  (28,63),(20,62),(12,57),(10,53),(10,49),(17,46),(23,45),
+  (28,42),(38,39),(40,32),(45,28),(52,25),(61,24),(64,21),
+  (60,18),(59,14),(61,11)),
+ ((48,10),(53,6),(61,5),(64,3),(68,5),(75,4),(80,5),(85,8),
+  (89,11),(91,16),(94,20),(92,24),(98,26),(104,26),(110,29),
+  (115,27),(116,23),(113,20),(110,18),(106,16),(106,12),(109,8),
+  (115,5),(124,5),(131,6),(138,10),(141,14),(140,19),(144,22),
+  (147,28),(149,33),(147,39),(141,43),(133,45),(126,48),
+  (120,50),(115,52),(115,57),(112,64),(9,64),(9,59),(12,54),
+  (18,48),(24,44),(26,40),(31,36),(38,33),(48,30),(54,29),
+  (56,26),(53,23),(50,21),(49,18),(48,14))
 )
 
 # Small openings follow the original outlines more closely than the outer
 # silhouette, excluding the old gym floor and the space under the raised fist.
 CUTOUTS = (
-    (((33, 64), (36, 58), (43, 53), (51, 51), (55, 54), (51, 58), (48, 64)),
+    (((28, 64), (32, 58), (39, 54), (48, 52), (53, 52), (54, 54), (49, 57), (44, 60), (44, 64)),
      ((112, 64), (116, 59), (120, 56), (124, 54), (134, 49), (131, 64))),
     (((92, 10), (107, 10), (107, 20), (110, 21), (110, 25), (103, 24), (98, 22), (93, 20)),),
 )

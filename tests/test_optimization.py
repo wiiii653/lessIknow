@@ -18,9 +18,17 @@ class OptimizationTests(unittest.TestCase):
             sequence.execute(tick, cpu)
         for cpu in pair:
             self.assertEqual(cpu.memory[0xd301], 0xff)
-        self.assertEqual(sequence.SequenceTests().raster(pair[0]),
-                         sequence.SequenceTests().raster(pair[1]), tick)
-        self.assertEqual(pair[0].memory[0xd000:0xd020], pair[1].memory[0xd000:0xd020], tick)
+        scene = pair[1].memory[0x83e0]
+        # V128 intentionally revises dance art/palette and Trevor silhouettes.
+        if scene not in (2, 3, 4, 5, 16):
+            self.assertEqual(sequence.SequenceTests().raster(pair[0]),
+                             sequence.SequenceTests().raster(pair[1]), tick)
+        old_gtia = pair[0].memory[0xd000:0xd020]
+        new_gtia = pair[1].memory[0xd000:0xd020]
+        if scene in (2, 3, 4, 5):
+            self.assertEqual(new_gtia[0x16:0x19], [0x5a, 0xac, 0x2e])
+            old_gtia[0x16:0x19] = new_gtia[0x16:0x19]
+        self.assertEqual(old_gtia, new_gtia, tick)
         self.assertEqual(pair[0].memory[0x0980:0x0c00], pair[1].memory[0x0980:0x0c00], tick)
 
     def test_scene_handoffs_restarts_and_nonsequential_frames_match_v126(self):

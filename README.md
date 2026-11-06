@@ -11,8 +11,9 @@ atari800 -1088xe -pal -nobasic -run build/visual-prototype-dev.xex
 
 Install `requirements-dev.txt` in a virtual environment and run
 `make check PYTHON=/path/to/venv/bin/python` for the required 6502 tests.
-Numbered releases remain preserved; the optimized release is
-`build/visual-prototype-v127.xex`. See `docs/V127_OPTYMALIZACJE.md` for
+Numbered releases remain preserved; the current visual release is
+`build/visual-prototype-v130.xex` (revised dancer/Trevor masks, entrance composite and dance palette).
+See `docs/V128_MASKI_I_PALETA.md` for the visual changes. See `docs/V127_OPTYMALIZACJE.md` for
 CPU measurements and validation. To test an archived build, set
 `ATARI_TEST_XEX=build/visual-prototype-v127.xex`; its matching JSON is required.
 

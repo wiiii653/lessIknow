@@ -83,9 +83,33 @@ def dance_group_pixels(frame, count=3):
                 at = y * 160 + x
                 # Atari pixels are wide; a two-pixel expansion creates heavy
                 # black legs. Keep just the immediate original outline there.
-                neighbors = (0, -1, 1, -160, 160) if y >= 95 else (
-                    0, -1, 1, -2, 2, -160, 160, -320, 320)
+                neighbors = (0, -1, 1, -160, 160)
                 opaque[at] = any(source[at + delta] for delta in neighbors)
+        # Keep small dark facial/uniform details opaque. Large openings between
+        # raised arms and torso remain transparent to the gym behind them.
+        visited = set()
+        for y in range(28, 95):
+            for x in range(56, 104):
+                start = y * 160 + x
+                if opaque[start] or start in visited:
+                    continue
+                component, pending, exterior = [], [start], False
+                visited.add(start)
+                while pending:
+                    pos = pending.pop()
+                    component.append(pos)
+                    yy, xx = divmod(pos, 160)
+                    if yy in (28, 94) or xx in (56, 103):
+                        exterior = True
+                    for delta in (-1, 1, -160, 160):
+                        nxt = pos + delta
+                        ny, nx = divmod(nxt, 160)
+                        if 28 <= ny < 95 and 56 <= nx < 104 and not opaque[nxt] and nxt not in visited:
+                            visited.add(nxt)
+                            pending.append(nxt)
+                if not exterior and len(component) <= 20:
+                    for pos in component:
+                        opaque[pos] = 1
         # Foot contacts move with each pose. The wide stance has two
         # separate shadows, while a raised foot leaves only one on the floor.
         contacts = (((25, 4),), ((23, 6),), ((18, 4),), ((8, 4), (37, 4)))

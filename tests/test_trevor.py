@@ -3,10 +3,21 @@ from artifact import XEX, METADATA
 import unittest
 import test_sequence as sequence
 from trevor_awakens import START,MIDPOINT,HIT,END
-from trevor_polished import frames, helper, tunnel_frames, POLYGONS, CUTOUTS, inside, HITS, HANDS, bank
+from trevor_polished import frames, helper, tunnel_frames, POLYGONS, CUTOUTS, inside, HITS, HANDS, bank, entrance_mask
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class TrevorTests(unittest.TestCase):
+    def test_entrance_uses_one_gym_and_preserves_face(self):
+        far, near = frames()[:2]
+        mask = entrance_mask()
+        for pos, keep in enumerate(mask):
+            if not keep:
+                self.assertEqual(near[pos], far[pos], pos)
+        # Doorway/wall must survive outside the actor, including underarms.
+        self.assertGreater(sum(not keep and far[pos] != 0 for pos, keep in enumerate(mask)), 1000)
+        # The face stays drawn in front of the original gym.
+        self.assertGreater(sum(near[y*160+x] == 3 for y in range(20,32) for x in range(69,91)), 80)
+
     def test_unused_pose_slots_are_available(self):
         quiet = bank(0, quiet=True)
         self.assertTrue(all(quiet[start:start+0xa00] == bytes(0xa00)
