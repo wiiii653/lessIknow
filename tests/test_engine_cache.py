@@ -24,7 +24,7 @@ if sequence.MPU is not None:
 @unittest.skipIf(sequence.MPU is None, 'install requirements-dev.txt')
 class CacheTests(unittest.TestCase):
     def cpu(self):
-        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v059.xex').read_bytes()))
+        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v070.xex').read_bytes()))
 
     def step(self, cpu, tick):
         cpu.memory.writes.clear()
@@ -43,7 +43,9 @@ class CacheTests(unittest.TestCase):
             cpu = self.cpu()
             self.step(cpu, tick)
             pixels = self.pixels(cpu)
-            cycles = self.step(cpu, tick + 4)
+            # A mode change initializes both alternating display lists once.
+            self.step(cpu, tick + 4)
+            cycles = self.step(cpu, tick + 8)
             self.assertLess(cycles, 2000)
             self.assertEqual(self.copied(cpu), 0)
             self.assertFalse(any(0x8000 <= a < 0x824a or 0x8400 <= a < 0x864a for a in cpu.memory.writes))

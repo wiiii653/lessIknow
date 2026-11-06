@@ -1,5 +1,6 @@
 """Tunnel ball stays in PMG RAM, spins, sparks and restores dance art."""
 import unittest
+import math
 import test_sequence as sequence
 from tunnel_ball import masks, tunnel_offsets
 from engine_effects import pmg_art
@@ -52,16 +53,15 @@ class TunnelBallTests(unittest.TestCase):
         self.assertEqual(sequence.SequenceTests().raster(cpu,effects=True),
                          sequence.SequenceTests().raster(sequence.execute(9163),effects=True))
 
-    def test_rainbow_panels_and_satellites_keep_distinct_bright_hues(self):
+    def test_rainbow_panels_and_satellites_keep_distinct_hues(self):
         colors=set()
         for tick in range(KALEIDO_START,KALEIDO_START+256,32):
             m=sequence.execute(tick).memory
-            palette=tuple(m[a] for a in (0xd012,0xd014,0xd019))
-            self.assertEqual(len({c>>4 for c in palette}),3)
-            self.assertTrue(all(c&15>=12 for c in palette))
-            self.assertEqual(m[0xd012],m[0xd013])
-            self.assertEqual(m[0xd014],m[0xd015])
-            self.assertEqual(m[0xd00c],0xff)
+            palette=tuple(m[a] for a in (0xd012,0xd013,0xd014,0xd015,0xd019))
+            self.assertEqual(len({c>>4 for c in palette}),5)
+            self.assertTrue(all((c&15) in (10,12) for c in palette[:4]))
+            self.assertEqual(palette[4]&15,14)
+            self.assertEqual(m[0xd00c],0x55)
             colors.add(palette)
         self.assertEqual(len(colors),8)
 
@@ -84,7 +84,7 @@ class TunnelBallTests(unittest.TestCase):
             self.assertEqual(m[0x83e9], vertical[i] & 255)
             self.assertTrue(any(m[0x980:0xa00]))
             for j in range(4):
-                self.assertLess(abs(m[0xd004+j]-(128+offsets[i])),32)
+                self.assertLessEqual(abs(m[0xd004+j]-(128+offsets[i])),44)
         self.assertLessEqual(abs(offsets[-1]),4)
         cpu=sequence.execute(13312,cpu)
         self.assertEqual(cpu.memory[0xd000],112)
@@ -112,3 +112,18 @@ class TunnelBallTests(unittest.TestCase):
                     self.assertTrue(covered,(i,x,y))
         self.assertGreater(len(positions),12)
         self.assertEqual(tunnel_offsets()[0],(0,0))
+
+    def test_two_paired_missile_stars_follow_different_ellipses(self):
+        cpu=None
+        for j in range(32):
+            cpu=sequence.execute(12288+j*8,cpu);m=cpu.memory
+            dx=m[0x83e8] if m[0x83e8]<128 else m[0x83e8]-256
+            dy=m[0x83e9] if m[0x83e9]<128 else m[0x83e9]-256
+            for i in range(4):
+                rx,ry=((25,14) if i<2 else (40,23))
+                angle=(j+(0 if i<2 else 8))*math.tau/32
+                half_offset=-4 if i%2==0 else 0
+                self.assertEqual(m[0xd004+i],128+half_offset+round(rx*math.cos(angle))+dx)
+                first=55+round(ry*math.sin(angle))+dy
+                rows=[y for y in range(128) if m[0x980+y] & (3 << (2*i))]
+                self.assertEqual(rows,list(range(first,first+5)))

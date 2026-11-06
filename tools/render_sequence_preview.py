@@ -17,8 +17,8 @@ from mosaic import KALEIDO_START
 
 
 def preview(tick, name):
-    info = json.loads(Path('build/visual-prototype-v059.json').read_text())
-    cpu = MPU(memory=RuntimeMemory(Path('build/visual-prototype-v059.xex').read_bytes()))
+    info = json.loads(Path('build/visual-prototype-v070.json').read_text())
+    cpu = MPU(memory=RuntimeMemory(Path('build/visual-prototype-v070.xex').read_bytes()))
     cpu.memory[0x23cd] = 0x60
     cpu.memory[0xd40b] = 124
     for offset in range(3):
@@ -52,21 +52,28 @@ def preview(tick, name):
             pc = target
         elif mode == 0:
             indices.extend(bytes(160 * (((op >> 4) & 7) + 1)))
-        elif mode == 14 and op & 0x40:
+        elif mode in (14, 15) and op & 0x40:
             address = fetch() | fetch() << 8
             for byte in memory[address:address + 40]:
-                for shift in (6, 4, 2, 0):
-                    indices.append((byte >> shift) & 3)
+                if mode == 15:
+                    indices.extend((byte >> 4, byte >> 4, byte & 15, byte & 15))
+                else:
+                    for shift in (6, 4, 2, 0):
+                        indices.append((byte >> shift) & 3)
         else:
             raise ValueError(f'unsupported preview mode: ${op:02X}')
     else:
         raise ValueError('display list did not terminate')
     height = len(indices) // 160
-    indices = player_masks(indices, memory, height, raster_start=8)
+    gtia11 = (memory[0xd01b] & 0xc0) == 0xc0
+    if not gtia11:
+        indices = player_masks(indices, memory, height, raster_start=8)
     original={0:PALETTE[0],0x48:PALETTE[1],0x9a:PALETTE[2],0x2c:PALETTE[3],0x82:(12,24,48)}
     palette=tuple(original.get(color,atari_rgb(color)) for color in
                   (memory[0xd01a],memory[0xd016],memory[0xd017],memory[0xd018]))
-    pixels = bytes(channel for index in indices for channel in (palette[index] if index<4 else atari_rgb((index-4)*2)))
+    pixels = bytes(channel for index in indices for channel in
+                   (atari_rgb(((index << 4) | (memory[0xd01a] & 15)) if index else 0)
+                    if gtia11 else (palette[index] if index < 4 else atari_rgb((index-4)*2))))
     path = Path(f'build/{name}-raster.ppm')
     path.write_bytes(f'P6\n160 {height}\n255\n'.encode() + pixels)
     print(path)

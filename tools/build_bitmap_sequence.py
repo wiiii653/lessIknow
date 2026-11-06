@@ -7,7 +7,8 @@ from pathlib import Path
 
 from build_sequence import Code, text_pixels, dance_pixels, TITLE_TICK, DANCE_TICK, PALETTE, dance_group_pixels, DANCE_SECOND_TICK, DANCE_THIRD_TICK
 from music_timing import tick_at_bar
-from build_title import ROWS
+from build_title import ROWS, gtia11_pixels
+from title_mode import ENTRY as TITLE_MODE_ENTRY, helper as title_mode_helper
 from engine_effects import copy_helper, effects_helper, pmg_art, COPY_ORIGIN, EFFECT_ORIGIN
 from dance_banks import FRAME_BASES, frame_address, frame_blob
 from gym_practice import practice_pixels, PRACTICE_TICK, PRACTICE_SCENE, BALL_PATH, PRACTICE_CUTS
@@ -42,12 +43,12 @@ def packed_rows(pixels):
             for y in range(192)]
 
 
-def build(output_path=Path('build/visual-prototype-v059.xex')):
+def build(output_path=Path('build/visual-prototype-v070.xex')):
     if output_path.exists():
         raise FileExistsError(f'Preserving existing XEX: {output_path}; choose --output with a new name')
     copy_code, copy_labels = copy_helper()
     effect_code = effects_helper()
-    scenes = [text_pixels((('TAME', 4, 47), ('IMPALA', 4, 111))), text_pixels(ROWS)]
+    scenes = [gtia11_pixels((('TAME', 4, 47), ('IMPALA', 4, 111))), gtia11_pixels(ROWS)]
     # Keep every source scanline, especially the small facial features.
     dance_frames = [frame_blob(packed_rows(dance_group_pixels(frame, count)))
                     for count in (1, 2, 3) for frame in range(4)]
@@ -92,7 +93,7 @@ def build(output_path=Path('build/visual-prototype-v059.xex')):
                (0x8340, 0x83e0), (0x864a, 0x9000),
                (EFFECT_ORIGIN + len(effect_code), 0xb000),
                (COPY_ORIGIN + len(copy_code), 0xd000),
-               (table_end, 0xfff0))
+               (table_end, TITLE_MODE_ENTRY))
     region = 0
     blobs = [bytearray() for _ in regions]
     # Join rows with the strongest suffix/prefix overlaps first. Chains are
@@ -485,6 +486,9 @@ def build(output_path=Path('build/visual-prototype-v059.xex')):
     c.emit(0x29, 4, 0x4a, 0x4a, 0x49, 1, 0x18, 0x69, 2, 0xaa)
     c.jump(0x4c, 'resolve_lookup')
     c.label('regular_lookup')
+    # Initialize both display lists while the ordinary intro/school scene is
+    # active; banked effects then run without a per-frame timing surcharge.
+    absolute(0x20, TITLE_MODE_ENTRY)
     absolute(0xad, SCENE)
     c.emit(0x09, 0x20)
     absolute(0x8d, NEWKEY)
@@ -688,7 +692,7 @@ def build(output_path=Path('build/visual-prototype-v059.xex')):
                (EFFECT_ORIGIN, effect_code), (COPY_ORIGIN, copy_code),
                (0x8000, display(0x8000)),
                (0x8300, descriptors[:0x3f]), (STATE, descriptors[0xe0:]),
-               (0x8400, display(0x8400))] + chunks
+               (0x8400, display(0x8400)), (TITLE_MODE_ENTRY, title_mode_helper())] + chunks
     # Reject every overlap, including accidental code/data growth.
     ordered = sorted(inserts)
     for (start, data), (next_start, _) in zip(ordered, ordered[1:]):
@@ -802,5 +806,5 @@ def build(output_path=Path('build/visual-prototype-v059.xex')):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v059.xex'))
+    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v070.xex'))
     build(parser.parse_args().output)

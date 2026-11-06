@@ -15,9 +15,12 @@ class TrevorTests(unittest.TestCase):
             source=art[pose] if pose<2 else tunnel_frames((tick>>4)&15)[pose-2]
             expected=bytes(source[y//3*160+x] for y in range(192) for x in range(160))
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected)
-            self.assertEqual(cpu.memory[0xd01d],3 if pose==2 and (tick&255)<128 else 1)
-            self.assertTrue(any(cpu.memory[0x980:0xa00]))
-            self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),expected)
+            phase=tick&255
+            active=pose==2 and phase<192
+            self.assertEqual(cpu.memory[0xd01d],(3 if phase<96 else 1) if active else 0)
+            if active:
+                self.assertTrue(any(cpu.memory[0x980:0xa00]))
+                self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),expected)
         self.assertEqual(seen,{0,1,2,3})
         self.assertEqual(sequence.execute(END,cpu).memory[0x83e0],6)
         self.assertLess(len(helper()),2560)
@@ -61,7 +64,7 @@ class TrevorTests(unittest.TestCase):
         from extract_music import segments
         from scene_memory import RuntimeMemory
         from pathlib import Path
-        m=RuntimeMemory((sequence.ROOT/'build/visual-prototype-v059.xex').read_bytes())
+        m=RuntimeMemory((sequence.ROOT/'build/visual-prototype-v070.xex').read_bytes())
         m.banks[0][0]=0x55 # The second marker must disambiguate this coincidence.
         saved=[bytes(bank) for bank in m.banks[:16]]
         frame=bytes((i*17+i//256)&255 for i in range(16384))
