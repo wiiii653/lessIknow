@@ -40,7 +40,7 @@ class DisplayListTests(unittest.TestCase):
                 self.assertIn(f'JVB ${address:04X}', output)
 
     def test_sequence_preserves_music_dlis(self):
-        output = self.inspect(ROOT / 'build/visual-prototype-v076.xex', 0x8000)
+        output = self.inspect(ROOT / 'build/visual-prototype-v079.xex', 0x8000)
         lines = [int(row.rsplit(' ', 1)[1]) for row in output.splitlines()
                  if 'DLI on line' in row]
         self.assertEqual(lines, [0, 78, 156, 234])
@@ -48,7 +48,7 @@ class DisplayListTests(unittest.TestCase):
 
     def test_visible_image_has_no_blank_dli_seams(self):
         for address in (0x8000, 0x8400):
-            output = self.inspect(ROOT / 'build/visual-prototype-v076.xex', address)
+            output = self.inspect(ROOT / 'build/visual-prototype-v079.xex', address)
             visible = [line for line in output.splitlines() if ': mode E,' in line]
             self.assertEqual(len(visible), 192)
             for row, line in enumerate(visible):
@@ -59,7 +59,7 @@ class DisplayListTests(unittest.TestCase):
             return [data for start, end, data in segments((ROOT / name).read_bytes())
                     if (start, end) == (0x8000, 0xbfff)]
         original = banks('less-i-know-release-v035.xex')
-        demo = banks('build/visual-prototype-v076.xex')
+        demo = banks('build/visual-prototype-v079.xex')
         self.assertEqual(original[:7], demo[:7])
         self.assertEqual(original[7][:0x0b10], demo[7][:0x0b10])
         self.assertEqual(set(original[7][0x2000:]), {255})

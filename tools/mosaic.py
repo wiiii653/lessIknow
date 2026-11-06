@@ -63,6 +63,10 @@ def palette_pairs():
     alternate=[pair for pair in pairs if all(separated(*pair,l+2,l-2) for l in (6,10))]
     return pairs+alternate[-17:]
 
+def contrast_indices():
+    return [i for i,(a,b) in enumerate(palette_pairs())
+            if math.dist(atari_rgb(a*16+8),atari_rgb(b*16+8))<105]
+
 def helper():
     c=Code(ENTRY)
     def a(op,address):c.emit(op,address&255,address>>8)
@@ -97,7 +101,7 @@ def helper():
     c.emit(0xa9,0);a(0x8d,0x83ea);a(0x8d,0x83eb)
     c.label('mod');a(0xad,0x83eb);c.branch(0xd0,'sub');a(0xad,0x83ea);c.emit(0xc9,187);c.branch(0x90,'beat')
     c.label('sub');a(0xad,0x83ea);c.emit(0x38,0xe9,187);a(0x8d,0x83ea);a(0xad,0x83eb);c.emit(0xe9,0);a(0x8d,0x83eb);c.emit(0xe8);c.jump(0x4c,'mod')
-    c.label('beat');c.emit(0xc9,24,0xa9,6);c.branch(0xb0,'luma');c.emit(0xa9,10)
+    c.label('beat');c.emit(0xc9,24,0xa9,8);c.branch(0xb0,'luma');c.emit(0xa9,12)
     c.label('luma');a(0x8d,0x83ea)
     c.label('color_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'color_wait')
     c.label('palette');c.emit(0xe0,161);c.branch(0x90,'palette_index_ok');c.emit(0xa2,160)
@@ -105,10 +109,15 @@ def helper():
     a(0xad,0x83ea);c.emit(0x18,0x69,2);a(0x8d,0x83ea)
     c.label('brightness_ready');c.jump(0xbd,'hue_pairs');a(0x8d,0x83eb)
     c.emit(0x29,0xf0);a(0x0d,0x83ea);a(0x8d,0xd016)
-    a(0xad,0x83eb);c.emit(0x0a,0x0a,0x0a,0x0a);a(0x0d,0x83ea)
-    c.emit(0xe0,144);c.branch(0xb0,'darker_second');c.emit(0x18,0x69,4);c.jump(0x4c,'second_ready')
-    c.label('darker_second');c.emit(0x38,0xe9,4)
-    c.label('second_ready');a(0x8d,0xd017)
+    # Boost only the second ink of hue pairs that need more contrast at
+    # low luminance. Keep the pale pulse below the four-bit maximum.
+    a(0xad,0x83ea);c.emit(0xc9,12);c.branch(0xb0,'second_luma_ready')
+    c.emit(0xa0,0)
+    c.label('contrast_lookup');c.emit(0x8a);c.jump(0xd9,'contrast_indices');c.branch(0xf0,'contrast_boost')
+    c.emit(0xc8,0xc0,len(contrast_indices()));c.branch(0xd0,'contrast_lookup');c.jump(0x4c,'second_luma_ready')
+    c.label('contrast_boost');a(0xad,0x83ea);c.emit(0x18,0x69,4);a(0x8d,0x83ea)
+    c.label('second_luma_ready')
+    a(0xad,0x83eb);c.emit(0x29,0x0f,0x0a,0x0a,0x0a,0x0a);a(0x0d,0x83ea);a(0x8d,0xd017)
     c.emit(0xa9,0x0e);a(0x8d,0xd018)
     for addr,val in ((0xd01a,0),(0xd01d,0),(0xd400,0x22)):
         c.emit(0xa9,val);a(0x8d,addr)
@@ -116,6 +125,7 @@ def helper():
     for label in ('read','write','dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     c.label('source_hi');c.emit(0x40,0x4f,0x5e,0x6d)
+    c.label('contrast_indices');c.emit(*contrast_indices())
     c.label('hue_pairs');c.emit(*((a<<4)|b for a,b in palette_pairs()))
     c.label('row_lo');c.emit(*((y//2*40)&255 for y in range(192)))
     c.label('row_hi');c.emit(*((y//2*40)>>8 for y in range(192)))

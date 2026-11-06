@@ -3,10 +3,10 @@
 ## Build and run
 
 Run `make` with Python 3 and ImageMagick installed to produce
-`build/visual-prototype-v076.xex`. Run Atari800 with stereo POKEY enabled:
+`build/visual-prototype-v079.xex`. Run Atari800 with stereo POKEY enabled:
 
 ```sh
-atari800 -1088xe -pal -nobasic -run build/visual-prototype-v076.xex
+atari800 -1088xe -pal -nobasic -run build/visual-prototype-v079.xex
 ```
 
 ## Opening sequence

@@ -43,7 +43,7 @@ def packed_rows(pixels):
             for y in range(192)]
 
 
-def build(output_path=Path('build/visual-prototype-v076.xex')):
+def build(output_path=Path('build/visual-prototype-v079.xex')):
     if output_path.exists():
         raise FileExistsError(f'Preserving existing XEX: {output_path}; choose --output with a new name')
     copy_code, copy_labels = copy_helper()
@@ -806,5 +806,5 @@ def build(output_path=Path('build/visual-prototype-v076.xex')):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v076.xex'))
+    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v079.xex'))
     build(parser.parse_args().output)
