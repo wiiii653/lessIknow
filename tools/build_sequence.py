@@ -4,13 +4,13 @@
 from pathlib import Path
 
 from build_title import render
-from gym_background import gym_pixels
+from gym_background import dance_gym_pixels
 from music_timing import tick_at_bar
 
 TITLE_TICK = tick_at_bar(4)  # 4 bars = 7.5 seconds
 DANCE_TICK = tick_at_bar(24)  # 24 bars = 45 seconds
 PALETTE = ((0, 0, 0), (255, 50, 160), (0, 220, 255), (255, 190, 150))
-DANCE_WIDTH, DANCE_HEIGHT = 48, 144  # ANTIC 4 pixels are twice as wide as tall
+DANCE_WIDTH, DANCE_HEIGHT = 48, 128
 DANCE_SECOND_TICK = tick_at_bar(26)  # two bars later: 48.75 seconds
 DANCE_THIRD_TICK = tick_at_bar(28)  # four bars later: 52.5 seconds
 DANCE_LEFTS = (56, 4, 108)  # center first, then left, then right
@@ -54,34 +54,36 @@ def text_pixels(rows):
 
 
 def dance_pixels(frame):
-    rgb = Path(f'build/dance{frame}.rgb').read_bytes()
+    rgb = Path(f'build/dance-v056-{frame}.rgb').read_bytes()
     if len(rgb) != DANCE_WIDTH * DANCE_HEIGHT * 3:
-        raise ValueError('expected 48x144 RGB dance frame')
+        raise ValueError('expected 48x128 RGB dance frame')
     result = bytearray(160 * 192)
     for y in range(DANCE_HEIGHT):
         for x in range(DANCE_WIDTH):
             color = rgb[(y * DANCE_WIDTH + x) * 3:(y * DANCE_WIDTH + x) * 3 + 3]
             value = min(range(4), key=lambda i: sum(
                 (color[c] - PALETTE[i][c]) ** 2 for c in range(3)))
-            result[(y + 24) * 160 + x + 56] = value
+            result[(y + 28) * 160 + x + 56] = value
     return result
 
 
 def dance_group_pixels(frame, count=3):
-    source = dance_pixels(frame)
-    result = bytearray(gym_pixels())
+    result = bytearray(dance_gym_pixels())
     # One-pixel dark outlines retain face details and separate the uniforms
     # from the lighter parquet. Exterior background remains transparent.
-    opaque = bytearray(160 * 192)
-    for y in range(1, 191):
-        for x in range(56, 104):
-            at = y * 160 + x
-            opaque[at] = any(source[at + delta] for delta in (0, -1, 1, -160, 160))
-    for left in DANCE_LEFTS[:count]:
+    for dancer, left in enumerate(DANCE_LEFTS[:count]):
+        # A staggered chorus gives the group a readable wave of motion.
+        source = dance_pixels((frame + (0, 1, 3)[dancer]) & 3)
+        opaque = bytearray(160 * 192)
+        for y in range(2, 190):
+            for x in range(56, 104):
+                at = y * 160 + x
+                opaque[at] = any(source[at + delta] for delta in
+                                 (0, -1, 1, -2, 2, -160, 160, -320, 320))
         # Contact shadows anchor each dancer to the court.
-        for y in range(149, 155):
+        for y in range(145, 150):
             for x in range(18, 34):
-                if ((x - 26) / 8) ** 2 + ((y - 152) / 3) ** 2 <= 1:
+                if ((x - 26) / 8) ** 2 + ((y - 147) / 3) ** 2 <= 1:
                     result[y * 160 + left + x] = 0
         for y in range(192):
             for x in range(48):

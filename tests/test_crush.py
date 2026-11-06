@@ -13,9 +13,14 @@ class CrushTests(unittest.TestCase):
             cpu=sequence.execute(t,cpu)
             expected=bytes(art[i][(t>>4)&3][y*52//192*80+x//2] for y in range(192) for x in range(160))
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected)
+            # Sample twice within one pompom phase, including at cuts that
+            # occur one tick before a 16-tick animation boundary.
+            held=(t+15)&~15
+            cpu=sequence.execute(held,cpu)
+            expected=bytes(art[i][(held>>4)&3][y*52//192*80+x//2] for y in range(192) for x in range(160))
             before=cpu.processorCycles
             dl=cpu.memory[0xd403]
-            cpu=sequence.execute(t+4,cpu)
+            cpu=sequence.execute(held+4,cpu)
             self.assertLess(cpu.processorCycles-before,9000)
             self.assertEqual(cpu.memory[0xd403],dl)
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected)

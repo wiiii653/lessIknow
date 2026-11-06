@@ -3,10 +3,10 @@
 ## Build and run
 
 Run `make` with Python 3 and ImageMagick installed to produce
-`build/visual-prototype-v051.xex`. Run Atari800 with stereo POKEY enabled:
+`build/visual-prototype-v059.xex`. Run Atari800 with stereo POKEY enabled:
 
 ```sh
-atari800 -1088xe -pal -nobasic -run build/visual-prototype-v051.xex
+atari800 -1088xe -pal -nobasic -run build/visual-prototype-v059.xex
 ```
 
 ## Opening sequence
@@ -16,22 +16,22 @@ atari800 -1088xe -pal -nobasic -run build/visual-prototype-v051.xex
 | 0–1495 | 0–7.5 s | TAME IMPALA, sliding entrance |
 | 1496–2991 | 7.5–15 s | THE LESS / I KNOW / THE BETTER, sliding entrance |
 | 2992–3552 | 15–17.8 s | Boy facing camera |
-| 3553–3926 | 17.8–19.7 s | Blonde girl portrait outside school |
-| 3927–4487 | 19.7–22.5 s | Boy facing camera again |
+| 3553–4113 | 17.8–20.6 s | Blonde girl portrait outside school |
+| 4114–4487 | 20.6–22.5 s | Boy facing camera again |
 | 4488–5983 | 22.5–30 s | Girl appears at the left, then recedes toward school; boy turns after her |
 | 5984–6980 | 30–35 s | Basketball player close-up |
 | 6981–7977 | 35–40 s | Shot toward the basket |
-| 7978–8975 | 40–45 s | Girls stretching at the wall bars |
-| 8976–9723 | 45–48.75 s | One dancing cheerleader at center |
-| 9724–10471 | 48.75–52.5 s | Second cheerleader joins on the left |
-| 10472–11967 | 52.5–60 s | Third joins on the right; synchronized trio |
-| 11968–14959 | 60–75 s | Breathing, color-cycling kaleidoscope |
-| 14960–20943 | 75–105 s | Four closeups during the cheerleading performance, blink and hair accent |
-| 20944–22439 | 105–112.5 s | Low-angle basketball dribble, animated PMG ball |
-| 22440–23935 | 112.5–120 s | Four-stage dunk, spinning rainbow ball and light flash |
-| 23936–26927 | 120–135 s | Trevor emerges in the dark gym, growing PMG silhouette |
-| 26928–32911 | 135–165 s | Neon zoom, sinusoidal motion and orbital accents |
-| 32912 onward | 165 s onward | Existing kaleidoscope; later acts remain to be developed |
+| 7978–8974 | 40–45 s | Girls stretching at the wall bars |
+| 8975–9722 | 45–48.75 s | One dancing cheerleader at center |
+| 9723–10470 | 48.75–52.5 s | Second cheerleader joins on the left |
+| 10471–11966 | 52.5–60 s | Third joins on the right; synchronized trio |
+| 11967–14958 | 60–75 s | Breathing, color-cycling kaleidoscope |
+| 14959–20941 | 75–105 s | Four closeups during the cheerleading performance, blink and hair accent |
+| 20942–22437 | 105–112.5 s | Low-angle basketball dribble, animated PMG ball |
+| 22438–23933 | 112.5–120 s | Four-stage dunk, spinning rainbow ball and light flash |
+| 23934–26924 | 120–135 s | Trevor emerges in the dark gym, growing PMG silhouette |
+| 26925–32908 | 135–165 s | Neon zoom, sinusoidal motion and orbital accents |
+| 32909 onward | 165 s onward | Existing kaleidoscope; later acts remain to be developed |
 
 The artist name, title and dancer slide in over 96 playback ticks (~0.48 s).
 Artist and title each last 1496 ticks. The school exterior lasts 15 seconds, followed by 15 seconds of gym practice;
@@ -46,15 +46,14 @@ to show her walking away.
 The boy starts facing forward and turns to watch her walk toward the school.
 At tick 5984, the camera cuts inside for three illustrated shots, matching the
 school exterior palette and portrait style. Cuts occur at 5984, 6981 and 7978;
-dance still starts at 8976. Three 160×64 images share one 8 KiB bank slot;
+dance starts at tick 8975. Three 160×64 images share one 8 KiB bank slot;
 each source row displays three times. These are held cinematic shots, with
 a rainbow PMG ball and colored missile spray during the second shot. The source contact sheet is
 `assets/art/source/act1_practice_storyboard_v011.png`.
-The dance scene is a complete school gym: perspective ceiling beams, tall
-windows, banners, side bleachers, a basketball goal, double doors, and parquet
-with court markings. The dancers retain their source pixels with dark outlines
-and contact shadows. Geometry is drawn in Atari's pixel grid by
-`tools/gym_background.py`; compositing is in `tools/build_sequence.py`.
+The dance scene uses new gym artwork and four illustrated cheerleader poses.
+The trio performs staggered phases of the same choreography, with dark outlines
+and contact shadows. The four-color conversion is in `tools/gym_background.py`;
+compositing is in `tools/build_sequence.py`.
 Twelve complete frames (four poses for each group size) occupy the six banks
 that the full-track v035 audit proved unused. There are no player reveal masks;
 the background fills the entire picture during solo, duo, and trio.
@@ -80,9 +79,9 @@ entry and restores the interrupted foreground bank before returning.
 Static artwork uses 425 shared rows (17,000 bytes before packing), stored in
 16,513 bytes including alignment. Row tables occupy 3,264 bytes. Dance rows
 reference the two framebuffers; each framebuffer leaves a 16-byte gap at its
-4 KiB DMA boundary. The music-clock pose selection is unchanged. Four player stars and four missile
-streaks pulse above the dancers on quarter-beat timestamps; they use preloaded
-double-line PMG data and register updates during vblank.
+4 KiB DMA boundary. Poses advance every 32 music ticks. Four player stars and
+four missile streaks sweep above the dancers on beat accents, with independent
+player colors, preloaded double-line PMG data and vblank register updates.
 
 See `docs/ENGINE_PROFILE_V013.md` for measured callback costs and validation.
 The full-track stereo POKEY recording matches the original player byte for byte.
@@ -109,7 +108,7 @@ Runtime layout:
 - `$13E0`: OS-off entry; `$1400–$1ACA`: 1739-byte scene callback and NMI wrapper.
 - `$1B00–$1FFF`, `$3300–$3BFF`, `$824A–$82FF`, `$8340–$83DF`, `$864A–$8FFF`: shared rows.
 - `$9000–$AEFF`, `$B000–$CEFF`: alternating practice/dance framebuffers.
-- `$AF00–$AFD5`: PMG helper; `$CF00–$CFC3`: copy helper; remaining tails hold shared bitmap rows.
+- `$AF00–$AFE3`: PMG helper; `$CF00–$CFC3`: copy helper; remaining tails hold shared bitmap rows.
 - `$8000`, `$8400`: double-buffered display lists, each within one 1 KiB page.
 - `$8300–$833F`: row-table descriptors; `$83E0–$83FF`: scene state.
 - `$D800–$E4BF`: compact scanline-address tables (3,264 bytes).
@@ -140,7 +139,7 @@ including blank raster lines and the hardware player masks. Preview RGB colors
 approximate the hardware.
 
 Original artwork is in `assets/art/source/`. Dance poses are cut directly from
-the large source sheet and converted once to 48×144 logical pixels. Every
+the large source sheet and converted once to 48×128 logical pixels. Every
 converted dancer scanline is retained. School artwork uses 160×64 source pixels
 and three output scanlines per source row; the girl's back sprite is composited
 before packing the frames. Earlier small dance PNGs/GIF are previews only.

@@ -25,25 +25,24 @@ def pixels(frame):
             if frame<32:
                 u=(co*xx-si*yy)/22
                 v=(si*xx+co*yy)/22
-                a,b=abs((u+0.5)%1-0.5),abs((v+0.5)%1-0.5)
-                edge=max(a,b)
-                diamond=a+b
-                checker=(math.floor(u+0.5)+math.floor(v+0.5))&1
-                if edge>0.46: color=0
-                elif edge>0.37: color=3 if edge>0.42 else 1
-                elif diamond<0.18: color=3
-                elif diamond<0.29: color=0
-                else: color=1+checker
+                a,b=(u+0.5)%1-0.5,(v+0.5)%1-0.5
+                radius=math.hypot(a,b)
+                angle_cell=math.atan2(b,a)
+                petal=0.29+0.07*math.cos(4*angle_cell)
+                if abs(radius-petal)<0.035: color=0
+                elif radius<0.095: color=3
+                elif radius<petal: color=1
+                else: color=2
             else:
                 radius=math.hypot(xx,yy)
                 theta=math.atan2(yy,xx)
-                # Log rings travel inward; fourfold symmetry makes phase wrap seamless.
-                u=math.log(max(3,radius))*3.6-phase/math.tau*4
-                v=theta*8/math.pi+0.65*math.sin(radius/24-phase)
-                a,b=u%1,v%1
-                if radius<5 or min(a,b)<0.10:color=0
-                elif min(a,b)<0.23:color=3
-                else:color=1+((math.floor(u)+math.floor(v))&1)
+                # Curving spiral ribbons and soft starbursts, periodic at wrap.
+                wave=math.sin(theta*6+math.log(max(3,radius))*4-phase)
+                ripple=math.sin(math.log(max(3,radius))*9-2*phase+math.sin(theta*3))
+                if radius<5:color=0
+                elif abs(wave)<0.09:color=0
+                elif ripple>0.92:color=3
+                else:color=1 if wave>0 else 2
             out.append(color)
     return bytes(out)
 
@@ -88,25 +87,16 @@ def helper():
     c.emit(0xa9,0);a(0x8d,0xd402);a(0xad,0x83e6);a(0x8d,0xd403);c.emit(0x49,4);a(0x8d,0x83e6)
     c.emit(0xa9,255);a(0x8d,0x83f8);a(0x8d,0x83f9)
     c.label('colors')
-    # Beat envelope follows alternating 186/187-tick half-bars at PAL rate.
-    # Unique pair per half-bar, continuing the sequence across the two uses.
-    a(0xad,0x83e3);c.emit(0xc9,TREVOR_START>>8);c.branch(0x90,'intro_base');c.branch(0xd0,'trevor_base')
-    a(0xad,0x83e2);c.emit(0xc9,TREVOR_START&255);c.branch(0x90,'intro_base')
-    c.label('trevor_base')
-    c.emit(0xa2,16,0xa0,41);a(0xad,0x83e2);c.emit(0x38,0xe9,TREVOR_START&255);a(0x8d,0x83ea)
-    a(0xad,0x83e3);c.emit(0xe9,TREVOR_START>>8);a(0x8d,0x83eb);c.jump(0x4c,'mod')
-    c.label('intro_base');c.emit(0xa2,0,0xa0,19);a(0xad,0x83e2);c.emit(0x38,0xe9,KALEIDO_START&255);a(0x8d,0x83ea)
-    a(0xad,0x83e3);c.emit(0xe9,KALEIDO_START>>8);a(0x8d,0x83eb)
-    c.label('mod');a(0xad,0x83eb);c.branch(0xd0,'long_elapsed')
-    a(0xad,0x83ea);c.emit(0xc0,44);c.branch(0xf0,'short_interval')
-    c.emit(0xc9,187);c.branch(0x90,'beat');c.jump(0x4c,'subtract_187')
-    c.label('short_interval');c.emit(0xc9,186);c.branch(0x90,'beat');c.jump(0x4c,'subtract_186')
-    c.label('long_elapsed');c.emit(0xc0,44);c.branch(0xf0,'subtract_186')
-    c.label('subtract_187');a(0xad,0x83ea);c.emit(0x38,0xe9,187);a(0x8d,0x83ea)
-    a(0xad,0x83eb);c.emit(0xe9,0);a(0x8d,0x83eb);c.jump(0x4c,'advance_halfbar')
-    c.label('subtract_186');a(0xad,0x83ea);c.emit(0x38,0xe9,186);a(0x8d,0x83ea)
-    a(0xad,0x83eb);c.emit(0xe9,0);a(0x8d,0x83eb)
-    c.label('advance_halfbar');c.emit(0xe8,0xc8,0xc0,45);c.branch(0xd0,'mod');c.emit(0xa0,0);c.jump(0x4c,'mod')
+    # Preserve v051's visual pulse phase; scene dispatch uses the corrected clock.
+    a(0xad,0x83e3);c.emit(0xc9,32912>>8);c.branch(0x90,'intro_base')
+    c.emit(0xa2,16);a(0xad,0x83e2);c.emit(0x38,0xe9,32912&255);a(0x8d,0x83ea)
+    a(0xad,0x83e3);c.emit(0xe9,32912>>8);a(0x8d,0x83eb);c.branch(0xb0,'mod')
+    c.emit(0xa9,0);a(0x8d,0x83ea);a(0x8d,0x83eb);c.jump(0x4c,'mod')
+    c.label('intro_base');c.emit(0xa2,0);a(0xad,0x83e2);c.emit(0x38,0xe9,11968&255);a(0x8d,0x83ea)
+    a(0xad,0x83e3);c.emit(0xe9,11968>>8);a(0x8d,0x83eb);c.branch(0xb0,'mod')
+    c.emit(0xa9,0);a(0x8d,0x83ea);a(0x8d,0x83eb)
+    c.label('mod');a(0xad,0x83eb);c.branch(0xd0,'sub');a(0xad,0x83ea);c.emit(0xc9,187);c.branch(0x90,'beat')
+    c.label('sub');a(0xad,0x83ea);c.emit(0x38,0xe9,187);a(0x8d,0x83ea);a(0xad,0x83eb);c.emit(0xe9,0);a(0x8d,0x83eb);c.emit(0xe8);c.jump(0x4c,'mod')
     c.label('beat');c.emit(0xc9,24,0xa9,6);c.branch(0xb0,'luma');c.emit(0xa9,10)
     c.label('luma');a(0x8d,0x83ea)
     c.label('color_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'color_wait')

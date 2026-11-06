@@ -1,6 +1,5 @@
 """Small unbanked helper routines and preloaded PMG beat accents."""
 from build_sequence import Code
-from music_timing import tick_at_beat
 
 COPY_ORIGIN = 0xcf00
 EFFECT_ORIGIN = 0xaf00
@@ -85,11 +84,19 @@ def effects_helper(state=0x83e0):
     c.emit(0xa2, 3)
     c.label('set_ink')
     absop(0x9d, 0xd012)
+    # Four independently colored players; missiles inherit their colors.
+    c.emit(0x18, 0x69, 0x40)
     c.emit(0xca)
     c.branch(0x10, 'set_ink')
+    # A short outward sweep follows each beat without copying PMG bitmaps.
+    c.emit(0x98, 0x4a, 0x4a, 0x29, 3)
+    c.jump(0x8d, 'position_offset_operand')
     c.emit(0xa2, 3)
     c.label('set_positions')
     c.jump(0xbd, 'positions')
+    c.emit(0x18)
+    c.label('position_offset')
+    c.emit(0x69, 0)
     absop(0x9d, 0xd000)
     c.emit(0x18, 0x69, 9)
     absop(0x9d, 0xd004)
@@ -110,10 +117,12 @@ def effects_helper(state=0x83e0):
     absop(0x8d, 0xd400)
     c.label('done')
     c.emit(0x60)
-    beats = [tick_at_beat(96 + i) for i in range(32)]
+    # Match the visual accent phase of v051 independently of scene timing.
+    beats = [8976 + i * 374 // 4 for i in range(32)]
     c.label('positions'); c.emit(*(x + 48 for x in (20, 55, 99, 136)))
     c.label('beat_lo'); c.emit(*(t & 255 for t in beats))
     c.label('beat_hi'); c.emit(*(t >> 8 for t in beats))
+    c.labels['position_offset_operand'] = c.labels['position_offset'] + 1
     data = c.finish()
     assert len(data) <= 256, len(data)
     return data

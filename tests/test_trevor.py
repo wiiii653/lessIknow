@@ -61,7 +61,7 @@ class TrevorTests(unittest.TestCase):
         from extract_music import segments
         from scene_memory import RuntimeMemory
         from pathlib import Path
-        m=RuntimeMemory((sequence.ROOT/'build/visual-prototype-v053.xex').read_bytes())
+        m=RuntimeMemory((sequence.ROOT/'build/visual-prototype-v059.xex').read_bytes())
         m.banks[0][0]=0x55 # The second marker must disambiguate this coincidence.
         saved=[bytes(bank) for bank in m.banks[:16]]
         frame=bytes((i*17+i//256)&255 for i in range(16384))

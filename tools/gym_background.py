@@ -1,6 +1,18 @@
 """School gym in perspective, drawn directly on the 160x192 Atari pixel grid."""
 
 import math
+from pathlib import Path
+
+
+def dance_gym_pixels():
+    """Four-color gym artwork used by the banked cheer dance."""
+    rgb = Path('build/gym-v056.rgb').read_bytes()
+    if len(rgb) != 160 * 192 * 3:
+        raise ValueError('expected 160x192 RGB dance gym')
+    palette = ((0, 0, 0), (255, 50, 160), (0, 220, 255), (255, 190, 150))
+    return bytes(min(range(4), key=lambda j: sum((rgb[i+c]-palette[j][c])**2
+                                                for c in range(3)))
+                 for i in range(0, len(rgb), 3))
 
 
 def gym_pixels():

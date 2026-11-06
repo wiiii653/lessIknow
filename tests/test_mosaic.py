@@ -10,7 +10,7 @@ from extract_music import segments
 @unittest.skipIf(sequence.MPU is None, 'py65 required')
 class MosaicTests(unittest.TestCase):
     def test_all_frames_and_inactive_buffer_ownership(self):
-        cpu=sequence.MPU(memory=TrackedMemory((sequence.ROOT/'build/visual-prototype-v053.xex').read_bytes()))
+        cpu=sequence.MPU(memory=TrackedMemory((sequence.ROOT/'build/visual-prototype-v059.xex').read_bytes()))
         for frame in range(64):
             tick=33792+(frame&31)*16+(1024 if frame>=32 else 0)
             # Inverse of ((tick>>4)&31) | ((tick>>5)&32).
@@ -48,8 +48,8 @@ class MosaicTests(unittest.TestCase):
 
     def test_scene_handoffs_and_restart(self):
         cpu=None
-        for tick,scene in ((KALEIDO_START-1,5),(KALEIDO_START,6),(CRUSH_START-1,6),(CRUSH_START,14),
-                           (TREVOR_START-1,16),(TREVOR_START,6),(96,0),(9163,2),(KALEIDO_START,6)):
+        for tick,scene in ((KALEIDO_START-1,2+(((KALEIDO_START-1)>>5)&3)),(KALEIDO_START,6),(CRUSH_START-1,6),(CRUSH_START,14),
+                           (TREVOR_START-1,16),(TREVOR_START,6),(96,0),(9163,2+((9163>>5)&3)),(KALEIDO_START,6)):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0x83e0],scene)
             if scene==6:self.assertEqual(cpu.memory[0xd01d],3)

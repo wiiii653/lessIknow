@@ -42,7 +42,7 @@ def packed_rows(pixels):
             for y in range(192)]
 
 
-def build(output_path=Path('build/visual-prototype-v053.xex')):
+def build(output_path=Path('build/visual-prototype-v059.xex')):
     if output_path.exists():
         raise FileExistsError(f'Preserving existing XEX: {output_path}; choose --output with a new name')
     copy_code, copy_labels = copy_helper()
@@ -288,7 +288,7 @@ def build(output_path=Path('build/visual-prototype-v053.xex')):
     c.jump(0x4c,'selected')
     c.label('dance')
     absolute(0xad, TICK)
-    c.emit(0x4a, 0x4a, 0x4a, 0x4a, 0x29, 3, 0x18, 0x69, 2)
+    c.emit(0x4a, 0x4a, 0x4a, 0x4a, 0x4a, 0x29, 3, 0x18, 0x69, 2)
     c.jump(0x4c, 'selected')
     c.label('kaleido')
     c.emit(0xa9, 6)
@@ -802,5 +802,5 @@ def build(output_path=Path('build/visual-prototype-v053.xex')):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v053.xex'))
+    parser.add_argument('--output', type=Path, default=Path('build/visual-prototype-v059.xex'))
     build(parser.parse_args().output)
