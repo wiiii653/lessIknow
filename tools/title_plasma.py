@@ -7,8 +7,9 @@ unbanked framebuffer; ANTIC repeats each line three times.
 import math
 from build_sequence import Code, TITLE_TICK
 from school_portrait_bank import bank_value
+from music_timing import tick_at_beat
 
-SIZE = 2048
+SIZE = 1792
 STATE = 0x83e0
 FRAME_BYTES = 2560
 FIRST_BANK = 40
@@ -52,19 +53,19 @@ def dither_hue(value, x, y):
     return 2 + int(min(5, max(0, level + threshold)))
 
 
-# Stable, saturated face colours; letter edges use a separate warm ink.
+# Stable, saturated face colours; the offset shadow uses neutral hue zero.
 LETTER_HUES = (9, 11, 13, 10, 12, 14, 15, 9)
 
 
-def letter_ink(code):
-    return LETTER_HUES[code & 7] if code & 8 else 1
+def letter_ink(code, phase=0):
+    return LETTER_HUES[(code + phase) & 7] if code & 8 else 0
 
 
-def compose_byte(background, mask):
+def compose_byte(background, mask, phase=0):
     result=0
     for shift in (4,0):
         code=(mask >> shift) & 15
-        hue=letter_ink(code) if code else (background >> shift) & 15
+        hue=letter_ink(code, phase) if code else (background >> shift) & 15
         result |= hue << shift
     return result
 
@@ -90,7 +91,13 @@ def artwork():
                     pixels.append(dither_hue(value, xx, y))
                 image.append((pixels[0] << 4) | pixels[1])
         frames.append(bytes(image))
-    banks = [b''.join(frames[n:n+4]).ljust(16384, b'\0') for n in range(0, 16, 4)]
+    # Every plasma bank has the same four colour lookup tables in its tail;
+    # composition can read them without switching away from the current frame.
+    color_tables = bytes((letter_ink(value >> 4, phase) << 4 if value >> 4 else 0) |
+                         (letter_ink(value & 15, phase) if value & 15 else 0)
+                         for phase in range(4) for value in range(256))
+    banks = [(b''.join(frames[n:n+4]) + color_tables).ljust(16384, b'\0')
+             for n in range(0, 16, 4)]
     masks = []
     # Large two-line artist card; taller, centred song-title lettering.
     cards = ((('TAME', 2, 39, None), ('IMPALA', 2, 108, None)),
@@ -122,12 +129,12 @@ def artwork():
                         else:
                             mask[offset] = (mask[offset] & 0x0f) | (hue_mask << 4)
 
-                # Hue-only offset extrusion: no black rectangle or extra
-                # playfield colour is needed, and plasma remains underneath.
+                # Offset extrusion separates the letters from the plasma.
                 for i, pixels in letters:
                     shadow = 1
                     for x, y in pixels:
-                        ink(x+1, y+1, shadow)
+                        for dx, dy in ((1, 1), (2, 1), (2, 2)):
+                            ink(x+dx, y+dy, shadow)
                 for i, pixels in letters:
                     face = 8 | ((i * 3) & 7)
                     for x, y in pixels:
@@ -207,7 +214,17 @@ def build(origin, blank):
     c.label('second_fade'); a(0xad, STATE+29); c.emit(0xc9, 39)
     c.branch(0xb0, 'save_fade'); c.emit(0xa9, 7)
     c.label('save_fade'); c.jump(0x8d, 'fade_phase')
-    a(0xad, STATE); c.emit(0x09, 0x40); a(0x8d, STATE+23)
+    # Find the current musical beat using the same integer timing map as
+    # the rest of the demo; a changed phase invalidates the render cache.
+    c.emit(0xa2, 31)
+    c.label('find_beat')
+    a(0xad, STATE+3); c.jump(0xdd, 'beat_hi'); c.branch(0x90, 'previous_beat')
+    c.branch(0xd0, 'beat_found')
+    a(0xad, STATE+2); c.jump(0xdd, 'beat_lo'); c.branch(0xb0, 'beat_found')
+    c.label('previous_beat'); c.emit(0xca); c.branch(0x10, 'find_beat')
+    c.emit(0xa2, 0)
+    c.label('beat_found'); c.emit(0x8a, 0x29, 3); c.jump(0x8d, 'color_phase')
+    c.emit(0x0a, 0x09, 0x40); a(0x0d, STATE); a(0x8d, STATE+23)
     c.emit(0xa9, 1, 0x60)
 
     c.label('invalidate')
@@ -277,13 +294,16 @@ def build(origin, blank):
     for page in range(10):
         a(0xad,STATE+12); c.emit(0x18,0x69,page); c.jump(0x8d,f'src_hi{page}')
         a(0xad,STATE+13); c.emit(0x18,0x69,page); c.jump(0x8d,f'dst_hi{page}')
+    c.jump(0xad,'color_phase'); c.emit(0x18,0x69,0x68)
+    for page in range(10): c.jump(0x8d,f'color_hi{page}')
     c.emit(0xa2,0)
     c.label('compose')
     for page in range(10):
         a(0xbd,0xa000+page*256);c.emit(0xa8)
         c.jump(0xb9,'letter_keep')
         c.label(f'src{page}'); c.emit(0x3d,0,0x40)
-        c.jump(0x19,'letter_color')
+        c.label(f'color{page}'); c.emit(0x19,0,0x68)
+        c.labels[f'color_hi{page}']=c.labels[f'color{page}']+2
         c.label(f'dst{page}'); c.emit(0x9d,0,0x90)
         c.labels[f'src_hi{page}']=c.labels[f'src{page}']+2
         c.labels[f'dst_hi{page}']=c.labels[f'dst{page}']+2
@@ -318,6 +338,9 @@ def build(origin, blank):
     c.emit(0x68,0x18,0x69,2,0xaa,0x68); a(0x8d,0xd301); c.emit(0x60)
     c.labels['mask_source_high']=c.labels['mask_source']+2
     c.labels['mask_dest_high']=c.labels['mask_dest']+2
+    c.label('color_phase'); c.emit(0)
+    c.label('beat_lo'); c.emit(*(tick_at_beat(i) & 255 for i in range(32)))
+    c.label('beat_hi'); c.emit(*(tick_at_beat(i) >> 8 for i in range(32)))
     c.label('mask_key'); c.emit(0xff)
     c.label('fade_phase'); c.emit(0)
     c.label('reveal_key'); c.emit(0,15,16,0,0,17,18)
@@ -329,12 +352,9 @@ def build(origin, blank):
     # Entire picture rises from black and falls back before the scene cut.
     c.jump(0xae,'fade_phase'); c.jump(0xbd,'brightness'); a(0x8d,0xd01a); c.emit(0x60)
     c.label('brightness')
-    c.emit(*([0,2,4,6,8,8,8] + [8]*32 + [8,8,6,6,4,2,0,0]))
+    c.emit(*([0,2,4,6,6,6,6] + [6]*32 + [6,6,6,4,4,2,0,0]))
     c.label('letter_keep')
     c.emit(*( (0 if value>>4 else 0xf0) | (0 if value&15 else 15) for value in range(256)))
-    c.label('letter_color')
-    c.emit(*( (letter_ink(value>>4)<<4 if value>>4 else 0) |
-              (letter_ink(value&15) if value&15 else 0) for value in range(256)))
     data=c.finish()
     if len(data)>SIZE: raise ValueError(f'plasma helper exceeds reservation: {len(data)}')
     return data,c.labels

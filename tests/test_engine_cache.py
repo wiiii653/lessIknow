@@ -24,7 +24,7 @@ if sequence.MPU is not None:
 @unittest.skipIf(sequence.MPU is None, 'install requirements-dev.txt')
 class CacheTests(unittest.TestCase):
     def cpu(self):
-        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v117.xex').read_bytes()))
+        return sequence.MPU(memory=TrackedMemory((sequence.ROOT / 'build/visual-prototype-v126.xex').read_bytes()))
 
     def step(self, cpu, tick):
         cpu.memory.writes.clear()
@@ -62,12 +62,12 @@ class CacheTests(unittest.TestCase):
     def test_partial_copy_tracks_each_buffer_and_group(self):
         cpu = self.cpu()
         for tick, copies, count in ((6000, 7936, 0), (9216, 7936, 1),
-                                    (9248, 7936, 1), (9280, 5376, 1),
-                                    (9312, 5376, 1), (9316, 0, 1),
-                                    (9344, 5376, 1), (9856, 7936, 2),
-                                    (9888, 7936, 2), (9920, 5376, 2),
-                                    (10624, 7936, 3), (10656, 7936, 3),
-                                    (10688, 5376, 3)):
+                                    (9232, 7936, 1), (9248, 5376, 1),
+                                    (9264, 5376, 1), (9268, 0, 1),
+                                    (9280, 5376, 1), (9856, 7936, 2),
+                                    (9872, 7936, 2), (9888, 5376, 2),
+                                    (10624, 7936, 3), (10640, 7936, 3),
+                                    (10656, 5376, 3)):
             previous_dl = cpu.memory[0xd403] << 8
             old_active = 0x9000 if previous_dl == 0x8400 else 0xb000
             cycles = self.step(cpu, tick)
@@ -77,14 +77,14 @@ class CacheTests(unittest.TestCase):
             if copies == 5376:
                 self.assertLess(cycles, 75000)
             if count:
-                self.assertEqual(self.pixels(cpu), dance_group_pixels((tick >> 5) & 3, count))
+                self.assertEqual(self.pixels(cpu), dance_group_pixels((tick >> 4) & 3, count))
 
     def test_nonsequential_poses_still_reconstruct_the_whole_frame(self):
         cpu = self.cpu()
         for count, start in ((1, 9216), (2, 9856), (3, 10624)):
             expected = [dance_group_pixels(frame, count) for frame in range(4)]
             for frame in (0, 2, 1, 3, 2, 0, 3, 1, 0):
-                self.step(cpu, start + frame * 32)
+                self.step(cpu, start + frame * 16)
                 self.assertEqual(self.pixels(cpu), expected[frame])
 
     def test_players_and_missiles_pulse_only_on_dance_beats(self):

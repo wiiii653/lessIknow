@@ -73,18 +73,25 @@ def dance_group_pixels(frame, count=3):
     # from the lighter parquet. Exterior background remains transparent.
     for dancer, left in enumerate(DANCE_LEFTS[:count]):
         # A staggered chorus gives the group a readable wave of motion.
-        source = dance_pixels((frame + (0, 1, 3)[dancer]) & 3)
+        pose = (frame + (0, 1, 3)[dancer]) & 3
+        source = dance_pixels(pose)
         opaque = bytearray(160 * 192)
         for y in range(2, 190):
             for x in range(56, 104):
                 at = y * 160 + x
-                opaque[at] = any(source[at + delta] for delta in
-                                 (0, -1, 1, -2, 2, -160, 160, -320, 320))
-        # Contact shadows anchor each dancer to the court.
-        for y in range(145, 150):
-            for x in range(18, 34):
-                if ((x - 26) / 8) ** 2 + ((y - 147) / 3) ** 2 <= 1:
-                    result[y * 160 + left + x] = 0
+                # Atari pixels are wide; a two-pixel expansion creates heavy
+                # black legs. Keep just the immediate original outline there.
+                neighbors = (0, -1, 1, -160, 160) if y >= 95 else (
+                    0, -1, 1, -2, 2, -160, 160, -320, 320)
+                opaque[at] = any(source[at + delta] for delta in neighbors)
+        # Foot contacts move with each pose. The wide stance has two
+        # separate shadows, while a raised foot leaves only one on the floor.
+        contacts = (((25, 4),), ((23, 6),), ((18, 4),), ((8, 4), (37, 4)))
+        for center, radius in contacts[pose]:
+            for y in range(146, 150):
+                for x in range(max(0, center-radius), min(48, center+radius+1)):
+                    if ((x-center) / radius) ** 2 + ((y-147.5) / 2) ** 2 <= 1:
+                        result[y * 160 + left + x] = 0
         for y in range(192):
             for x in range(48):
                 at = y * 160 + 56 + x

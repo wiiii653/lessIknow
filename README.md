@@ -3,10 +3,10 @@
 ## Build and run
 
 Run `make` with Python 3 and ImageMagick installed to produce
-`build/visual-prototype-v117.xex`. Run Atari800 with stereo POKEY enabled:
+`build/visual-prototype-v126.xex`. Run Atari800 with stereo POKEY enabled:
 
 ```sh
-atari800 -1088xe -pal -nobasic -run build/visual-prototype-v117.xex
+atari800 -1088xe -pal -nobasic -run build/visual-prototype-v126.xex
 ```
 
 ## Opening sequence
@@ -114,7 +114,7 @@ Runtime layout:
 - `$8000`, `$8400`: double-buffered display lists, each within one 1 KiB page.
 - `$8300–$833F`: row-table descriptors; `$83E0–$83FF`: scene state.
 - `$D800–$E4BF`: compact scanline-address tables (3,264 bytes).
-- `$E4C0–$ECBF`: reserved intro plasma code and data; `$ECC0–$FEEF`: remaining bitmap rows; `$FFFA–$FFFF`: hardware vectors.
+- `$E4C0–$EBBF`: reserved intro plasma code and data; `$EBC0–$FEEF`: remaining bitmap rows; `$FFFA–$FFFF`: hardware vectors.
 
 Each 40-byte bitmap row stays within a 4 KiB DMA page. During dance, the CPU reads video banks through `$4000–$7FFF`; the NMI wrapper
 restores bank ownership around every music update. ANTIC always reads unbanked RAM. The older standalone kaleidoscope can

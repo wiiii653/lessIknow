@@ -2,10 +2,17 @@
 import unittest
 import test_sequence as sequence
 from trevor_awakens import START,MIDPOINT,HIT,END
-from trevor_polished import frames, helper, tunnel_frames, POLYGONS, inside, HITS, HANDS
+from trevor_polished import frames, helper, tunnel_frames, POLYGONS, CUTOUTS, inside, HITS, HANDS, bank
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class TrevorTests(unittest.TestCase):
+    def test_unused_pose_slots_are_available(self):
+        quiet = bank(0, quiet=True)
+        self.assertTrue(all(quiet[start:start+0xa00] == bytes(0xa00)
+                            for start in (0x1400, 0x2a00, 0x3400)))
+        for phase in range(16):
+            self.assertEqual(bank(phase)[0xa00:0x1400], bytes(0xa00))
+
     def test_illustrations_boundaries_and_missiles(self):
         art=frames();cpu=None;seen=set()
         for tick in (START,START+512,MIDPOINT-1,MIDPOINT,HIT-1,*HITS[:5],HITS[1]-4,HITS[3]-4,END-1):
@@ -16,8 +23,8 @@ class TrevorTests(unittest.TestCase):
             expected=bytes(source[y//3*160+x] for y in range(192) for x in range(160))
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected)
             age = tick - max((t for t in HITS if t <= tick), default=tick)
-            active=pose in (2,4) and age<96
-            self.assertEqual(cpu.memory[0xd01d],(3 if age<48 else 1) if active else 0)
+            active=pose in (2,4) and age<120
+            self.assertEqual(cpu.memory[0xd01d],(3 if age<72 else 1) if active else 0)
             if active:
                 self.assertTrue(any(cpu.memory[0x980:0xa00]))
                 self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),expected)
@@ -49,7 +56,7 @@ class TrevorTests(unittest.TestCase):
             kept=changed=0
             for y in range(64):
                 for x in range(160):
-                    gap=stage==3 and 92<=x<107 and 9<=y<20
+                    gap=any(inside(x+.5,y+.5,cutout) for cutout in CUTOUTS[stage-2])
                     pos=y*160+x
                     if not gap and inside(x+0.5,y+0.5,POLYGONS[stage-2]):
                         self.assertEqual((a[pos],b[pos]),(original[stage][pos],)*2)
@@ -73,7 +80,7 @@ class TrevorTests(unittest.TestCase):
         mirrored = tunnel_frames(4)[2]
         for y in range(64):
             for x in range(160):
-                if inside(x + .5, y + .5, POLYGONS[0]):
+                if inside(x + .5, y + .5, POLYGONS[0]) and not any(inside(x+.5,y+.5,c) for c in CUTOUTS[0]):
                     self.assertEqual(original[y*160+x], mirrored[y*160+159-x])
 
     def test_correct_hand_rises_before_each_impact(self):
@@ -135,7 +142,7 @@ class TrevorTests(unittest.TestCase):
                 for y in range(64):
                     for x in range(160):
                         source_x=159-x if stage in (4,5) else x
-                        gap=original==3 and 92<=source_x<107 and 9<=y<20
+                        gap=any(inside(source_x+.5,y+.5,c) for c in CUTOUTS[original-2])
                         if not gap and inside(source_x+.5,y+.5,poly):
                             self.assertEqual(shot[stage-2][y*160+x],art[original][y*160+source_x])
 
@@ -147,12 +154,12 @@ class TrevorTests(unittest.TestCase):
                                         for y in range(64) for x in range(0,160,4)))
         cpu=None
         for index,impact in enumerate(HITS):
-            for age in (-4,0,8,48,92,96):
+            for age in (-4,0,8,80,103,104,116,120,132,136):
                 tick=impact+age
                 cpu=sequence.execute(tick,cpu)
-                pose=(HANDS[index]+1 if age<0 else HANDS[index] if age<96 or index==len(HITS)-1 else HANDS[index+1]+1)
+                pose=(HANDS[index]+1 if age<0 else HANDS[index] if age<120 or index==len(HITS)-1 else HANDS[index+1]+1)
                 self.assertEqual(cpu.memory[0x83ed],pose,(index,age))
-                expected_pm=0 if age<0 or age>=96 else 3 if age<48 else 1
+                expected_pm=0 if age<0 or age>=136 else 3 if age<104 else 1
                 self.assertEqual(cpu.memory[0xd01d],expected_pm,(index,age))
                 m=cpu.memory;display=m[0xd402]|m[0xd403]<<8
                 actual=b''.join(bytes(m[(m[display+3+y*9]|m[display+4+y*9]<<8):
@@ -164,7 +171,7 @@ class TrevorTests(unittest.TestCase):
         from extract_music import segments
         from scene_memory import RuntimeMemory
         from pathlib import Path
-        m=RuntimeMemory((sequence.ROOT/'build/visual-prototype-v117.xex').read_bytes())
+        m=RuntimeMemory((sequence.ROOT/'build/visual-prototype-v126.xex').read_bytes())
         m.banks[0][0]=0x55 # The second marker must disambiguate this coincidence.
         saved=[bytes(bank) for bank in m.banks[:16]]
         frame=bytes((i*17+i//256)&255 for i in range(16384))

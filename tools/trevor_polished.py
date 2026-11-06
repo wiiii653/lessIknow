@@ -5,6 +5,9 @@ from build_sequence import Code
 from trevor_awakens import COLORS, HIT as TREVOR_HIT, END as TREVOR_END, MIDPOINT as TREVOR_MIDPOINT
 from music_timing import tick_at_beat
 ENTRY=0x6000
+LETTER_END=80
+BUBBLE_END=104
+EFFECT_END=136
 # A two-bar combination mixing one-and-a-half- and two-beat gaps.
 # 2 and 4 are the right- and left-handed punch poses respectively.
 COMBO_HALF_BEATS = (0, 3, 6, 9, 12)
@@ -51,6 +54,14 @@ POLYGONS=(
  ((68,2),(78,2),(87,5),(92,10),(92,12),(105,12),(109,6),(118,4),(130,5),(138,8),(143,13),(144,20),(147,26),(146,36),(141,43),(128,47),(116,49),(110,63),(19,63),(8,58),(7,49),(14,43),(24,38),(35,33),(47,30),(54,25),(50,21),(48,15),(49,12),(54,8),(60,5))
 )
 
+# Small openings follow the original outlines more closely than the outer
+# silhouette, excluding the old gym floor and the space under the raised fist.
+CUTOUTS = (
+    (((33, 64), (36, 58), (43, 53), (51, 51), (55, 54), (51, 58), (48, 64)),
+     ((112, 64), (116, 59), (120, 56), (124, 54), (134, 49), (131, 64))),
+    (((92, 10), (107, 10), (107, 20), (110, 21), (110, 25), (103, 24), (98, 22), (93, 20)),),
+)
+
 def inside(x,y,polygon):
     hit=False
     for (x1,y1),(x2,y2) in zip(polygon,polygon[1:]+polygon[:1]):
@@ -69,7 +80,8 @@ def tunnel_frames(phase):
             for x in range(160):
                 sample_x = x - thrust if index == 2 else x + thrust if index == 4 else x
                 character_x = 159-sample_x if index in (4, 5) else sample_x
-                gap = index in (3, 5) and 92 <= character_x < 107 and 9 <= y < 20
+                cutouts = CUTOUTS[0 if index in (2, 4) else 1]
+                gap = any(inside(character_x+.5, y+.5, cutout) for cutout in cutouts)
                 actor[y*160+x] = not gap and inside(character_x+.5, y+.5, poly)
         for y in range(64):
             for x in range(160):
@@ -144,7 +156,7 @@ def helper():
     # Anticipation belongs to the action, after the entrance has finished.
     a(0xad,0x83e3);c.emit(0xc9,HITS[0]>>8);c.branch(0x90,'opening_windup')
     c.branch(0xd0,'scan_hits');a(0xad,0x83e2);c.emit(0xc9,HITS[0]&255);c.branch(0xb0,'scan_hits')
-    c.label('opening_windup');c.emit(0xa9,HANDS[0]+1);c.jump(0x4c,'stage_ready')
+    c.label('opening_windup');c.emit(0xa9,255);c.jump(0x8d,'hit_age');c.emit(0xa9,HANDS[0]+1);c.jump(0x4c,'stage_ready')
     c.label('scan_hits');c.emit(0xa2,len(HITS)-1)
     c.label('find_hit')
     a(0xad,0x83e3);c.jump(0xdd,'hit_hi');c.branch(0x90,'previous_hit')
@@ -155,7 +167,7 @@ def helper():
     c.emit(0xa2,0)
     c.label('hit_found');c.jump(0x8e,'hit_index')
     c.emit(0x38);a(0xad,0x83e2);c.jump(0xfd,'hit_lo');c.jump(0x8d,'hit_age')
-    c.emit(0xc9,96);c.branch(0xb0,'windup')
+    c.emit(0xc9,120);c.branch(0xb0,'windup')
     c.jump(0xbd,'hit_hand');c.jump(0x4c,'stage_ready')
     c.label('windup')
     c.emit(0xe0,len(HITS)-1);c.branch(0x90,'next_windup')
@@ -196,11 +208,10 @@ def helper():
     c.jump(0xbd,'pose_pf1');a(0x8d,0xd017)
     c.jump(0xbd,'pose_skin');a(0x8d,0xd018)
     c.label('accents')
-    # Both hands trigger the same comic impact; wind-up remains quiet.
-    a(0xad,0x83ed);c.emit(0xc9,2);c.branch(0xf0,'punch_accent')
-    c.emit(0xc9,4);c.branch(0xd0,'sparks')
-    c.label('punch_accent')
-    c.jump(0xad,'hit_age');c.emit(0xc9,96);c.branch(0xb0,'sparks')
+    # A departing splash may continue into the next hand's wind-up.
+    # Before the first hit the opening wind-up sets hit_age to 255.
+    a(0xad,0x83ed);c.emit(0xc9,2);c.branch(0x90,'sparks')
+    c.jump(0xad,'hit_age');c.emit(0xc9,EFFECT_END);c.branch(0xb0,'sparks')
     c.jump(0x4c,'bang')
     c.label('sparks')
     # No unrelated ambient insects: the tunnel and Trevor carry the idle shot.
@@ -216,12 +227,12 @@ def helper():
     # The hand chooses the side; two small variants use the same origin
     # for lettering, burst and departing fragments.
     c.jump(0xad,'hit_index');c.emit(0x29,1);a(0x8d,0x83e8)
-    a(0xad,0x83ed);c.emit(0xc9,4);c.branch(0xd0,'bang_side_ready')
+    c.jump(0xae,'hit_index');c.jump(0xbd,'hit_hand');c.emit(0xc9,4);c.branch(0xd0,'bang_side_ready')
     a(0xad,0x83e8);c.emit(0x18,0x69,2);a(0x8d,0x83e8)
     c.label('bang_side_ready');a(0xae,0x83e8)
     c.jump(0xbd,'bang_bx');a(0x8d,0x83ec)
     c.jump(0xbd,'bang_by');a(0x8d,0x83ef)
-    c.jump(0xad,'hit_age');c.emit(0xc9,48);c.branch(0x90,'bang_burst_start')
+    c.jump(0xad,'hit_age');c.emit(0xc9,BUBBLE_END);c.branch(0x90,'bang_burst_start')
     c.jump(0x4c,'bang_scatter')
     c.label('bang_burst_start')
     # 24 double-lines of shared missile data: expand, impact, disperse.
@@ -230,7 +241,7 @@ def helper():
     c.emit(0xa9,36,0x18);a(0x6d,0x83ef);c.emit(0xa8)
     c.label('burst_rows');c.jump(0xbd,'bang_burst');a(0x99,0x0980);c.emit(0xe8,0xc8);a(0xcc,0x83eb);c.branch(0xd0,'burst_rows')
     # The word appears after the initial flash and before the fragments.
-    c.jump(0xad,'hit_age');c.emit(0xc9,8);c.branch(0x90,'bang_positions')
+    c.jump(0xad,'hit_age');c.emit(0xc9,8);c.branch(0x90,'bang_positions');c.emit(0xc9,LETTER_END);c.branch(0xb0,'bang_positions')
     c.emit(0xa2,0,0xa9,45,0x18);a(0x6d,0x83ef);c.emit(0xa8)
     c.label('glyph_rows')
     for i in range(4):c.jump(0xbd,f'bang_glyph{i}');a(0x99,0x0a00+i*128)
@@ -246,7 +257,7 @@ def helper():
     c.emit(0x60)
     c.label('bang_scatter')
     # The burst centre and its departing fragments share the same origin.
-    c.jump(0xad,'hit_age');c.emit(0x38,0xe9,48,0x4a);a(0x8d,0x83ea)
+    c.jump(0xad,'hit_age');c.emit(0x38,0xe9,BUBBLE_END,0x4a);a(0x8d,0x83ea)
     c.emit(0x4a);a(0x8d,0x83eb)
     for i,(base,row) in enumerate(((162,51),(165,53),(171,51),(174,53))):
         c.emit(0xa9,base,0x38 if i<2 else 0x18)
@@ -270,7 +281,7 @@ def helper():
     c.label('row_lo');c.emit(*((y//3*40)&255 for y in range(192)))
     c.label('row_hi');c.emit(*((y//3*40)>>8 for y in range(192)))
     burst,glyphs=bang_art()
-    c.label('bang_phase');c.emit(0,32,64,64,64,32,64,64)
+    c.label('bang_phase');c.emit(0,32,*([64]*11))
     c.label('bang_color');c.emit(0x1e,0x0e,0x9e,0x1e)
     c.label('bang_bx');c.emit(0,0xfc,0xd8,0xdc)
     c.label('bang_by');c.emit(0,0xfe,2,1)
@@ -287,12 +298,14 @@ def helper():
 
 def bank(phase=0, quiet=False):
     out=bytearray(16384);code=helper();out[0x2000:0x2000+len(code)]=code
-    illustrations=frames()[:2]
-    punches=tunnel_frames(phase)
-    # During action $4000 holds the second wind-up. The separate quiet bank
-    # retains the two original reveal pictures at $4000 and $4A00.
-    art=[illustrations[0] if quiet else punches[3], illustrations[1],
-         punches[0], punches[1], punches[2]]
-    for offset,p in zip((0,0xa00,0x1400,0x2a00,0x3400),art):
+    # Quiet poses are selected only in bank 49; action banks never read
+    # $4A00. Keep these disjoint slots available for future banked assets.
+    if quiet:
+        art = zip((0, 0xa00), frames()[:2])
+    else:
+        punches = tunnel_frames(phase)
+        art = zip((0, 0x1400, 0x2a00, 0x3400),
+                  (punches[3], punches[0], punches[1], punches[2]))
+    for offset,p in art:
         out[offset:offset+2560]=bytes(sum(p[i+k]<<(6-2*k) for k in range(4)) for i in range(0,len(p),4))
     return bytes(out)

@@ -59,7 +59,7 @@ class HeroTests(unittest.TestCase):
         from basketball_hero import DRIBBLE_X, DRIBBLE_Y, DRIBBLE_WIDTH, DRIBBLE_HEIGHT, DRIBBLE_PATCH_BYTES, packed
         from test_engine_cache import TrackedMemory
         from scene_memory import RuntimeMemory
-        data=(sequence.ROOT/'build/visual-prototype-v117.xex').read_bytes()
+        data=(sequence.ROOT/'build/visual-prototype-v126.xex').read_bytes()
         cpu=sequence.MPU(memory=TrackedMemory(data))
         art=frames()
         self.assertEqual(len(packed()), 5*2240+3*DRIBBLE_PATCH_BYTES)
