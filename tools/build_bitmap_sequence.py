@@ -36,6 +36,8 @@ from crush_portraits import START as CRUSH_TICK, END as CRUSH_END, ENTRY as CRUS
 
 KALEIDO_TICK = tick_at_bar(32)  # eight bars / 15 seconds after the dancer enters
 SCHOOL_TICK = tick_at_bar(8)  # equal 7.5-second artist and title screens
+# Align the post-Act-5 global motif cycle to its next complete tunnel phase.
+ACT5_CYCLE_TICK = ((tick_at_bar(112) + 1023) // 1024) * 1024
 ORIGIN = 0x1400
 POOL_LOW = 0x1e00
 TABLE_BASE = 0xd800
@@ -672,7 +674,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     # the six-bit animation clock to alternate between them every 512 ticks.
     compare_tick(TREVOR_END, 'act5_select', 'mosaic_frame_ready')
     c.label('act5_select')
-    compare_tick16(tick_at_bar(112), 'mosaic_frame_ready', 'act5_motif', True)
+    compare_tick16(ACT5_CYCLE_TICK, 'mosaic_frame_ready', 'act5_motif', True)
     c.label('act5_motif')
     # Hold both halves of the banana rotozoom through bar 96, then run the
     # tunnel until its existing bar-108 texture change.

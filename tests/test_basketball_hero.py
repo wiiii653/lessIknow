@@ -2,7 +2,7 @@
 from artifact import XEX, METADATA
 import unittest
 import test_sequence as sequence
-from basketball_hero import CUTAWAY_START,START,DUNK,END,DUNK_PHASE_TICKS,frames,helper,DATA,ENTRY,scene_frame,SHATTER_PATCH_BYTES
+from basketball_hero import CUTAWAY_START,START,DUNK,END,DUNK_PHASE_TICKS,dribble_phase,frames,helper,DATA,ENTRY,scene_frame,SHATTER_PATCH_BYTES
 from engine_effects import pmg_art
 from trevor_awakens import END as TREVOR_END
 
@@ -11,7 +11,7 @@ class HeroTests(unittest.TestCase):
     def test_act_boundaries_and_all_eight_poses(self):
         art=frames();cpu=None;seen=set()
         self.assertEqual(sequence.execute(CUTAWAY_START-1).memory[0x83e0],14)
-        for tick in (START,START+48,START+96,START+160,DUNK-1,DUNK,DUNK+376,DUNK+488,DUNK+600,END-1):
+        for tick in (START,START+24,START+48,START+72,DUNK-1,DUNK,DUNK+376,DUNK+488,DUNK+600,END-1):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0x83e0],15)
             pose=cpu.memory[0x83ec];seen.add(pose)
@@ -53,9 +53,9 @@ class HeroTests(unittest.TestCase):
 
     def test_music_clock_drives_dribble_and_one_dunk(self):
         cpu=None;levels=set()
-        for elapsed in (0,40,92,140,184,187,374,1122):
+        for elapsed in (0,40,92,94,140,184,187,188,280,373,374,1122):
             cpu=sequence.execute(START+elapsed,cpu)
-            self.assertEqual(cpu.memory[0x83ff],(elapsed%187)//4)
+            self.assertEqual(cpu.memory[0x83ff],dribble_phase(elapsed))
             levels.add(bytes(cpu.memory[0xa00:0xc00]))
         self.assertGreater(len(levels),4)
         for elapsed in (0,128,256,384,512,624,747):
@@ -90,10 +90,10 @@ class HeroTests(unittest.TestCase):
                 if not (DRIBBLE_X <= x < DRIBBLE_X+DRIBBLE_WIDTH and DRIBBLE_Y <= y < DRIBBLE_Y+DRIBBLE_HEIGHT):
                     for pose in (1,6,7):
                         self.assertEqual(art[0][y*160+x],art[pose][y*160+x])
-        for elapsed in (0,48,96,160,187,235):
+        for elapsed in (0,24,48,72,94,118,142,166):
             cpu.memory.writes.clear()
             sequence.execute(START+elapsed,cpu)
-            if elapsed >=96:
+            if elapsed >=48:
                 bitmap=[a for a in cpu.memory.writes if 0x9000<=a<0xaf00 or 0xb000<=a<0xcf00]
                 self.assertEqual(len(bitmap),DRIBBLE_PATCH_BYTES)
                 for addr in bitmap:
@@ -106,19 +106,19 @@ class HeroTests(unittest.TestCase):
         hand_rows = []
         art=frames()
         for phase,pose in phases:
-            cpu=sequence.execute(START+phase*4)
+            cpu=sequence.execute(START+phase*2)
             self.assertEqual(cpu.memory[0x83ec],pose)
             # Each pose has a visibly different palm in the moving-arm area.
             hand_rows.append(bytes(art[pose][y*160+x] for y in range(20,44) for x in range(88,104)))
         self.assertEqual(len(set(hand_rows)),4)
 
-    def test_live_buffers_show_every_arm_phase_over_two_bounces(self):
+    def test_live_buffers_show_every_arm_phase_over_three_bounces(self):
         art=frames()
         expected={pose:bytes(art[pose][y*56//192*160+x] for y in range(192) for x in range(160))
                   for pose in (0,1,6,7)}
         cpu=None
         for elapsed in range(0,374,4):
-            phase=(elapsed%187)//4
+            phase=dribble_phase(elapsed)
             pose=0 if phase<9 or phase>=42 else 1 if phase<18 else 6 if phase<32 else 7
             cpu=sequence.execute(START+elapsed,cpu)
             self.assertEqual(cpu.memory[0x83ec],pose,elapsed)

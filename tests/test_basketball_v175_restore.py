@@ -17,12 +17,12 @@ class BasketballV175RestoreTests(unittest.TestCase):
         self.assertLessEqual(ENTRY+len(helper()),DATA)
         self.assertLessEqual(DATA+len(packed()),ORBIT_DATA)
 
-    def test_live_keyframes_and_ball_match_the_archived_release(self):
+    def test_dunk_keyframes_and_ball_match_the_archived_release(self):
         old=Path('build/visual-prototype-v175.xex')
         self.assertEqual(json.loads(old.with_suffix('.json').read_text())['callback'],
                          json.loads(s.METADATA.read_text())['callback'])
         archived=s.MPU(memory=RuntimeMemory(old.read_bytes()));current=None
-        for tick in (START,START+48,START+96,START+160,DUNK,DUNK+376,
+        for tick in (DUNK,DUNK+376,
                      DUNK+488,DUNK+600,DUNK+648,DUNK+696,END-1):
             archived=s.execute(tick,archived);current=s.execute(tick,current)
             self.assertEqual(s.SequenceTests().raster(current),s.SequenceTests().raster(archived),tick)

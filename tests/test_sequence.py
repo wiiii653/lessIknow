@@ -54,7 +54,8 @@ class SequenceTests(unittest.TestCase):
                                 (34403, 0, 15), (34404, 16, 31),
                                 (35899, 16, 31), (35900, 32, 47),
                                 (40387, 32, 47),
-                                (40388, 48, 63)):
+                                (40388, 48, 63), (41884, 48, 63),
+                                (41983, 48, 63), (41984, 32, 47)):
             cpu = execute(tick, cpu)
             self.assertLessEqual(low, cpu.memory[0x83ed])
             self.assertLessEqual(cpu.memory[0x83ed], high)

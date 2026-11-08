@@ -132,7 +132,10 @@ rotator do ośmiu taktów, żeby obie połowy animacji miały czas wybrzmieć.
 - 5A (88-96, 32909-35900): pełny bananowy rotator (15 s).
 - 5B (96-112, 35900-41884): tunel spiralny. W takcie 108 (tick 40388)
   przechodzi w organiczne pasma. Klatki i banki bez zmian.
-- 5C (112-116, 41884-43379): Trevor Mosaic (głośność spada o ok. 2 dB w 112-119)
+- 5C (112-116, 41884-43379): Trevor Mosaic (głośność spada o ok. 2 dB w 112-119).
+  Bieżąca faza tunelu jest trzymana do ticku 41984; dopiero wtedy globalny
+  cykl przechodzi na pełną fazę spiralną. Eliminuje to półsekundowy błysk
+  bananów po granicy taktu 112.
 - 5D (116-120, 43379-44875): Eyes Sequence
 - GTIA9: do decyzji, w którym bloku. W asset list brak dla niego assetów.
 
@@ -179,6 +182,7 @@ W takcie 144 muzyka się zmienia. Wyciszenie dopiero w 158-159.
 | 96 | 35900 | 5B tunnel — początek tunelu spiralnego |
 | 108 | 40388 | zmiana tekstury tunelu |
 | 112 | 41884 | 5C mosaic |
+| — | 41984 | start globalnego cyklu od pełnej fazy tunelu (v194) |
 | 116 | 43379 | 5D eyes |
 | 120 | 44875 | Act 6 / 6A |
 | 124 | 46371 | 6B |

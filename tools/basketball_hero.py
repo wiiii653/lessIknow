@@ -98,7 +98,9 @@ def packed():
 
 
 def ball_paths():
-    dribble=[(97,round(94+66*((i/23) if i<=23 else ((46-i)/23))**1.5)) for i in range(47)]
+    # Screen coordinates: centre the ball below the palm, then bounce off
+    # the floor. Serialization below converts Y into double-line PMG rows.
+    dribble=[(84,round(94+66*math.sin(math.pi*i/46)**1.5)) for i in range(47)]
     # Positions are anchored to the illustrated ball hand in each pose.
     # The first wind-up is held, then two quick airborne poses and the dunk.
     dunk=[]
@@ -112,6 +114,10 @@ def ball_paths():
             x,cy=round(124+5*t),round(32+99*t)
         dunk.append((x,max(0,cy-16)))
     return dribble,dunk
+
+def dribble_phase(elapsed):
+    phase=elapsed%374
+    return (phase if phase<94 else phase-94)//2 if phase<188 else (phase-188)//4
 
 def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     c=Code(ENTRY)
@@ -139,9 +145,15 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     c.emit(0xc9,DUNK_OFFSET>>8);c.branch(0x90,'dribble');c.branch(0xd0,'dunk')
     a(0xad,0x83ea);c.emit(0xc9,DUNK_OFFSET&255);c.branch(0xb0,'dunk')
     c.label('dribble')
-    a(0xad,0x83eb);c.branch(0xd0,'subtract_beat');a(0xad,0x83ea);c.emit(0xc9,187);c.branch(0x90,'dribble_phase')
-    c.label('subtract_beat');a(0xad,0x83ea);c.emit(0x38,0xe9,187);a(0x8d,0x83ea);a(0xad,0x83eb);c.emit(0xe9,0);a(0x8d,0x83eb);c.jump(0x4c,'dribble')
-    c.label('dribble_phase');c.emit(0x4a,0x4a);a(0x8d,0x83ff);c.emit(0xa9,0);a(0x8d,0x83ed)
+    a(0xad,0x83eb);c.emit(0xc9,1);c.branch(0x90,'dribble_tempo');c.branch(0xd0,'subtract_beat')
+    a(0xad,0x83ea);c.emit(0xc9,118);c.branch(0x90,'dribble_tempo')
+    c.label('subtract_beat');a(0xad,0x83ea);c.emit(0x38,0xe9,118);a(0x8d,0x83ea);a(0xad,0x83eb);c.emit(0xe9,1);a(0x8d,0x83eb);c.jump(0x4c,'dribble')
+    c.label('dribble_tempo');a(0xad,0x83eb);c.branch(0xd0,'slow_dribble')
+    a(0xad,0x83ea);c.emit(0xc9,188);c.branch(0xb0,'slow_dribble')
+    c.emit(0xc9,94);c.branch(0x90,'fast_dribble');c.emit(0x38,0xe9,94)
+    c.label('fast_dribble');c.emit(0x4a);c.jump(0x4c,'dribble_phase')
+    c.label('slow_dribble');a(0xad,0x83ea);c.emit(0x38,0xe9,188,0x4a,0x4a)
+    c.label('dribble_phase');a(0x8d,0x83ff);c.emit(0xa9,0);a(0x8d,0x83ed)
     a(0xad,0x83ff);c.emit(0xc9,9,0xa9,0);c.branch(0x90,'pose_ready')
     a(0xad,0x83ff);c.emit(0xc9,18,0xa9,1);c.branch(0x90,'pose_ready')
     a(0xad,0x83ff);c.emit(0xc9,32,0xa9,6);c.branch(0x90,'pose_ready')

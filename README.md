@@ -12,8 +12,9 @@ atari800 -1088xe -pal -nobasic -run build/visual-prototype-dev.xex
 Install `requirements-dev.txt` in a virtual environment and run
 `make check PYTHON=/path/to/venv/bin/python` for the required 6502 tests.
 Numbered releases remain preserved; the current visual release is
-`build/visual-prototype-v193.xex` (full-length Act 5 rotator; the lying boy enters under credits).
-See `docs/V193_TIMELINE_ROTOR_I_CREDITS.md` for the timing update. Earlier releases: `docs/V189_KOSZYKOWKA_I_TABLICA_V175.md`, `docs/V188_CIAGLE_PMG_BEZ_STROBO.md`, `docs/V187_DUZE_NUTY_PMG.md`, `docs/V186_DOMKNIETA_SCENA_SPOTKANIA.md`, `docs/V185_DLUZSZA_MELODIA.md`, `docs/V184_WCZESNIEJSZY_GWIZD.md`, `docs/V183_NUTY_PMG.md`, `docs/V182_REAKCJA_CHLOPCA.md`, `docs/V181_WEJSCIE_DZIEWCZYNY_V175.md`, `docs/V180_DLUZSZY_TUNEL.md`, `docs/V179_MASKA_I_REAKCJA_CHLOPCA.md`, `docs/V178_KADRY_OTWARCIA.md`, `docs/V177_GRAFIKA_PRODUKCYJNA_POSTACI.md`, `docs/V176_SPACER_WZDLUZ_ARENY.md`, `docs/V175_TREVOR_BNG.md`, `docs/V174_CZYTELNY_SZYLD_ARENY.md`, `docs/V173_DOPRACOWANIE_SOLOWKI.md`, then `docs/V172_POPRAWKA_DEKODERA_TANCA.md`, `docs/V171_DODATKOWE_KLATKI_SOLOWKI.md`, `docs/V170_GWIZDAJACY_ZIOMEK.md`, `docs/V169_ZMIANA_TEKSTURY_TUNELU.md`, `docs/V168_MORFUJACA_RAMKA_TREVORA.md`, `docs/V167_TECZOWY_CYKL_KOLOROW.md`, and `docs/V166_PLYNNIEJSZY_TANIEC.md`.
+`build/visual-prototype-v196.xex` (aligned dribble ball; two fast bounces followed by one slow bounce).
+See `docs/V196_KOZLY_DWA_SZYBKIE_JEDEN_WOLNY.md`.
+See `docs/V194_CIAGLY_CYKL_ROTATORA.md` for the timing update. Earlier releases: `docs/V193_TIMELINE_ROTOR_I_CREDITS.md`, `docs/V189_KOSZYKOWKA_I_TABLICA_V175.md`, `docs/V188_CIAGLE_PMG_BEZ_STROBO.md`, `docs/V187_DUZE_NUTY_PMG.md`, `docs/V186_DOMKNIETA_SCENA_SPOTKANIA.md`, `docs/V185_DLUZSZA_MELODIA.md`, `docs/V184_WCZESNIEJSZY_GWIZD.md`, `docs/V183_NUTY_PMG.md`, `docs/V182_REAKCJA_CHLOPCA.md`, `docs/V181_WEJSCIE_DZIEWCZYNY_V175.md`, `docs/V180_DLUZSZY_TUNEL.md`, `docs/V179_MASKA_I_REAKCJA_CHLOPCA.md`, `docs/V178_KADRY_OTWARCIA.md`, `docs/V177_GRAFIKA_PRODUKCYJNA_POSTACI.md`, `docs/V176_SPACER_WZDLUZ_ARENY.md`, `docs/V175_TREVOR_BNG.md`, `docs/V174_CZYTELNY_SZYLD_ARENY.md`, `docs/V173_DOPRACOWANIE_SOLOWKI.md`, then `docs/V172_POPRAWKA_DEKODERA_TANCA.md`, `docs/V171_DODATKOWE_KLATKI_SOLOWKI.md`, `docs/V170_GWIZDAJACY_ZIOMEK.md`, `docs/V169_ZMIANA_TEKSTURY_TUNELU.md`, `docs/V168_MORFUJACA_RAMKA_TREVORA.md`, `docs/V167_TECZOWY_CYKL_KOLOROW.md`, and `docs/V166_PLYNNIEJSZY_TANIEC.md`.
 See `docs/V165_ORBITY_PRZY_WSADZIE.md` and `build/v165-dunk-orbits.gif`.
 See `docs/V164_TECZOWE_RAKIETY.md` and `build/v164-title-fireworks.gif`.
 See `docs/V163_PILKA_Z_SATELITAMI.md` and `build/v163-rebound-left.gif` / `build/v163-rebound-right.gif`.
@@ -73,7 +74,8 @@ CPU measurements and validation. To test an archived build, set
 | 32909–35899 | 165–180 s | Full banana rotator, both animation halves |
 | 35900–40387 | 180–202.5 s | Spiral tunnel |
 | 40388–41883 | 202.5–210 s | Organic tunnel texture |
-| 41884–53849 | 210–270 s | Existing rotator/tunnel cycle remains the placeholder through acts 5C/5D and 6–7 |
+| 41884–41983 | 210–210.5 s | Organic tunnel tail; prevents a partial banana phase from flashing |
+| 41984–53849 | 210.5–270 s | Existing rotator/tunnel cycle remains the placeholder through acts 5C/5D and 6–7 |
 | 53850–56841 | 270–285 s | Credits window; lying boy is the planned background, credit cards remain unimplemented |
 | 56842–59084 | 285–296.25 s | Greetz window on the same planned background; lettering remains unimplemented |
 | 59085–59832 | 296.25–300 s | Defeated boy, four orbiting PMG stars, fade to black |

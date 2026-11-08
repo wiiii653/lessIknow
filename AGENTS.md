@@ -10,10 +10,10 @@ This project is an Atari XE 1 MB audiovisual demo for “The Less I Know The Bet
 
 `tools/` generates NMOS 6502 code and assets; `tests/` executes callbacks with py65; `assets/` contains source artwork. `build/visual-prototype-dev.xex` and its JSON are working artifacts. Preserve numbered releases; use a new output name for each release.
 
-## Current Project Progress — v193
+## Current Project Progress — v196
 
 The user targets Silly Venture. The latest visual release is
-`build/visual-prototype-v193.xex`; use its matching JSON. The replaceable
+`build/visual-prototype-v196.xex`; use its matching JSON. The replaceable
 `visual-prototype-dev` pair is the development target. These are full demo
 builds using the original v035 music, not replacements for the supplied player.
 Use `docs/PLAN_STATUS.md` for remaining production work and V1–V7 status.
@@ -69,7 +69,8 @@ missile trails and two side fireworks. See `docs/V148_DYNAMICZNY_WYRZUT.md`.
   Hit timestamps and hand sequence remain in `tools/trevor_polished.py`.
 - Act 5 keeps the banana rotator at tick 32909 and shows both animation halves
   through tick 35900 (bar 96); the spiral tunnel then runs until the organic
-  texture change at 40388 and Act 5 ends at 41884. Trevor mosaic at 41884 and
+  texture change at 40388. The organic tunnel holds through tick 41983 so the
+  global cycle starts on a complete tunnel phase at 41984. Trevor mosaic at 41884 and
   eyes at 43379 remain unfinished. Acts 6–7 and credits/greetz overlays remain
   placeholders; the lying-boy backdrop now starts at 53850, and the full final
   shot and black ending retain their original 59085–59833 timing.
@@ -569,3 +570,16 @@ starts at bar 96; the organic texture change stays at bar 108 and Act 5 cuts
 remain at bars 112/116. The lying-boy scene starts at bar 144 (53850) beneath
 the reserved credits/greetz windows; the 8C full-shot/fade still starts at
 bar 158 (59085). No artwork, effect renderer, or effect data changed.
+
+V194 aligns the post-Act-5 motif cycle to tick 41984 rather than beginning at
+bar 112 / tick 41884. The latter falls 100 ticks before the global tunnel
+phase and exposed bananas for about half a second. The organic tunnel now
+holds through tick 41983, then the unchanged cycle resumes on spiral tunnel.
+No artwork or effect generator changed. `docs/V194_CIAGLY_CYKL_ROTATORA.md`.
+
+V195 ball dithering was reverted at the user request; keep v194 ball masks
+and colours. V196 aligns the dribble ball centre at X=84 (previously 97),
+with two 94-tick fast bounces and one 186-tick slow bounce per 374-tick cycle.
+The same remapped phase drives the arm and ball. Dunk and glass remain v175;
+scene boundaries unchanged. 21 focused tests pass. See
+`docs/V196_KOZLY_DWA_SZYBKIE_JEDEN_WOLNY.md`.

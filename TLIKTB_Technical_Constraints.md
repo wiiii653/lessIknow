@@ -2,15 +2,19 @@
 
 Dokument dla agenta kodującego. Uzupełnia `TLIKTB_Atari_Timeline_v2.md` (co i kiedy) i `TLIKTB_Asset_List.md` (z czego). Tu jest: w jakich granicach i co jest sprawdzone.
 
-## Stan wdrożenia — v193
+## Stan wdrożenia — v196
 
-[ODCZYT] V193 przesuwa wyłącznie granice timeline’u: pełny bananowy rotator
-zostaje od taktu 88 do 96 (32909–35900), tunel zaczyna się w 96, a zmiana
-organicznej tekstury pozostaje w 108. Ujęcia Act 5 w 112/116 bez zmian.
-Leżący chłopiec pojawia się od taktu 144 (53850) jako przewidziane tło
-credits/greetz; pełny finał nadal zaczyna się w 158 (59085). Grafika,
-procedury efektów, banki i klatki bez zmian. Plansze tekstowe credits/greetz
-pozostają do wykonania.
+[ODCZYT] V196 koryguje tor piłki przy kozłowaniu i rytm 94 + 94 + 186
+ticków. Ramię i piłka korzystają ze wspólnej fazy; granice scen bez zmian.
+Dithering v195 wycofany, piłka rotatora zachowuje maski i kolory v194.
+
+## Historia: v194
+
+[ODCZYT] V194 usuwa półsekundowy błysk bananów na wejściu do globalnego cyklu:
+organiczny tunel utrzymuje się do ticku 41983, a cykl rusza od pełnej fazy
+spiralnej przy 41984. Pozostały rozkład v193 bez zmian: rotator 32909–35900,
+tunel od 35900, organiczna tekstura od 40388, chłopiec w tle credits od 53850.
+Grafika, procedury efektów, banki i klatki bez zmian.
 
 ## Historia: v189
 
