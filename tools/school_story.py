@@ -6,20 +6,20 @@ from build_sequence import PALETTE
 from gym_practice import PRACTICE_TICK, PRACTICE_SCENE
 from music_timing import tick_at_bar
 
-# The whole school scene still lasts 15–45 seconds. The girl first appears
-# in the left foreground, then recedes toward the school's entrance.
+# The opening scene keeps its established camera framing and timing.
 GIRL_PORTRAIT_SCENE = 14
 SCHOOL_PORTRAIT_TICK = tick_at_bar(19, 2)
 SCHOOL_PORTRAIT_END = tick_at_bar(11)
+WHISTLE_START = tick_at_bar(13)  # after the foreground pass
+WHISTLE_END = tick_at_bar(15)  # arrival at the doorway
 SCHOOL_PHASES = ((tick_at_bar(8), 8), (SCHOOL_PORTRAIT_TICK, GIRL_PORTRAIT_SCENE),
                  (SCHOOL_PORTRAIT_END, 8), (tick_at_bar(12), 9),
                  (tick_at_bar(13), 10), (tick_at_bar(14), 11),
                  (tick_at_bar(15), 12), (PRACTICE_TICK, PRACTICE_SCENE))
 # (left, top, width, height), in the 160x64 school artwork's coordinates.
 # The first placement is twice full height: the bottom crops at the waist.
-# Foot positions approach the school steps at approximately (66, 46).
-GIRL_PLACEMENTS = ((0, 0, 96, 128), (30, 11, 36, 48),
-                   (44, 22, 24, 32), (58, 32, 12, 16))
+GIRL_PLACEMENTS = ((0, 0, 96, 128), (44, 11, 36, 48),
+                   (62, 22, 24, 32), (76, 36, 12, 16))
 # Compact lettering fits entirely on the teal back panel at source resolution.
 NORTH_ORIGIN = (14, 15)
 NORTH_ADVANCE = 4
@@ -47,30 +47,47 @@ def expand(pixels):
     return bytes(pixels[(y // 3) * 160 + x] for y in range(192) for x in range(160))
 
 
+def boy_poses():
+    """Forward gaze, turn, then puckered lips while she approaches the doorway."""
+    from arena_art import portrait
+    turned=portrait(load_rgb('build/school.rgb'))
+    poses=[]
+    for name in ('build/school-neutral.rgb',None,'build/school-front.rgb'):
+        canvas=bytearray(turned)
+        if name:
+            source=portrait(load_rgb(name))
+            for y in range(64):
+                canvas[y*160+104:(y+1)*160]=source[y*160+104:(y+1)*160]
+        if name=='build/school-front.rgb':
+            # Remove the old source image's whistle rays outside the face.
+            from arena_art import background
+            bg=background()
+            for y in range(31,43):
+                for x in range(104,116):canvas[y*160+x]=bg[y*200+x]
+            # A clean, deliberately drawn puckered mouth survives 160x64.
+            lips=(".##.","#...",".##.","#...",".##.")
+            for y,row in enumerate(lips):
+                for x,cell in enumerate(row):canvas[(33+y)*160+119+x]=0 if cell=='#' else 3
+        poses.append(expand(canvas))
+    return tuple(poses)
+
+
 def story_frames():
-    after = load_rgb('build/school.rgb')
-    front_art = load_rgb('build/school-front.rgb')
-    front = bytearray(after)
-    # Match the court exactly between views; only the portrait changes.
-    for y in range(64):
-        front[y * 160 + 104:(y + 1) * 160] = front_art[y * 160 + 104:(y + 1) * 160]
-    rgba = Path('build/north-girl.rgba').read_bytes()
-    if len(rgba) != 48 * 64 * 4:
+    from arena_art import logo, FUJI_ORIGIN
+    neutral,turned,whistle=boy_poses()
+    rgba=Path('build/north-girl.rgba').read_bytes()
+    if len(rgba)!=48*64*4:
         raise ValueError('girl sprite must be 48x64 RGBA')
-    girl = bytearray(color(rgba[i:i + 3]) for i in range(0, len(rgba), 4))
-    mask = bytearray(rgba[i + 3] >= 160 for i in range(0, len(rgba), 4))
-    # Hand-set bitmap lettering survives reduction to Atari's logical pixels.
-    for y in range(15, 19):
-        for x in range(14, 33):
-            girl[y * 48 + x] = 2
-    for index, letter in enumerate('NORTH'):
-        for y, row in enumerate(NORTH[letter]):
-            for x, bit in enumerate(row):
-                if bit == '1':
-                    girl[(NORTH_ORIGIN[1] + y) * 48 + NORTH_ORIGIN[0] + index * NORTH_ADVANCE + x] = 3
-    frames = [expand(after), expand(front)]
+    girl=bytearray(color(rgba[i:i+3]) for i in range(0,len(rgba),4))
+    mask=bytearray(rgba[i+3]>=128 for i in range(0,len(rgba),4))
+    for y in range(14,24):
+        for x in range(14,33):girl[y*48+x]=2
+    logo(girl,48,*FUJI_ORIGIN)
+    # First two encounter views face forward. He turns as she passes in
+    # the foreground, then whistles as she recedes toward the doorway.
+    frames = [turned, neutral]
     for index, (left, top, width, height) in enumerate(GIRL_PLACEMENTS):
-        canvas = bytearray(front if index == 0 else after)
+        canvas = bytearray(whistle if index in (1,2) else turned)
         for y in range(height):
             source_y = y * 64 // height
             for x in range(width):
@@ -78,8 +95,9 @@ def story_frames():
                 source = source_y * 48 + source_x
                 target_x, target_y = left + x, top + y
                 if 0 <= target_x < 104 and 0 <= target_y < 64 and mask[source]:
-                    canvas[target_y * 160 + target_x] = girl[source]
-        frames.append(expand(canvas))
+                    for dy in range(3):
+                        canvas[(target_y*3+dy)*160+target_x] = girl[source]
+        frames.append(bytes(canvas))
     return frames
 
 

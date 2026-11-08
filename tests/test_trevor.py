@@ -10,9 +10,17 @@ class TrevorTests(unittest.TestCase):
     def test_entrance_uses_one_gym_and_preserves_face(self):
         far, near = frames()[:2]
         mask = entrance_mask()
+        rim = 0
         for pos, keep in enumerate(mask):
-            if not keep:
+            x, y = pos % 160, pos // 160
+            adjacent = any(0 <= xx < 160 and 0 <= yy < 64 and mask[yy*160+xx]
+                           for xx, yy in ((x-1,y), (x+1,y), (x,y-1), (x,y+1)))
+            if not keep and adjacent:
+                self.assertEqual(near[pos], 0, pos)
+                rim += 1
+            elif not keep:
                 self.assertEqual(near[pos], far[pos], pos)
+        self.assertGreater(rim, 100)
         # Doorway/wall must survive outside the actor, including underarms.
         self.assertGreater(sum(not keep and far[pos] != 0 for pos, keep in enumerate(mask)), 1000)
         # The face stays drawn in front of the original gym.
@@ -38,7 +46,8 @@ class TrevorTests(unittest.TestCase):
             active=pose in (2,4) and age<120
             self.assertEqual(cpu.memory[0xd01d],(3 if age<72 else 1) if active else 0)
             if active:
-                self.assertTrue(any(cpu.memory[0x980:0xa00]))
+                base=(cpu.memory[0xd407]&0xfc)<<8
+                self.assertTrue(any(cpu.memory[base+0x180:base+0x200]))
                 self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),expected)
         self.assertEqual(seen,{0,1,2,3,4,5})
         self.assertEqual(sequence.execute(END,cpu).memory[0x83e0],6)
@@ -171,7 +180,7 @@ class TrevorTests(unittest.TestCase):
                 cpu=sequence.execute(tick,cpu)
                 pose=(HANDS[index]+1 if age<0 else HANDS[index] if age<120 or index==len(HITS)-1 else HANDS[index+1]+1)
                 self.assertEqual(cpu.memory[0x83ed],pose,(index,age))
-                expected_pm=0 if age<0 or age>=136 else 3 if age<104 else 1
+                expected_pm=0 if age<0 or age>=136 else 3
                 self.assertEqual(cpu.memory[0xd01d],expected_pm,(index,age))
                 m=cpu.memory;display=m[0xd402]|m[0xd403]<<8
                 actual=b''.join(bytes(m[(m[display+3+y*9]|m[display+4+y*9]<<8):

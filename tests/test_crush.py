@@ -6,56 +6,54 @@ from pompom_effects import variants, PALETTES
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class CrushTests(unittest.TestCase):
-    def test_all_cuts_pixels_and_held_frames(self):
+    def test_three_ribbon_shots_and_half_beat_frames(self):
+        from ribbon_dance import STEPS, frame_at, artwork, CUTS as RIBBON_CUTS
         cpu=None
-        art=variants()
-        for i,t in enumerate(CUTS):
-            cpu=sequence.execute(t,cpu)
-            expected=bytes(art[i][(t>>4)&3][y*52//192*80+x//2] for y in range(192) for x in range(160))
-            self.assertEqual(sequence.SequenceTests().raster(cpu),expected)
-            # Sample twice within one pompom phase, including at cuts that
-            # occur one tick before a 16-tick animation boundary.
-            held=(t+15)&~15
-            cpu=sequence.execute(held,cpu)
-            expected=bytes(art[i][(held>>4)&3][y*52//192*80+x//2] for y in range(192) for x in range(160))
-            before=cpu.processorCycles
-            dl=cpu.memory[0xd403]
-            cpu=sequence.execute(held+4,cpu)
-            self.assertLess(cpu.processorCycles-before,9000)
-            self.assertEqual(cpu.memory[0xd403],dl)
-            self.assertEqual(sequence.SequenceTests().raster(cpu),expected)
+        self.assertEqual(len(RIBBON_CUTS),3)
+        for tick in STEPS:
+            cpu=sequence.execute(tick,cpu)
+            pixels,_=artwork(frame_at(tick))
+            expected=bytes(pixels[y//3*160+x] for y in range(192) for x in range(160))
+            self.assertEqual(sequence.SequenceTests().raster(cpu),expected,tick)
+            self.assertEqual(cpu.memory[0xd301],0xff)
+            self.assertEqual(cpu.memory[0xd01d],3)
         self.assertEqual(sequence.execute(START-1).memory[0x83e0],6)
         self.assertEqual(sequence.execute(END-1,cpu).memory[0x83e0],14)
-        self.assertEqual(sequence.execute(END,cpu).memory[0x83e0],15)
+        self.assertEqual(sequence.execute(END,cpu).memory[0x83e0],6)  # tunnel cutaway after the unchanged throw
 
-    def test_blink_preserved_with_animated_pompoms(self):
-        cpu=sequence.execute(15088)
-        raster=sequence.SequenceTests().raster(cpu)
-        self.assertNotEqual(cpu.memory[0xd000],0)
-        cpu=sequence.execute(15092,cpu)
-        self.assertEqual(sequence.SequenceTests().raster(cpu),raster)
-        self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),raster)
-        cpu=sequence.execute(15104,cpu)
-        self.assertEqual(cpu.memory[0xd000],0)
+    def test_held_pose_animates_ribbons_without_copying_bitmap(self):
+        from ribbon_dance import START
+        cpu=sequence.execute(START)
+        raw=sequence.SequenceTests().raster(cpu)
+        painted=sequence.SequenceTests().raster(cpu,effects=True)
+        display=cpu.memory[0xd403]
+        before=cpu.processorCycles
+        cpu=sequence.execute(START+16,cpu)
+        self.assertEqual(sequence.SequenceTests().raster(cpu),raw)
+        self.assertEqual(cpu.memory[0xd403],display)
+        self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),painted)
+        self.assertLess(cpu.processorCycles-before,25000)
 
-    def test_every_animation_phase_reconstructs_local_pixels(self):
-        art=variants()
+    def test_nonsequential_ribbon_shots_and_launch(self):
+        from ribbon_dance import STEPS, frame_at, artwork
         cpu=None
-        for i,t in enumerate(CUTS):
-            for phase in (3,0,2,1,3,0):
-                tick=t+((phase-((t>>4)&3))%4)*16
-                cpu=sequence.execute(tick,cpu)
-                expected=bytes(art[i][phase][y*52//192*80+x//2] for y in range(192) for x in range(160))
-                self.assertEqual(sequence.SequenceTests().raster(cpu),expected,(i,phase))
-                self.assertEqual(tuple(cpu.memory[0xd016:0xd019]),PALETTES[i])
+        for step in (126,0,33,66,120,122,124,127,0):
+            tick=STEPS[step]
+            cpu=sequence.execute(tick,cpu)
+            pixels,_=artwork(frame_at(tick))
+            expected=bytes(pixels[y//3*160+x] for y in range(192) for x in range(160))
+            self.assertEqual(sequence.SequenceTests().raster(cpu),expected,step)
 
-    def test_restart_restores_dance_player_and_missile_art(self):
+    def test_restart_replaces_ribbon_pmg_with_title_fireworks(self):
         cpu=sequence.execute(15088)
         cpu=sequence.execute(96,cpu)
-        from engine_effects import pmg_art
-        missiles,players=pmg_art()
-        self.assertEqual(bytes(cpu.memory[0x0980:0x0a00]),missiles)
-        self.assertEqual(bytes(cpu.memory[0x0a00:0x0c00]),players)
+        fresh=sequence.execute(96)
+        def active_pmg(m):
+            base=(m[0xd407]&0xfc)<<8
+            return bytes(m[base+0x180:base+0x400])
+        self.assertEqual(active_pmg(cpu.memory),active_pmg(fresh.memory))
+        self.assertEqual(cpu.memory[0xd01b],0xc1)
+        self.assertEqual(cpu.memory[0xd012:0xd016],fresh.memory[0xd012:0xd016])
 
     def test_school_portrait_cut_and_return_preserve_scene_order(self):
         from school_story import girl_front_pixels, story_frames

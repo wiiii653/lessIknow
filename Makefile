@@ -23,24 +23,12 @@ build/gym-v056.rgb: assets/art/source/act1_gym_dance_v056.png
 	mkdir -p build
 	$(CONVERT) $< -filter point -resize 160x192\! -depth 8 rgb:$@
 
-build/school.rgb: assets/art/source/act1_school_court_boy.png
-	mkdir -p build
-	$(CONVERT) $< -filter point -resize 160x64\! -depth 8 rgb:$@
-
-build/school-front.rgb: assets/art/source/act1_boy_front.png
-	mkdir -p build
-	$(CONVERT) $< -filter point -resize 160x64\! -depth 8 rgb:$@
-
-build/north-girl.rgba: assets/art/source/act1_north_girl.png
-	mkdir -p build
-	$(CONVERT) $< -filter point -resize 48x64\! -depth 8 rgba:$@
-
-VIDEO_INPUTS = build/kaleidoscope.gray build/gym-v056.rgb \
+VIDEO_INPUTS = assets/art/reference/v175/basketball.bin assets/art/reference/v175/arena-pan.bin build/kaleidoscope.gray build/gym-v056.rgb \
+    build/ribbon-dancer-v136.rgb build/ribbon-side-v142.rgb build/ribbon-overhead-v145.rgb build/ribbon-inbetweens-v166.rgb build/ribbon-inbetweens-v171.rgb build/ribbon-inbetweens-v173.rgb build/arena-exterior-v151.rgb build/arena-interior-v151.rgb build/boy-floor-v145.rgb \
     $(addprefix build/dance-v056-,0.rgb 1.rgb 2.rgb 3.rgb) \
-    build/school.rgb build/school-front.rgb build/north-girl.rgba \
+    build/school.rgb build/school-neutral.rgb build/school-front.rgb build/north-girl.rgba build/school-girl-side-v033.rgb \
     build/practice-storyboard.rgb build/crush-portraits.rgb \
-    build/school-girl-side-v033.rgb build/school-wide-v034.rgb \
-    build/school-girl-cutout-v034.rgba build/basketball-hero.rgb \
+    build/girl-walk-cycle-v177.rgba build/boy-whistle-v177.rgba \
     $(addprefix build/trevor-panel-,0.rgb 1.rgb 2.rgb 3.rgb) \
     $(addprefix build/trevor-pmg-,0.rgb 1.rgb) \
     $(addprefix build/trevor-polished-,0.rgb 1.rgb 2.rgb 3.rgb)
@@ -60,11 +48,20 @@ build/practice-storyboard.rgb: assets/art/source/act1_practice_storyboard_v011.p
 build/crush-portraits.rgb: assets/art/source/act2_cheer_performance_v015.png
 	$(CONVERT) $< -filter point -resize 160x104\! -depth 8 rgb:$@
 
-build/school-girl-front.rgb: assets/art/source/act1_blonde_portraits_reserved_v014.png
-	$(CONVERT) $< -crop 50%x50%+0+0 +repage -delete 1--1 -filter point -resize 160x64\! -depth 8 rgb:$@
+build/school.rgb: assets/art/source/act1_school_court_boy.png
+	$(CONVERT) $< -filter point -resize 160x64\! -depth 8 rgb:$@
 
-build/basketball-hero.rgb: assets/art/source/act3_basketball_hero_v024.png
-	$(CONVERT) $< -filter point -resize 320x168\! -depth 8 rgb:$@
+build/school-front.rgb: assets/art/source/act1_boy_front_v170.png
+	$(CONVERT) $< -filter point -resize 160x64\! -depth 8 rgb:$@
+
+build/north-girl.rgba: assets/art/source/act1_north_girl.png
+	$(CONVERT) $< -filter point -resize 48x64\! -depth 8 rgba:$@
+
+build/school-girl-side-v033.rgb: assets/art/source/act1_girl_side_walking_v033.png
+	$(CONVERT) $< -filter point -resize 160x64\! -depth 8 rgb:$@
+
+build/girl-walk-cycle-v177.rgba build/boy-whistle-v177.rgba build/basketball-hero-v177.rgba &: tools/prepare_production_art.py assets/art/source/act1_girl_walk_cycle_v177.png assets/art/source/act1_boy_whistle_v177.png assets/art/source/act3_basketball_hero_v177.png
+	$(PYTHON) tools/prepare_production_art.py
 
 build/trevor-panel-0.rgb build/trevor-panel-1.rgb build/trevor-panel-2.rgb build/trevor-panel-3.rgb &: assets/art/source/act4_trevor_awakens_v025.png
 	$(CONVERT) $< -crop 2x2@ +repage -filter point -resize 160x64\! -depth 8 +adjoin rgb:build/trevor-panel-%d.rgb
@@ -72,11 +69,36 @@ build/trevor-panel-0.rgb build/trevor-panel-1.rgb build/trevor-panel-2.rgb build
 build/trevor-pmg-0.rgb build/trevor-pmg-1.rgb &: assets/art/source/act4_trevor_awakens_v025.png
 	$(CONVERT) $< -crop 2x2@ +repage -delete 0,1 -trim +repage -filter point -resize 16x24\! -depth 8 +adjoin rgb:build/trevor-pmg-%d.rgb
 
-build/school-girl-side-v033.rgb: assets/art/source/act1_girl_side_walking_v033.png
-	$(CONVERT) $< -filter point -resize 160x64\! -depth 8 rgb:$@
-
-build/school-wide-v034.rgb build/school-girl-cutout-v034.rgba &: tools/prepare_school_pan.py assets/art/source/act1_school_background_v034.png assets/art/source/act1_girl_side_walking_v033.png
-	python3 tools/prepare_school_pan.py
-
 build/trevor-polished-0.rgb build/trevor-polished-1.rgb build/trevor-polished-2.rgb build/trevor-polished-3.rgb &: assets/art/source/act4_trevor_polished_v043.png
 	$(CONVERT) $< -crop 2x2@ +repage -filter point -resize 160x64\! -depth 8 +adjoin rgb:build/trevor-polished-%d.rgb
+
+build/ribbon-dancer-v136.rgb: assets/art/source/act2_ribbon_dancer_v136.png
+	$(CONVERT) $< -depth 8 rgb:$@
+
+build/ribbon-side-v142.rgb: assets/art/source/act2_ribbon_side_v142.png
+	$(CONVERT) $< -depth 8 rgb:$@
+
+build/ribbon-overhead-v145.rgb: assets/art/source/act2_ribbon_overhead_v145.png
+	$(CONVERT) $< -resize 1774x887\! -depth 8 rgb:$@
+
+build/ribbon-inbetweens-v166.rgb: assets/art/source/act2_ribbon_inbetweens_v166.png
+	$(CONVERT) $< -resize 1329x1329\! -depth 8 rgb:$@
+
+build/ribbon-inbetweens-v171.rgb: assets/art/source/act2_ribbon_inbetweens_v171.png
+	$(CONVERT) $< -resize 1329x1329\! -depth 8 rgb:$@
+
+build/ribbon-inbetweens-v173.rgb: assets/art/source/act2_ribbon_inbetweens_v173.png
+	$(CONVERT) $< -resize 1329x1329\! -depth 8 rgb:$@
+
+build/boy-floor-v145.rgb: assets/art/source/act8_boy_floor_v145.png
+	$(CONVERT) $< -filter point -resize 144x56\! -depth 8 rgb:$@
+
+
+build/arena-exterior-v151.rgb: assets/art/source/act1_atari_arena_exterior_v151.png
+	$(CONVERT) $< -filter point -resize 200x64\! -depth 8 rgb:$@
+
+build/arena-interior-v151.rgb: assets/art/source/act3_atari_arena_interior_v151.png
+	$(CONVERT) $< -filter point -resize 160x56\! -depth 8 rgb:$@
+
+build/school-neutral.rgb: assets/art/source/act1_boy_front.png
+	$(CONVERT) $< -filter point -resize 160x64\! -depth 8 rgb:$@

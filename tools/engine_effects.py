@@ -145,7 +145,7 @@ def pmg_art():
 # Reserved independently of the packed scanline pool. Both bytes describe the
 # LMS mapping of an entire display list, never the framebuffer's pixel content.
 RUNTIME_ORIGIN = 0x0c00
-RUNTIME_END = 0x0e00
+RUNTIME_END = 0x0f00  # $0E00–$0EFF: masked side-dancer composition
 DL_KEYS = 0x0dfe
 COPY_PAGES = RUNTIME_ORIGIN
 DL_CHECK = 0x0d40

@@ -16,26 +16,42 @@ def paths():
 
 
 def spin_masks():
-    """Eight real shape/color rotations, four players, sixteen double-lines."""
+    """Compact opaque neon sphere, eight rotations in the existing 512 B.
+
+    Four co-located players paint curved panels, a darker rim and a bright
+    seam/glint. No transparent seams reveal the background through the ball.
+    """
     frames=[]
-    outline=(0x18,0x3c,0x7e,0x7e,0xff,0xff,0xff,0xff,
-             0xff,0xff,0xff,0xff,0x7e,0x7e,0x3c,0x18)
     for phase in range(8):
-        theta=phase*math.pi/4
+        theta=phase*math.tau/8
         planes=[bytearray(16) for _ in range(4)]
-        for row,shape in enumerate(outline):
-            seam=round(3.5+2.2*math.sin(theta+(row-7.5)*0.13))
-            shape &= ~(1<<(7-seam))
-            for col in range(8):
-                equator=round(7.5+math.sin(theta)*(col-3.5)*0.7)
-                if row==equator:shape &= ~(1<<(7-col))
-            planes[((row+phase*2)//4)%4][row]=shape
+        for y in range(16):
+            v=(y-7.5)/7.8
+            for x in range(8):
+                u=(x-3.5)/3.9;r2=u*u+v*v
+                if r2>1:continue
+                z=math.sqrt(1-r2)
+                sy=v*math.cos(.38)-z*math.sin(.38)
+                sz=v*math.sin(.38)+z*math.cos(.38)
+                sx=u*math.cos(theta)-sz*math.sin(theta)
+                depth=u*math.sin(theta)+sz*math.cos(theta)
+                seam=min(abs(sx),abs(sy),abs(depth))<.105
+                glint=((u+.30)/.26)**2+((v+.38)/.18)**2<1
+                panel=1+((sx>0) ^ (sy>0))
+                ink=0 if r2>.78 else 3 if seam or glint else panel
+                planes[ink][y]|=0x80>>x
         frames.append(planes)
     return frames
+
 
 def helper():
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
+    from whistle_pmg import ENTRY as WHISTLE_ENTRY
+    a(0xad,0x83e0);c.emit(0xc9,10);c.branch(0x90,'not_whistle')
+    c.emit(0xc9,12);c.branch(0xb0,'not_whistle')
+    a(0x4c,WHISTLE_ENTRY)
+    c.label('not_whistle')
     a(0xad,0x83e0);c.emit(0xc9,14);c.branch(0xd0,'not_portrait')
     a(0xad,0x83e3);c.emit(0xc9,CRUSH_START>>8);c.branch(0x90,'not_portrait');a(0x4c,0x6900)
     c.label('not_portrait');a(0xad,0x83e0);c.emit(0xc9,13);c.branch(0xd0,'inactive')
@@ -93,6 +109,6 @@ def helper():
         dx=(-20,-12,16,24)[i]
         c.label(f'spray_x{i}');c.emit(*(max(50,min(202,x+48+dx+(j%4-2)*2)) for j,(x,y) in enumerate(positions)))
         c.label(f'spray_y{i}');c.emit(*(max(9,min(103,(y+17)//2+((i*3+j)%9)-4)) for j,(x,y) in enumerate(positions)))
-        c.label(f'hues{i}');c.emit(*((((j+i*4)%15+1)<<4)|10 for j in range(16)))
+        c.label(f'hues{i}');c.emit(*((((j+i*4)%15+1)<<4)|(6,10,12,14)[i] for j in range(16)))
     result=c.finish();assert ENTRY+len(result)<RESTORE
     return result

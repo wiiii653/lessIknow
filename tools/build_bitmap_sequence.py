@@ -20,6 +20,10 @@ from school_story import (story_frames, SCHOOL_PHASES, girl_front_pixels,
                           SCHOOL_PORTRAIT_END)
 from school_portrait_bank import loader as school_bank_loader, BANK_VALUE
 from mosaic import banks as mosaic_banks
+import ribbon_dance
+import ribbon_inbetweens
+import title_fireworks
+import final_boy
 from school_parallax import banks as school_pan_banks
 from trevor_awakens import END as TREVOR_END, HIT as TREVOR_HIT, bank as trevor_bank
 from trevor_polished import bank as polished_trevor_bank
@@ -33,7 +37,7 @@ from crush_portraits import START as CRUSH_TICK, END as CRUSH_END, ENTRY as CRUS
 KALEIDO_TICK = tick_at_bar(32)  # eight bars / 15 seconds after the dancer enters
 SCHOOL_TICK = tick_at_bar(8)  # equal 7.5-second artist and title screens
 ORIGIN = 0x1400
-POOL_LOW = 0x1b50
+POOL_LOW = 0x1e00
 TABLE_BASE = 0xd800
 STATE = 0x83e0
 
@@ -50,16 +54,8 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     copy_code, copy_labels = copy_helper()
     effect_code = effects_helper()
     scenes = [bytes(160 * 192), bytes(160 * 192)]  # intro rendered into framebuffers
-    # Keep every source scanline, especially the small facial features.
-    dance_frames = [frame_blob(packed_rows(dance_group_pixels(frame, count)))
-                    for count in (1, 2, 3) for frame in range(4)]
-    # The bounded delta copy is valid for ANY pair of poses in a group.
-    # Reject future art changes that move changing pixels outside these pages.
-    for group in range(3):
-        poses = dance_frames[group * 4:group * 4 + 4]
-        for offset in list(range(0x400)) + list(range(0x1900, 0x1e10)):
-            if len({pose[offset] for pose in poses}) != 1:
-                raise ValueError('dance changes outside dirty pages 4–24')
+    # The old 96 KiB pompom scene is preserved in projects/pompom-dance.
+    # Its six banks now hold 36 compact ribbon-performance frames.
     scenes += [bytes(160 * 192)] * 4
     scenes.append(bytes(160 * 192))  # mozaika: klatki w bankach rozszerzenia
     scenes += story_frames()
@@ -71,6 +67,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     girl_frame[POM_DATA-0x4000:POM_DATA-0x4000+len(pom_data)]=pom_data
     ball_code=ball_helper()
     girl_frame[BALL_ENTRY-0x4000:BALL_ENTRY-0x4000+len(ball_code)]=ball_code
+    from whistle_pmg import ENTRY as WHISTLE_ENTRY, helper as whistle_helper
+    whistle_code=whistle_helper()
+    girl_frame[WHISTLE_ENTRY-0x4000:WHISTLE_ENTRY-0x4000+len(whistle_code)]=whistle_code
     ball_restore=crush_cleanup(BALL_RESTORE)
     girl_frame[BALL_RESTORE-0x4000:BALL_RESTORE-0x4000+len(ball_restore)]=ball_restore
     portrait_code = crush_helper([])
@@ -91,7 +90,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     # share identical suffix/prefix bytes (notably the dancer's black margins).
     # This is lossless and adds no work to the Atari's playback routine.
     regions = ((0x0400, 0x0800), (0x0900, 0x0980), (RUNTIME_END, RUN), (POOL_LOW, 0x2000), (0x3300, 0x3c00), (0x824a, 0x8300),
-               (0x8340, 0x83e0), (0x864a, 0x9000),
+               (0x8340, 0x83e0), (0x864a, 0x8980), (0x8c00, 0x9000),
                (EFFECT_ORIGIN + len(effect_code), 0xb000),
                (COPY_ORIGIN + len(copy_code), 0xd000),
                (table_end + PLASMA_SIZE, TITLE_MODE_ENTRY))
@@ -204,7 +203,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
 
     def compare_tick(threshold, yes, no):
         # Local branch trampolines keep arbitrary scene dispatch within range.
-        tag = f'cmp{threshold}'
+        tag = f'cmp{threshold}_{yes}'
         absolute(0xad, TICK + 2)
         c.branch(0xf0, tag + '_high')
         c.jump(0x4c, yes)
@@ -221,6 +220,17 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         c.label(tag + '_yes')
         c.jump(0x4c, yes)
 
+    def compare_tick16(threshold, yes, no, fallthrough_no=False):
+        """Compact 16-bit compare for the sub-65536 Act 5 dispatch."""
+        tag=f'cmp16_{threshold}_{yes}'
+        absolute(0xad,TICK+1);c.emit(0xc9,threshold>>8)
+        c.branch(0x90,tag+'_no');c.branch(0xd0,tag+'_yes')
+        absolute(0xad,TICK);c.emit(0xc9,threshold&255)
+        c.branch(0x90,tag+'_no')
+        c.label(tag+'_yes');c.jump(0x4c,yes)
+        c.label(tag+'_no')
+        if not fallthrough_no:c.jump(0x4c,no)
+
     c.label('snapshot')
     for offset in (2, 1, 0):
         absolute(0xad, 0x24a7 + offset)
@@ -230,6 +240,13 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         absolute(0xcd, TICK + offset)
         c.branch(0xd0, 'snapshot')
     absolute(0x20, plasma_labels['invalidate'])
+    compare_tick(final_boy.START,'final_boy','before_final_boy')
+    c.label('final_boy')
+    c.emit(0xa9,17);absolute(0x8d,SCENE)
+    absolute(0xad,0xd301);c.emit(0x48)
+    absolute(0xad,0x08f1);absolute(0x8d,0xd301);absolute(0x20,final_boy.ENTRY)
+    c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
+    c.label('before_final_boy')
     compare_tick(TREVOR_END, 'kaleido', 'before_hero_end')
     c.label('before_hero_end')
     compare_tick(CRUSH_END, 'hero', 'before_crush_end')
@@ -253,16 +270,16 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x8d, SHIFT)
     absolute(0xad, 0xd301)
     c.emit(0x48)
-    absolute(0xad, 0x2703)
+    absolute(0xad, 0x08f1)
     absolute(0x8d, 0xd301)
-    absolute(0x20, CRUSH_ENTRY)
+    absolute(0x20, ribbon_dance.ENTRY)
     c.emit(0x68)
     absolute(0x8d, 0xd301)
     c.emit(0x60)
     c.label('before_crush')
     compare_tick(KALEIDO_TICK, 'kaleido', 'before_kaleido')
     c.label('before_kaleido')
-    compare_tick(DANCE_TICK, 'dance', 'before_dance')
+    compare_tick(DANCE_TICK, 'crush', 'before_dance')
     c.label('before_dance')
     compare_tick(SCHOOL_TICK, 'school', 'before_school')
     c.label('before_school')
@@ -291,10 +308,6 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         c.label(tag)
     c.emit(0xa9,SCHOOL_PHASES[0][1])
     c.jump(0x4c,'selected')
-    c.label('dance')
-    absolute(0xad, TICK)
-    c.emit(0x4a, 0x4a, 0x4a, 0x4a, 0x29, 3, 0x18, 0x69, 2)
-    c.jump(0x4c, 'selected')
     c.label('kaleido')
     c.emit(0xa9, 6)
     c.label('selected')
@@ -361,17 +374,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x8d, NEWAMP)
     c.label('amplitude_ready')
     # Resolve each scene's low/high pointer tables for the row lookup opcodes.
-    # Copy the complete next dance raster into the inactive framebuffer.
+    # Legacy full-height copy remains only for the practice atlas.
     # ANTIC keeps reading the current unbanked buffer throughout the copy.
     absolute(0xad, SCENE)
-    c.emit(0xc9, 2)
-    c.branch(0xb0, 'copy_check_high')
-    c.jump(0x4c, 'regular_lookup')
-    c.label('copy_check_high')
-    c.emit(0xc9, 6)
-    c.branch(0xb0, 'copy_still_check')
-    c.jump(0x4c, 'copy_begin')
-    c.label('copy_still_check')
     c.emit(0xc9, GIRL_PORTRAIT_SCENE)
     c.branch(0xf0, 'copy_girl')
     c.emit(0xc9, PRACTICE_SCENE)
@@ -406,28 +411,6 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     check_cached('practice_changed')
     c.emit(0xa9, 1, 0x48, 0xa2, 7)  # bank 8, second 8 KiB half
     c.jump(0x4c, 'copy_bank_select')
-    c.label('copy_begin')
-    c.emit(0x38, 0xe9, 2)
-    absolute(0x8d, STATE + 10)
-    compare_tick(DANCE_THIRD_TICK, 'copy_trio', 'copy_before_trio')
-    c.label('copy_before_trio')
-    compare_tick(DANCE_SECOND_TICK, 'copy_duo', 'copy_solo')
-    c.label('copy_trio')
-    c.emit(0xa9, 8)
-    c.jump(0x4c, 'copy_group')
-    c.label('copy_duo')
-    c.emit(0xa9, 4)
-    c.jump(0x4c, 'copy_group')
-    c.label('copy_solo')
-    c.emit(0xa9, 0)
-    c.label('copy_group')
-    c.emit(0x18)
-    absolute(0x6d, STATE + 10)
-    absolute(0x8d, FRAMEID)
-    absolute(0x8d, NEWKEY)
-    check_cached('dance_changed')
-    absolute(0xad, FRAMEID)
-    c.emit(0x48, 0x4a, 0x18, 0x69, 8, 0xaa)
     c.label('copy_bank_select')
     absolute(0xad, 0xd301)
     absolute(0x8d, STATE + 11)
@@ -493,6 +476,12 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     # Initialize both display lists while the ordinary intro/school scene is
     # active; banked effects then run without a per-frame timing surcharge.
     absolute(0x20, TITLE_MODE_ENTRY)
+    absolute(0xad,SCENE);c.emit(0xc9,2);c.branch(0xb0,'skip_firework_prepare')
+    absolute(0xad,0xd301);c.emit(0x48)
+    absolute(0xae,SCENE);absolute(0xbd,0x08e8);absolute(0x8d,0xd301)
+    absolute(0x20,title_fireworks.ENTRY)
+    c.emit(0x68);absolute(0x8d,0xd301)
+    c.label('skip_firework_prepare')
     absolute(0x20, plasma_labels['prepare'])
     c.branch(0xf0, 'regular_static')
     check_cached('plasma_changed')
@@ -614,6 +603,12 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('last_color')
     absolute(0x8d, 0xd018)
     # The backdrop is part of every solo/duo/trio frame; no reveal masks.
+    absolute(0xad,SCENE);c.emit(0xc9,2);c.branch(0x90,'scene_done')
+    # Melody scenes own continuous PMG DMA. Retain the visible front buffer
+    # while their banked renderer builds the back buffer, even across frames.
+    c.emit(0xc9,10);c.branch(0x90,'reset_ordinary_pmg')
+    c.emit(0xc9,12);c.branch(0x90,'scene_done')
+    c.label('reset_ordinary_pmg')
     c.emit(0xa9, 0)
     absolute(0x8d, 0xd01d)
     c.emit(0xa9, 0x22)
@@ -641,6 +636,14 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         c.emit(0xa9, color)
         absolute(0x8d, address)
     c.label('dance_palette_done')
+    absolute(0xad,SCENE);c.emit(0xc9,2);c.branch(0xb0,'ordinary_effects')
+    absolute(0x20,plasma_labels['color'])
+    c.emit(0xa9,0xc1);absolute(0x8d,0xd01b)
+    absolute(0xad,0xd301);c.emit(0x48)
+    absolute(0xae,SCENE);absolute(0xbd,0x08e8);absolute(0x8d,0xd301)
+    absolute(0x20,title_fireworks.PUBLISH)
+    c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
+    c.label('ordinary_effects')
     c.jump(0x4c, 'banked_effects')
     c.label('effect_vblank')
     absolute(0xad, 0xd40b)
@@ -665,11 +668,44 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0xad,TICK+1);c.emit(0x29,1,0x0a,0x0a,0x0a,0x0a);absolute(0x8d,STATE+13)
     absolute(0xad,TICK);c.emit(0x4a,0x4a,0x4a,0x4a);absolute(0x0d,STATE+13);absolute(0x8d,STATE+13)
     absolute(0xad,TICK+1);c.emit(0x29,4,0x0a,0x0a,0x0a);absolute(0x0d,STATE+13);absolute(0x8d,STATE+13)
+    # Act 5 uses the existing two motifs deliberately, rather than allowing
+    # the six-bit animation clock to alternate between them every 512 ticks.
+    compare_tick(TREVOR_END, 'act5_select', 'mosaic_frame_ready')
+    c.label('act5_select')
+    compare_tick16(tick_at_bar(112), 'mosaic_frame_ready', 'act5_motif', True)
+    c.label('act5_motif')
+    # Keep the opening banana rotozoom, then give the tunnel the full
+    # remaining Act 5 lead-in before the existing bar-108 texture change.
+    compare_tick16(tick_at_bar(92), 'act5_tunnel', 'act5_kaleido', True)
+    c.label('act5_kaleido')
+    absolute(0xad,STATE+13);c.emit(0x29,15);absolute(0x8d,STATE+13)
+    compare_tick16(tick_at_bar(92), 'act5_kaleido_second', 'mosaic_frame_ready')
+    c.label('act5_kaleido_second')
+    absolute(0xad,STATE+13);c.emit(0x09,16);absolute(0x8d,STATE+13)
+    c.jump(0x4c,'mosaic_frame_ready')
+    c.label('act5_tunnel')
+    absolute(0xad,STATE+13);c.emit(0x29,15);absolute(0x8d,STATE+13)
+    compare_tick16(tick_at_bar(108),'act5_tunnel_texture2','act5_tunnel_texture1',True)
+    c.label('act5_tunnel_texture1')
+    absolute(0xad,STATE+13);c.emit(0x09,32);absolute(0x8d,STATE+13)
+    c.jump(0x4c,'mosaic_frame_ready')
+    c.label('act5_tunnel_texture2')
+    absolute(0xad,STATE+13);c.emit(0x09,48);absolute(0x8d,STATE+13)
+    c.label('mosaic_frame_ready')
+    absolute(0xad,STATE+13)
     c.emit(0x4a,0x4a,0xaa)
     absolute(0xad,0xd301);c.emit(0x48)
     absolute(0xbd,0x08c3);absolute(0x8d,0xd301);absolute(0x20,0x7c00)
     absolute(0xad,0x24b5);absolute(0x8d,0xd301);absolute(0x20,0x7800)
     c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
+    # Banked hero delegates its opening cutaway here without growing the
+    # generic 24-bit scene dispatcher. The existing return restores PORTB.
+    c.label('hero_cutaway')
+    c.emit(0xa9,6);absolute(0x8d,SCENE)
+    c.emit(0xa9,0);absolute(0x8d,SHIFT)
+    absolute(0xad,TICK+1);c.emit(0x4a)
+    absolute(0xad,TICK);c.emit(0x6a,0x4a,0x4a,0x4a,0x29,31,0x09,32)
+    absolute(0x8d,STATE+13);c.jump(0x4c,'mosaic_frame_ready')
     c.label('banked_effects')
     absolute(0xad,0xd301)
     c.emit(0x48)
@@ -690,9 +726,28 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x8d, 0xd301)
     c.emit(0x4c, 0x18, 0x22)
     c.label('music_exit')
+    # Nonmusical raster colour work runs after the unchanged music tick.
+    absolute(0xad,SCENE);c.emit(0xc9,14);c.branch(0xd0,'music_colors_done')
+    c.jump(0x20,'ribbon_palette')
+    c.label('music_colors_done')
     absolute(0xad, STATE + 14)
     absolute(0x8d, 0xd301)
     c.emit(0x68, 0xa8, 0x68, 0xaa, 0x68, 0x40)
+    # Unbanked trampoline: frames live in player banks 9–14, while the
+    # controller executes in loader bank 49. Side actors use loader 24–31.
+    # Music NMI preserves the selected bank throughout background + overlay.
+    c.label('ribbon_copy')
+    absolute(0xad,0xd301);c.emit(0x48)
+    absolute(0xae,0x83ed);c.emit(0xe0,final_boy.FRAME_KEY);c.branch(0xd0,'ribbon_frame_bank')
+    absolute(0xad,0x08c0+final_boy.BITMAP_BANK);absolute(0x8d,0xd301)
+    c.emit(0xa9,final_boy.BITMAP_SOURCE>>8);c.jump(0x4c,'ribbon_source_ready')
+    c.label('ribbon_frame_bank');c.jump(0xbc,'ribbon_banks');absolute(0xb9,0x26fc);absolute(0x8d,0xd301)
+    c.jump(0xbd,'ribbon_sources')
+    c.label('ribbon_source_ready');c.emit(0xa2,2);absolute(0x20,ribbon_dance.SIDE_COMPOSITOR)
+    c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
+    ribbon_dance.emit_rainbow(c)
+    c.label('ribbon_banks');c.emit(*(8+i//6 for i in range(ribbon_dance.FRAME_COUNT)))
+    c.label('ribbon_sources');c.emit(*(0x40+(i%6)*10 for i in range(ribbon_dance.FRAME_COUNT)))
     code = c.finish()
     portrait_code = crush_helper(effects_address=c.labels['banked_effects'])
     for pos, offset in ((source_patch + 1, 2), (target_patch + 1, 5)):
@@ -710,7 +765,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         descriptors[address - 0x8300] = 255
 
     missiles, players = pmg_art()
-    inserts = [(RUNTIME_ORIGIN, runtime_helper()), (0x0800, bytes(y // 3 for y in range(192))), (0x0980, missiles),
+    inserts = [(RUNTIME_ORIGIN, ribbon_dance.install_runtime(runtime_helper())), (0x0800, bytes(y // 3 for y in range(192))), (0x0980, missiles),
                (0x0a00, players), (TABLE_BASE, tables), (ORIGIN, code), (RUN, run_stub()),
                (EFFECT_ORIGIN, effect_code), (COPY_ORIGIN, copy_code),
                (0x8000, display(0x8000)),
@@ -753,14 +808,14 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                 payload = bytearray(payload[:0x2000] + practice_frame)
                 if any(b != 255 for b in payload[CRUSH_ENTRY-0x4000:0x2000]):
                     raise ValueError('portraits overlap music')
-                payload[CRUSH_ENTRY-0x4000:CRUSH_ENTRY-0x4000+len(portrait_code)] = portrait_code
+                # The four old performance portraits are retired. This gap
+                # is no longer executed; preserve the practice frame above it.
+                payload[CRUSH_ENTRY-0x4000:0x2000] = bytes(0x2000-(CRUSH_ENTRY-0x4000))
                 payload[0x0f00:0x0f00+len(crush_cleanup())] = crush_cleanup()
-                payload[CRUSH_DATA-0x4000:0x2000] = portrait_data
             if bank_number >= 9:
                 if any(byte != 255 for byte in payload):
                     raise ValueError('video bank is not unused v035 padding')
-                offset = (bank_number - 9) * 2
-                payload = dance_frames[offset] + dance_frames[offset + 1]
+                payload = ribbon_dance.frame_bank(bank_number-9)
         if (start, end) == (0x2000, 0x24b2):
             payload = bytearray(payload)
             offset = 0x21bc - start
@@ -781,17 +836,25 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             patched = True
         if (start, end) == (0x02e0, 0x02e1):
             output.extend(school_bank_loader(girl_frame))
-            output.extend(school_bank_loader(hero_bank(c.labels['banked_effects'],c.labels['banked_effects']+5),index=1))
-            output.extend(school_bank_loader(trevor_bank(),index=2))
+            output.extend(school_bank_loader(hero_bank(c.labels['banked_effects'],c.labels['banked_effects']+5,c.labels['hero_cutaway']),index=1))
+            output.extend(school_bank_loader(ribbon_inbetweens.install(trevor_bank(),2),index=2))
             for index, frame in enumerate(mosaic_banks(),3):
                 output.extend(school_bank_loader(frame,index=index))
             for index, frame in enumerate(school_pan_banks(),19):
                 output.extend(school_bank_loader(frame,index=index))
             for phase in range(16):
-                output.extend(school_bank_loader(polished_trevor_bank(phase),index=24+phase))
-            for index, bank in enumerate(plasma_artwork(), PLASMA_FIRST_BANK):
+                art=ribbon_dance.install_side_actor(polished_trevor_bank(phase,bank_wrapper=c.labels['banked_effects']),24+phase)
+                output.extend(school_bank_loader(ribbon_inbetweens.install(final_boy.install_bitmap(art,24+phase),24+phase),index=24+phase))
+            plasma_banks=plasma_artwork()
+            masks=plasma_banks[4]
+            # Both card layouts can coexist during the ordered dissolve.
+            protected=bytes(a|b for a,b in zip(masks[2560:5120],masks[5*2560:6*2560]))
+            for index, bank in enumerate(plasma_banks, PLASMA_FIRST_BANK):
+                if index in (40,41):
+                    bank=title_fireworks.install(bank,protected)
                 output.extend(school_bank_loader(bank, index=index))
-            output.extend(school_bank_loader(polished_trevor_bank(0, quiet=True), index=49))
+            control=ribbon_dance.install_control(polished_trevor_bank(0, quiet=True,bank_wrapper=c.labels['banked_effects']),c.labels['ribbon_copy'],c.labels['ribbon_palette'])
+            output.extend(school_bank_loader(final_boy.install_control(control,c.labels['ribbon_copy']), index=49))
             output.extend(loader(rom))
             for address, data in inserts:
                 if address < 0xc000:
@@ -810,9 +873,31 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         'dance_third_tick': DANCE_THIRD_TICK, 'kaleido_tick': KALEIDO_TICK,
         'school_portrait_tick': SCHOOL_PORTRAIT_TICK, 'school_portrait_end': SCHOOL_PORTRAIT_END,
         'trevor_start': HERO_END, 'trevor_hit':TREVOR_HIT, 'trevor_end':TREVOR_END,
+        'hero_cutaway_start': CRUSH_END, 'hero_cutaway_entry': c.labels['hero_cutaway'],
         'hero_start': HERO_START, 'hero_end': HERO_END, 'hero_bank': HERO_BANK,
         'crush_tick': CRUSH_TICK, 'crush_end': CRUSH_END,
-        'crush_entry': CRUSH_ENTRY, 'crush_data': CRUSH_DATA,
+        'crush_entry': ribbon_dance.ENTRY, 'ribbon_palette': c.labels['ribbon_palette'],
+        'ribbon_copy': c.labels['ribbon_copy'],
+        'ribbon_side_start': ribbon_dance.SIDE_START,
+        'ribbon_side_end': ribbon_dance.SIDE_END,
+        'ribbon_frame_count': ribbon_dance.FRAME_COUNT,
+        'ribbon_frame_bytes': 2560, 'ribbon_frames_per_bank': 6,
+        'ribbon_control_bytes': len(ribbon_dance.helper(c.labels['ribbon_copy'],c.labels['ribbon_palette'])),
+        'ribbon_anchor_bytes': len(ribbon_dance.metadata()),
+        'ribbon_inbetween_count': 18, 'ribbon_inbetween_source_poses': 13,
+        'ribbon_quarter_inbetween_count': 4,
+        'ribbon_inbetween_packed_bytes': sum(len(data) for bank,source,data in ribbon_inbetweens.payloads()),
+        'ribbon_inbetween_selector': ribbon_inbetweens.BANK_ENTRY,
+        'ribbon_inbetween_selector_bytes': len(ribbon_inbetweens.selector()),
+        'ribbon_inbetween_decoder': ribbon_inbetweens.DECODER,
+        'ribbon_inbetween_decoder_bytes': len(ribbon_inbetweens.decoder()),
+        'reclaimed_trevor_slots_bytes': 22016-sum(len(data) for bank,source,data in ribbon_inbetweens.payloads() if 32<=bank<39),
+        'trevor_old_ball_slot_free_bytes': 8192-7*len(ribbon_inbetweens.decoder()),
+        'ribbon_midpoint_remaining_bank_gap_bytes': 50644-sum(len(data) for bank,source,data in ribbon_inbetweens.payloads())-len(ribbon_inbetweens.selector())-8*len(ribbon_inbetweens.decoder()),
+        'ribbon_bank_tail_bytes': 6144,
+        'side_actor_bytes': 16384, 'side_compositor': ribbon_dance.SIDE_COMPOSITOR,
+        'final_boy_start': final_boy.START, 'final_boy_end': final_boy.END,
+        'final_boy_entry': final_boy.ENTRY, 'final_boy_bytes': len(final_boy.helper(c.labels['ribbon_copy'])),
         'table_bytes': len(tables),
         'blank_row': blank,
         'callback': ORIGIN, 'state': STATE, 'code_size': len(code),

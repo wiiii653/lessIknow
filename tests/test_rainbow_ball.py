@@ -39,8 +39,12 @@ class RainbowBallTests(unittest.TestCase):
         self.assertEqual(bytes(cpu.memory[0xa00:0xc00]),players)
         cpu=sequence.execute(7000,cpu)
         cpu=sequence.execute(9163,cpu) # Seek directly into dance as well.
-        self.assertEqual(bytes(cpu.memory[0x980:0xa00]),missiles)
-        self.assertEqual(bytes(cpu.memory[0xa00:0xc00]),players)
+        baseline=sequence.execute(9163).memory
+        def active_pmg(m):
+            base=(m[0xd407]&0xfc)<<8
+            return bytes(m[base+0x180:base+0x400])
+        self.assertEqual(active_pmg(cpu.memory),active_pmg(baseline))
+        self.assertEqual(cpu.memory[0xd01b],0x11)
 
     def test_single_flight_spans_whole_shot_without_low_byte_wrap(self):
         cpu=None
@@ -60,5 +64,9 @@ class RainbowBallTests(unittest.TestCase):
         silhouettes=[]
         for planes in frames:
             silhouettes.append(bytes(planes[0][y]|planes[1][y]|planes[2][y]|planes[3][y] for y in range(16)))
-        self.assertGreater(len(set(silhouettes)),4)
+        self.assertEqual(len(set(silhouettes)),1)
+        self.assertEqual(len({b''.join(f) for f in frames}),8)
+        for frame in frames:
+            for y in range(16):
+                self.assertEqual(sum(p[y].bit_count() for p in frame),silhouettes[0][y].bit_count())
         self.assertTrue(all(any(plane) for frame in frames for plane in frame))

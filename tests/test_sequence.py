@@ -21,7 +21,8 @@ KALEIDO_TICK = tick_at_bar(32)
 from pmg_preview import player_masks
 if MPU is not None:
     from scene_memory import video_memory, RuntimeMemory
-from school_story import story_frames, SCHOOL_PHASES, GIRL_PLACEMENTS, NORTH, NORTH_ORIGIN, NORTH_ADVANCE
+from school_story import story_frames, SCHOOL_PHASES, GIRL_PLACEMENTS
+from arena_art import FUJI, FUJI_ORIGIN
 from os_ram import image, loader, RUN
 from gym_practice import PRACTICE_TICK, PRACTICE_SCENE, practice_pixels, BALL_PATH, practice_shot, PRACTICE_CUTS
 
@@ -45,6 +46,18 @@ def execute(tick, cpu=None):
 
 @unittest.skipIf(MPU is None, 'install requirements-dev.txt for 6502 scene tests')
 class SequenceTests(unittest.TestCase):
+    def test_act5_motif_boundaries(self):
+        # Act 5 uses banana phases 0–31, spiral tunnel phases 32–47 and
+        # the new radial-lattice tunnel phases 48–63 after bar 108.
+        cpu = None
+        for tick, low, high in ((38892, 32, 47), (32909, 0, 15),
+                                (34403, 0, 15), (34404, 16, 31),
+                                (38891, 16, 31), (40387, 32, 47),
+                                (40388, 48, 63)):
+            cpu = execute(tick, cpu)
+            self.assertLessEqual(low, cpu.memory[0x83ed])
+            self.assertLessEqual(cpu.memory[0x83ed], high)
+
     def raster(self, cpu, effects=False):
         display = cpu.memory[0xd402] | cpu.memory[0xd403] << 8
         pixels = bytearray()
@@ -55,7 +68,7 @@ class SequenceTests(unittest.TestCase):
                 pixels.extend((byte >> shift) & 3 for shift in (6, 4, 2, 0))
         return player_masks(pixels, cpu.memory, 192) if effects else pixels
 
-    def test_school_encounter_pixels_and_readable_north(self):
+    def test_arena_encounter_pixels_and_readable_atari_logo(self):
         frames = story_frames()
         for tick, scene in SCHOOL_PHASES[:-1]:
             if scene == 14:
@@ -66,11 +79,11 @@ class SequenceTests(unittest.TestCase):
             self.assertEqual(pixels, frames[scene - 7])
             if scene == 9:  # lettering is fully legible in the foreground
                 left, top, width, height = GIRL_PLACEMENTS[0]
-                for index, letter in enumerate('NORTH'):
-                    for y, row in enumerate(NORTH[letter]):
-                        for x, bit in enumerate(row):
-                            at = (top + (NORTH_ORIGIN[1] + y) * height // 64) * 3 * 160 + left + (NORTH_ORIGIN[0] + index * NORTH_ADVANCE + x) * width // 48
-                            self.assertEqual(pixels[at], 3 if bit == '1' else 2)
+                for y,row in enumerate(FUJI):
+                    for x,bit in enumerate(row):
+                        if bit=='1':
+                            at=(top+(FUJI_ORIGIN[1]+y)*height//64)*3*160+left+(FUJI_ORIGIN[0]+x)*width//48
+                            self.assertEqual(pixels[at],3)
 
     def test_first_girl_view_crops_at_waist(self):
         left, top, width, height = GIRL_PLACEMENTS[0]
@@ -81,7 +94,6 @@ class SequenceTests(unittest.TestCase):
             for x in range(14, 33):
                 offset = (y * 48 + x) * 4
                 self.assertGreaterEqual(rgba[offset + 3], 160)
-        # Every backing pixel was already teal jacket or its original lettering.
         from school_story import color
         for y in range(15, 19):
             for x in range(14, 33):
@@ -97,12 +109,13 @@ class SequenceTests(unittest.TestCase):
             self.assertLessEqual(left + width, 104)
             self.assertLess(width * height, last_area)
             last_area = width * height
-            distance = (left + width / 2 - 66) ** 2 + (top + height - 46) ** 2
+            distance = (left + width / 2 - 82) ** 2 + (top + height - 52) ** 2
             self.assertLess(distance, last_distance)
             last_distance = distance
             cpu = execute(next(t for t,s in SCHOOL_PHASES if s==index+9))
             pixels = self.raster(cpu)
-            portrait = frames[1 if index == 0 else 0]
+            from school_story import boy_poses
+            portrait = boy_poses()[2 if index in (1,2) else 1]
             for y in range(192):
                 self.assertEqual(pixels[y * 160 + 104:(y + 1) * 160],
                                  portrait[y * 160 + 104:(y + 1) * 160])
@@ -127,40 +140,33 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(cpu.memory[0xd301] & 1, 0)
         self.assertEqual(cpu.memory[0xd40e], 0)
 
-    def test_dancer_retains_every_source_pixel_in_all_four_poses(self):
-        for frame in range(4):
-            # These ticks select poses 0–3 after the entrance has completed.
-            cpu = execute(9216 + frame * 16)
-            actual = self.raster(cpu)
-            source = dance_pixels(frame)
-            for index, pixel in enumerate(source):
-                if pixel:
-                    self.assertEqual(actual[index], pixel, f'pose {frame}, pixel {index}')
+    def test_side_dancer_uses_all_sixteen_composed_frames(self):
+        from ribbon_dance import scene_artwork
+        cpu=None
+        for tick in range(9216,9472,16):
+            cpu=execute(tick,cpu)
+            pixels,_=scene_artwork(tick)
+            expected=bytes(pixels[y//3*160+x] for y in range(192) for x in range(160))
+            self.assertEqual(self.raster(cpu),expected,tick)
+            self.assertEqual(cpu.memory[0x83e0],14)
 
-    def test_gym_stays_visible_for_solo_duo_and_trio(self):
-        from gym_background import dance_gym_pixels
-        gym = dance_gym_pixels()
-        for tick in (9152, 9808, 10560):
-            pixels = self.raster(execute(tick))
-            frame = execute(tick).memory[0x83e0] - 2
-            count = 1 if tick < DANCE_SECOND_TICK else 2 if tick < DANCE_THIRD_TICK else 3
-            self.assertEqual(pixels, dance_group_pixels(frame, count))
-            self.assertEqual(pixels[:24 * 160], gym[:24 * 160])
-            self.assertEqual(pixels[156 * 160:], gym[156 * 160:])
-        self.assertEqual(set(gym), {0, 1, 2, 3})
+    def test_side_gym_scrolls_left_at_two_depth_speeds(self):
+        from ribbon_dance import side_gym
+        for phase in range(15):
+            a,b=side_gym(phase),side_gym(phase+1)
+            for y in range(42):
+                self.assertEqual(b[y*160:y*160+156],a[y*160+4:(y+1)*160])
+            for y in range(42,64):
+                self.assertEqual(b[y*160:y*160+158],a[y*160+2:(y+1)*160])
+        self.assertEqual(side_gym(0),side_gym(16))
 
-    def test_dancers_join_progressively_without_losing_detail(self):
-        for tick, count in ((DANCE_SECOND_TICK-1, 1), (DANCE_SECOND_TICK, 2),
-                            (DANCE_THIRD_TICK-1, 2), (DANCE_THIRD_TICK, 3),
-                            (KALEIDO_TICK-1, 3)):
-            cpu = execute(tick)
-            frame = cpu.memory[0x83e0] - 2
-            self.assertEqual(self.raster(cpu), dance_group_pixels(frame, count))
-        for count, start in ((1, 9216), (2, 9856), (3, 10624)):
-            for frame in range(4):
-                cpu = execute(start + frame * 16)
-                self.assertEqual(cpu.memory[0x83e0], 2 + frame)
-                self.assertEqual(self.raster(cpu), dance_group_pixels(frame, count))
+    def test_ribbon_shot_retains_original_interval_boundaries(self):
+        from ribbon_dance import frame_at
+        for tick in (DANCE_TICK,DANCE_SECOND_TICK,DANCE_THIRD_TICK,KALEIDO_TICK-1):
+            cpu=execute(tick)
+            self.assertEqual(cpu.memory[0x83e0],14)
+            self.assertEqual(cpu.memory[0x83ed],frame_at(tick))
+        self.assertEqual(execute(KALEIDO_TICK).memory[0x83e0],6)
 
     def test_trio_uses_independent_pose_phases(self):
         from build_sequence import DANCE_LEFTS
@@ -177,7 +183,7 @@ class SequenceTests(unittest.TestCase):
     def test_banked_frame_copy_survives_music_interrupts(self):
         info = json.loads(METADATA.read_text())
         # Interrupt each dance bank and the practice bank's shared music tail.
-        for pose in (0, 2, 4, 6, 8, 10, 12, 13, 14):
+        for pose in (12, 13, 14):
             count, frame = pose // 4 + 1, pose % 4
             tick = (11968 if pose == 13 else 34288) if pose > 12 else PRACTICE_TICK if pose == 12 else (9216, 9856, 10624)[count - 1] + frame * 16
             cpu = MPU(memory=RuntimeMemory(XEX.read_bytes()))
@@ -244,9 +250,9 @@ class SequenceTests(unittest.TestCase):
         for tick in (6980, 6981, 7977, 7978):
             self.assertEqual(self.raster(execute(tick)), practice_shot(tick))
         cpu = execute(DANCE_TICK, execute(DANCE_TICK-1))
-        self.assertEqual(cpu.memory[0x83e0], 2 + ((DANCE_TICK >> 4) & 3))
-        self.assertEqual(cpu.memory[0x83e1], 192)
-        self.assertEqual(cpu.memory[0xd01d], 0)
+        self.assertEqual(cpu.memory[0x83e0], 14)
+        self.assertEqual(cpu.memory[0x83e1], 0)
+        self.assertEqual(cpu.memory[0xd01d], 3)
         info = json.loads(METADATA.read_text())
         self.assertEqual(info['dance_tick'], DANCE_TICK)
         self.assertEqual(info['dance_second_tick'], DANCE_SECOND_TICK)
@@ -254,7 +260,7 @@ class SequenceTests(unittest.TestCase):
 
     def test_player_dma_enabled_for_both_mosaic_motifs(self):
         cpu = execute(KALEIDO_TICK-1)
-        self.assertEqual(cpu.memory[0xd01d], 0)
+        self.assertEqual(cpu.memory[0xd01d], 3)
         cpu = execute(KALEIDO_TICK, cpu)
         self.assertEqual(cpu.memory[0xd01d], 3)
         self.assertEqual(cpu.memory[0xd400], 0x2e)
@@ -281,7 +287,7 @@ class SequenceTests(unittest.TestCase):
             self.assertEqual([i for i, op in enumerate(opcodes) if op & 0x80], [69, 147])
             if tick < 2992:
                 self.assertEqual(m[0xd01b] & 0xc0, 0xc0)
-                self.assertEqual(m[0xd01d], 0)
+                self.assertEqual(m[0xd01d], 3)
                 colors = set()
                 for row in range(192):
                     operand = display + 3 + row * 3
@@ -340,7 +346,8 @@ class SequenceTests(unittest.TestCase):
         # Two large, separate words, rather than the old small single line.
         self.assertGreaterEqual(len(rows),28)
         self.assertTrue(any(y<30 for y in rows))
-        self.assertTrue(any(y>=36 for y in rows))
+        self.assertTrue(any(y>=16 for y in rows))
+        self.assertTrue(all(y<32 for y in rows))
 
     def test_intro_letter_colors_follow_beat_with_live_cache(self):
         from title_plasma import artwork, FRAME_BYTES, compose_byte
@@ -431,11 +438,11 @@ class SequenceTests(unittest.TestCase):
                                    (2992, 8, 0), (4487, 8, 0), (4488, 9, 0),
                                    (4862, 10, 0), (5236, 11, 0), (5610, 12, 0),
                                    (5984, 13, 0), (DANCE_TICK-1, 13, 0),
-                                   (DANCE_TICK, 2 + ((DANCE_TICK >> 4) & 3), 192),
-                                   (DANCE_TICK+48, 2 + (((DANCE_TICK+48) >> 4) & 3), 96),
-                                   (DANCE_TICK+96, 2 + (((DANCE_TICK+96) >> 4) & 3), 0),
-                                   (KALEIDO_TICK-1, 2 + (((KALEIDO_TICK-1) >> 4) & 3), 0), (KALEIDO_TICK, 6, 0),
-                                   (65536, 6, 0), (0xffffff, 6, 0)):
+                                   (DANCE_TICK, 14, 0),
+                                   (DANCE_TICK+48, 14, 0),
+                                   (DANCE_TICK+96, 14, 0),
+                                   (KALEIDO_TICK-1, 14, 0), (KALEIDO_TICK, 6, 0),
+                                   (59084, 6, 0), (59085,17,0), (65536, 17, 0), (0xffffff, 17, 0)):
             with self.subTest(tick=tick):
                 cpu = execute(tick)
                 self.assertEqual(cpu.memory[0x83e0], frame)
@@ -458,7 +465,8 @@ class SequenceTests(unittest.TestCase):
                 if frame == PRACTICE_SCENE:
                     source = source // 3 + 64 * sum(tick >= cut for cut in PRACTICE_CUTS[1:])
                 lookup = 2 if 2 <= frame < 6 or frame == PRACTICE_SCENE else frame
-                expected = blank if source < 0 else info['row_addresses'][lookup][source]
+                expected = (0x9000+row//3*40 if frame in (14,17) else
+                            blank if source < 0 else info['row_addresses'][lookup][source])
                 if frame == 6:
                     expected = 0x9000 + row//2*40
                 if frame < 2:
@@ -466,7 +474,9 @@ class SequenceTests(unittest.TestCase):
                 else:
                     self.assertEqual(actual, expected, (tick, row))
                 self.assertEqual(actual // 4096, (actual + 39) // 4096)
-            limit = 110000 if 2 <= frame <= 6 or frame == PRACTICE_SCENE else 140000 if frame < 2 else 21000
+            # Intro adds ~9.6k instruction cycles for offscreen PMG preparation.
+            # This is a CPU regression ceiling, not a real-time frame deadline.
+            limit = 110000 if 2 <= frame <= 6 or frame == PRACTICE_SCENE else 150000 if frame < 2 else 110000 if frame in (14,17) else 21000
             self.assertLess(cpu.processorCycles, limit)
 
     def test_inactive_buffer_is_updated_then_swapped(self):
@@ -481,7 +491,7 @@ class SequenceTests(unittest.TestCase):
 
     def test_all_dance_frames_selected(self):
         self.assertEqual({execute(t).memory[0x83e0] for t in range(9216, 9280, 16)},
-                         {2, 3, 4, 5})
+                         {14})
 
 
 if __name__ == '__main__':

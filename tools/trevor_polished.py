@@ -19,6 +19,15 @@ HANDS = COMBO_HANDS * 8
 assert HITS[0] == TREVOR_HIT + 32 and HITS[-1] < TREVOR_END
 
 
+def impact_anchor(index):
+    """Repeatable xorshift scatter, held for the whole hit; close to its fist."""
+    seed=0x6d2b
+    for _ in range(index+1):
+        seed^=(seed<<7)&0xffff;seed^=seed>>9;seed^=(seed<<8)&0xffff
+    base_x,base_y=(-2,-1) if HANDS[index]==2 else (-38,2)
+    return base_x+seed%13-6,base_y+(seed>>8)%7-3
+
+
 # Near entrance pose is composited over the same gym as the distant pose.
 # Black pixels inside the actor stay opaque; the old rectangular black gym
 # backing must not cover the doorway and wall behind his shoulders.
@@ -85,6 +94,16 @@ def frames():
                        for xx in range(max(0,x-3),min(160,x+4)))
         if near[pos] or supported or not boundary:
             composite[pos] = near[pos]
+    # A dark one-pixel keyline on the gym side separates the purple fur
+    # from the purple wall without changing Trevor's face or body colours.
+    for y in range(64):
+        for x in range(160):
+            pos = y * 160 + x
+            if not mask[pos] and any(
+                0 <= xx < 160 and 0 <= yy < 64 and mask[yy * 160 + xx]
+                for xx, yy in ((x-1, y), (x+1, y), (x, y-1), (x, y+1))
+            ):
+                composite[pos] = 0
     out[1] = bytes(composite)
     return out
 
@@ -125,6 +144,9 @@ def inside(x,y,polygon):
 
 def tunnel_frames(phase):
     art=frames();result=[]
+    # Morph the tunnel's rectangular frame into an oval and back over the
+    # sixteen banked background phases; Trevor's bitmap and silhouette stay fixed.
+    morph=0.5-0.5*math.cos((phase&15)*math.tau/16)
     # Stages 4 and 5 mirror the punch and wind-up for the opposite hand.
     for index,poly in ((2, POLYGONS[0]), (3, POLYGONS[1]),
                        (4, POLYGONS[0]), (5, POLYGONS[1])):
@@ -151,7 +173,9 @@ def tunnel_frames(phase):
                     p[y*160+x]=art[source][y*160+character_x]
                 else:
                     xx=(x-79.5)/80;yy=(y-31.5)/32
-                    r=max(abs(xx),abs(yy),0.025)
+                    square_r=max(abs(xx),abs(yy))
+                    oval_r=math.hypot(xx,yy)/math.sqrt(2)
+                    r=max(square_r+(oval_r-square_r)*morph,0.025)
                     rings=(math.log(r)*2.5-phase/16)%1
                     # Bands expand from the center; radial facets add depth.
                     if rings<0.035:ink=3
@@ -193,9 +217,31 @@ def bang_art():
       (0xcc,0xec,0xfc,0xdc,0xcc,0xcc,0xcc),
       (0x78,0xcc,0xc0,0xdc,0xcc,0xcc,0x7c),
     )
-    return bytes(small+medium+full),tuple(bytes(v for row in glyph for v in (row,row)) for glyph in fonts)
+    exclamation=(0x18,0x18,0x18,0x18,0x18,0,0x18)
+    glyphs=tuple(bytes(v for row in glyph for v in (row,row)) for glyph in fonts)
+    return bytes(small+medium+full),glyphs+(bytes(v for row in exclamation for v in (row,row)),)
 
-def helper():
+
+def impact_word(index):
+    return 'BAM' if index & 1 else 'BUM'
+
+
+def impact_glyphs(index):
+    glyphs=bang_art()[1]
+    m=bytes(v for row in (0xc6,0xee,0xfe,0xd6,0xc6,0xc6,0xc6) for v in (row,row))
+    if index & 1:
+        return glyphs[0],glyphs[1],m,bytes(14)
+    # Mirror the actual BAM A vertically, removing only its crossbar.
+    a_rows=glyphs[1][::2]
+    u=bytes(v for row in reversed(a_rows)
+            for v in ((0xcc if row==0xfc else row),)*2)
+    return glyphs[0],u,m,bytes(14)
+
+
+IMPACT_HUES=(0x2e,0x3c,0x4e,0x5c,0x6e,0x7c,0x8e,0x9c,
+             0xae,0xbc,0xce,0xdc,0xee,0xfc,0x1e,0x2c)
+
+def helper(bank_wrapper=0):
     c=Code(ENTRY)
     def a(op,address):c.emit(op,address&255,address>>8)
     # Impacts follow the music clock; the next hand is raised in recovery.
@@ -272,57 +318,134 @@ def helper():
     for addr,val in ((0xd01b,1),(0xd01d,0),(0xd400,0x22)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
+    # Every PMG write below targets the INACTIVE $08/$88 buffer. Positions
+    # and colours are committed together in the early bottom-blank window.
+    pmg_fixups=[]
+    def pmg(op,address):
+        label=f'impact_pmg{len(pmg_fixups)}'
+        c.label(label);a(op,address)
+        pmg_fixups.append((label,address>>8))
     c.label('bang')
-    # Clear all players: their old RAM may contain art from preceding scenes.
-    clear_pmg(c, 'bang_clear')
-    # The hand chooses the side; two small variants use the same origin
-    # for lettering, burst and departing fragments.
-    c.jump(0xad,'hit_index');c.emit(0x29,1);a(0x8d,0x83e8)
-    c.jump(0xae,'hit_index');c.jump(0xbd,'hit_hand');c.emit(0xc9,4);c.branch(0xd0,'bang_side_ready')
-    a(0xad,0x83e8);c.emit(0x18,0x69,2);a(0x8d,0x83e8)
-    c.label('bang_side_ready');a(0xae,0x83e8)
+    c.jump(0x20,'bang_prepare')
+    c.emit(0xa9,0,0xa2,127)
+    c.label('bang_clear')
+    for base in (0x980,0xa00,0xa80,0xb00,0xb80):pmg(0x9d,base)
+    c.emit(0xca);c.branch(0x10,'bang_clear')
+    c.jump(0xae,'hit_index')
     c.jump(0xbd,'bang_bx');a(0x8d,0x83ec)
     c.jump(0xbd,'bang_by');a(0x8d,0x83ef)
     c.jump(0xad,'hit_age');c.emit(0xc9,BUBBLE_END);c.branch(0x90,'bang_burst_start')
     c.jump(0x4c,'bang_scatter')
     c.label('bang_burst_start')
-    # 24 double-lines of shared missile data: expand, impact, disperse.
     c.emit(0xa9,68,0x18);a(0x6d,0x83ef);a(0x8d,0x83eb)
-    c.jump(0xad,'hit_age');c.emit(0x4a,0x4a,0x4a,0xaa);c.jump(0xbd,'bang_phase');c.emit(0xaa)
+    c.jump(0xad,'hit_age');c.emit(0x4a,0x4a,0x4a,0xc9,2);c.branch(0x90,'burst_phase_ready');c.emit(0xa9,2)
+    c.label('burst_phase_ready');c.emit(0x0a,0x0a,0x0a,0x0a,0x0a,0xaa)
     c.emit(0xa9,36,0x18);a(0x6d,0x83ef);c.emit(0xa8)
-    c.label('burst_rows');c.jump(0xbd,'bang_burst');a(0x99,0x0980);c.emit(0xe8,0xc8);a(0xcc,0x83eb);c.branch(0xd0,'burst_rows')
-    # The word appears after the initial flash and before the fragments.
+    c.label('burst_rows');c.jump(0xbd,'bang_burst');pmg(0x99,0x0980)
+    c.emit(0xe8,0xc8);a(0xcc,0x83eb);c.branch(0xd0,'burst_rows')
     c.jump(0xad,'hit_age');c.emit(0xc9,8);c.branch(0x90,'bang_positions');c.emit(0xc9,LETTER_END);c.branch(0xb0,'bang_positions')
     c.emit(0xa2,0,0xa9,45,0x18);a(0x6d,0x83ef);c.emit(0xa8)
     c.label('glyph_rows')
-    for i in range(4):c.jump(0xbd,f'bang_glyph{i}');a(0x99,0x0a00+i*128)
+    for i in range(4):
+        if i == 0:
+            c.jump(0xbd,'bang_glyph0')
+        else:
+            c.jump(0xad,'hit_index');c.emit(0x29,1);c.branch(0xf0,f'word_bng{i}')
+            if i==1:c.jump(0xbd,'bang_glyph1')
+            elif i==2:c.jump(0xbd,'bam_m')
+            else:c.emit(0xa9,0)
+            c.jump(0x4c,f'word_write{i}')
+            c.label(f'word_bng{i}')
+            c.jump(0xbd,('bang_glyph2' if i==1 else 'bang_glyph3' if i==2 else 'bang_exclamation'))
+            c.label(f'word_write{i}')
+        pmg(0x99,0x0a00+i*128)
     c.emit(0xe8,0xc8,0xe0,14);c.branch(0xd0,'glyph_rows')
     c.label('bang_positions')
+    c.emit(0xa9,0);c.jump(0x8d,'puff_size')
+    c.emit(0xa9,0xff);c.jump(0x8d,'missile_size')
+    c.emit(0xa9,0x11);c.jump(0x8d,'impact_prior')
     for i in range(4):
-        c.emit(0xa9,152+i*8,0x18);a(0x6d,0x83ec);a(0x8d,0xd000+i);a(0x8d,0xd004+i)
-        c.emit(0xa9,0);a(0x8d,0xd008+i);a(0x8d,0xd012+i)
-    # Fifth player carries the colorful splash, black players form lettering.
-    c.jump(0xad,'hit_age');c.emit(0x4a,0x4a,0x4a,0x29,3,0xaa);c.jump(0xbd,'bang_color');a(0x8d,0xd019)
-    for addr,val in ((0xd407,8),(0xd01b,0x11),(0xd01d,3),(0xd400,0x2e),(0xd00c,0xff)):
-        c.emit(0xa9,val);a(0x8d,addr)
-    c.emit(0x60)
+        c.emit(0xa9,152+i*8,0x18);a(0x6d,0x83ec);c.jump(0x8d,f'impact_mx{i}')
+        # Both BUM and BAM occupy three 8-clock cells in a 32-clock bubble.
+        c.emit(0x18,0x69,4);c.jump(0x8d,f'impact_px{i}')
+    c.jump(0xad,'hit_age');c.emit(0xc9,LETTER_END);c.branch(0x90,'bang_word_publish')
+    c.jump(0x4c,'bang_puffs')
+    c.label('bang_word_publish')
+    c.jump(0x4c,'bang_publish')
     c.label('bang_scatter')
-    # The burst centre and its departing fragments share the same origin.
+    c.emit(0xa9,1);c.jump(0x8d,'impact_prior')
+    c.jump(0xad,'hit_age');c.emit(0xc9,120,0xa9,0x55);c.branch(0x90,'missile_size_ready');c.emit(0xa9,0)
+    c.label('missile_size_ready');c.jump(0x8d,'missile_size')
     c.jump(0xad,'hit_age');c.emit(0x38,0xe9,BUBBLE_END,0x4a);a(0x8d,0x83ea)
     c.emit(0x4a);a(0x8d,0x83eb)
     for i,(base,row) in enumerate(((162,51),(165,53),(171,51),(174,53))):
         c.emit(0xa9,base,0x38 if i<2 else 0x18)
         a(0xed if i<2 else 0x6d,0x83ea)
-        c.emit(0x18);a(0x6d,0x83ec);a(0x8d,0xd004+i)
+        c.emit(0x18);a(0x6d,0x83ec);c.jump(0x8d,f'impact_mx{i}')
         c.emit(0xa9,row,0x38 if i%2==0 else 0x18)
         a(0xed if i%2==0 else 0x6d,0x83eb)
         c.emit(0x18);a(0x6d,0x83ef);c.emit(0xa8)
-        for dy,bits in enumerate((1,1,3,1,1)):
-            a(0xb9,0x0980+dy);c.emit(0x09,bits<<(2*i));a(0x99,0x0980+dy)
-    for addr,val in ((0xd01a,0),(0xd012,0x2e),(0xd013,0x9e),(0xd014,0x4e),(0xd015,0xce),
-                     (0xd407,8),(0xd01b,1),(0xd01d,1),(0xd400,0x26),(0xd00c,0x55)):
+        # Several isolated bits per missile make a breaking particle train.
+        for dy,bits in enumerate((3,1,0,2,0,1)):
+            if not bits:continue
+            pmg(0xb9,0x0980+dy);c.emit(0x09,bits<<(2*i));pmg(0x99,0x0980+dy)
+    c.label('bang_puffs')
+    c.jump(0xad,'hit_index')
+    c.label('ball_mod');c.emit(0xc9,3);c.branch(0x90,'ball_mod_done');c.emit(0x38,0xe9,3);c.jump(0x4c,'ball_mod')
+    c.label('ball_mod_done');c.emit(0xc9,2);c.branch(0xd0,'normal_puffs');c.jump(0x4c,'impact_ball')
+    c.label('normal_puffs')
+    c.jump(0xad,'hit_age');c.emit(0x38,0xe9,LETTER_END,0x4a);a(0x8d,0x83ea)
+    c.emit(0x4a);a(0x8d,0x83eb)
+    c.jump(0xad,'hit_age');c.emit(0xc9,120,0xa9,1);c.branch(0x90,'puff_size_ready');c.emit(0xa9,0)
+    c.label('puff_size_ready');c.jump(0x8d,'puff_size')
+    for i,(base,row) in enumerate(((157,47),(165,55),(167,47),(175,55))):
+        c.emit(0xa9,base,0x38 if i<2 else 0x18);a(0xed if i<2 else 0x6d,0x83ea)
+        c.emit(0x18);a(0x6d,0x83ec);c.jump(0x8d,f'impact_px{i}')
+        c.emit(0xa9,row,0x38 if i%2==0 else 0x18);a(0xed if i%2==0 else 0x6d,0x83eb)
+        c.emit(0x18);a(0x6d,0x83ef);c.emit(0xa8)
+        c.jump(0xad,'hit_age');c.emit(0xc9,120,0xa2,0);c.branch(0x90,f'puff_start{i}');c.emit(0xa2,8)
+        c.label(f'puff_start{i}');c.emit(0x8a,0x18,0x69,8);a(0x8d,0x83e7)
+        c.label(f'puff_rows{i}');c.jump(0xbd,'puff_shape');pmg(0x99,0x0a00+i*128)
+        c.emit(0xe8,0xc8);a(0xec,0x83e7);c.branch(0xd0,f'puff_rows{i}')
+    c.jump(0x4c,'bang_publish')
+    c.label('impact_ball')
+    # Borrow the actual rotator ball + orbit renderer via the unbanked
+    # trampoline. Only hand/age cross banks; there are no copied ball assets.
+    c.jump(0xad,'hit_age');c.emit(0x38,0xe9,LETTER_END);a(0x8d,0x83eb)
+    c.jump(0xae,'hit_index');c.jump(0xbd,'hit_hand');a(0x8d,0x83e7)
+    for addr,value in ((bank_wrapper+5,0xb5),(bank_wrapper+6,0x24),(bank_wrapper+11,0),(bank_wrapper+12,0x40)):
+        c.emit(0xa9,value);a(0x8d,addr)
+    a(0x20,bank_wrapper)
+    for addr,value in ((bank_wrapper+5,0xb3),(bank_wrapper+6,0x24),(bank_wrapper+11,0),(bank_wrapper+12,0x60)):
+        c.emit(0xa9,value);a(0x8d,addr)
+    c.emit(0x60)
+    c.label('bang_publish')
+    c.label('impact_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'impact_wait');c.emit(0xc9,128);c.branch(0xb0,'impact_wait')
+    a(0xad,0x83e9);c.emit(0x09,8);a(0x8d,0xd407)
+    for i in range(4):
+        c.jump(0xad,f'impact_px{i}');a(0x8d,0xd000+i)
+        c.jump(0xad,f'impact_mx{i}');a(0x8d,0xd004+i)
+        c.jump(0xad,'puff_size');a(0x8d,0xd008+i)
+    c.jump(0xad,'missile_size');a(0x8d,0xd00c)
+    c.jump(0xad,'impact_prior');a(0x8d,0xd01b)
+    c.jump(0xad,'hit_age');c.emit(0x4a,0x4a,0x4a,0x29,15,0xaa)
+    c.jump(0xad,'hit_age');c.emit(0xc9,LETTER_END);c.branch(0x90,'black_letters')
+    for i in range(4):c.jump(0xbd,f'impact_hues{i}');a(0x8d,0xd012+i)
+    c.jump(0x4c,'missile_colour')
+    c.label('black_letters');c.emit(0xa9,0)
+    for i in range(4):a(0x8d,0xd012+i)
+    c.label('missile_colour');c.jump(0xbd,'impact_spark_hues');c.emit(0x09,14);a(0x8d,0xd019)
+    for addr,val in ((0xd01d,3),(0xd400,0x2e)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
+    c.label('bang_prepare')
+    a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e9)
+    for high in (9,10,11):
+        c.emit(0xa9,high);a(0x0d,0x83e9)
+        for label,hi in pmg_fixups:
+            if hi==high:c.jump(0x8d,label+'_hi')
+    c.emit(0x60)
+    for label,high in pmg_fixups:c.labels[label+'_hi']=c.labels[label]+2
     for label in ('dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     c.label('pose_pf0');c.emit(0x46,0x48,0x48,0x48,0x48,0x48)
@@ -332,23 +455,34 @@ def helper():
     c.label('row_lo');c.emit(*((y//3*40)&255 for y in range(192)))
     c.label('row_hi');c.emit(*((y//3*40)>>8 for y in range(192)))
     burst,glyphs=bang_art()
-    c.label('bang_phase');c.emit(0,32,*([64]*11))
-    c.label('bang_color');c.emit(0x1e,0x0e,0x9e,0x1e)
-    c.label('bang_bx');c.emit(0,0xfc,0xd8,0xdc)
-    c.label('bang_by');c.emit(0,0xfe,2,1)
+    c.label('bang_bx');c.emit(*(impact_anchor(i)[0]&255 for i in range(len(HITS))))
+    c.label('bang_by');c.emit(*(impact_anchor(i)[1]&255 for i in range(len(HITS))))
     c.label('hit_index');c.emit(0)
     c.label('hit_age');c.emit(0)
     c.label('hit_lo');c.emit(*(tick & 255 for tick in HITS))
     c.label('hit_hi');c.emit(*(tick >> 8 for tick in HITS))
     c.label('hit_hand');c.emit(*HANDS)
+    c.label('impact_hues');c.emit(*((IMPACT_HUES*2)[:28]))
+    for i in range(4):c.labels[f'impact_hues{i}']=c.labels['impact_hues']+i*4
+    c.labels['impact_spark_hues']=c.labels['impact_hues']+2
+    c.label('puff_shape');c.emit(0x18,0x3c,0x6e,0xff,0xfb,0x76,0x3c,0x18,
+                                0x20,0x70,0x20,0,0x04,0x0e,0x04,0)
+    c.label('bam_m');c.emit(*impact_glyphs(1)[2])
+    for name in ('puff_size','missile_size','impact_prior'):
+        c.label(name);c.emit(0)
+    for kind in ('p','m'):
+        for i in range(4):c.label(f'impact_{kind}x{i}');c.emit(0)
     c.label('bang_burst');c.emit(*burst)
-    for i,glyph in enumerate(glyphs):c.label(f'bang_glyph{i}');c.emit(*glyph)
+    bum=impact_glyphs(0)
+    for i,glyph in enumerate((glyphs[0],glyphs[1],bum[1],bum[2],bytes(14))):
+        c.label(f'bang_glyph{i}');c.emit(*glyph)
+    c.label('bang_exclamation');c.emit(*bytes(14))
     result=c.finish();assert len(result)<=2560,len(result)
     return result
 
 
-def bank(phase=0, quiet=False):
-    out=bytearray(16384);code=helper();out[0x2000:0x2000+len(code)]=code
+def bank(phase=0, quiet=False, bank_wrapper=0):
+    out=bytearray(16384);code=helper(bank_wrapper);out[0x2000:0x2000+len(code)]=code
     # Quiet poses are selected only in bank 49; action banks never read
     # $4A00. Keep these disjoint slots available for future banked assets.
     if quiet:

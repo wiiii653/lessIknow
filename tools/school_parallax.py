@@ -1,53 +1,19 @@
 """Precomposed independent layers for school pan, 18 clocked frames."""
 from pathlib import Path
 from engine_effects import COPY_PAGES, cached_display_list
-from build_sequence import Code, PALETTE
+from build_sequence import Code
 from music_timing import tick_at_bar
-from school_story import color
 ENTRY=0x7000
 START=tick_at_bar(19,2)
 
-# The three roots are fixed on original blonde pixels; only the tips move.
-HAIR_ROOTS=((26,9,20,0),(26,13,19,2),(27,19,21,4))
-HAIR_WAVE=(0,1,1,0,-1,-1)
-
-def hair_strands(phase):
-    strands=[]
-    for root_x,root_y,tip_x,offset in HAIR_ROOTS:
-        lift=HAIR_WAVE[(phase+offset)%len(HAIR_WAVE)]
-        points=[]
-        for x in range(tip_x,root_x+1):
-            # Fade to zero at the root, which never leaves its original pixel.
-            y=root_y+round(lift*(root_x-x)/(root_x-tip_x))
-            points.append((x,y))
-        strands.append(points)
-    return strands
-
 def frames():
-    bg=Path('build/school-wide-v034.rgb').read_bytes()
-    fg=Path('build/school-girl-cutout-v034.rgba').read_bytes()
-    assert len(bg)==200*64*3 and len(fg)==160*64*4
-    bg=[color(bg[i:i+3]) for i in range(0,len(bg),3)]
-    fg=[(color(fg[i:i+3]),fg[i+3]) for i in range(0,len(fg),4)]
-    result=[]
-    for phase in range(18):
-        back=phase*18//17
-        left=phase*38//17
-        img=bytearray(bg[y*200+x+back] for y in range(64) for x in range(160))
-        for y in range(64):
-            for x in range(160):
-                target=left+x
-                ink,alpha=fg[y*160+x]
-                if 0<=target<160 and alpha>=128:img[y*160+target]=ink
-        # Draw only three slender, attached trailing tips over the unchanged
-        # silhouette. Fixed roots and the original hair stay in place.
-        for strand in hair_strands(phase):
-            for x,y in strand[:-1]:
-                target=left+x
-                if 0<=target<160:
-                    img[y*160+target]=3
-        result.append(bytes(img))
-    return result
+    # Exact precomposed v175 walk: framing, direction, pose and parallax.
+    packed=Path('assets/art/reference/v175/arena-pan.bin').read_bytes()
+    if len(packed)!=18*2560:
+        raise ValueError('v175 arena pan must contain eighteen 160x64 frames')
+    return [bytes(value>>shift&3 for value in packed[i*2560:(i+1)*2560]
+                  for shift in (6,4,2,0)) for i in range(18)]
+
 
 def helper():
     c=Code(ENTRY)

@@ -1,0 +1,18 @@
+Built-in imagegen, reference-based generation, 2026-11-06.
+Reference: assets/art/source/act2_ribbon_dancer_v136.png.
+Local generated result: /home/igi/.codex/generated_images/01a1b17e-a60e-7361-8a07-3d9737480a5b/exec-5007327f-3474-4a8f-bc89-93df7daafc85.png
+
+Generation brief:
+Production sprite animation sheet for an Atari demoscene project. Exactly
+eight equally sized cells in four columns and two rows, pure black background,
+no lines or text. The same adult blonde woman and costume as the reference:
+psychedelic hot pink and cyan long-sleeved cropped top, short pleated skirt,
+pale yellow hair and white athletic shoes. Full body in LEFT-facing side
+profile, moving backwards to the RIGHT. Fixed camera, consistent scale and
+ground baseline in every cell, complete hands and shoes with ample margins.
+Eight consecutive backwards dance steps with heel-to-toe weight transfer,
+knee dips and small torso twists. Distinct baton-hand positions: forward,
+overhead and low, suitable for broad ribbon swings. Clean comic cel shading,
+thick outlines, limited saturated flat colors, peach skin. No drawn ribbons,
+no pom-poms, no scenery, no background shadows. The demo draws the ribbons
+and gym procedurally; keep the body silhouette separate in each cell.

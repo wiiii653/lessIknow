@@ -1,0 +1,140 @@
+"""Title reveal order, foreground fireworks and safe buffer ownership."""
+import json
+import unittest
+import test_sequence as sequence
+from test_engine_cache import TrackedMemory
+from test_tunnel_raster import BeamMemory
+from title_plasma import artwork, FRAME_BYTES
+from title_fireworks import graphics, occupied, anchors, CENTRES, missile_position
+
+
+class TitleFireworkTests(unittest.TestCase):
+    def test_live_fireworks_are_complete_in_front_of_both_cards(self):
+        from pmg_preview import player_masks
+        from title_plasma import zuraw_hue
+        data=graphics(bytes(FRAME_BYTES));cpu=None;overlaps=[0,0]
+        for tick in (768,800,832,864,896,928,2304,2336,2368,2400):
+            cpu=sequence.execute(tick,cpu);m=cpu.memory
+            phase=(m[0x83e2]>>4)&15;base=(m[0xd407]&0xfc)<<8
+            for p in range(5):
+                start=p*512+phase*32 if p<4 else 2048+phase*64
+                size=32 if p<4 else 64
+                target=base+(0x200+p*128 if p<4 else 0x180)+anchors((tick>>2)&63)[p]
+                self.assertEqual(bytes(m[target:target+size]),data[start:start+size],(tick,p))
+            mask=bytes(m[0xa000:0xaa00])
+            composite=player_masks(bytes(160*192),m,192,raster_start=8,pmg_color_offset=16)
+            for y in range(192):
+                for x in range(160):
+                    if composite[y*160+x]<16:continue
+                    overlaps[0]+=occupied(mask,x,y)
+                    overlaps[1]+=zuraw_hue(x//2,y//3) is not None
+            self.assertEqual(m[0xd01b],0xc1)
+        self.assertTrue(all(overlaps),overlaps)
+
+    def test_raised_title_enters_middle_then_bottom_then_top(self):
+        masks=artwork()[4]
+        stages=[masks[i*FRAME_BYTES:(i+1)*FRAME_BYTES] for i in (3,4,5)]
+        def rows(mask,start,end):return any(mask[start*40:end*40])
+        self.assertFalse(rows(stages[0],0,11))
+        self.assertTrue(rows(stages[0],11,21))
+        self.assertFalse(rows(stages[0],21,64))
+        self.assertFalse(rows(stages[1],0,11))
+        self.assertTrue(rows(stages[1],22,32))
+        self.assertTrue(rows(stages[2],0,11))
+        self.assertEqual(stages[0][11*40:21*40],stages[2][11*40:21*40])
+        self.assertEqual(stages[1][22*40:],stages[2][22*40:])
+
+    def test_both_cards_leave_the_zuraw_and_city_uncovered(self):
+        from title_plasma import ZURAW_TOP, ZURAW_LEFT, ZURAW, ZURAW_WIDTH, ZURAW_HEIGHT, zuraw_hue
+        masks=artwork()[4]
+        for index in (1,5):
+            mask=masks[index*FRAME_BYTES:(index+1)*FRAME_BYTES]
+            self.assertFalse(any(mask[ZURAW_TOP*40:]))
+        self.assertEqual((ZURAW_WIDTH,ZURAW_HEIGHT),(36,29))
+        self.assertGreater(sum(v is not None for row in ZURAW for v in row),600)
+        # The rear gatehouse joins the left tower to the timber shaft at
+        # every facade row: no transparent plasma slit may split the building.
+        for y in range(16,26):
+            self.assertNotIn(None,ZURAW[y][13:20],y)
+        inks={v for row in ZURAW for v in row}
+        self.assertTrue({0,1,3,9,10}.issubset(inks))
+
+    def test_all_phases_ignore_text_masks_and_keep_falling_sparks(self):
+        data=graphics(bytes(FRAME_BYTES))
+        self.assertEqual(data,graphics(bytes([255])*FRAME_BYTES))
+        self.assertEqual(len(data),3072)
+        for phase in range(16):
+            for p in range(4):
+                stream=data[p*512+phase*32:p*512+(phase+1)*32]
+                self.assertGreaterEqual(sum(v.bit_count() for v in stream),2,(p,phase))
+            missiles=data[2048+phase*64:2048+(phase+1)*64]
+            self.assertTrue(any(missiles),(phase,missiles))
+        # Late fragments descend after the burst and shrink in pixel count.
+        first=data[9*32:10*32];last=data[15*32:16*32]
+        self.assertGreater(sum(last[i]*i for i in range(32))/sum(last),
+                           sum(first[i]*i for i in range(32))/sum(first))
+        self.assertLess(sum(v.bit_count() for v in last),sum(v.bit_count() for v in first))
+
+    def test_rockets_rise_from_bottom_and_burst_in_the_upper_sky(self):
+        from pmg_preview import player_masks
+        for plane in range(4):
+            # Same cycle, staggered by one quarter for the four rockets.
+            start=2048+((-plane*64)&255)
+            head_rows=[]
+            for age in range(16):
+                tick=start+age*4;m=sequence.execute(tick).memory
+                base=(m[0xd407]&0xfc)<<8
+                rows=[r for r in range(128) if m[base+0x200+plane*128+r]]
+                head_rows.append(2*min(rows)-8)
+            self.assertGreaterEqual(head_rows[0],188)
+            self.assertEqual(head_rows,sorted(head_rows,reverse=True))
+            self.assertLess(head_rows[-1],CENTRES[plane][1]+12)
+            m=sequence.execute(start+64).memory
+            base=(m[0xd407]&0xfc)<<8
+            flash=m[base+0x200+plane*128:base+0x280+plane*128]
+            self.assertGreater(sum(v.bit_count() for v in flash),25)
+            centre=(CENTRES[plane][1]+8)//2
+            self.assertEqual(flash[centre],255)
+            self.assertLess(2*centre-8,80)
+
+    def test_burst_cycles_rainbow_and_detached_missiles_spread(self):
+        for plane in range(4):
+            start=2048+((-plane*64)&255)+64
+            colours=set();positions=[]
+            for age in range(0,128,8):
+                tick=start+age;m=sequence.execute(tick).memory
+                colours.add(m[0xd012+plane]>>4)
+                self.assertEqual(m[0xd012+plane]&15,14)
+                self.assertEqual(m[0xd004+plane],missile_position((tick>>4)&15,plane)+48)
+                positions.append(m[0xd004+plane])
+            self.assertGreaterEqual(len(colours),12)
+            self.assertGreaterEqual(max(positions)-min(positions),20)
+
+    def test_fireworks_keep_gtia11_and_use_only_inactive_pmg(self):
+        cpu=sequence.MPU(memory=TrackedMemory(sequence.XEX.read_bytes()))
+        sequence.execute(96,cpu)
+        for tick in (112,256,768,1496,1752,2008,2304,32,96,1592):
+            m=cpu.memory;active=(m[0xd407]&0xfc)<<8;m.writes.clear()
+            sequence.execute(tick,cpu)
+            self.assertFalse(any(active+0x180<=a<active+0x400 for a in m.writes),tick)
+            self.assertEqual(m[0xd01b],0xc1)
+            self.assertEqual(m[0xd400],0x2e)
+            self.assertEqual(m[0xd301],0xff)
+        sequence.execute(2992,cpu)
+        self.assertEqual(cpu.memory[0xd01b]&0xc0,0)
+
+    def test_late_raster_does_not_blank_the_last_burst(self):
+        for line in (248,255,290,305,306,311):
+            m=BeamMemory(sequence.XEX.read_bytes());cpu=sequence.MPU(memory=m)
+            sequence.execute(768,cpu)
+            cpu.processorCycles=0;m.start=line*114;m.cpu=cpu;m.events=[]
+            cpu.pc=json.loads(sequence.METADATA.read_text())['callback'];cpu.sp=0xfd
+            m[0x1fe:0x200]=[0xfe,0x7f]
+            for _ in range(100000):
+                if cpu.pc==0x7fff:break
+                cpu.step()
+            else:self.fail('callback did not return')
+            self.assertFalse(any(a==0xd01d and v!=3 for _,a,v in m.events))
+            commits=[t/114%312 for t,a,v in m.events if 0xd000<=a<=0xd015 or a==0xd01d]
+            self.assertGreaterEqual(min(commits),248)
+            self.assertLess(max(commits),260)

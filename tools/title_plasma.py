@@ -56,6 +56,100 @@ def dither_hue(value, x, y):
 # Stable, saturated face colours; the offset shadow uses neutral hue zero.
 LETTER_HUES = (9, 11, 13, 10, 12, 14, 15, 9)
 
+# All coordinates below are source GTIA pixels (80x64). A source row is
+# displayed three times. Keep the title and its extrusion above the skyline.
+CARDS = ((('TAME', 2, 0, None), ('IMPALA', 2, 48, None)),
+         (('I KNOW', 2, 33, None), ('THE BETTER', 1, 66, None),
+          ('THE LESS', 1, 0, None)))
+CARD_Y_SCALE = (2,1)
+ZURAW_LEFT, ZURAW_TOP = 22, 35
+ZURAW_WIDTH, ZURAW_HEIGHT = 36, 29
+
+
+def zuraw_artwork():
+    """Hand-drawn Motlawa facade: round brick towers and projecting timber.
+
+    Shape reference: National Maritime Museum / Visit Gdansk. Contrast comes
+    from black keylines, cyan brickwork, warm tiles and golden timber edges.
+    Source pixels are wider than tall in the corrected Atari preview.
+    """
+    p=[[None]*40 for _ in range(32)]
+    def dot(x,y,ink):
+        if 0<=x<40 and 0<=y<32:p[y][x]=ink
+    def line(x0,y0,x1,y1,ink):
+        n=max(abs(x1-x0),abs(y1-y0),1)
+        for i in range(n+1):dot(round(x0+(x1-x0)*i/n),round(y0+(y1-y0)*i/n),ink)
+    def polygon(points,ink,outline=0):
+        for y in range(32):
+            for x in range(40):
+                inside=False;px,py=x+.5,y+.5
+                for (ax,ay),(bx,by) in zip(points,points[1:]+points[:1]):
+                    if (ay>py)!=(by>py) and px<(bx-ax)*(py-ay)/(by-ay)+ax:inside=not inside
+                if inside:dot(x,y,ink)
+        for a,b in zip(points,points[1:]+points[:1]):line(*a,*b,outline)
+    # Continuous rear gatehouse wall: the towers attach to the timber core,
+    # with no slit of moving plasma between the left tower and the crane.
+    polygon([(13,14),(31,14),(31,30),(13,30)],8)
+    # Rounded, shaded masonry cylinders under steep red tiled roofs.
+    for left,right,top in ((1,18,15),(28,38,16)):
+        polygon([(left+1,top),(right-1,top),(right,top+2),(right,30),
+                 (left,30),(left,top+2)],9)
+        line(left+1,top+2,left+1,29,10)
+        line(right-1,top+2,right-1,29,8)
+        for y in range(top+3,30,3):
+            for x in range(left+3,right-1):
+                if (x+y//3)%4!=0:dot(x,y,10)
+        for x,y in ((left+4,top+3),(right-4,top+10),(left+4,top+12)):
+            line(x,y,x,y+2,0);dot(x+1,y+1,1)
+    polygon([(0,16),(9,8),(19,16)],3)
+    polygon([(27,17),(32,10),(39,17)],3)
+    for x in range(2,19,3):line(9,9,x,15,2)
+    for x in range(28,39,3):line(32,11,x,16,2)
+    line(1,16,18,16,9);line(28,17,38,17,9)
+    # Tall roof with the protruding gable clearly above the two towers.
+    polygon([(14,10),(18,4),(25,1),(31,7),(28,10)],3)
+    for x in (17,20,23):line(24,2,x,9,2)
+    line(14,10,18,4,9)
+    polygon([(18,10),(21,7),(29,8),(28,24),(19,25)],0)
+    line(19,11,19,24,1);line(21,10,21,23,1);line(27,10,27,23,1)
+    for y in (12,17,22):line(21,y,27,y,1)
+    # Upper loading hood and lower flared housing: the historic crane's
+    # recognisable two projections, rather than an industrial jib/gantry.
+    polygon([(21,7),(25,4),(30,8),(30,10),(20,10)],0)
+    line(21,7,25,4,9);line(26,5,29,8,1)
+    line(24,8,26,8,15);line(25,10,25,24,0)
+    polygon([(20,24),(28,24),(31,28),(28,29),(17,29)],0)
+    line(20,24,18,28,1);line(28,24,30,28,1)
+    line(20,28,28,28,1)
+    # Open water gate, hoisting rope, quay and slim cool edge.
+    polygon([(18,29),(27,29),(27,31),(18,31)],0)
+    line(23,29,23,30,15)
+    line(0,31,39,31,9)
+    line(25,0,25,1,1);dot(26,0,1)
+    # Slightly smaller, categorical pixel resampling; preserve roof peak and quay.
+    return tuple(tuple(p[round(y*31/(ZURAW_HEIGHT-1))][round(x*39/(ZURAW_WIDTH-1))]
+                       for x in range(ZURAW_WIDTH)) for y in range(ZURAW_HEIGHT))
+
+
+ZURAW = zuraw_artwork()
+
+
+def zuraw_hue(x,y):
+    if ZURAW_TOP<=y<64 and ZURAW_LEFT<=x<ZURAW_LEFT+ZURAW_WIDTH:
+        return ZURAW[y-ZURAW_TOP][x-ZURAW_LEFT]
+    return None
+
+
+def skyline_hue(x,y):
+    """Return the static night skyline hue, or None for unobstructed sky."""
+    crane=zuraw_hue(x,y)
+    if crane is not None:return crane
+    if y>=54:
+        roof=(57,55,58,56,58,57,55,57,54,58)[x//8]
+        if y>=roof:
+            return 10 if y>roof and x%8 in (2,5) and y%3==0 else 0
+    return None
+
 
 def letter_ink(code, phase=0):
     return LETTER_HUES[(code + phase) & 7] if code & 8 else 0
@@ -88,7 +182,12 @@ def artwork():
                     d1 = math.hypot((xx-x1)*.72, y-y1)
                     d2 = math.hypot((xx-x2)*.72, y-y2)
                     value = math.sin(d1*.19 - t) + math.cos(d2*.18 + t) + .55*math.sin(xx*.09 + y*.11 + t)
-                    pixels.append(dither_hue(value, xx, y))
+                    hue=dither_hue(value, xx, y)
+                    # Half-screen historic crane below the compact lettering.
+                    # Composited text always wins over these background pixels.
+                    city=skyline_hue(xx,y)
+                    if city is not None:hue=city
+                    pixels.append(hue)
                 image.append((pixels[0] << 4) | pixels[1])
         frames.append(bytes(image))
     # Every plasma bank has the same four colour lookup tables in its tail;
@@ -100,10 +199,8 @@ def artwork():
              for n in range(0, 16, 4)]
     masks = []
     # Large two-line artist card; taller, centred song-title lettering.
-    cards = ((('TAME', 2, 39, None), ('IMPALA', 2, 108, None)),
-             (('THE LESS', 1, 19, None), ('I KNOW', 2, 75, None),
-              ('THE BETTER', 1, 131, None)))
-    for rows in cards:
+    for card,rows in enumerate(CARDS):
+        sy=CARD_Y_SCALE[card]
         for stage in (1, 2, 3):
             mask = bytearray(FRAME_BYTES)
             for text, sx, top, fixed_left in rows[:stage]:
@@ -115,10 +212,10 @@ def artwork():
                     for gy, line in enumerate(TITLE_GLYPHS[char]):
                         for gx, bit in enumerate(line):
                             if bit == '1':
-                                for dy in range(2):
+                                for dy in range(sy):
                                     for dx in range(sx):
                                         pixels.add((left + i*advance + gx*sx + dx,
-                                                    top//3 + gy*2 + dy))
+                                                    top//3 + gy*sy + dy))
                     letters.append((i, pixels))
 
                 def ink(x, y, hue_mask):

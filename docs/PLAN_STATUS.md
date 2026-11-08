@@ -1,23 +1,309 @@
-# Status planu dema — stan po v126
+# Status planu dema — stan po v192
 
 Legenda: ✅ wykonane w buildzie lub potwierdzone; 🟡 częściowo wykonane / ograniczone do prototypu albo emulatora; ⬜ niezaimplementowane lub nieweryfikowane. Ticki pozostają zgodne z zatwierdzonym timeline’em.
 
+Punktem wyjścia był audyt kodu i XEX v144 z 2026-11-07
+(`AUDYT_BRAKOW_V144.md`). Poniższa tabela uwzględnia późniejsze zmiany
+aż do v192. Audyt v144 jest historycznym zapisem: nie opisuje bieżącego
+wydania, pamięci ani walidacji v192. Późniejszy przegląd nie zmienił
+priorytetów ani zatwierdzonych granic aktów.
+
+Zmiany scenariusza zatwierdzone przez użytkownika 2026-11-07,
+**zaimplementowane w v145**:
+
+- Trzecie ujęcie szarf: kamera z góry, dziewczyna wyrzucona ku obiektywowi;
+  powiększa się, a sala i grupa oddalają się pod nią.
+- Wsad: chłopiec rozbija tablicę kosza, z pęknięciem i odłamkami.
+- Ostatni kadr outro: ten sam chłopiec pobity na podłodze, z gwiazdkami
+  krążącymi wokół głowy; potem wygaszenie do czerni. Zakresy credits/greetz
+  pozostają zarezerwowane; same plansze nadal są do wykonania.
+
+Granice aktów i zegar muzyki pozostają bez zmian. V151 na zlecenie użytkownika zmienia wewnętrzne zakresy aktu 3, zachowując długość wyrzutu.
+
+[ODCZYT] V145: 109 testów, 106 zaliczonych, 3 pominięte (brak v126).
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 572 808 identycznych
+bajtów względem v035, cały utwór. Nadal 64 banki, 25 303 B odzysku netto
+względem v141. Dokładna mapa, źródła/prompty i ograniczenia walidacji:
+`V145_WYRZUT_TABLICA_FINAL.md`.
+
+[ODCZYT] V146: ujęcie z góry ma spokojne czarne tło bez kratki i linii
+boiska. Szarfy wyłączone w całym trzecim ujęciu; od początku lotu, tick 20662,
+po bokach rozkwitają fajerwerki players i lecą iskry missiles. Wcześniejsze
+ujęcia zachowują szarfy. Nadal 64 banki, 24 954 B odzysku netto względem v141.
+Kontroler końcowego chłopca przeniesiono do `$5CC0`, bez zmiany jego obrazu
+i animacji. Szczegóły: `V146_WYRZUT_FAJERWERKI.md`.
+Walidacja: 113 testów, 110 zaliczonych, 3 pominięte (brak v126).
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 14 751 288 identycznych
+bajtów przez cały utwór; bez testu na fizycznym Atari.
+
+[ODCZYT] V149: lewa baszta Żurawia połączona z korpusem bez prześwitu
+plazmy; cała bryła mniejsza o około 10% w obu wymiarach (36×29).
+Fajerwerki mają wznoszenie, promienisty rozkwit i opadające odłamki.
+Players/missiles na pierwszym planie, także przed literami i budynkiem.
+Bez zmian kolejności napisów ani synchronizacji. Nadal 64 banki;
+odzysk netto względem v141: 23 683 B. `V149_ZURAW_I_PIERWSZY_PLAN.md`.
+Walidacja: 115 testów, 112 zaliczonych, 3 pominięte (brak v126).
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 348 384 identyczne
+bajty względem v035, cały utwór. Bez testu na fizycznym Atari.
+
+[ODCZYT] V150: 16 różnych faz obrotu piłki rotatora i tunelu, zakrzywione
+szwy, refleks, jasna krawędź i cztery nasycone kolory. Sylwetka nie pulsuje
+i nie ma prześwitów; środek tunelu zasłonięty we wszystkich fazach.
+Całość mieści się w 2 KiB istniejącego banku 2; nadal 64 banki.
+Odzysk netto względem v141: 23 646 B. Szczegóły:
+`V150_PSYCHODELICZNA_PILKA.md`.
+Walidacja: 115 testów, 112 zaliczonych, 3 pominięte (brak v126),
+91,038 s. Atari800 PAL/1088XE, Altirra OS, stereo POKEY:
+15 780 312 identycznych bajtów względem v035, cały utwór.
+Bez testu na fizycznym Atari.
+
+[ODCZYT] V151: wyrzut kończy się nadal w 20942. Potem tunel z neonową
+piłką 20942–21690 (3,75 s), kozłowanie 21690–23186 (7,5 s), pojedynczy
+wsad z rozbiciem tablicy 23186–23934 (3,75 s zamiast 7,5 s).
+Wejście Trevora pozostaje w 23934. Nowe fasada i wnętrze ATARI ARENA;
+duże Fuji na plecach dziewczyny zastępuje NORTH. Nadal 64 banki,
+odzysk netto względem v141: 23 671 B. Szczegóły:
+`V151_ATARI_ARENA_I_PRZEBITKA.md`.
+Walidacja: 116 testów, 113 zaliczonych, 3 pominięte (brak v126), 86,535 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 154 704 identyczne bajty
+względem v035 przez cały utwór. Bez odsłuchu i testu na fizycznym Atari.
+
+[ODCZYT] V153: rzut, kozłowanie i wsad mają wspólną nieprzezroczystą
+piłkę z ośmioma obrotami paneli, jasnymi szwami/refleksem i ciemniejszą
+krawędzią. Cztery jasności 6/10/12/14 i cykl barw. Nadal 512 B masek,
+bez wzrostu kodu i RAM-u. Trajektorie, kotwice dłoni i cały timeline v151
+zachowane. Szczegóły: `V153_PILKA_RZUT_KOZIO_WSAD.md`.
+Walidacja: 116 testów, 113 zaliczonych, 3 pominięte (brak v126), 87,461 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 373 584 identyczne bajty
+względem v035, cały utwór. Bez testu na fizycznym Atari.
+
+[ODCZYT] V155: naprawiono przezroczyste włosy i kurtkę chłopca przed
+areną. Pełna maska sylwetki zachowuje czarne piksele włosów i magentę kurtki,
+także na prawej krawędzi ekranu. Obie pozy objęte regresją. Bez zmian kodu,
+timeline’u i liczby banków. Spakowane wiersze 10 764 B, o 163 B mniej niż
+w v153; odzysk netto względem v141: 23 834 B.
+Szczegóły: `V155_PELNA_MASKA_CHLOPCA.md`.
+Walidacja: 117 testów, 114 zaliczonych, 3 pominięte (brak v126), 87,656 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 14 573 016 identycznych
+bajtów względem v035, cały utwór; bez testu na fizycznym Atari.
+
+[ODCZYT] V156: co trzeci cios Trevora po BANG/BAM wypuszcza dużą piłkę
+z tunelu zamiast chmurki players. Cztery fazy obrotu, ruch w górę/prawo,
+kolorowe missiles pozostają. Hit ticki i czas efektu bez zmian. Maski
+zajmują `$5E00–$5FFF` banków 24–39; bank 49 jest wyłączony z instalacji.
+Kontroler ma 2556 B, tylko 4 B do `$6A00`. Nadal 64 banki,
+odzysk netto względem v141: 12 905 B. `V156_TREVOR_WYBIJA_PILKE.md`.
+Walidacja: 118 testów, 115 zaliczonych, 3 pominięte (brak v126), 87,140 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 14 403 384 identyczne bajty
+względem v035, cały utwór; bez testu na fizycznym Atari.
+
+[ODCZYT] V157: usunięto przerwy we wszystkich szarfach. Generator łączy
+kolejne próbki krzywej odcinkami zamiast zaznaczać wyłącznie punkty.
+Test sprawdza brak pustych wierszy i spójność ścieżki wszystkich 64 masek
+players. Iskry missiles, fajerwerki i wiatr bez zmian. Bez wzrostu pamięci,
+kodu, banków i bez przesuwania ticków. `V157_CIAGLE_SZARFY.md`.
+Walidacja: 119 testów, 116 zaliczonych, 3 pominięte (brak v126), 89,045 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 14 720 904 identyczne bajty
+względem v035 przez cały utwór; bez testu na fizycznym Atari.
+
+[ODCZYT] V158: w 32909–59085 rotator i tunel mają cykl ośmiu rodzin
+PMG bez szarf, z małą kryjącą piłką stale osłaniającą środek. Pozostałe
+3 players i 4 missiles pokazują duże/piłki rzutu, fajerwerki, BANG/BAM,
+chmurki, gwiazdki, wiatr/fajerwerki wyrzutu i odłamki. Tryb co 512 ticków,
+pełna pętla 4096. Wcześniejsze sceny i finał zachowane. Nadal 64 banki;
+nieużywane grafiki starego Trevora w banku 2 zastąpił nowy renderer.
+Odzysk netto vs v141: 15 461 B. `V158_CYKL_PMG.md`.
+Walidacja: 122 testy, 119 zaliczonych, 3 pominięte (brak v126), 90,811 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 14 202 576 identycznych
+bajtów względem v035 przez cały utwór; bez testu na fizycznym Atari.
+To urozmaica istniejące tła; nie realizuje brakujących scen fabularnych
+aktów 5C/5D, 6–7 ani credits/greetz.
+
+[ODCZYT] V159: skromny dithering 4×4 na przejściach złota/żółci bananów
+oraz wąskim pasie barwnych krawędzi wiatraka tunelu. Zmienione odpowiednio
+1,81% i 1,99% pikseli. Kontury czerni, białe grzbiety tunelu i otwór bez
+zmian. PMG/osłona środka zachowane; bez wzrostu pamięci, kodu i banków.
+`V159_DELIKATNY_DITHERING.md`.
+Walidacja: 122 testy, 119 zaliczonych, 3 pominięte (brak v126), 90,768 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 9 833 112 identycznych
+bajtów względem v035, cały utwór; bez testu na fizycznym Atari.
+
+[ODCZYT] V160 zastępuje osobną kryjącą piłkę v158: otwór zasłania teraz
+aktualny efekt PMG swoją własną sylwetką. Fajerwerki usunięto z cyklu;
+pojawiło się bijące czerwono-różowe serce. Piłka, komiksowy wybuch, chmurka,
+gwiazda, podmuch i odłamek mają pełny środek i używają wszystkich players.
+Przedział i tempo cyklu zachowane, wcześniejsze sceny bez zmian.
+Bank 2 zajmuje 14 705 B; nadal 64 banki. Odzysk netto vs v141: 13 081 B.
+`V160_SERCE_I_MASKOWANIE_EFEKTEM.md`.
+Walidacja: 124 testy, 121 zaliczonych, 3 pominięte (brak v126), 90,686 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 806 592 identyczne bajty
+względem v035, cały utwór; bez testu na fizycznym Atari.
+
+[ODCZYT] V161 usuwa dithering bananów i tunelu na życzenie użytkownika.
+Wszystkie 64 klatki efektów są identyczne z v158. Pozostałe banki i RAM
+niebankowany identyczne z v160; serce i maskowanie aktywnym efektem zachowane.
+Bez zmian pamięci i timeline’u. `V161_BEZ_DITHERINGU.md`.
+Walidacja: 124 testy, 121 zaliczonych, 3 pominięte (brak v126), 90,701 s.
+Potwierdzona binarna zgodność przywróconych banków z v158 i wszystkich
+innych banków/niebankowanego RAM-u z v160; nie powtarzano POKEY.
+
+[ODCZYT] V162 usuwa nowy cykl PMG z rotatora/tunelu, serce i ich dane.
+Przywrócony ten sam wcześniejszy renderer piłki i satelitów; test sprawdza
+zasłonięcie otworu tunelu. Bank 2 ma całe `$4000–$77FF` wolne (14 KiB).
+W bitce co trzecie BANG/BAM wypuszcza naprzemiennie dużą piłkę tunelu
+w lewo lub kompaktową piłkę rzutu w prawo. Dotychczasowe odłamki pozostają.
+Te same 512 B masek, po dwie fazy każdego rodzaju; bez nowych banków.
+Odzysk względem v161: 12 640 B netto; względem v141: 25 721 B.
+`V162_STARE_EFEKTY_I_DWIE_PILKI.md`.
+Walidacja: 121 testów, 118 zaliczonych, 3 pominięte (brak v126), 90,643 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 383 304 identyczne bajty
+względem v035, cały utwór; bez testu na fizycznym Atari.
+
+[ODCZYT] V163: co trzeci cios po napisie wypuszcza pełną piłkę rotatora
+z obiema orbitami satelitów. To wywołanie tego samego renderera, z 16 fazami
+obrotu i oryginalnymi kolorami. Całość odlatuje ku bliższej krawędzi według
+dłoni Trevora; BANG/BAM, pozostałe chmurki, ticki i długość bez zmian.
+Usunięto wszystkie kopie masek z banków 24–39 (8192 B). Bank 2 ma adapter
+44 B oraz dotychczasowy helper 2048 B; 14 292 B pozostaje wolne.
+Helper Trevora 2466 B, 94 B zapasu. Odzysk dodatkowy vs v162: 9695 B;
+łącznie vs v141: 35 416 B. `V163_PILKA_Z_SATELITAMI.md`.
+Walidacja: 122 testy, 119 zaliczonych, 3 pominięte (brak v126), 90,000 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 13 910 544 identyczne bajty
+względem v035, cały utwór. Bez testu na fizycznym Atari; py65 nie modeluje
+ANTIC DMA ani rzeczywistego FPS.
+
+[ODCZYT] V164: rakiety w intro lecą od dolnej krawędzi do górnej części
+nieba, z płynną kotwicą co 4 ticki. Wybuch: centralny błysk, promienie,
+opadające fragmenty i rozsuwające się na boki missiles. Kolory tęczy
+cyklicznie zmieniają się co 8 ticków. Obie plansze zachowują napisy,
+Żuraw, kolejność, długość, pełne foreground PMG i podwójny bufor.
+Koszt +648 B w bankach 40/41; netto vs v141: 34 768 B. Nadal 64 banki,
+main 2546 B. Mapa i walidacja w `V164_TECZOWE_RAKIETY.md`.
+[ODCZYT] Pełne `make check`: 124 testy, 121 zaliczonych,
+3 pominięte (brak archiwalnego v126), 95.022 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 14 601 744 identyczne bajty
+względem v035, cały utwór. Bez testu na fizycznym Atari.
+
+[ODCZYT] V165: cztery różne orbity satelitów piłki przy wsadzie do kosza,
+przeciwne kierunki, jedna szybsza i jedna pochylona. Orbity podążają za
+piłką przez wszystkie pozy do pierwszej rysy (fazy 0–74); od 75 pozostają
+oryginalne odłamki. Bez zmian kozłowania, grafiki, ticków i długości scen.
+Bank loadera 1: +207 B helpera i 256 B tabel, koszt +463 B.
+Helper 2859 B, 85 B przed danymi; tablice orbit `$7E40–$7F3F`, ogon
+192 B. Pozostałe 63 banki i RAM niebankowany identyczne z v164.
+Netto vs v141: 34 305 B. Szczegóły: `V165_ORBITY_PRZY_WSADZIE.md`.
+[ODCZYT] Pełne `make check`: 127 testów, 124 zaliczone,
+3 pominięte (brak archiwalnego v126), 96,416 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 11 964 744 identyczne bajty
+względem v035, cały utwór. Bez testu na fizycznym Atari.
+
+[ODCZYT] V166: 14 rzeczywistych kompozycji pośrednich, 9 nowych póz,
+w trzech późniejszych ujęciach tańca. Wstawiane w połowie odstępów między
+starymi akcentami; długość, tempo, cięcia i szybki wyrzut zachowane.
+Boczne ujęcie: 32 kolejne próbki obrazu/PMG/rejestrów identyczne z v165;
+wszystkie sześć oryginalnych banków tańca i osiem bocznych aktorów bez zmian.
+Nowe bitmapy: 16 886 B zamiast 35 840 B; dekodery/selektor podnoszą
+zajętość dawnych luk bankowych do 19 021 B. Kontroler +9 B, main bez zmian,
+nadal 64 banki. Znane pozostałe luki banków 31 623 B (30,88 KiB).
+Walidacja: 132 testy, 129 zaliczonych, 3 pominięte (brak v126), 101,725 s.
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 057 720 identycznych
+bajtów względem v035, cały utwór. CPU najdroższej sprawdzonej zmiany:
+91 282 cykle; nie jest to pomiar FPS ani DMA. Bez testu na fizycznym Atari.
+Szczegóły: `V166_PLYNNIEJSZY_TANIEC.md`.
+
+[ODCZYT] V171 zawierał cztery nowe klatki solówki, ale błędnie kierował
+dekoder do banków 8–11, gdzie pod adresem `$5E00` znajdowała się grafika.
+Wydanie nie nadawało się do odtwarzania. V172 przenosi 3805 B do ogonów
+banków 32–35, z istniejącymi dekoderami. Selektor: 1370 B; wolne luki:
+27 463 B. Budowa v172 powiodła się. Próba testu py65 nie wystartowała, bo
+brakuje zależności `py65`; nie ma walidacji emulatorowej ani sprzętowej.
+Szczegóły: `V171_DODATKOWE_KLATKI_SOLOWKI.md` i
+`V172_POPRAWKA_DEKODERA_TANCA.md`.
+
+[ODCZYT] V173 dopracowuje cztery dodatkowe pozy solówki, dopasowując je do
+konkretnych faz ruchu. Timingi oraz routing banków 32–35 pozostają jak w v172.
+Nowe strumienie zajmują 3945 B; potwierdzone wolne luki to 27 323 B.
+Zbudowano `build/visual-prototype-v173.xex` (309 wierszy, 2552 B kodu).
+Testów py65 i emulatora nie uruchomiono; py65 nie jest zainstalowany.
+Szczegóły: `V173_DOPRACOWANIE_SOLOWKI.md`.
+
 ## Timeline i akty
+
+[ODCZYT] V148 zastępuje wolne przygotowanie z v147 dynamicznym tańcem grupy
+w 17950–20475. Potem pojedynczy szybki wyrzut: przykucnięcie, lot z widoku
+ogólnego, cięcie do kamery z góry i zbliżenie w mniej niż sekundę. W obu
+planach działają białe/cyjanowe smugi players i ruchome kreski missiles,
+z bocznymi fajerwerkami. Granice aktów i ujęć głównych zachowane.
+Odzysk netto w v148: 24 771 B względem v141. Szczegóły:
+`V148_DYNAMICZNY_WYRZUT.md`.
+Walidacja: 115 testów, 112 zaliczonych, 3 pominięte (brak v126).
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 331 536 identycznych
+bajtów względem v035 przez cały utwór; bez próby na fizycznym Atari.
+
+[ODCZYT] V147: usunięto cykliczną sekwencję przygotowania w trzecim ujęciu.
+Kolejne fazy występują pojedynczo: przygotowanie, obniżenie przed wyrzutem,
+wznoszenie i zatrzymane końcowe zbliżenie. Fajerwerki i moment startu lotu
+pozostają z v146. Bez zmian wielkości danych, kodu i granic ujęć.
+Szczegóły: `V147_JEDEN_WYRZUT.md`.
+Walidacja: 114 testów, 111 zaliczonych, 3 pominięte (brak v126).
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 14 837 040 identycznych
+bajtów względem v035 przez cały utwór; bez próby na fizycznym Atari.
 
 | Akt / zakres z timeline’u | Status | Co mamy teraz |
 |---|---|---|
-| **Act 1 — School Days**, takty 0–24, ticki 0–8975 | ✅ | Szkoła zewnętrzna, wejście dziewczyny, ujęcia chłopca i dziewczyny, sala gimnastyczna oraz animowana piłka. Cheerleaderki wchodzą kolejno w tickach 8975, 9723 i 10471; cztery pozy, animowane cienie i akcenty PMG. |
-| **Act 2 — Crush**, takty 24–56, ticki 8975–20942 | ✅ | Taniec, kalejdoskop z cyklem kolorów, cztery zbliżenia podczas występu z mruganiem i włosami. Granice podscen wykorzystują muzyczne ticki. |
-| **Act 3 — Basketball Hero**, takty 56–64, ticki 20942–23934 | ✅ | Kozłowanie z animowanym chłopcem, piłką i ramieniem; następnie czteroetapowy wsad, obracająca się tęczowa piłka i błysk. Tło sali przy kozłowaniu pozostaje statyczne. |
-| **Act 4 — Trevor Awakens**, takty 64–88, ticki 23934–32909 | ✅ | Ciche wejście, zamach przed każdym ciosem, naprzemienne kombinacje i BANG z osobną fazą pustej chmurki oraz dłuższym rozpryskiem. Zachowano moment powrotu energii w ticku 26925. |
-| **Act 5 — Psychedelic Breakdown**, takty 88–120, ticki 32909–44875 | 🟡 | Od ticku 32909 działa kalejdoskop. Zaplanowane przejścia do tunelu w 38892, zmiany tekstury w 40388, mozaika w 41884 i sekwencja oczu od 43379 nie są jeszcze ułożone jako ten akt. Część efektów mozaiki/tunelu istnieje w innych miejscach dema. |
+| **Act 1 — School Days**, takty 0–24, ticki 0–8975 | 🟡 | Fasada ATARI ARENA zamiast szkoły, wejście dziewczyny z Fuji na plecach, ujęcia chłopca i dziewczyny, sala gimnastyczna oraz animowana piłka. W v170 chłopiec w pierwszym szkolnym ujęciu puszcza oko i gwiżdże; pikselowe klucze wiolinowe i nuty wychodzą od ust, pod dziewczyną warstwą tła. Brak Trevora w tle szkoły, przewidzianego w 1B; pierwotne intro świadomie zastąpiono planszami tytułowymi. |
+| **Act 2 — Crush**, takty 24–56, ticki 8975–20942 | 🟡 | W 8975–11967 boczny taniec ze szarfą: cofająca się dziewczyna, przeciwbieżny scroll sali i paralaksa podłogi. Pomponiary zachowane w osobnym projekcie. Po rotozoomerze trzy ujęcia szarf: grupa, solówka, grupa i wyrzut bohaterki. Jest 36 bazowych kompozycji (16 bocznych + 20 późniejszych) oraz 14 nowych klatek pośrednich w trzech późniejszych ujęciach; ticki akcentów i cięcia bez zmian. Podwójne bufory PMG i tęczowe iskry. Testy CPU i stereo POKEY wykonane; ocena płynności obrazu z DMA i artystyczna na docelowym sprzęcie pozostaje. |
+| **Act 3 — Basketball Hero**, takty 56–64, ticki 20942–23934 | ✅ | Po niezmienionym wyrzucie 3,75 s tunelu z piłką, potem 7,5 s kozłowania i 3,75 s wsadu we wnętrzu ATARI ARENA. Animowany chłopiec, piłka i ramię; rozbicie tablicy: pęknięcie, rozpad i odłamki PMG, obracająca się tęczowa piłka oraz błysk. Tło sali przy kozłowaniu pozostaje statyczne. |
+| **Act 4 — Trevor Awakens**, takty 64–88, ticki 23934–32909 | ✅ | Ciche wejście, zamachy i kombinacje ciosów. Tunel za Trevorem zmienia kształt z prostokąta w owal i z powrotem; postać pozostaje nieruchoma względem tła. Naprzemienne BANG/BAM, kolorowe fragmenty chmurki na czterech players, rozdzielone i kurczące się szczątki na missiles. Cykle barw PMG, podwójny bufor efektów. Zachowano moment powrotu energii w 26925 i wszystkie momenty uderzeń. |
+| **Act 5 — Psychedelic Breakdown**, takty 88–120, ticki 32909–44875 | 🟡 | Od 32909 do 34404 działa bananowy rotator. Tunel spiralny wydłużono w v180: zaczyna się w 34404; w 40388 przechodzi w organiczne falujące pasma (v190). Mozaika Trevora w 41884 i sekwencja oczu od 43379 nadal czekają; po 41884 pozostaje efekt zastępczy. |
 | **Act 6 — Love Triangle**, takty 120–128, ticki 44875–47867 | ⬜ | Brak zaplanowanych kadrów komiksowych i pojedynku Trevora z koszykarzem w tym zakresie. |
 | **Act 7 — Trevor Wins**, takty 128–144, ticki 47867–53850 | ⬜ | Brak osobnej kulminacji z gigantycznym Trevorem, flashem i wskazanym narastaniem neonów. |
-| **Act 8 — Outro**, takty 144–160, ticki 53850–59833 | ⬜ | Brak creditsów, greetzów i końcowego fade’u w zaplanowanych zakresach. |
+| **Act 8 — Outro**, takty 144–160, ticki 53850–59833 | 🟡 | W 59085–59833 działa ostatni kadr: pobity chłopiec na podłodze, cztery kolorowe gwiazdki wokół głowy i fade do trwałej czerni. Credits/greetz w wcześniejszych zakresach nadal brak. |
 
-Intro TAME IMPALA / album title z plazmą i ditheringiem działa w tickach 0–2992 przed ujęciami szkoły. Kolory liter zmieniają się co uderzenie. To późniejszy dodatek, który zastępuje początkowe logo szkoły z timeline’u; dalsze granice nie przesunięto.
+Intro TAME IMPALA / album title z plazmą i ditheringiem działa w tickach 0–2992 przed ujęciami szkoły. Kolory liter zmieniają się co uderzenie. V140 dodaje miasto i fajerwerki PMG; kolejność wejść na drugiej planszy to I KNOW → THE BETTER → THE LESS, z niezmienionym układem końcowym. W v140 maski chroniły litery i cienie także podczas przenikania; v149 usuwa tę ochronę na życzenie użytkownika, pokazując kompletne fajerwerki przed obrazem. To późniejszy dodatek, który zastępuje początkowe logo szkoły z timeline’u; dalszych granic nie przesunięto.
+
+[ODCZYT] V141: oba zestawy napisów podniesiono, zachowując kolejność wejść.
+Panorama zawiera pikselowego Żurawia; litery i cienie kończą się powyżej
+jego najwyższego punktu. Bez nowych banków i bez dodatkowych danych Atari.
+
+[ODCZYT] V144: Żuraw ma teraz 40×32 piksele na siatce 80×64, czyli połowę
+szerokości i wysokości aktywnego obrazu. Dwie baszty, dachy i wysunięta
+drewniana część według historycznej bryły; kontrast turkusu, ciepłych dachów
+i czerni. Napisy są w górnej połowie, z zachowaną kolejnością wejść.
+PMG omija też sylwetkę Żurawia. Bez wzrostu RAM, liczby banków i kodu 6502.
+Szczegóły: `V144_DUZY_ZURAW.md`.
+Walidacja końcowa: 101 testów, 98 zaliczonych, 3 pominięte (brak v126).
+Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 12 213 216 identycznych
+bajtów względem v035 przez cały utwór. Bez próby na fizycznym Atari.
+
+[ODCZYT] V137: scena wstęg ma rasterowy cykl tęczy oraz lecące iskry
+na missiles. Podwójne bufory zachowane, bez dodatkowych banków. Pełne wyniki:
+`V137_TECZOWE_SZARFY.md`.
+
+[ODCZYT] V138: opis efektów ciosów i walidacji znajduje się
+w `V138_BANG_BAM_ROZPAD.md`. V142 przenosi bitmapy szarf do banków dawnego
+tańca: odzysk netto 46 633 B, nadal 64 przydzielone banki. Bieżąca mapa
+w `AGENTS.md`, szczegóły i osobny projekt w `V142_SZARFY_Z_BOKU_I_ARCHIWUM_POMPONOW.md`.
+
+[ODCZYT] V142: `make check` — 100 testów, 97 zaliczonych, 3 pominięte
+(brak archiwalnego v126). Atari800 PAL/1088XE, Altirra OS, stereo POKEY:
+14 297 256 identycznych bajtów względem v035, cały utwór. Osobny projekt:
+3/3 testy oraz 16 312 896 identycznych bajtów POKEY. Bez pomiaru FPS
+z DMA ANTIC i bez próby na fizycznym Atari.
 
 ## Zadania weryfikacyjne V1–V7
+
+[ODCZYT] V143: dziewczyna w bocznym ujęciu przechodzi z lewej na prawą
+razem z szarfami i iskrami. Niezależny maskowany aktor zajmuje dodatkowe
+16 KiB; obecny odzysk netto względem v141 to 29 901 B. `make check`:
+101 testów, 98 zaliczonych i 3 pominięte (brak v126). Atari800 PAL/1088XE,
+Altirra OS, stereo POKEY: 15 040 296 identycznych bajtów, cały utwór.
+Płynność na fizycznym Atari nadal nieweryfikowana. Szczegóły w
+`V143_PRZEJSCIE_Z_SZARFA.md`.
+
+[ODCZYT] Dla roboczej zmiany aktu 5 porównanie Atari800 PAL/1088XE, stereo
+POKEY z v035 dało 14 789 088 identycznych bajtów (cały utwór). Nie jest to
+odsłuch ani pomiar FPS na fizycznym Atari.
 
 | Zadanie | Status | Ustalenie |
 |---|---|---|
@@ -38,3 +324,173 @@ Intro TAME IMPALA / album title z plazmą i ditheringiem działa w tickach 0–2
 - ⬜ Walidacja na fizycznym Atari 65XE 1 MB ze stereo POKEY oraz pomiar zapasu CPU w najcięższych scenach.
 
 Źródła statusu: `TLIKTB_Atari_Timeline_v2.md`, `TLIKTB_Technical_Constraints.md`, bieżący `README.md` oraz notatki w `docs/` (m.in. audyt banków, profil silnika i wydania V117–V125).
+
+
+[ODCZYT] V174 naprawia przezroczyste/czarne plamy na szyldzie ATARI ARENA
+w pierwszym ujęciu chłopca. Maska portretu wybiera teraz spójne, kolorowe
+elementy postaci zamiast całego wielokąta obejmującego także tło; nuty i klucze
+wiolinowe są umieszczone nad napisem. Podgląd: `build/v174-arena-sign-preview.png`.
+Zbudowano `build/visual-prototype-v174.xex` (307 współdzielonych wierszy,
+2552 B kodu). Bez zmian ticków i alokacji banków. Testów py65 i odtwarzania
+emulatorowego nie uruchomiono. Szczegóły: `V174_CZYTELNY_SZYLD_ARENY.md`.
+
+
+[ODCZYT] V175: w dymkach Trevora słowo BANG zmieniono na BNG!; co drugi
+cios nadal pokazuje BAM. Zachowano szerokość efektu, animację i momenty
+uderzeń. Zbudowano `build/visual-prototype-v175.xex` (307 współdzielonych
+wierszy, 2552 B kodu). Nie uruchamiano testów ani emulatora. Szczegóły:
+`V175_TREVOR_BNG.md`.
+
+
+[ODCZYT] V176 odświeża sylwetkę dziewczyny w panoramie ATARI ARENA: nowa
+grafika pokazuje ją w profilu skierowaną w lewo, w Atariowej kurtce. Postać
+i tło przesuwają się teraz od prawej do lewej. Ujęcie chłopca zachowuje
+winknięcie i gwizdanie z nutami. Długości, ticki i granice scen bez zmian.
+Podgląd: `build/v176-arena-walk-preview.png`. Zbudowano
+`build/visual-prototype-v176.xex` (307 współdzielonych wierszy, 2552 B kodu).
+Nie uruchamiano testów ani emulatora. Szczegóły: `V176_SPACER_WZDLUZ_ARENY.md`.
+
+
+[ODCZYT] V177 zastępuje portret chłopca, cztery klatki spaceru dziewczyny i
+sześć póz koszykarza nowymi arkuszami RGBA. Maska każdej postaci pochodzi
+z kanału alfa nowej grafiki; usunięto stare wielokątne maski portretu,
+koszykarza i obręczy. Koszykarz i obręcz są komponowani na czystej płycie hali.
+Granice, ticki, rytm kozłowania/wsadu i banki pozostają bez zmian.
+Zbudowano `build/visual-prototype-v177.xex`: 292 z 309 współdzielonych
+wierszy, 2552 B kodu, 10 919 B danych skanlinii. Podglądy bitmapowe:
+`build/v177-opening-cast-preview.png`, `build/v177-arena-walk-preview.png`,
+`build/v177-basketball-preview.png`; to nie są przechwycenia z emulatora.
+Testów i odtwarzania emulatorowego nie uruchomiono. Szczegóły:
+`V177_GRAFIKA_PRODUKCYJNA_POSTACI.md`.
+
+
+[ODCZYT] V178 przywraca ustalone kadry otwarcia z v176: zbliżenie chłopca
+po prawej oraz cztery znane skale/pozycje dziewczyny. Zachowuje czytelną
+maskę portretu i poprawny szyld; nowy cykl spaceru w panoramie nadal idzie
+z prawej na lewo. Nowe sześć póz koszykarza z v177 pozostaje aktywne. Ticki,
+długości i przydział banków bez zmian. Podgląd:
+`build/v178-opening-framing-preview.png`. Zbudowano
+`build/visual-prototype-v178.xex` (307/309 wierszy, 12 084 B danych
+skanlinii, 2552 B kodu). Testów i emulatora nie uruchomiono. Szczegóły:
+`V178_KADRY_OTWARCIA.md`.
+
+
+[ODCZYT] V179 naprawia maskę portretu chłopca: czarne piksele włosów i kurtki
+wewnątrz maski sylwetki pozostają kryjące. Neutralna poza jest używana przed
+przejściem dziewczyny; mrugnięcie, dziubek i nuty pojawiają się w kolejnych
+ujęciach po przejściu. Ticki i granice scen bez zmian. Podgląd:
+`build/v179-opening-frames.png` (kompozycja źródłowa, nie emulator).
+Zbudowano `build/visual-prototype-v179.xex` (286 współdzielonych wierszy,
+11 034 B danych wierszy, 2552 B kodu). Testów i emulatora nie uruchomiono.
+Szczegóły: `V179_MASKA_I_REAKCJA_CHLOPCA.md`.
+
+
+[ODCZYT] V180 wydłuża ujęcie tunelu w akcie 5: bananowy rotator kończy się
+w takcie 92 (tick 34404), a tunel zaczyna się tam i trwa do niezmienionego
+momentu kolejnej kompozycji w takcie 112 (tick 41884). Spiralna tekstura
+przechodzi w radialną siatkę w takcie 108 (tick 40388), jak wcześniej.
+Granice aktów, dalsze ujęcia, muzyczne ticki oraz banki bez zmian. XEX:
+`build/visual-prototype-v180.xex`; 286 współdzielonych wierszy, 11 034 B
+danych wierszy, 2552 B kodu. Build poprawny; testów ani emulatora nie
+uruchomiono. Szczegóły: `V180_DLUZSZY_TUNEL.md`.
+
+
+[ODCZYT] V181 przywraca boczny spacer klatka w klatkę z XEX-a v175 i dawną
+kolejność kadrów spotkania. Skale postaci pozostają z v175; tor zmniejszania
+dziewczyny prowadzi do lewych drzwi areny, do punktu (82,52). Uzupełniono
+krycie kurtki chłopca. Sześć testów CPU/grafiki zaliczonych. Podgląd po
+callbacku 6502: `build/v181-opening-preview.png`; nie jest to przechwycenie
+z emulatora z DMA. Porównanie muzyki Atari800 zablokował brak FUSE dla
+zainstalowanego AppImage. Banki i ticki pozostają bez zmian; 275 wierszy,
+10 630 B danych wierszy, 2552 B kodu. Szczegóły:
+`V181_WEJSCIE_DZIEWCZYNY_V175.md`.
+
+
+[ODCZYT] V182: chłopiec patrzy przed siebie w ujęciach 2992 i 4114, ogląda
+się przy mijaniu (4488) i podczas oddalania dziewczyny (4862,5236). Gwiżdże
+z dziubkiem i nutami dopiero w 5610, przy dziewczynie w drzwiach. Kadry,
+panorama v175 i tor wejścia z v181 bez zmian. Siedem testów CPU/grafiki
+zaliczonych; 316 wierszy, 12 153 B danych, 2552 B kodu. Bez nowej walidacji
+emulatorowej (znana przeszkoda FUSE). `V182_REAKCJA_CHLOPCA.md`.
+
+
+[ODCZYT] V183 usuwa spłaszczone bitmapowe nuty nad areną. Od ticku 5610
+nuty i klucz wiolinowy wylatują z ust na czterech players, unoszą się w górę
+i w lewo, mienią kolorami i mają krótkie ślady missiles. Efekt wyłączany
+przy następnym ujęciu w 5984. Podwójne bufory PMG i publikacja w blankingu.
+835 B helpera w luce banku 0; 63 pozostałe banki identyczne z v182.
+13 testów zaliczonych; podgląd CPU: `build/v183-whistle.gif`. Bez nowej
+walidacji emulatorowej. Szczegóły: `V183_NUTY_PMG.md`.
+
+
+[ODCZYT] V184 przesuwa wejście ostatniego ujęcia przy drzwiach i gwizdu PMG
+o jeden beat wcześniej: tick 5516 zamiast 5610 (94 ticki, około 0,47 s).
+Dziubek i pierwsza nuta startują razem. Wspólna stała WHISTLE_START; koniec
+ujęcia i początek kozłowania w 5984 bez zmian.
+`V184_WCZESNIEJSZY_GWIZD.md`.
+
+
+[ODCZYT] V185: gwizd i nuty zaczynają się w 4862, po mijaniu w pierwszym
+planie, i trwają do 5984 (około 5,6 s). Etapy oddalania dziewczyny zachowują
+oryginalne ticki; ostatnia pozycja przy drzwiach ponownie w 5610. Nuty
+unoszą się wolniej (jedna faza na osiem ticków), pozostając czytelne dłużej.
+14 testów zaliczonych. Podgląd CPU: `build/v185-whistle.gif`. Bez nowego
+odtwarzania emulatorowego. Szczegóły: `V185_DLUZSZA_MELODIA.md`.
+
+
+[ODCZYT] V186: dziubek i pierwsza nuta razem w 4862; gwizd i melodia
+kończą się przy dojściu dziewczyny do drzwi w 5610. Dwie skończone fale
+nut/kluczy PMG mają odrębne krzywe lotu, ślady i wygaszanie. Poprawiony
+rysunek ust, usunięte resztki starych promieni przy twarzy; kadry i tor
+dziewczyny zachowane. 15 testów sceny i piłki zaliczonych. Porównanie
+całego utworu w Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 6 220 440
+identycznych bajtów z v035. Podgląd CPU: `build/v186-encounter.gif`.
+Pełny zestaw i starsze rozbieżności: `V186_DOMKNIETA_SCENA_SPOTKANIA.md`.
+
+
+[ODCZYT] V187 powiększa nuty PMG dwukrotnie w obu osiach, utrzymuje pełną
+jasność prawie przez cały lot, przeplata kolory białymi błyskami oraz poszerza
+ślady missiles. Tory szerzej rozchodzą się po niebie. Synchronizacja ust
+i końca przy drzwiach oraz kadry bez zmian. 16 testów zaliczonych.
+Podgląd: `build/v187-whistle.gif`. `V187_DUZE_NUTY_PMG.md`.
+
+[ODCZYT] V187: porównanie całego utworu w Atari800 PAL/1088XE, stereo
+POKEY — 16 221 456 identycznych bajtów z v035. Pozostałe 63 banki identyczne
+z v186; zmiana ograniczona do banku 0 i sterowania wielkością/barwami PMG.
+
+
+[ODCZYT] V188 naprawia wyłączanie GRACTL/DMACTL przed przygotowaniem PMG
+w scenach 10–11. Poprzednio nuty znikały na 267–313 linii ekranu na każdej
+aktualizacji. Teraz front pozostaje aktywny do publikacji gotowego bufora.
+Regresja z poruszającym się rastrem i opóźnieniami potwierdza brak przerw
+(48 przypadków). 19 testów ukierunkowanych zaliczonych. Atari800 PAL/1088XE,
+stereo POKEY: 16 336 440 bajtów identycznych z v035, cały utwór. Main
+2560 B — bez zapasu przed $1E00. `V188_CIAGLE_PMG_BEZ_STROBO.md`.
+
+
+[ODCZYT] V189 odtwarza osiem póz koszykarza, kozłowanie, wsad i trzy fazy
+rozbicia tablicy bezpośrednio z v175. Przywrócone cztery różne fazy ręki
+usuwają powielenia i błędne łaty nowych póz v177. Wszystkie klatki kluczowe,
+rysunek i położenie tablicy oraz trajektorie piłki zachowują zgodność z v175.
+Zmienił się tylko bank 1; poprawki nut v188 pozostają. 23 testy ukierunkowane
+zaliczone, w tym porównanie działających klatek i PMG z archiwalnym v175.
+Cały utwór w Atari800: 14 992 848 identycznych bajtów stereo POKEY z v035.
+Podgląd: `build/v189-basketball.gif`. `V189_KOSZYKOWKA_I_TABLICA_V175.md`.
+
+[ODCZYT] Pełny `make check` v189: 144 testy, 135 zaliczonych,
+6 niezaliczonych, 3 pominięte (brak v126). Zniknęły wszystkie cztery
+wcześniejsze błędy testów koszykówki. Pozostałe są opisane w raporcie v189.
+
+[ODCZYT] V190: Trevor pokazuje BUM/BAM, a ostatnia tekstura tunelu
+(klatki 48–63) ma organiczne falujące pasma. Timing, piłka i przydział
+pamięci zachowane. `V190_BUM_I_ORGANICZNY_TUNEL.md`.
+
+[ODCZYT] V191 centruje BUM/BAM w dymku i dodaje ograniczony pseudolosowy
+rozrzut wokół właściwej pięści: ±6 pikseli X i ±6 linii ekranu Y. Pozycja
+stała przez cały cios, wspólna dla tekstu i dymka. 24 testy zaliczone; cały
+utwór stereo POKEY identyczny z v035 (16 037 712 B).
+`V191_DYMKI_PRZY_PIESCI.md`.
+
+[ODCZYT] V192 zmienia U w BUM na odwrócone pionowo A z BAM bez poprzeczki.
+Zachowane centrowanie, rozrzut przy pięściach i rozmiary danych.
+`V192_U_Z_ODWROCONEGO_A.md`.

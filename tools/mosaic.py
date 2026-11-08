@@ -13,6 +13,39 @@ ENTRY=0x7c00
 KALEIDO_START=tick_at_bar(32)
 TREVOR_START=tick_at_bar(88)
 
+@lru_cache(maxsize=1)
+def banana_tile():
+    """Hand-traced hanging bunch; distinct tips, black seams and golden ribs."""
+    shapes = (
+        ((43,12),(48,21),(50,32),(47,43),(40,52),(29,57),(18,57),(11,52),
+         (22,51),(32,45),(38,36),(40,25),(39,15)),
+        ((38,13),(42,23),(41,34),(36,45),(27,51),(17,52),(9,48),(6,43),
+         (17,45),(26,40),(31,32),(33,22),(33,15)),
+        ((32,13),(35,22),(32,31),(26,39),(17,43),(9,42),(4,36),(4,32),
+         (12,36),(19,33),(24,27),(27,19),(27,14)),
+    )
+    def contains(x,y,poly):
+        hit=False
+        for (ax,ay),(bx,by) in zip(poly,poly[1:]+poly[:1]):
+            if (ay>y)!=(by>y) and x < (bx-ax)*(y-ay)/(by-ay)+ax:
+                hit=not hit
+        return hit
+    tile=bytearray([2]*4096)
+    for shape in shapes:
+        mask={(x,y) for y in range(64) for x in range(64)
+              if contains(x+.5,y+.5,shape)}
+        for x,y in mask:
+            edge=any((x+dx,y+dy) not in mask for dx,dy in ((1,0),(-1,0),(0,1),(0,-1)))
+            shade=any((x+dx,y+dy) not in mask for dx,dy in ((2,0),(0,2)))
+            tile[y*64+x]=0 if edge else 1 if shade else 3
+    # Thick cut stalk and crown visibly join the three separate fruit.
+    stalk=((27,15),(32,8),(35,3),(41,4),(40,9),(44,14),(40,19),(33,18))
+    for y in range(3,20):
+        for x in range(26,45):
+            if contains(x+.5,y+.5,stalk):
+                tile[y*64+x]=0 if y<6 or x<30 or x>40 else 1
+    return bytes(tile)
+
 @lru_cache(maxsize=64)
 def pixels(frame):
     phase=(frame&31)/32*math.tau
@@ -24,26 +57,34 @@ def pixels(frame):
         for x in range(160):
             xx,yy=x-79.5,(y-47.5)*1.66
             if frame<32:
-                u=(co*xx-si*yy)/22
-                v=(si*xx+co*yy)/22
-                a,b=(u+0.5)%1-0.5,(v+0.5)%1-0.5
-                radius=math.hypot(a,b)
-                angle_cell=math.atan2(b,a)
-                petal=0.29+0.07*math.cos(4*angle_cell)
-                if abs(radius-petal)<0.035: color=0
-                elif radius<0.095: color=3
-                elif radius<petal: color=1
-                else: color=2
+                u=int(co*xx-si*yy+32)%64
+                v=int(si*xx+co*yy+32)%64
+                color=banana_tile()[v*64+u]
             else:
                 radius=math.hypot(xx,yy)
                 theta=math.atan2(yy,xx)
-                # Curving spiral ribbons and soft starbursts, periodic at wrap.
-                wave=math.sin(theta*6+math.log(max(3,radius))*4-phase)
-                ripple=math.sin(math.log(max(3,radius))*9-2*phase+math.sin(theta*3))
-                if radius<5:color=0
-                elif abs(wave)<0.09:color=0
-                elif ripple>0.92:color=3
-                else:color=1 if wave>0 else 2
+                tunnel_phase=(frame&15)/16*math.tau
+                if frame<48:
+                    # First tunnel texture: the existing curling spiral.
+                    wave=math.sin(theta*6+math.log(max(3,radius))*4-tunnel_phase)
+                    ripple=math.sin(math.log(max(3,radius))*9-2*tunnel_phase+math.sin(theta*3))
+                    if radius<5:color=0
+                    elif abs(wave)<0.09:color=0
+                    elif ripple>0.92:color=3
+                    else:color=1 if wave>0 else 2
+                else:
+                    # Warped liquid folds: continuous contours instead of
+                    # intersecting radial/ring signs that formed a checkerboard.
+                    depth=math.log(max(3,radius))
+                    bend=theta+0.28*math.sin(depth*2.7-tunnel_phase)
+                    fold=math.sin(5*bend+depth*5.2-tunnel_phase
+                                  +1.2*math.sin(3*theta+depth*1.7+tunnel_phase))
+                    glow=math.sin(depth*7-2*tunnel_phase
+                                  +2*math.sin(bend*3+tunnel_phase))
+                    if radius<5:color=0
+                    elif abs(fold)<0.075:color=0
+                    elif fold>0.76 and glow>0.25:color=3
+                    else:color=1 if fold>0 else 2
             out.append(color)
     return bytes(out)
 
@@ -125,8 +166,23 @@ def helper():
     c.label('contrast_boost');a(0xad,0x83ea);c.emit(0x18,0x69,4);a(0x8d,0x83ea)
     c.label('second_luma_ready')
     a(0xad,0x83eb);c.emit(0x29,0x0f,0x0a,0x0a,0x0a,0x0a);a(0x0d,0x83ea);a(0x8d,0xd017)
-    c.emit(0xa9,0x0e);a(0x8d,0xd018)
-    for addr,val in ((0xd01a,0),(0xd01d,0),(0xd400,0x22)):
+    # Banana tiles stay yellow. The short Act 3 cutaway keeps its original
+    # white. After Trevor, cycle Act 5 tunnel highlights once per frame.
+    a(0xad,0x83ed);c.emit(0xc9,32);c.branch(0x90,'banana_highlight')
+    a(0xad,0x24a8);c.emit(0xc9,38892>>8);c.branch(0x90,'white_highlight');c.branch(0xd0,'tunnel_hue')
+    a(0xad,0x24a7);c.emit(0xc9,38892&255);c.branch(0x90,'white_highlight')
+    c.label('tunnel_hue')
+    a(0xad,0x83ed);c.emit(0x29,15,0xaa)
+    c.jump(0xbd,'hue_pairs');c.emit(0x09,0x0e);a(0x8d,0xd018)
+    c.jump(0x4c,'highlight_done')
+    c.label('white_highlight');c.emit(0xa9,0x0e);a(0x8d,0xd018)
+    c.jump(0x4c,'highlight_done')
+    c.label('banana_highlight');c.emit(0xa9,0x1e);a(0x8d,0xd018)
+    c.emit(0xa9,0x18);a(0x8d,0xd016)
+    c.label('highlight_done')
+    # Keep the previous ball and its DMA alive until the PMG helper can
+    # safely update it. A second wait may cross an entire frame boundary.
+    for addr,val in ((0xd01a,0),):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
     for label in ('dl1','dl2'):

@@ -9,9 +9,13 @@ from mosaic import KALEIDO_START
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class TunnelBallTests(unittest.TestCase):
     def test_all_rotations_and_four_missiles(self):
-        frames=masks();self.assertEqual(len({b''.join(f) for f in frames}),8)
+        frames=masks();self.assertEqual(len({b''.join(f) for f in frames}),16)
         areas = [sum(byte.bit_count() for plane in frame for byte in plane) for frame in frames]
-        self.assertGreater(max(areas), min(areas) * 2)
+        self.assertEqual(len(set(areas)),1)
+        self.assertGreater(areas[0],350)
+        # Solid geometry stays fixed; only the panels and seams rotate.
+        silhouettes={bytes(f[h][y]|f[h+2][y] for h in range(2) for y in range(32)) for f in frames}
+        self.assertEqual(len(silhouettes),1)
         # Each physical half can contain both inks, so the boundary follows
         # the curved seam rather than a fixed player edge.
         self.assertTrue(any(any(f[0]) and any(f[2]) for f in frames))
@@ -21,18 +25,22 @@ class TunnelBallTests(unittest.TestCase):
                 self.assertEqual(frame[0][y]&frame[2][y],0)
                 self.assertEqual(frame[1][y]&frame[3][y],0)
         pictures=set()
-        for tick in range(KALEIDO_START,KALEIDO_START+256,32):
+        for tick in range(KALEIDO_START,KALEIDO_START+256,16):
             cpu=sequence.execute(tick);m=cpu.memory
             self.assertEqual(m[0xd01b],0x11)
             self.assertEqual(m[0xd01d],3)
             dx,dy=tunnel_offsets()[(tick>>4)&31]
             self.assertEqual(m[0xd000:0xd004],[112+dx,128+dx,112+dx,128+dx])
             for i in range(4):self.assertTrue(any(b&(3<<(2*i)) for b in m[0x980:0xa00]))
+            origin=40+(m[0x83e9] if m[0x83e9]<128 else m[0x83e9]-256)
+            expected=frames[(tick>>4)&15]
+            for plane in range(4):
+                self.assertEqual(bytes(m[0xa00+plane*128+origin:0xa00+plane*128+origin+32]),expected[plane],(tick,plane))
             raw=sequence.SequenceTests().raster(cpu)
             painted=sequence.SequenceTests().raster(cpu,effects=True)
             self.assertNotEqual(raw,painted)
             pictures.add(bytes(m[0xa00:0xc00]))
-        self.assertEqual(len(pictures),8)
+        self.assertEqual(len(pictures),16)
 
     def test_held_bitmap_and_clean_handoff(self):
         cpu=sequence.execute(11968)
@@ -46,20 +54,22 @@ class TunnelBallTests(unittest.TestCase):
         sequence.execute(12288,cpu)
         self.assertEqual(cpu.memory[0xd01d],3)
         sequence.execute(9163,cpu)
-        missiles,players=pmg_art()
-        self.assertEqual(bytes(cpu.memory[0x980:0xa00]),missiles)
-        self.assertEqual(bytes(cpu.memory[0xa00:0xc00]),players)
-        self.assertEqual(cpu.memory[0xd01b],1)
+        reference=sequence.execute(9163).memory
+        def active(mem):
+            base=(mem[0xd407]&0xfc)<<8
+            return bytes(mem[base+0x180:base+0x400])
+        self.assertEqual(active(cpu.memory),active(reference))
+        self.assertEqual(cpu.memory[0xd01b],0x11)
         self.assertEqual(sequence.SequenceTests().raster(cpu,effects=True),
                          sequence.SequenceTests().raster(sequence.execute(9163),effects=True))
 
     def test_rainbow_panels_and_satellites_keep_distinct_hues(self):
         colors=set()
-        for tick in range(KALEIDO_START,KALEIDO_START+256,32):
+        for tick in range(KALEIDO_START,KALEIDO_START+128,16):
             m=sequence.execute(tick).memory
             palette=tuple(m[a] for a in (0xd012,0xd013,0xd014,0xd015,0xd019))
             self.assertEqual(len({c>>4 for c in palette}),5)
-            self.assertTrue(all((c&15) in (10,12) for c in palette[:4]))
+            self.assertEqual(tuple(c&15 for c in palette[:4]),(8,10,14,12))
             self.assertEqual(palette[4]&15,14)
             self.assertEqual(m[0xd00c],0x55)
             colors.add(palette)
@@ -127,3 +137,24 @@ class TunnelBallTests(unittest.TestCase):
                 first=55+round(ry*math.sin(angle))+dy
                 rows=[y for y in range(128) if m[0x980+y] & (3 << (2*i))]
                 self.assertEqual(rows,list(range(first,first+5)))
+
+    def test_reused_cycle_memory_and_original_tunnel_covering_are_separate(self):
+        cpu=None
+        for i in range(32):
+            cpu=sequence.execute(38912+i*16,cpu);m=cpu.memory
+            # Extra loader bank 2 is actual RuntimeMemory bank 16.
+            from tunnel_ball import rebound_helper,helper
+            from ribbon_inbetweens import BANK_ENTRY,selector
+            self.assertEqual(bytes(m.banks[16][:len(rebound_helper())]),rebound_helper())
+            self.assertEqual(bytes(m.banks[16][BANK_ENTRY-0x4000:BANK_ENTRY-0x4000+len(selector())]),selector())
+            # Its original PMG renderer is outside the new animation payload.
+            # Self-modified indices/pointers are deliberately excluded here.
+            self.assertEqual(bytes(m.banks[16][0x3c00:]),helper()[0x400:])
+            for x in range(75,86):
+                for y in range(88,105):
+                    if (x-79.5)**2+((y//2-47.5)*1.66)**2>=25:continue
+                    covered=False
+                    for p in range(4):
+                        col=(x-(m[0xd000+p]-48))//2
+                        if 0<=col<8 and m[0xa00+p*128+(y+17)//2]&(0x80>>col):covered=True
+                    self.assertTrue(covered,(i,x,y))

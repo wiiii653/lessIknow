@@ -1,7 +1,8 @@
 """Composite foreground players and missiles using the playfield palette."""
 
 
-def player_masks(pixels, memory, height, raster_start=17):
+def player_masks(pixels, memory, height, raster_start=17, rainbow_bands=False,
+                 pmg_color_offset=4):
     result = bytearray(pixels)
     players = bool(memory[0xd01d] & 2 and memory[0xd400] & 8)
     missiles = bool(memory[0xd01d] & 1 and memory[0xd400] & 4)
@@ -20,7 +21,8 @@ def player_masks(pixels, memory, height, raster_start=17):
         if position == 0:
             return
         color=memory[0xd019] if missile and memory[0xd01b]&0x10 else memory[0xd012+index]
-        ink=colors.get(color,4+(color>>1))
+        ink=(pmg_color_offset+(color>>1) if pmg_color_offset>=16 else
+             colors.get(color,4+(color>>1)))
         left = position - 48
         size = ((memory[0xd00c] >> (2 * index)) & 3 if missile else
                 memory[0xd008 + index] & 3)
@@ -28,6 +30,12 @@ def player_masks(pixels, memory, height, raster_start=17):
         address = base + (0x300 if single else 0x180) if missile else base + offset + index * stride
         bits = 2 if missile else 8
         for y in range(height):
+            if rainbow_bands:
+                from ribbon_dance import rainbow_palette
+                # Ideal DLI bands; real transitions include decoder latency.
+                band=min(3,(y+9)//78)
+                color=rainbow_palette(memory[0x83e2],band,airflow=12<=memory[0x83ed]<16)[4 if missile else index]
+                ink=colors.get(color,4+(color>>1))
             line = y + raster_start
             value = memory[address + (line if single else line // 2)]
             if missile:
@@ -45,11 +53,13 @@ def player_masks(pixels, memory, height, raster_start=17):
         if missiles:
             for index in range(4):draw(index, missile=True)
         if players:
-            for index in range(4):draw(index)
+            for index in range(3,-1,-1):draw(index)
     else:
-        for index in range(4):
-            if players:draw(index)
+        # Fixed GTIA object priority: P0/M0 precede P1/M1, etc.
+        # Paint the lowest-priority objects first; each player covers its missile.
+        for index in range(3,-1,-1):
             if missiles:draw(index, missile=True)
+            if players:draw(index)
     return result
 
 

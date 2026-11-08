@@ -1,0 +1,22 @@
+{
+  "baseline": "visual-prototype-v141.xex",
+  "baseline_sha256": "cbde55ed1cb77faf55cd54043119bdc7cfcba06cd14dedc806196927e124dba6",
+  "frame_bytes": 8192,
+  "frame_count": 12,
+  "bank_count": 6,
+  "frames_sha256": "92576cccd2fdedc5dd5c55482ebabda96bc4673ceea03933366aa16def149bbf",
+  "source_sha256": {
+    "tools/build_sequence.py": "2f3bc996514f3ce66a01e031b91cd519b1de8f6e2d2f15af47318942ca72dec5",
+    "tools/build_title.py": "dd76b7baf432778fd39111635a3fcfec9ce2eeaa5c2d108c1c7237fcb15ae16e",
+    "tools/gym_background.py": "def4a03bb3dfe8c52dcf7857f156425cf323977afe4b1d60db54ed02d2865456",
+    "tools/music_timing.py": "37f7dce6dbcb5697da149c61f60b346e0f609baa7a7afe6955708a8764462b24",
+    "tools/engine_effects.py": "ddb48eecf1d4f8c3d8219520ad8b42adcfdabe078d884c238e3794dbb587832e",
+    "tools/dance_banks.py": "4f4341d62932dc7588a6f8bd21eeb2e07ff79cf66e103392421d6b7c74d1ad83",
+    "tools/extract_music.py": "72ae66dd1262f3354b4a1764128b8355012fe4d4495ddc628570b4e0e470abe6",
+    "tools/scene_memory.py": "2b9cecf357ac15cff45965d3447c2879d54d6c264890714d0f6b43ef0516ef81",
+    "tools/pmg_preview.py": "da7f3344f45c0deece2711c054e5f73a7867a37bc9433c8527b57f5e278fab62",
+    "requirements-dev.txt": "c05896048bfc72cfcd492e2ae01c7980573a5fb313d733c47c2655ebed438f86",
+    "assets/art/source/act1_cheer_dance_v056.png": "b9f64bf80a2e67b85c1b07e46014d2e5696c589f9e7b7d3b04fe8bbc5bf974e9",
+    "assets/art/source/act1_gym_dance_v056.png": "7f9e50a1f640b89aebe4038bc8b77d76da5d4e38baac9613a149400209adc439"
+  }
+}

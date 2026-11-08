@@ -68,14 +68,19 @@ def preview(tick, name, cpu=None):
     height = len(indices) // 160
     gtia11 = (memory[0xd01b] & 0xc0) == 0xc0
     if not gtia11:
-        indices = player_masks(indices, memory, height, raster_start=8)
+        indices = player_masks(indices, memory, height, raster_start=8,
+                               rainbow_bands=memory[0x83e0] == 14)
+    else:
+        indices = player_masks(indices, memory, height, raster_start=8,
+                               pmg_color_offset=16)
     original={0:PALETTE[0],0x48:PALETTE[1],0x9a:PALETTE[2],0x2c:PALETTE[3],0x82:(12,24,48)}
     if memory[0x83e0] == 16:
         original = {}  # consistent GTIA approximation across every Trevor pose
     palette=tuple(original.get(color,atari_rgb(color)) for color in
                   (memory[0xd01a],memory[0xd016],memory[0xd017],memory[0xd018]))
     pixels = bytes(channel for index in indices for channel in
-                   (atari_rgb(((index << 4) | (memory[0xd01a] & 15)) if index else 0)
+                   (atari_rgb((index-16)*2 if index>=16 else
+                              ((index << 4) | (memory[0xd01a] & 15)) if index else 0)
                     if gtia11 else (palette[index] if index < 4 else atari_rgb((index-4)*2))))
     path = Path(f'build/{name}-raster.ppm')
     path.write_bytes(f'P6\n160 {height}\n255\n'.encode() + pixels)

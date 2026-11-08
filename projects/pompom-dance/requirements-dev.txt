@@ -1,0 +1,2 @@
+# Required by make check: executes the actual NMOS 6502 scene callback.
+py65==1.2.0

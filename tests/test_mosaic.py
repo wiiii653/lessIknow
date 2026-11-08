@@ -2,7 +2,7 @@
 from artifact import XEX, METADATA
 import unittest
 import test_sequence as sequence
-from mosaic import pixels, KALEIDO_START, TREVOR_START
+from mosaic import pixels, KALEIDO_START, TREVOR_START, palette_pairs
 from crush_portraits import START as CRUSH_START
 from test_engine_cache import TrackedMemory
 from school_portrait_bank import loader, bank_value
@@ -10,10 +10,18 @@ from extract_music import segments
 
 @unittest.skipIf(sequence.MPU is None, 'py65 required')
 class MosaicTests(unittest.TestCase):
+    def test_bananas_stay_yellow_and_tunnel_highlights_cycle_hue(self):
+        cpu = sequence.execute(TREVOR_START)
+        self.assertEqual(cpu.memory[0xd018], 0x1e)
+        cpu = sequence.execute(38892, cpu)
+        frame = cpu.memory[0x83ed] & 15
+        expected_hue = palette_pairs()[frame][0]
+        self.assertEqual(cpu.memory[0xd018], (expected_hue << 4) | 14)
+
     def test_all_frames_and_inactive_buffer_ownership(self):
         cpu=sequence.MPU(memory=TrackedMemory(XEX.read_bytes()))
         for frame in range(64):
-            tick=33792+(frame&31)*16+(1024 if frame>=32 else 0)
+            tick=45056+(frame&31)*16+(1024 if frame>=32 else 0)
             # Inverse of ((tick>>4)&31) | ((tick>>5)&32).
             frame_expected=((tick>>4)&31)|((tick>>5)&32)
             active=cpu.memory[0xd403]<<8
@@ -49,8 +57,8 @@ class MosaicTests(unittest.TestCase):
 
     def test_scene_handoffs_and_restart(self):
         cpu=None
-        for tick,scene in ((KALEIDO_START-1,2+(((KALEIDO_START-1)>>4)&3)),(KALEIDO_START,6),(CRUSH_START-1,6),(CRUSH_START,14),
-                           (TREVOR_START-1,16),(TREVOR_START,6),(96,0),(9163,2+((9163>>4)&3)),(KALEIDO_START,6)):
+        for tick,scene in ((KALEIDO_START-1,14),(KALEIDO_START,6),(CRUSH_START-1,6),(CRUSH_START,14),
+                           (TREVOR_START-1,16),(TREVOR_START,6),(96,0),(9163,14),(KALEIDO_START,6)):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0x83e0],scene)
             if scene==6:self.assertEqual(cpu.memory[0xd01d],3)

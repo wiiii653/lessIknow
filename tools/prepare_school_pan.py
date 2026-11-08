@@ -1,12 +1,25 @@
-"""Prepare exact v033 pixels as separate foreground and extended background."""
+"""Prepare the v176 left-facing arena walker and extended background."""
 from pathlib import Path
-from PIL import Image, ImageDraw
-src=Image.open('assets/art/source/act1_girl_side_walking_v033.png').convert('RGB').resize((160,64),Image.Resampling.NEAREST)
+from PIL import Image
+import sys
+sys.path.insert(0,'tools')
+from build_sequence import PALETTE
+from school_story import color
+source=Image.open('assets/art/source/act1_girl_arena_walk_v176.png').convert('RGBA')
+alpha=source.getchannel('A')
+source=source.crop(alpha.getbbox())
+width=round(source.width*64/source.height)
+source=source.resize((width,64),Image.Resampling.LANCZOS)
+rgb=source.convert('RGB')
+rgb_data=rgb.tobytes()
+mapped=bytes(channel for i in range(0,len(rgb_data),3)
+             for channel in PALETTE[color(rgb_data[i:i+3])])
+rgb=Image.frombytes('RGB',source.size,mapped)
+source=Image.merge('RGBA',(*rgb.split(),source.getchannel('A')))
+fg=Image.new('RGBA',(160,64),(0,0,0,0))
+fg.alpha_composite(source,(4,0))
 clean=Image.open('assets/art/source/act1_school_background_v034.png').convert('RGB').resize((160,64),Image.Resampling.NEAREST)
-mask=Image.new('L',(160,64));d=ImageDraw.Draw(mask)
-d.polygon([(45,1),(53,1),(55,4),(55,8),(57,12),(56,16),(53,19),(51,20),(52,26),(53,35),(57,44),(61,47),(66,48),(68,51),(67,55),(64,57),(60,57),(55,54),(53,54),(51,58),(50,63),(22,63),(24,59),(28,54),(30,50),(27,49),(19,51),(17,55),(14,59),(11,62),(8,61),(7,58),(9,55),(14,50),(16,44),(18,40),(22,36),(27,32),(31,27),(34,24),(31,24),(26,23),(23,21),(21,18),(21,12),(23,9),(26,8),(25,7),(27,5),(32,6),(36,5),(41,3)],fill=255)
-# The foreground is sampled directly from the previous release, unchanged.
-fg=src.convert('RGBA');fg.putalpha(mask);Path('build/school-girl-cutout-v034.rgba').write_bytes(fg.tobytes())
+Path('build/school-girl-cutout-v176.rgba').write_bytes(fg.tobytes())
 # Preserve every original pixel outside the foreground; fill its footprint.
 back=clean.copy()
 wide=Image.new('RGB',(200,64));wide.paste(back,(0,0));wide.paste(back.crop((120,0,160,64)),(160,0))

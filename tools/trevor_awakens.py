@@ -152,7 +152,7 @@ def helper():
     code=c.finish();assert ENTRY+len(code)<=0x6c00,len(code)
     return code
 
-def bank():
+def legacy_bank():
     out=bytearray(16384)
     for i,p in enumerate(backgrounds()):
         b=bytes(sum(p[y*160+x+k]<<(6-2*k) for k in range(4)) for y in range(64) for x in range(0,160,4))
@@ -163,4 +163,13 @@ def bank():
     code=helper();out[ENTRY-0x4000:ENTRY-0x4000+len(code)]=code
     from tunnel_ball import helper as tunnel_helper
     tunnel=tunnel_helper();out[0x3800:0x3800+len(tunnel)]=tunnel
+    return bytes(out)
+
+
+def bank():
+    # Only the already-used tunnel/rotator renderer remains in this bank.
+    from tunnel_ball import helper as tunnel_helper, rebound_helper
+    out=bytearray(16384);code=tunnel_helper()
+    rebound=rebound_helper();out[:len(rebound)]=rebound
+    out[0x3800:0x3800+len(code)]=code
     return bytes(out)
