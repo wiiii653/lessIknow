@@ -7,7 +7,7 @@ from build_sequence import Code
 from engine_effects import cached_display_list
 from music_timing import tick_at_bar
 
-START,END=tick_at_bar(158),tick_at_bar(160)
+START,END=tick_at_bar(144),tick_at_bar(160)
 FADE_START=END-128
 ENTRY=0x5cd0  # space below includes the launch wind/fireworks helper
 BITMAP_BANK=39

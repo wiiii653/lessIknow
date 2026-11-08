@@ -52,7 +52,8 @@ class SequenceTests(unittest.TestCase):
         cpu = None
         for tick, low, high in ((38892, 32, 47), (32909, 0, 15),
                                 (34403, 0, 15), (34404, 16, 31),
-                                (38891, 16, 31), (40387, 32, 47),
+                                (35899, 16, 31), (35900, 32, 47),
+                                (40387, 32, 47),
                                 (40388, 48, 63)):
             cpu = execute(tick, cpu)
             self.assertLessEqual(low, cpu.memory[0x83ed])
@@ -442,7 +443,9 @@ class SequenceTests(unittest.TestCase):
                                    (DANCE_TICK+48, 14, 0),
                                    (DANCE_TICK+96, 14, 0),
                                    (KALEIDO_TICK-1, 14, 0), (KALEIDO_TICK, 6, 0),
-                                   (59084, 6, 0), (59085,17,0), (65536, 17, 0), (0xffffff, 17, 0)):
+                                   (53849, 6, 0), (53850,17,0),
+                                   (59084, 17, 0), (59085,17,0),
+                                   (65536, 17, 0), (0xffffff, 17, 0)):
             with self.subTest(tick=tick):
                 cpu = execute(tick)
                 self.assertEqual(cpu.memory[0x83e0], frame)

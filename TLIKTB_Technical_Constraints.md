@@ -2,12 +2,15 @@
 
 Dokument dla agenta kodującego. Uzupełnia `TLIKTB_Atari_Timeline_v2.md` (co i kiedy) i `TLIKTB_Asset_List.md` (z czego). Tu jest: w jakich granicach i co jest sprawdzone.
 
-## Stan wdrożenia — v190
+## Stan wdrożenia — v193
 
-[ODCZYT] V190 zastępuje BNG! napisem BUM, zachowując BAM. Klatki tunelu
-48–63 mają organiczne falujące pasma zamiast szachownicy. Bez zmiany banków,
-ticków, 298 wierszy i kodu głównego (2560 B).
-Szczegóły: `docs/V190_BUM_I_ORGANICZNY_TUNEL.md`.
+[ODCZYT] V193 przesuwa wyłącznie granice timeline’u: pełny bananowy rotator
+zostaje od taktu 88 do 96 (32909–35900), tunel zaczyna się w 96, a zmiana
+organicznej tekstury pozostaje w 108. Ujęcia Act 5 w 112/116 bez zmian.
+Leżący chłopiec pojawia się od taktu 144 (53850) jako przewidziane tło
+credits/greetz; pełny finał nadal zaczyna się w 158 (59085). Grafika,
+procedury efektów, banki i klatki bez zmian. Plansze tekstowe credits/greetz
+pozostają do wykonania.
 
 ## Historia: v189
 
@@ -84,6 +87,7 @@ koniec ujęcia w takcie 112 (tick 41884), dalsze granice, banki oraz kod efektó
 pozostają bez zmian. Budowa `build/visual-prototype-v180.xex` poprawna; 286
 współdzielonych wierszy, 11 034 B danych wierszy, 2552 B kodu. Testów ani
 emulatora nie uruchomiono. Szczegóły: `docs/V180_DLUZSZY_TUNEL.md`.
+Ten historyczny podział czasu zastępuje harmonogram v193 opisany powyżej.
 
 ## Historia: v170
 

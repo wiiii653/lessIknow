@@ -125,13 +125,13 @@ sylwetka zasłania środek tunelu. Tory ruchu i ticki scen pozostają bez zmian.
 
 Takty: 88-120 | Ticki: 32909-44875
 
-Podział na 4 bloki odpowiada 4 efektom. Zmiany w muzyce w 92, 108 i 116.
+Podział zachowuje wejście rotatora w takcie 88 i muzyczne zmiany tekstury
+w takcie 108 oraz następnych ujęć w 112 i 116. Zmiana v193 wydłuża pełny
+rotator do ośmiu taktów, żeby obie połowy animacji miały czas wybrzmieć.
 
-- 5A (88-92, 32909-34404): Kaleidoscope.
-- 5B (92-112, 34404-41884): Tunnel. W takcie 108 (tick 40388) zmiana tekstury.
-- Implementacja v180 wydłuża tunel, rozpoczynając go w takcie 92 po krótkim
-  bananowym rotatorze. Tekstura spiralna przechodzi w ticku 40388 w radialną
-  siatkę gwiazd z wirującymi promieniami (v169). Klatki i banki bez zmian.
+- 5A (88-96, 32909-35900): pełny bananowy rotator (15 s).
+- 5B (96-112, 35900-41884): tunel spiralny. W takcie 108 (tick 40388)
+  przechodzi w organiczne pasma. Klatki i banki bez zmian.
 - 5C (112-116, 41884-43379): Trevor Mosaic (głośność spada o ok. 2 dB w 112-119)
 - 5D (116-120, 43379-44875): Eyes Sequence
 - GTIA9: do decyzji, w którym bloku. W asset list brak dla niego assetów.
@@ -155,8 +155,9 @@ Takty: 144-160 | Ticki: 53850-59833 (zmiana: było 152-160)
 
 W takcie 144 muzyka się zmienia. Wyciszenie dopiero w 158-159.
 
-- 8A (144-152, 53850-56842): credits (logo_group, logo_music, logo_sv)
-- 8B (152-158, 56842-59085): greetz
+- 8A (144-152, 53850-56842): credits na tle leżącego chłopca
+  (logo_group, logo_music, logo_sv; plansze credits nadal do wykonania)
+- 8B (152-158, 56842-59085): greetz na tym samym tle
 - 8C (158-160, 59085-59833): finałowy kadr po zwycięstwie Trevora — chłopiec leży pobity na podłodze sali, a wokół jego głowy krążą komiksowe gwiazdki. Zmiana scenariusza zatwierdzona 2026-11-07. Domknięcie losu tej samej postaci, która wcześniej rozbiła tablicę przy wsadzie. Końcowy flash/przejście i fade do czerni pozostają w obecnym zakresie; credits i greetz z 8A/8B zachowane.
 
 ## Tabela zdarzeń dla silnika
@@ -174,7 +175,8 @@ W takcie 144 muzyka się zmienia. Wyciszenie dopiero w 158-159.
 | 64 | 23934 | Act 4 / 4A |
 | 72 | 26925 | 4B (uderzenie) |
 | 88 | 32909 | Act 5 / 5A |
-| 92 | 34404 | 5B tunnel (v180; koniec bananowego rotatora) |
+| 92 | 34404 | 5A — druga połowa bananowego rotatora |
+| 96 | 35900 | 5B tunnel — początek tunelu spiralnego |
 | 108 | 40388 | zmiana tekstury tunelu |
 | 112 | 41884 | 5C mosaic |
 | 116 | 43379 | 5D eyes |
@@ -182,9 +184,9 @@ W takcie 144 muzyka się zmienia. Wyciszenie dopiero w 158-159.
 | 124 | 46371 | 6B |
 | 128 | 47867 | Act 7 / 7A |
 | 136 | 50858 | 7B |
-| 144 | 53850 | Act 8 / 8A |
+| 144 | 53850 | Act 8 / 8A — chłopiec w tle credits |
 | 152 | 56842 | 8B greetz |
-| 158 | 59085 | 8C fade |
+| 158 | 59085 | 8C — finałowy kadr / fade |
 | 160 | 59833 | koniec |
 
 ## Zmiany względem v1

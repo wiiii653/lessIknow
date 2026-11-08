@@ -10,10 +10,10 @@ This project is an Atari XE 1 MB audiovisual demo for “The Less I Know The Bet
 
 `tools/` generates NMOS 6502 code and assets; `tests/` executes callbacks with py65; `assets/` contains source artwork. `build/visual-prototype-dev.xex` and its JSON are working artifacts. Preserve numbered releases; use a new output name for each release.
 
-## Current Project Progress — v192
+## Current Project Progress — v193
 
 The user targets Silly Venture. The latest visual release is
-`build/visual-prototype-v192.xex`; use its matching JSON. The replaceable
+`build/visual-prototype-v193.xex`; use its matching JSON. The replaceable
 `visual-prototype-dev` pair is the development target. These are full demo
 builds using the original v035 music, not replacements for the supplied player.
 Use `docs/PLAN_STATUS.md` for remaining production work and V1–V7 status.
@@ -25,8 +25,9 @@ V145 implements the user-approved story changes (2026-11-07): the third
 ribbon shot is overhead and the thrown girl approaches the lens while the
 court/bases recede; the boy shatters the backboard during the dunk; the last
 outro shot at ticks 59085–59833 shows him on the floor with four orbiting
-stars and fades to permanent black. Earlier credits/greetz slots remain
-reserved but unimplemented. Act/shot boundaries and music ticks are preserved.
+stars and fades to permanent black. In v193, this same image begins at tick
+53850 as the planned credits/greetz background; the text overlays remain
+unimplemented. The full final-shot timing remains unchanged.
 See `docs/V145_WYRZUT_TABLICA_FINAL.md` for assets, memory and validation.
 V146 removes the grid/court markings and all ribbon masks from the overhead
 shot. Its preparation has quiet black ground; from tick 20662 the launch
@@ -66,10 +67,12 @@ missile trails and two side fireworks. See `docs/V148_DYNAMICZNY_WYRZUT.md`.
 - Act 4 has the common-gym Trevor entrance, timed wind-ups/punch combinations,
   alternating BANG/BAM, coloured player cloud fragments and missile debris.
   Hit timestamps and hand sequence remain in `tools/trevor_polished.py`.
-- Act 5 is incomplete: banana rotozoomer and tunnel are arranged up to tick
-  41884; the texture change at 40388, Trevor mosaic at 41884 and eyes at 43379
-  remain unfinished. Acts 6–7 and outro credits/greetz still use placeholders;
-  the final 8C shot and black ending now exist.
+- Act 5 keeps the banana rotator at tick 32909 and shows both animation halves
+  through tick 35900 (bar 96); the spiral tunnel then runs until the organic
+  texture change at 40388 and Act 5 ends at 41884. Trevor mosaic at 41884 and
+  eyes at 43379 remain unfinished. Acts 6–7 and credits/greetz overlays remain
+  placeholders; the lying-boy backdrop now starts at 53850, and the full final
+  shot and black ending retain their original 59085–59833 timing.
 - V135 fixes the tunnel ball's PMG enable race. V136 introduces double-buffered
   ribbon PMG, V137 rainbow raster colours/sparks, V138 double-buffered impacts.
   Do not remove those protections when adding more effects.
@@ -428,7 +431,8 @@ V180 extends the Act 5 tunnel shot by moving its start from bar 104 (tick
 38892) to bar 92 (tick 34404). The banana rotozoomer now ends at bar 92; the
 existing bar 108 texture change and bar 112 transition remain unchanged. No
 act boundary, later scene tick, code size or bank allocation changes. See
-`docs/V180_DLUZSZY_TUNEL.md`.
+`docs/V180_DLUZSZY_TUNEL.md`. Its timing was superseded by v193: rotator now
+runs through bar 96 before the tunnel.
 
 V181 restores the exact v175 side-walk frames from archived XEX bank data
 (`assets/art/reference/v175/arena-pan.bin`) and the v175 encounter shot order.
@@ -558,3 +562,10 @@ V192 derives U in BUM directly from the vertically inverted A in BAM,
 replacing the crossbar with the side-stem row. Same glyph cell and size;
 centering, bounded hit anchors, code sizes and timing unchanged.
 See docs/V192_U_Z_ODWROCONEGO_A.md.
+
+V193 changes timeline boundaries only: the banana rotator runs from bar 88 to
+96 (32909–35900), showing both existing animation halves. The spiral tunnel
+starts at bar 96; the organic texture change stays at bar 108 and Act 5 cuts
+remain at bars 112/116. The lying-boy scene starts at bar 144 (53850) beneath
+the reserved credits/greetz windows; the 8C full-shot/fade still starts at
+bar 158 (59085). No artwork, effect renderer, or effect data changed.

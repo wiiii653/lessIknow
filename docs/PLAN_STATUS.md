@@ -1,11 +1,11 @@
-# Status planu dema — stan po v192
+# Status planu dema — stan po v193
 
 Legenda: ✅ wykonane w buildzie lub potwierdzone; 🟡 częściowo wykonane / ograniczone do prototypu albo emulatora; ⬜ niezaimplementowane lub nieweryfikowane. Ticki pozostają zgodne z zatwierdzonym timeline’em.
 
 Punktem wyjścia był audyt kodu i XEX v144 z 2026-11-07
 (`AUDYT_BRAKOW_V144.md`). Poniższa tabela uwzględnia późniejsze zmiany
-aż do v192. Audyt v144 jest historycznym zapisem: nie opisuje bieżącego
-wydania, pamięci ani walidacji v192. Późniejszy przegląd nie zmienił
+aż do v193. Audyt v144 jest historycznym zapisem: nie opisuje bieżącego
+wydania, pamięci ani walidacji v193. Późniejszy przegląd nie zmienił
 priorytetów ani zatwierdzonych granic aktów.
 
 Zmiany scenariusza zatwierdzone przez użytkownika 2026-11-07,
@@ -255,10 +255,10 @@ bajtów względem v035 przez cały utwór; bez próby na fizycznym Atari.
 | **Act 2 — Crush**, takty 24–56, ticki 8975–20942 | 🟡 | W 8975–11967 boczny taniec ze szarfą: cofająca się dziewczyna, przeciwbieżny scroll sali i paralaksa podłogi. Pomponiary zachowane w osobnym projekcie. Po rotozoomerze trzy ujęcia szarf: grupa, solówka, grupa i wyrzut bohaterki. Jest 36 bazowych kompozycji (16 bocznych + 20 późniejszych) oraz 14 nowych klatek pośrednich w trzech późniejszych ujęciach; ticki akcentów i cięcia bez zmian. Podwójne bufory PMG i tęczowe iskry. Testy CPU i stereo POKEY wykonane; ocena płynności obrazu z DMA i artystyczna na docelowym sprzęcie pozostaje. |
 | **Act 3 — Basketball Hero**, takty 56–64, ticki 20942–23934 | ✅ | Po niezmienionym wyrzucie 3,75 s tunelu z piłką, potem 7,5 s kozłowania i 3,75 s wsadu we wnętrzu ATARI ARENA. Animowany chłopiec, piłka i ramię; rozbicie tablicy: pęknięcie, rozpad i odłamki PMG, obracająca się tęczowa piłka oraz błysk. Tło sali przy kozłowaniu pozostaje statyczne. |
 | **Act 4 — Trevor Awakens**, takty 64–88, ticki 23934–32909 | ✅ | Ciche wejście, zamachy i kombinacje ciosów. Tunel za Trevorem zmienia kształt z prostokąta w owal i z powrotem; postać pozostaje nieruchoma względem tła. Naprzemienne BANG/BAM, kolorowe fragmenty chmurki na czterech players, rozdzielone i kurczące się szczątki na missiles. Cykle barw PMG, podwójny bufor efektów. Zachowano moment powrotu energii w 26925 i wszystkie momenty uderzeń. |
-| **Act 5 — Psychedelic Breakdown**, takty 88–120, ticki 32909–44875 | 🟡 | Od 32909 do 34404 działa bananowy rotator. Tunel spiralny wydłużono w v180: zaczyna się w 34404; w 40388 przechodzi w organiczne falujące pasma (v190). Mozaika Trevora w 41884 i sekwencja oczu od 43379 nadal czekają; po 41884 pozostaje efekt zastępczy. |
+| **Act 5 — Psychedelic Breakdown**, takty 88–120, ticki 32909–44875 | 🟡 | V193 wydłuża bananowy rotator do taktu 96 (tick 35900), pokazując obie połowy. Tunel spiralny trwa 35900–40388, potem organiczne pasma do 41884. Mozaika Trevora w 41884 i sekwencja oczu od 43379 nadal czekają. |
 | **Act 6 — Love Triangle**, takty 120–128, ticki 44875–47867 | ⬜ | Brak zaplanowanych kadrów komiksowych i pojedynku Trevora z koszykarzem w tym zakresie. |
 | **Act 7 — Trevor Wins**, takty 128–144, ticki 47867–53850 | ⬜ | Brak osobnej kulminacji z gigantycznym Trevorem, flashem i wskazanym narastaniem neonów. |
-| **Act 8 — Outro**, takty 144–160, ticki 53850–59833 | 🟡 | W 59085–59833 działa ostatni kadr: pobity chłopiec na podłodze, cztery kolorowe gwiazdki wokół głowy i fade do trwałej czerni. Credits/greetz w wcześniejszych zakresach nadal brak. |
+| **Act 8 — Outro**, takty 144–160, ticki 53850–59833 | 🟡 | Leżący chłopiec pojawia się od 53850 jako przewidziane tło credits/greetz; ich napisy nadal nie są zaimplementowane. Od 59085 wraca pełny kadr z czterema orbitującymi gwiazdkami i fade do czerni, bez zmiany końcowego zakresu. |
 
 Intro TAME IMPALA / album title z plazmą i ditheringiem działa w tickach 0–2992 przed ujęciami szkoły. Kolory liter zmieniają się co uderzenie. V140 dodaje miasto i fajerwerki PMG; kolejność wejść na drugiej planszy to I KNOW → THE BETTER → THE LESS, z niezmienionym układem końcowym. W v140 maski chroniły litery i cienie także podczas przenikania; v149 usuwa tę ochronę na życzenie użytkownika, pokazując kompletne fajerwerki przed obrazem. To późniejszy dodatek, który zastępuje początkowe logo szkoły z timeline’u; dalszych granic nie przesunięto.
 
@@ -393,6 +393,7 @@ Granice aktów, dalsze ujęcia, muzyczne ticki oraz banki bez zmian. XEX:
 `build/visual-prototype-v180.xex`; 286 współdzielonych wierszy, 11 034 B
 danych wierszy, 2552 B kodu. Build poprawny; testów ani emulatora nie
 uruchomiono. Szczegóły: `V180_DLUZSZY_TUNEL.md`.
+Ten historyczny podział czasu zastępuje harmonogram v193 opisany wyżej.
 
 
 [ODCZYT] V181 przywraca boczny spacer klatka w klatkę z XEX-a v175 i dawną
@@ -494,3 +495,10 @@ utwór stereo POKEY identyczny z v035 (16 037 712 B).
 [ODCZYT] V192 zmienia U w BUM na odwrócone pionowo A z BAM bez poprzeczki.
 Zachowane centrowanie, rozrzut przy pięściach i rozmiary danych.
 `V192_U_Z_ODWROCONEGO_A.md`.
+
+[ODCZYT] V193 wydłuża bananowy rotator z taktów 88–92 do 88–96
+(32909–35900), dzięki czemu odtwarza obie połowy istniejącego cyklu.
+Tunel zaczyna się w 35900; zmiana organicznej tekstury przy 40388 oraz
+granice ujęć w 41884 i 43379 pozostają bez zmian. Kadr leżącego chłopca
+zaczyna się pod credits/greetz w takcie 144 (53850); pełny finał w 59085
+pozostaje. Zmieniono wyłącznie timing, bez zmian grafiki i procedur efektów.

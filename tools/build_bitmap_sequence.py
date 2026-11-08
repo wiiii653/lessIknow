@@ -674,9 +674,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('act5_select')
     compare_tick16(tick_at_bar(112), 'mosaic_frame_ready', 'act5_motif', True)
     c.label('act5_motif')
-    # Keep the opening banana rotozoom, then give the tunnel the full
-    # remaining Act 5 lead-in before the existing bar-108 texture change.
-    compare_tick16(tick_at_bar(92), 'act5_tunnel', 'act5_kaleido', True)
+    # Hold both halves of the banana rotozoom through bar 96, then run the
+    # tunnel until its existing bar-108 texture change.
+    compare_tick16(tick_at_bar(96), 'act5_tunnel', 'act5_kaleido', True)
     c.label('act5_kaleido')
     absolute(0xad,STATE+13);c.emit(0x29,15);absolute(0x8d,STATE+13)
     compare_tick16(tick_at_bar(92), 'act5_kaleido_second', 'mosaic_frame_ready')
