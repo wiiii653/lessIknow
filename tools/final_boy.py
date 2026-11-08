@@ -1,4 +1,4 @@
-"""Last shot: defeated basketball player, orbiting stars and black ending."""
+"""Final shot: defeated boy, alternating orbiting stars/melody, black ending."""
 import math
 from collections import deque
 from functools import lru_cache
@@ -6,10 +6,20 @@ from pathlib import Path
 from build_sequence import Code
 from engine_effects import cached_display_list
 from music_timing import tick_at_bar
+from whistle_pmg import SHAPES as WHISTLE_SHAPES
+
+STAR_SHAPE=(0,0,0x10,0x54,0x38,0xfe,0x38,0x54,0x10,0,0,0)
+NOTE_SHAPES=tuple(glyph[::2] for glyph in WHISTLE_SHAPES)
+GLYPH_ROWS=12
+
+def notes_active(tick):
+    return bool((tick >> 8) & 1)
 
 START,END=tick_at_bar(144),tick_at_bar(160)
 FADE_START=END-128
-ENTRY=0x5cd0  # space below includes the launch wind/fireworks helper
+ENTRY=0x5cd0
+ORBIT_DATA=0x69c4  # 60-byte gap after the Trevor controller
+SHAPE_DATA=0x7fa0  # 96 unused bytes after the launch wind masks
 BITMAP_BANK=39
 BITMAP_SOURCE=0x4a00
 FRAME_KEY=36  # unbanked ribbon-copy trampoline's dedicated final-shot route
@@ -88,7 +98,7 @@ def helper(copy_address):
     c.label('swap')
     c.label('prepare')
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x29,15);a(0x8d,0x83ff)
-    # Double-buffer every star mask; the previous stars stay visible.
+    # Double-buffer every glyph; keep the previous orbit visible until publication.
     a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e8)
     for i,high in enumerate((9,10,10,11,11)):
         c.emit(0xa9,high);a(0x0d,0x83e8);c.jump(0x8d,f'clear{i}_hi')
@@ -100,9 +110,13 @@ def helper(copy_address):
         c.label(f'clear{i}');a(0x9d,addr)
     c.emit(0xca);c.branch(0x10,'clear')
     for plane in range(4):
-        a(0xae,0x83ff);c.jump(0xbd,f'star_y{plane}');c.emit(0xa8,0xa2,0)
-        c.label(f'star{plane}');c.jump(0xbd,'star_shape');c.label(f'put{plane}');a(0x99,0xa00+plane*128)
-        c.emit(0xc8,0xe8,0xe0,7);c.branch(0xd0,f'star{plane}')
+        a(0xae,0x83ff);c.jump(0xbd,f'star_y{plane}');c.emit(0x38,0xe9,2,0xa8)
+        a(0xad,0x83e3);c.emit(0x29,1,0xaa)
+        c.jump(0xbd,f'select_lo{plane}');c.jump(0x8d,f'shape{plane}_lo')
+        c.jump(0xbd,f'select_hi{plane}');c.jump(0x8d,f'shape{plane}_hi')
+        c.emit(0xa2,0)
+        c.label(f'star{plane}');c.label(f'shape{plane}');c.jump(0xbd,'star_shape');c.label(f'put{plane}');a(0x99,0xa00+plane*128)
+        c.emit(0xc8,0xe8,0xe0,GLYPH_ROWS);c.branch(0xd0,f'star{plane}')
     # Fade stays zero after the music ends, including later callbacks.
     a(0xad,0x83e4);c.branch(0xd0,'black')
     a(0xad,0x83e3);c.emit(0xc9,END>>8);c.branch(0x90,'before_end');c.branch(0xd0,'black')
@@ -135,14 +149,21 @@ def helper(copy_address):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     for i in range(5):c.labels[f'clear{i}_hi']=c.labels[f'clear{i}']+2
     for i in range(4):c.labels[f'put{i}_hi']=c.labels[f'put{i}']+2
-    c.label('star_shape');c.emit(0x10,0x54,0x38,0xfe,0x38,0x54,0x10)
-    c.label('fade');c.emit(*(max(0,12-2*i) for i in range(16)))
-    for plane in range(4):
+    c.labels['star_x0']=ORBIT_DATA
+    c.labels['star_y0']=ORBIT_DATA+16
+    for plane in range(1,4):
         c.label(f'star_x{plane}');c.emit(*(star_position(phase,plane)[0]+48 for phase in range(16)))
         c.label(f'star_y{plane}');c.emit(*(star_position(phase,plane)[1] for phase in range(16)))
-    c.label('star_hues');c.emit(*((0x20,0x90,0x40,0)*8))
-    for plane in range(4):c.labels['star_hues'+str(plane)]=c.labels['star_hues']+plane
-    code=c.finish();assert ENTRY+len(code)<=0x6000,len(code)
+    for plane in range(4):
+        c.labels[f'shape{plane}_lo']=c.labels[f'shape{plane}']+1
+        c.labels[f'shape{plane}_hi']=c.labels[f'shape{plane}']+2
+        for part,shift in (('lo',0),('hi',8)):
+            c.labels[f'select_{part}{plane}']=ORBIT_DATA+32+plane*4+(2 if shift else 0)
+    c.labels['star_shape']=SHAPE_DATA
+    c.labels['fade']=SHAPE_DATA+60
+    for plane in range(4):c.labels[f'star_hues{plane}']=SHAPE_DATA+76+plane
+    code=bytes(c.finish())
+    assert ENTRY+len(code)<=0x6000,len(code)
     return code
 
 
@@ -150,6 +171,20 @@ def install_control(bank,copy_address):
     out=bytearray(bank);code=helper(copy_address);offset=ENTRY-0x4000
     assert out[offset:offset+len(code)]==bytes(len(code))
     out[offset:offset+len(code)]=code
+    orbit=bytes(star_position(phase,0)[0]+48 for phase in range(16))
+    orbit+=bytes(star_position(phase,0)[1] for phase in range(16))
+    for plane in range(4):
+        for shift in (0,8):
+            orbit+=bytes(((SHAPE_DATA>>shift)&255,((SHAPE_DATA+12+plane*12)>>shift)&255))
+    offset=ORBIT_DATA-0x4000
+    assert out[offset:offset+len(orbit)]==bytes(len(orbit))
+    out[offset:offset+len(orbit)]=orbit
+    shapes=bytes(STAR_SHAPE)+b''.join(bytes(g) for g in NOTE_SHAPES)
+    shapes+=bytes(max(0,12-2*i) for i in range(16))
+    shapes+=bytes((0x20,0x90,0x40,0)[i%4] for i in range(19))
+    offset=SHAPE_DATA-0x4000
+    assert out[offset:offset+len(shapes)]==bytes(len(shapes))
+    out[offset:offset+len(shapes)]=shapes
     return bytes(out)
 
 

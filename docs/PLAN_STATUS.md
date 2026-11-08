@@ -1,11 +1,11 @@
-# Status planu dema — stan po v196
+# Status planu dema — stan po v197
 
 Legenda: ✅ wykonane w buildzie lub potwierdzone; 🟡 częściowo wykonane / ograniczone do prototypu albo emulatora; ⬜ niezaimplementowane lub nieweryfikowane. Ticki pozostają zgodne z zatwierdzonym timeline’em.
 
 Punktem wyjścia był audyt kodu i XEX v144 z 2026-11-07
 (`AUDYT_BRAKOW_V144.md`). Poniższa tabela uwzględnia późniejsze zmiany
-aż do v196. Audyt v144 jest historycznym zapisem: nie opisuje bieżącego
-wydania, pamięci ani walidacji v196. Późniejszy przegląd nie zmienił
+aż do v197. Audyt v144 jest historycznym zapisem: nie opisuje bieżącego
+wydania, pamięci ani walidacji v197. Późniejszy przegląd nie zmienił
 priorytetów ani zatwierdzonych granic aktów.
 
 Zmiany scenariusza zatwierdzone przez użytkownika 2026-11-07,
@@ -513,3 +513,5 @@ spiralnego tunelu. 10 testów granic scen, motywów i finału zaliczonych.
 animuje ramię oraz piłkę w rytmie 94 + 94 + 186 ticków. Wsad i tablica
 z v175 zachowane; 21 testów zaliczonych. Dithering v195 wycofany.
 `V196_KOZLY_DWA_SZYBKIE_JEDEN_WOLNY.md`.
+
+V197: finałowy chłopiec ma naprzemiennie gwiazdki i nuty/klucz wiolinowy z początku, co 256 ticków. Ta sama orbita, kolory i wygaszenie; +140 B w banku 49. Szczegóły: `V197_NUTKI_W_FINALE.md`.

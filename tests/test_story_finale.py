@@ -88,6 +88,20 @@ class StoryFinaleTests(unittest.TestCase):
         self.assertGreater(len(positions),12)
         self.assertGreater(len(masks),8)
 
+    def test_final_alternates_original_melody_and_stars_without_trails(self):
+        from final_boy import NOTE_SHAPES,STAR_SHAPE,notes_active
+        from whistle_pmg import SHAPES
+        self.assertEqual(NOTE_SHAPES,tuple(g[::2] for g in SHAPES))
+        cpu=None
+        for tick in range(START,START+1024,16):
+            cpu=sequence.execute(tick,cpu);m=cpu.memory
+            base=(m[0xd407]&0xfc)<<8
+            for plane in range(4):
+                shape=NOTE_SHAPES[plane] if notes_active(tick) else STAR_SHAPE
+                y=star_position((tick>>4)&15,plane)[1]-2
+                expected=bytearray(128);expected[y:y+12]=bytes(shape)
+                self.assertEqual(bytes(m[base+0x200+plane*128:base+0x280+plane*128]),bytes(expected))
+
     def test_final_updates_only_inactive_buffers_and_cleanly_restarts(self):
         cpu=sequence.MPU(memory=TrackedMemory(sequence.XEX.read_bytes()))
         sequence.execute(START-1,cpu)

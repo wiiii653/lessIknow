@@ -12,7 +12,7 @@ atari800 -1088xe -pal -nobasic -run build/visual-prototype-dev.xex
 Install `requirements-dev.txt` in a virtual environment and run
 `make check PYTHON=/path/to/venv/bin/python` for the required 6502 tests.
 Numbered releases remain preserved; the current visual release is
-`build/visual-prototype-v196.xex` (aligned dribble ball; two fast bounces followed by one slow bounce).
+`build/visual-prototype-v197.xex` (finale: opening melody symbols alternate with orbiting stars).
 See `docs/V196_KOZLY_DWA_SZYBKIE_JEDEN_WOLNY.md`.
 See `docs/V194_CIAGLY_CYKL_ROTATORA.md` for the timing update. Earlier releases: `docs/V193_TIMELINE_ROTOR_I_CREDITS.md`, `docs/V189_KOSZYKOWKA_I_TABLICA_V175.md`, `docs/V188_CIAGLE_PMG_BEZ_STROBO.md`, `docs/V187_DUZE_NUTY_PMG.md`, `docs/V186_DOMKNIETA_SCENA_SPOTKANIA.md`, `docs/V185_DLUZSZA_MELODIA.md`, `docs/V184_WCZESNIEJSZY_GWIZD.md`, `docs/V183_NUTY_PMG.md`, `docs/V182_REAKCJA_CHLOPCA.md`, `docs/V181_WEJSCIE_DZIEWCZYNY_V175.md`, `docs/V180_DLUZSZY_TUNEL.md`, `docs/V179_MASKA_I_REAKCJA_CHLOPCA.md`, `docs/V178_KADRY_OTWARCIA.md`, `docs/V177_GRAFIKA_PRODUKCYJNA_POSTACI.md`, `docs/V176_SPACER_WZDLUZ_ARENY.md`, `docs/V175_TREVOR_BNG.md`, `docs/V174_CZYTELNY_SZYLD_ARENY.md`, `docs/V173_DOPRACOWANIE_SOLOWKI.md`, then `docs/V172_POPRAWKA_DEKODERA_TANCA.md`, `docs/V171_DODATKOWE_KLATKI_SOLOWKI.md`, `docs/V170_GWIZDAJACY_ZIOMEK.md`, `docs/V169_ZMIANA_TEKSTURY_TUNELU.md`, `docs/V168_MORFUJACA_RAMKA_TREVORA.md`, `docs/V167_TECZOWY_CYKL_KOLOROW.md`, and `docs/V166_PLYNNIEJSZY_TANIEC.md`.
 See `docs/V165_ORBITY_PRZY_WSADZIE.md` and `build/v165-dunk-orbits.gif`.

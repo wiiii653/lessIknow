@@ -10,10 +10,10 @@ This project is an Atari XE 1 MB audiovisual demo for “The Less I Know The Bet
 
 `tools/` generates NMOS 6502 code and assets; `tests/` executes callbacks with py65; `assets/` contains source artwork. `build/visual-prototype-dev.xex` and its JSON are working artifacts. Preserve numbered releases; use a new output name for each release.
 
-## Current Project Progress — v196
+## Current Project Progress — v197
 
 The user targets Silly Venture. The latest visual release is
-`build/visual-prototype-v196.xex`; use its matching JSON. The replaceable
+`build/visual-prototype-v197.xex`; use its matching JSON. The replaceable
 `visual-prototype-dev` pair is the development target. These are full demo
 builds using the original v035 music, not replacements for the supplied player.
 Use `docs/PLAN_STATUS.md` for remaining production work and V1–V7 status.
@@ -583,3 +583,10 @@ with two 94-tick fast bounces and one 186-tick slow bounce per 374-tick cycle.
 The same remapped phase drives the arm and ball. Dunk and glass remain v175;
 scene boundaries unchanged. 21 focused tests pass. See
 `docs/V196_KOZLY_DWA_SZYBKIE_JEDEN_WOLNY.md`.
+
+V197 alternates the finale orbit between stars and the opening whistle's notes/treble
+clef every 256 player ticks (1.28 s). Four glyphs share the existing head orbit,
+rainbow colours, inactive PMG buffers and final fade. Glyphs retain the original
+8-bit silhouettes with single PMG rows for the smaller finale framing. Final
+controller: 809 B at $5CD0, 48 B at $69C4 and 95 B at $7FA0 in bank 49;
+net +140 B versus v196, no new banks. See docs/V197_NUTKI_W_FINALE.md.
