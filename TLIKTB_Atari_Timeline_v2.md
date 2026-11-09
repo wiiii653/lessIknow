@@ -72,6 +72,12 @@ i zbliżenie w 20662. W obu planach lotu smugi pędu powietrza na players
 i missiles; boczne fajerwerki zachowane. Taniec może się powtarzać, sam
 wyrzut tylko raz. Bez zmian granic aktów i głównych przedziałów 2C.
 
+Detal finału 2C (v233): w zbliżeniu z góry w 20615 dziewczyna puszcza
+oczko, a w 20662 robi dziubek. Z ust startuje jedno przestrzenne serce
+PMG: osiem faz wzrostu, lekkiego obrotu i oddalania się po skosie ku
+kamerze. Pociski zachowują smugi pędu; w tej ostatniej fazie players
+przejmuje serce. Cięcie w 20942 i długość całego wyrzutu pozostają.
+
 Korekta płynności v166: trzy późniejsze plany tańca (40–48 oraz taniec
 przed wyrzutem w 48–56) dostają rzeczywiste klatki pośrednie. Stare pozy
 pozostają na tickach `STEPS`; nowe wchodzą w połowie odstępu 46/47 ticków,
@@ -127,9 +133,17 @@ Takty: 88-120 | Ticki: 32909-44875
 
 Podział zachowuje wejście rotatora w takcie 88 i muzyczne zmiany tekstury
 w takcie 108 oraz następnych ujęć w 112 i 116. Zmiana v193 wydłuża pełny
-rotator do ośmiu taktów, żeby obie połowy animacji miały czas wybrzmieć.
+rotator do ośmiu taktów. V236 usuwa osobne zapętlanie połówek: wszystkie
+32 klatki tworzą ciągłe 360°, bez resetu fazy w takcie 92.
 
 - 5A (88-96, 32909-35900): pełny bananowy rotator (15 s).
+  Od v239 kolejne widoczne wejścia bananów w całym demie przeplatają kiść
+  z pojedynczym bananem obranym do połowy. Każdy motyw ma 32 klatki i pełne
+  360°; zmiana następuje dopiero przy kolejnym wejściu motywu. Cały ten
+  odcinek 5A jest trzecim wejściem i zachowuje kiść, bez zmiany w takcie 92.
+  V241 przywraca bezpośrednie kopiowanie bitmap: motywy ułożone są parami
+  z symetrią środkową, a zoom powtarza się po półobrocie. Pozwala to użyć
+  16 unikalnych bitmap dla 32 kroków kątowych bez skoku i bez runtime RLE.
 - 5B (96-112, 35900-41884): tunel spiralny. W takcie 108 (tick 40388)
   przechodzi w organiczne pasma. Klatki i banki bez zmian.
 - 5C (112-116, 41884-43379): Trevor Mosaic (głośność spada o ok. 2 dB w 112-119).
@@ -146,21 +160,25 @@ Takty: 120-128 | Ticki: 44875-47867 (zmiana: było 120-136)
 - 6B (124-128, 46371-47867): Trevor vs koszykarz
 
 ## ACT 7 - TREVOR WINS
-Takty: 128-144 | Ticki: 47867-53850 (zmiana: było 136-152)
+Takty: 128–około 138,65 | Ticki: 47867–51850 (v240: wcześniejsze outro na polecenie użytkownika)
 
 Najgłośniejsza część utworu zaczyna się w takcie 128 (ok. 3 dB głośniej), szczyt jest w 136-143.
 
 - 7A (128-136, 47867-50858): neon glow, narastanie
-- 7B (136-144, 50858-53850): gigantyczny Trevor, flash, kulminacja
+- 7B (od 136, 50858–51850): planowana kulminacja; bieżący rotator/tunel
+  ustępuje terminalowi w 51850, około 10 s wcześniej niż przed v240.
 
 ## ACT 8 - OUTRO
-Takty: 144-160 | Ticki: 53850-59833 (zmiana: było 152-160)
+Takty: około 138,65–160 | Ticki: 51850–59833 (v240: wejście 2000 ticków wcześniej)
 
 W takcie 144 muzyka się zmienia. Wyciszenie dopiero w 158-159.
 
-- 8A (144-152, 53850-56842): credits na tle leżącego chłopca
-  (logo_group, logo_music, logo_sv; plansze credits nadal do wykonania)
-- 8B (152-158, 56842-59085): greetz na tym samym tle
+- 8A (51850–54850): trzy plansze credits na tle leżącego chłopca;
+  wejścia 51850/52850/53850. Szybkie wpisanie całej planszy, potem pauza.
+- 8B (54850–59085): pięć plansz greetz, osobno dla każdego akapitu;
+  wejścia 54850/55697/56544/57391/58238. Prompt `>_`, migający podkreślnik
+  podczas pisania i pauzy. Siedem wierszy: status + sześć tekstu.
+  Chłopiec i orbita pozostają w jednym stałym niższym położeniu.
 - 8C (158-160, 59085-59833): finałowy kadr po zwycięstwie Trevora — chłopiec leży pobity na podłodze sali, a wokół jego głowy krążą komiksowe gwiazdki. Zmiana scenariusza zatwierdzona 2026-11-07. Domknięcie losu tej samej postaci, która wcześniej rozbiła tablicę przy wsadzie. Końcowy flash/przejście i fade do czerni pozostają w obecnym zakresie; credits i greetz z 8A/8B zachowane.
 
 ## Tabela zdarzeń dla silnika
@@ -178,7 +196,7 @@ W takcie 144 muzyka się zmienia. Wyciszenie dopiero w 158-159.
 | 64 | 23934 | Act 4 / 4A |
 | 72 | 26925 | 4B (uderzenie) |
 | 88 | 32909 | Act 5 / 5A |
-| 92 | 34404 | 5A — druga połowa bananowego rotatora |
+| 92 | 34404 | 5A — środek odcinka, bez resetu fazy rotatora |
 | 96 | 35900 | 5B tunnel — początek tunelu spiralnego |
 | 108 | 40388 | zmiana tekstury tunelu |
 | 112 | 41884 | 5C mosaic |
@@ -188,8 +206,14 @@ W takcie 144 muzyka się zmienia. Wyciszenie dopiero w 158-159.
 | 124 | 46371 | 6B |
 | 128 | 47867 | Act 7 / 7A |
 | 136 | 50858 | 7B |
-| 144 | 53850 | Act 8 / 8A — chłopiec w tle credits |
-| 152 | 56842 | 8B greetz |
+| — | 51850 | Act 8 / 8A — terminal i leżący chłopiec, 10 s wcześniej |
+| — | 52850 | 8A — plansza audio |
+| 144 | 53850 | 8A — plansza Silly Venture / AI |
+| — | 54850 | 8B — pierwsza plansza greetz |
+| — | 55697 | 8B — anegdota o mamie |
+| — | 56544 | 8B — podziękowania / AI |
+| — | 57391 | 8B — znajomi i grupy |
+| — | 58238 | 8B — ekipa i goście Silly Venture |
 | 158 | 59085 | 8C — finałowy kadr / fade |
 | 160 | 59833 | koniec |
 

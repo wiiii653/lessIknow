@@ -99,9 +99,13 @@ class CacheTests(unittest.TestCase):
             if index<32:
                 self.assertEqual(bytes(m[0x5200:0x5400]),bytes(512))
             elif index<39:
-                source,data=next((source,data) for bank,source,data in payloads() if bank==index)
-                self.assertEqual(bytes(m[source:source+len(data)]),data)
-                self.assertFalse(any(m[source+len(data):0x5400]))
+                streams=sorted((source,data) for bank,source,data in payloads() if bank==index)
+                end=0x4a00
+                for source,data in streams:
+                    self.assertEqual(source,end)
+                    self.assertEqual(bytes(m[source:source+len(data)]),data)
+                    end=source+len(data)
+                self.assertFalse(any(m[end:0x5400]))
             else:
                 from final_boy import packed
                 self.assertEqual(bytes(m[0x4a00:0x5400]),packed())

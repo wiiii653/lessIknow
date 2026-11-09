@@ -9,7 +9,7 @@ from build_sequence import Code, TITLE_TICK
 from school_portrait_bank import bank_value
 from music_timing import tick_at_beat
 
-SIZE = 1792
+SIZE = 2272
 STATE = 0x83e0
 FRAME_BYTES = 2560
 FIRST_BANK = 40
@@ -325,6 +325,15 @@ def build(origin, blank):
     c.emit(0xa9, 1, 0x60)
 
     c.label('invalidate')
+    # A development seek out of captions must restore both normal DLISTs
+    # before earlier scene builders reuse their LMS operands.
+    a(0xad,STATE);c.emit(0xc9,17);c.branch(0xd0,'outro_seek_done')
+    a(0xad,0x0dd0);c.branch(0xf0,'outro_seek_done')
+    from outro_text import START as OUTRO_START
+    a(0xad,STATE+3);c.emit(0xc9,OUTRO_START>>8);c.branch(0x90,'outro_seek_reset');c.branch(0xd0,'outro_seek_done')
+    a(0xad,STATE+2);c.emit(0xc9,OUTRO_START&255);c.branch(0xb0,'outro_seek_done')
+    c.label('outro_seek_reset');a(0x20,0xc340)
+    c.label('outro_seek_done')
     a(0xad, STATE); c.emit(0xc9, 2); c.branch(0x90, 'invalidate_done')
     c.emit(0xa9, 0xff); c.jump(0x8d, 'mask_key')
     c.label('invalidate_done'); c.emit(0x60)

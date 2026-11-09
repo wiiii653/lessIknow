@@ -12,7 +12,19 @@ atari800 -1088xe -pal -nobasic -run build/visual-prototype-dev.xex
 Install `requirements-dev.txt` in a virtual environment and run
 `make check PYTHON=/path/to/venv/bin/python` for the required 6502 tests.
 Numbered releases remain preserved; the current visual release is
-`build/visual-prototype-v197.xex` (finale: opening melody symbols alternate with orbiting stars).
+`build/visual-prototype-v244.xex` (prepares both dense banana motifs as raw frames in retired title banks, matching tunnel playback cost).
+See `docs/V244_SUROWE_BANANY_I_BANKI_PO_TYTULE.md`.
+See `docs/V243_GESTE_BANANY_SZYBSZY_DEKODER.md` and `build/banana-v243-variants.png`.
+See `docs/V242_STALY_KADR_BEZ_RESETOW.md`.
+See `docs/V241_SZYBKIE_BANANY_BEZ_RLE.md` and `build/banana-v241-variants.png`.
+See `docs/V240_WCZESNIEJSZY_TERMINAL_I_PLANSZE.md` and `build/terminal-v240.gif`.
+See `docs/V239_KISC_I_OBRANY_BANAN.md` and `build/banana-v239-variants.png`.
+See `docs/V236_PELNY_OBROT_BANANOW.md` and `build/bananas-v236.gif`.
+See `docs/V235_LLM_AI_W_CREDITS.md`.
+See `docs/V234_SIODMY_WIERSZ_TERMINALA.md`.
+See `docs/V233_OCZKO_BUZIAK_SERCE.md` and `build/launch-kiss-v233.gif`.
+See `docs/V231_DYNAMICZNY_TUNEL_PO_TREVORZE.md` for tunnel texture, direction and speed changes synchronized to musical phrases.
+See `docs/V230_TERMINAL_I_CHWYTY_SZARF.md` and `docs/V227_CZYSTE_PMG_NAD_GLOWA.md` and `docs/V225_PALETY_TERMINAL_I_TREVOR.md` (green letters on black, DLI palette split, matching Trevor entrance colours).
 See `docs/V196_KOZLY_DWA_SZYBKIE_JEDEN_WOLNY.md`.
 See `docs/V194_CIAGLY_CYKL_ROTATORA.md` for the timing update. Earlier releases: `docs/V193_TIMELINE_ROTOR_I_CREDITS.md`, `docs/V189_KOSZYKOWKA_I_TABLICA_V175.md`, `docs/V188_CIAGLE_PMG_BEZ_STROBO.md`, `docs/V187_DUZE_NUTY_PMG.md`, `docs/V186_DOMKNIETA_SCENA_SPOTKANIA.md`, `docs/V185_DLUZSZA_MELODIA.md`, `docs/V184_WCZESNIEJSZY_GWIZD.md`, `docs/V183_NUTY_PMG.md`, `docs/V182_REAKCJA_CHLOPCA.md`, `docs/V181_WEJSCIE_DZIEWCZYNY_V175.md`, `docs/V180_DLUZSZY_TUNEL.md`, `docs/V179_MASKA_I_REAKCJA_CHLOPCA.md`, `docs/V178_KADRY_OTWARCIA.md`, `docs/V177_GRAFIKA_PRODUKCYJNA_POSTACI.md`, `docs/V176_SPACER_WZDLUZ_ARENY.md`, `docs/V175_TREVOR_BNG.md`, `docs/V174_CZYTELNY_SZYLD_ARENY.md`, `docs/V173_DOPRACOWANIE_SOLOWKI.md`, then `docs/V172_POPRAWKA_DEKODERA_TANCA.md`, `docs/V171_DODATKOWE_KLATKI_SOLOWKI.md`, `docs/V170_GWIZDAJACY_ZIOMEK.md`, `docs/V169_ZMIANA_TEKSTURY_TUNELU.md`, `docs/V168_MORFUJACA_RAMKA_TREVORA.md`, `docs/V167_TECZOWY_CYKL_KOLOROW.md`, and `docs/V166_PLYNNIEJSZY_TANIEC.md`.
 See `docs/V165_ORBITY_PRZY_WSADZIE.md` and `build/v165-dunk-orbits.gif`.
@@ -71,13 +83,13 @@ CPU measurements and validation. To test an archived build, set
 | 23186–23933 | 116.25–120 s | Fast dunk breaks the backboard: cracks, split panel, glass fragments and missile debris; spinning rainbow ball and light flash |
 | 23934–26924 | 120–135 s | Two illustrated Trevor entrance poses composited over the same dark gym |
 | 26925–32908 | 135–165 s | Neon tunnel, punch combinations, alternating BANG/BAM, cycling PMG cloud fragments and missile debris |
-| 32909–35899 | 165–180 s | Full banana rotator, both animation halves |
+| 32909–35899 | 165–180 s | Continuous 32-frame banana rotator, full 360-degree cycles |
 | 35900–40387 | 180–202.5 s | Spiral tunnel |
 | 40388–41883 | 202.5–210 s | Organic tunnel texture |
 | 41884–41983 | 210–210.5 s | Organic tunnel tail; prevents a partial banana phase from flashing |
-| 41984–53849 | 210.5–270 s | Existing rotator/tunnel cycle remains the placeholder through acts 5C/5D and 6–7 |
-| 53850–56841 | 270–285 s | Credits window; lying boy is the planned background, credit cards remain unimplemented |
-| 56842–59084 | 285–296.25 s | Greetz window on the same planned background; lettering remains unimplemented |
+| 41984–51849 | 210.5–260 s | Rotator/tunnel cycle, ending 10 seconds earlier for the terminal |
+| 51850–54849 | 260–275 s | Three terminal credits pages above the fixed lying boy; fast typing, then reading pauses |
+| 54850–59084 | 275–296.25 s | Five greetz paragraph pages, with a blinking underscore cursor |
 | 59085–59832 | 296.25–300 s | Defeated boy, four orbiting PMG stars, fade to black |
 | 59833 onward | 300 s onward | Black picture; original music DLI layout retained |
 

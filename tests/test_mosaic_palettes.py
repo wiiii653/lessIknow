@@ -4,6 +4,7 @@ import math
 from pmg_preview import atari_rgb
 import test_sequence as sequence
 from final_boy import START as FINAL_SHOT
+from banana_variants import variant_at
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class MosaicPaletteTests(unittest.TestCase):
@@ -14,7 +15,7 @@ class MosaicPaletteTests(unittest.TestCase):
                 self.assertEqual(memory[0x83e0],6)
                 first,second=memory[0xd016],memory[0xd017]
                 if memory[0x83ed] < 32:
-                    self.assertEqual((first,memory[0xd018]),(0x18,0x1e))
+                    self.assertEqual((first,memory[0xd018]),(0x1a,0x0e) if variant_at(tick) else (0x18,0x1e))
                     continue
                 self.assertIn(first&15,(8,10,12,14))
                 self.assertIn((second&15)-(first&15),(0,4))
@@ -32,7 +33,7 @@ class MosaicPaletteTests(unittest.TestCase):
             if m[0x83ed] < 32:
                 # Fruit inks are deliberately stable gold/yellow; only the
                 # background cycles. Unique pairs apply to the tunnel.
-                self.assertEqual((m[0xd016],m[0xd018]),(0x18,0x1e))
+                self.assertEqual((m[0xd016],m[0xd018]),(0x1a,0x0e) if variant_at(tick) else (0x18,0x1e))
                 continue
             pair=(m[0xd016],m[0xd017])
             self.assertNotIn(pair,pairs,(tick,pair))

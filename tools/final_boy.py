@@ -7,6 +7,8 @@ from build_sequence import Code
 from engine_effects import cached_display_list
 from music_timing import tick_at_bar
 from whistle_pmg import SHAPES as WHISTLE_SHAPES
+from outro_loader import ENTRY as OUTRO_ENTRY, FLAG as OUTRO_FLAG
+from outro_text import START
 
 STAR_SHAPE=(0,0,0x10,0x54,0x38,0xfe,0x38,0x54,0x10,0,0,0)
 NOTE_SHAPES=tuple(glyph[::2] for glyph in WHISTLE_SHAPES)
@@ -15,7 +17,7 @@ GLYPH_ROWS=12
 def notes_active(tick):
     return bool((tick >> 8) & 1)
 
-START,END=tick_at_bar(144),tick_at_bar(160)
+END=tick_at_bar(160)
 FADE_START=END-128
 ENTRY=0x5cd0
 ORBIT_DATA=0x69c4  # 60-byte gap after the Trevor controller
@@ -43,7 +45,7 @@ def artwork():
     p=bytearray(160*64)
     for y in range(64):
         for x in range(160):
-            if y in (5,9,60) or (y>=9 and (x+y//3)%24==0):p[y*160+x]=2
+            if y==60 or (y>=9 and (x+y//3)%24==0):p[y*160+x]=2
             elif y>=9 and y%12==0:p[y*160+x]=1
     points={}
     for y in range(56):
@@ -67,7 +69,7 @@ def packed():
 
 def star_position(phase,plane):
     t=((phase+plane*4)&15)*math.tau/16
-    return HEAD_X+round(22*math.cos(t))-4,round((HEAD_Y+20*math.sin(t)-7+17)/2)
+    return HEAD_X+round(22*math.cos(t))-4,round((HEAD_Y+20*math.sin(t)-7+17)/2)+16
 
 
 def fade_level(tick):
@@ -81,8 +83,10 @@ def helper(copy_address):
     a(0xad,0x83fa);c.emit(0xc9,0x7e);c.branch(0xd0,'bitmap_changed');c.jump(0x4c,'prepare')
     c.label('bitmap_changed');c.emit(0xa9,0x7e);a(0x8d,0x83fa)
     c.emit(0xa9,FRAME_KEY);a(0x8d,0x83ed)
-    a(0xad,0x83e6);c.emit(0x29,4,0x0a,0x0a,0x0a,0x49,0xb0);a(0x8d,0x83fe)
-    a(0x20,copy_address);c.emit(0xa9,1);a(0x8d,0x83e5)
+    a(0x8d,0x0dfe);a(0x8d,0x0dff)
+    c.emit(0xa9,0);a(0x8d,OUTRO_FLAG);a(0x8d,0xd01d)
+    c.emit(0xa9,0x90);a(0x8d,0x83fe)
+    a(0x20,copy_address)
     cached_display_list(c,7)
     a(0xad,0x83e6);c.jump(0x8d,'dl1_hi');c.jump(0x8d,'dl2_hi')
     c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');c.emit(0xa9,4);c.jump(0x8d,'dl2_lo')
@@ -99,7 +103,7 @@ def helper(copy_address):
     c.label('prepare')
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x29,15);a(0x8d,0x83ff)
     # Double-buffer every glyph; keep the previous orbit visible until publication.
-    a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e8)
+    a(0xad,0x83e8);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e8)
     for i,high in enumerate((9,10,10,11,11)):
         c.emit(0xa9,high);a(0x0d,0x83e8);c.jump(0x8d,f'clear{i}_hi')
     for i,high in enumerate((10,10,11,11)):
@@ -141,10 +145,10 @@ def helper(copy_address):
     a(0xad,0x83ec);c.branch(0xf0,'dark_pixels')
     for addr,hue in ((0xd016,0x40),(0xd017,0x90),(0xd018,0x20)):
         a(0xad,0x83ec);c.emit(0x09,hue);a(0x8d,addr)
-    c.emit(0xa9,2);a(0x8d,0xd01d);c.emit(0x60)
+    c.emit(0xa9,2);a(0x8d,0xd01d);a(0x4c,OUTRO_ENTRY)
     c.label('dark_pixels');c.emit(0xa9,0)
     for addr in (0xd016,0xd017,0xd018,0xd01d):a(0x8d,addr)
-    c.emit(0x60)
+    a(0x4c,OUTRO_ENTRY)
     for label in ('dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     for i in range(5):c.labels[f'clear{i}_hi']=c.labels[f'clear{i}']+2
@@ -181,7 +185,11 @@ def install_control(bank,copy_address):
     out[offset:offset+len(orbit)]=orbit
     shapes=bytes(STAR_SHAPE)+b''.join(bytes(g) for g in NOTE_SHAPES)
     shapes+=bytes(max(0,12-2*i) for i in range(16))
-    shapes+=bytes((0x20,0x90,0x40,0)[i%4] for i in range(19))
+    # Nineteen vivid GTIA hues give each plane a phase-offset rainbow sweep.
+    rainbow=(0x0f,0x2f,0x4f,0x6f,0x8f,0xaf,0xcf,0xef,
+             0x1f,0x3f,0x5f,0x7f,0x9f,0xbf,0xdf,0xff,
+             0x1e,0x5e,0x9e)
+    shapes+=bytes(rainbow)
     offset=SHAPE_DATA-0x4000
     assert out[offset:offset+len(shapes)]==bytes(len(shapes))
     out[offset:offset+len(shapes)]=shapes

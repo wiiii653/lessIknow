@@ -1,12 +1,13 @@
-# Status planu dema — stan po v197
+# Status planu dema — stan po v244
 
 Legenda: ✅ wykonane w buildzie lub potwierdzone; 🟡 częściowo wykonane / ograniczone do prototypu albo emulatora; ⬜ niezaimplementowane lub nieweryfikowane. Ticki pozostają zgodne z zatwierdzonym timeline’em.
 
 Punktem wyjścia był audyt kodu i XEX v144 z 2026-11-07
 (`AUDYT_BRAKOW_V144.md`). Poniższa tabela uwzględnia późniejsze zmiany
-aż do v197. Audyt v144 jest historycznym zapisem: nie opisuje bieżącego
-wydania, pamięci ani walidacji v197. Późniejszy przegląd nie zmienił
-priorytetów ani zatwierdzonych granic aktów.
+aż do v240. Audyt v144 jest historycznym zapisem: nie opisuje bieżącego
+wydania, pamięci ani walidacji v198. Późniejszy przegląd nie zmienił
+priorytetów. V240 na wyraźne polecenie użytkownika przesuwa wejście
+terminala i leżącego chłopca o 2000 ticków wcześniej, do 51850.
 
 Zmiany scenariusza zatwierdzone przez użytkownika 2026-11-07,
 **zaimplementowane w v145**:
@@ -15,10 +16,9 @@ Zmiany scenariusza zatwierdzone przez użytkownika 2026-11-07,
   powiększa się, a sala i grupa oddalają się pod nią.
 - Wsad: chłopiec rozbija tablicę kosza, z pęknięciem i odłamkami.
 - Ostatni kadr outro: ten sam chłopiec pobity na podłodze, z gwiazdkami
-  krążącymi wokół głowy; potem wygaszenie do czerni. Zakresy credits/greetz
-  pozostają zarezerwowane; same plansze nadal są do wykonania.
+  krążącymi wokół głowy; potem wygaszenie do czerni. Credits/greetz są zaimplementowane w v216 w dotychczasowych oknach.
 
-Granice aktów i zegar muzyki pozostają bez zmian. V151 na zlecenie użytkownika zmienia wewnętrzne zakresy aktu 3, zachowując długość wyrzutu.
+Zegar muzyki pozostaje bez zmian. V151 na zlecenie użytkownika zmienia wewnętrzne zakresy aktu 3, zachowując długość wyrzutu; v240 przyspiesza początek outro o około 10 s.
 
 [ODCZYT] V145: 109 testów, 106 zaliczonych, 3 pominięte (brak v126).
 Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 572 808 identycznych
@@ -255,10 +255,10 @@ bajtów względem v035 przez cały utwór; bez próby na fizycznym Atari.
 | **Act 2 — Crush**, takty 24–56, ticki 8975–20942 | 🟡 | W 8975–11967 boczny taniec ze szarfą: cofająca się dziewczyna, przeciwbieżny scroll sali i paralaksa podłogi. Pomponiary zachowane w osobnym projekcie. Po rotozoomerze trzy ujęcia szarf: grupa, solówka, grupa i wyrzut bohaterki. Jest 36 bazowych kompozycji (16 bocznych + 20 późniejszych) oraz 14 nowych klatek pośrednich w trzech późniejszych ujęciach; ticki akcentów i cięcia bez zmian. Podwójne bufory PMG i tęczowe iskry. Testy CPU i stereo POKEY wykonane; ocena płynności obrazu z DMA i artystyczna na docelowym sprzęcie pozostaje. |
 | **Act 3 — Basketball Hero**, takty 56–64, ticki 20942–23934 | ✅ | Po niezmienionym wyrzucie 3,75 s tunelu z piłką, potem 7,5 s kozłowania i 3,75 s wsadu we wnętrzu ATARI ARENA. Animowany chłopiec, piłka i ramię; rozbicie tablicy: pęknięcie, rozpad i odłamki PMG, obracająca się tęczowa piłka oraz błysk. Tło sali przy kozłowaniu pozostaje statyczne. |
 | **Act 4 — Trevor Awakens**, takty 64–88, ticki 23934–32909 | ✅ | Ciche wejście, zamachy i kombinacje ciosów. Tunel za Trevorem zmienia kształt z prostokąta w owal i z powrotem; postać pozostaje nieruchoma względem tła. Naprzemienne BANG/BAM, kolorowe fragmenty chmurki na czterech players, rozdzielone i kurczące się szczątki na missiles. Cykle barw PMG, podwójny bufor efektów. Zachowano moment powrotu energii w 26925 i wszystkie momenty uderzeń. |
-| **Act 5 — Psychedelic Breakdown**, takty 88–120, ticki 32909–44875 | 🟡 | V193 wydłuża bananowy rotator do taktu 96 (tick 35900), pokazując obie połowy. Tunel spiralny trwa 35900–40388, potem organiczne pasma. V194 trzyma je do ticku 41984, by globalny cykl zaczął się od pełnej fazy tunelu. Mozaika Trevora w 41884 i sekwencja oczu od 43379 nadal czekają. |
+| **Act 5 — Psychedelic Breakdown**, takty 88–120, ticki 32909–44875 | 🟡 | Bananowy rotator trwa do taktu 96 (tick 35900); v236 daje ciągłe 32-klatkowe obroty 360°, bez resetu w takcie 92. Tunel spiralny trwa 35900–40388, potem organiczne pasma do 41984. V231 dynamizuje późniejsze okna tunelu zmianami motywu, kierunku i prędkości. Mozaika Trevora w 41884 i sekwencja oczu od 43379 nadal czekają. |
 | **Act 6 — Love Triangle**, takty 120–128, ticki 44875–47867 | ⬜ | Brak zaplanowanych kadrów komiksowych i pojedynku Trevora z koszykarzem w tym zakresie. |
-| **Act 7 — Trevor Wins**, takty 128–144, ticki 47867–53850 | ⬜ | Brak osobnej kulminacji z gigantycznym Trevorem, flashem i wskazanym narastaniem neonów. |
-| **Act 8 — Outro**, takty 144–160, ticki 53850–59833 | 🟡 | Leżący chłopiec pojawia się od 53850 jako przewidziane tło credits/greetz; ich napisy nadal nie są zaimplementowane. Od 59085 wraca pełny kadr z czterema orbitującymi gwiazdkami i fade do czerni, bez zmiany końcowego zakresu. |
+| **Act 7 — Trevor Wins**, od taktu 128, ticki 47867–51850 | ⬜ | Brak osobnej kulminacji z gigantycznym Trevorem. Na polecenie użytkownika od v240 bieżący rotator/tunel ustępuje terminalowi 10 s wcześniej. |
+| **Act 8 — Outro**, ticki 51850–59833 | 🟡 | Stały niższy kadr chłopca i siedmiowierszowy terminal: trzy plansze credits, pięć greetz. Szybki wydruk, potem pauza na czytanie; prompt `>_`, kursor miga również przy pisaniu. Tekst znika w 59085; pozycja chłopca/orbity i końcowy fade pozostają. Test na fizycznym Atari pozostaje. |
 
 Intro TAME IMPALA / album title z plazmą i ditheringiem działa w tickach 0–2992 przed ujęciami szkoły. Kolory liter zmieniają się co uderzenie. V140 dodaje miasto i fajerwerki PMG; kolejność wejść na drugiej planszy to I KNOW → THE BETTER → THE LESS, z niezmienionym układem końcowym. W v140 maski chroniły litery i cienie także podczas przenikania; v149 usuwa tę ochronę na życzenie użytkownika, pokazując kompletne fajerwerki przed obrazem. To późniejszy dodatek, który zastępuje początkowe logo szkoły z timeline’u; dalszych granic nie przesunięto.
 
@@ -515,3 +515,156 @@ z v175 zachowane; 21 testów zaliczonych. Dithering v195 wycofany.
 `V196_KOZLY_DWA_SZYBKIE_JEDEN_WOLNY.md`.
 
 V197: finałowy chłopiec ma naprzemiennie gwiazdki i nuty/klucz wiolinowy z początku, co 256 ticków. Ta sama orbita, kolory i wygaszenie; +140 B w banku 49. Szczegóły: `V197_NUTKI_W_FINALE.md`.
+
+V198: 19 nasyconych kolorów GTIA cyklicznie barwi orbitujące gwiazdki i symbole melodii; cztery duszki mają przesunięte fazy. Bez zmian orbity, czasu i zajętości pamięci. Szczegóły: `V198_TECZOWE_KOLORY_FINALE.md`.
+
+## V216 — credits i greetz
+
+Credits 53850–56842, falujący scroll greetz 56842–59085; pełny chłopiec
+i PMG zachowane, od 59085 wraca stary finał. Brak nowych banków.
+Zasoby 1738 B + loader 364 B w lukach podstawowej pamięci. Prywatny DL
+`$BC00` zachowuje muzyczne DLI co 78 linii. Patrz `V216_CREDITS_GREETZ.md`.
+
+[ODCZYT] V216: 154/154 testy, bez pominięć. Atari800 PAL/1088XE, stereo:
+9 791 424 identyczne bajty POKEY względem v035, cały utwór. Ponowny build
+identyczny bajtowo; wszystkie banki poza blokiem kontrolera finału zgodne
+z v198.
+
+V218: jedna niższa pozycja chłopca od 53850 do fade, również po 59085.
+Zielony terminal z `>`, puste górne wiersze po greetz; usunięte górne linie.
+Patrz `V218_STALY_KADR_TERMINAL.md`.
+
+V222: właściwe pisanie terminala znak po znaku, migający kursor za tekstem,
+Entery i scroll historii pięciu wierszy. Stały dolny kadr zachowany.
+158 testów w pełnym przebiegu v221; 44 testy dopracowanej v222 oraz cały
+utwór stereo w Atari800 zaliczone. `V222_TERMINAL_PISANIE.md`.
+
+V225: zielone litery ANTIC 4 na czarnym tle, przełączenie palety z DLI
+bez piątego ticka muzyki; brak zapisów terminala do koloru skóry. Wejście
+Trevora używa palety bitki `$48/$68/$2A`. 47 testów i pełne stereo Atari800
+zaliczone. `V225_PALETY_TERMINAL_I_TREVOR.md`.
+
+V227: usunięte rozdwojenie PMG finału — prawidłowy cień PMBASE i kompletne
+maski na docelowej wysokości przed publikacją. Test sprzętowego odczytu
+write-only odtwarza błąd v225 i przechodzi na v227.
+
+V230: stały kolumnowy terminal, 6 wierszy (status + 5 historii), jaśniejsza
+zieleń i rzadki glitch wyłącznie tekstu; poprawione wszystkie chwyty szarf
+ujęć solo/trio i dodatkowych klatek. Kadr chłopca i zegar muzyki zachowane.
+`V230_TERMINAL_I_CHWYTY_SZARF.md`.
+
+V231: montaż po Trevorze przeplata istniejące dwa tunele, odwraca kierunek
+i wprowadza przyspieszenia 2× w rytmie półtaktów oraz krótkich zakończeń fraz.
+Dotyczy tylko dotychczasowych okien tunelu od 41984; banany i wejście finału
+w 53850 pozostają. Bez nowych bitmap/banków; główny kod 2524 B, director
+337 B w pamięci podstawowej. 38 testów ukierunkowanych i pełne porównanie
+stereo Atari800 zaliczone. `V231_DYNAMICZNY_TUNEL_PO_TREVORZE.md`.
+
+[ODCZYT] Regresja v231: 167/168 w pełnym przebiegu; po dostosowaniu
+testu wyboru 64 klatek do nowego montażu moduł mosaic zalicza 4/4.
+Wszystkie 168 przypadków zweryfikowane, XEX bez dalszych zmian.
+
+V233: pojedyncze oczko i buziak w istniejących fazach zbliżenia wyrzutu,
+następnie ośmiofazowe serce PMG z różowym przodem, białym połyskiem
+i fioletową głębią. Start przy ustach 20662, koniec sceny nadal 20942;
+wszystkie cztery missile trails pozostają. 992 B wykorzystanej końcówki
+banku tańca, 5152 B pozostałych końcówek. Bez nowych banków i bitmap.
+`V233_OCZKO_BUZIAK_SERCE.md`.
+
+[ODCZYT] V233: 172/172 testy, 118,6 s; Atari800 PAL/1088XE, cały utwór
+stereo — 11 608 128 bajtów identycznych z v035. Build roboczy zgodny z v233.
+
+V234: siedem wierszy terminala (status + sześć historii), dodatkowy wiersz
+pozostawia widoczną wcześniejszą linię greetz. Zastępuje wyłącznie kolejne
+8 czarnych linii bitmapy; chłopiec i orbita zachowują położenie. Bez zmiany
+tekstów i ich ticków; muzyczne DLI nadal 1/79/157/235, split palety teraz 57.
+46 testów ukierunkowanych i cały utwór stereo Atari800 zaliczone.
+`V234_SIODMY_WIERSZ_TERMINALA.md`.
+
+[ODCZYT] V234: 173/173 testy, 119,4 s. Build roboczy zgodny z v234.
+
+V235: dopisane `HUMAN VISION / LLM CODE` oraz `AI TOOLS / ATARI SOUL`
+w istniejących planszach credits. Pierwsza wykorzystuje szósty wiersz
+historii. Greetz, kadr i granice scen zachowane. 1795 B zasobów po kompresji;
+dodatkowe 12 B w wyłączonym UI, bez luk banków rozszerzenia.
+`V235_LLM_AI_W_CREDITS.md`.
+
+[ODCZYT] V235: 174/174 testy, 118,6 s; pełny utwór stereo Atari800
+zgodny z v035 (10 847 448 B). Build roboczy zgodny z v235.
+
+V236: naprawiony niepełny obrót bananów. Generator 32 klatek obejmuje
+360° zamiast 90°, a akt 5 nie resetuje już osobno połówek 0–15 i 16–31
+ani nie wymusza zmiany fazy w 34404. Timeline, kafel bananów, paleta,
+piłka i tunele zachowane. Main 2521 B, bez nowych banków. 44 testy
+ukierunkowane i pełne stereo Atari800 zaliczone.
+`V236_PELNY_OBROT_BANANOW.md`.
+
+[ODCZYT] V236: 174 dotychczasowe testy zaliczone w pełnym przebiegu;
+po naprawie importu nowego modułu jego osobne discovery zalicza 3/3.
+Łącznie 177 przypadków zweryfikowanych; build roboczy zgodny z v236.
+
+V239: kiść i pojedynczy banan obrany do połowy pojawiają się wymiennie,
+co drugie wejście bananowego rotatora. Oba mają pełne 32-klatkowe obroty.
+Dwa komplety mieszczą się po RLE w tych samych 8 bankach, zostawiając
+9910 B luk; bez użycia rezerwy innych banków. Main nadal 2521 B.
+Cały utwór stereo Atari800 zgodny z v035; tunele identyczne bajtowo.
+`V239_KISC_I_OBRANY_BANAN.md`.
+
+[ODCZYT] V239: 181/181 testów, 133,7 s; cały utwór stereo Atari800
+zgodny z v035 (11 570 400 B). Build roboczy zgodny z v239.
+
+V240: terminal i leżący chłopiec od 51850, około 10 s wcześniej.
+Osiem plansz (3 credits + 5 akapitów greetz): szybkie wpisanie wszystkich
+wierszy i pauzy ponad 3 s. Prompt `>_`, podkreślnik miga także w czasie
+pisania. Zakończenie tekstu 59085 i fade zachowane; wszystkie 64 banki
+identyczne z v239. 59 testów ukierunkowanych i cały utwór stereo Atari800
+zaliczone. `V240_WCZESNIEJSZY_TERMINAL_I_PLANSZE.md`.
+
+[ODCZYT] V240: 183/183 testy, 133,5 s; cały utwór stereo Atari800
+zgodny z v035 (11 175 336 B). Build roboczy zgodny z v240.
+
+V241: usunięte rozpakowywanie RLE obu bananów. Symetryczne pary owoców
+pozwalają przechować surowe półobroty i odtworzyć 32 próbki kątowe bez
+skoku; zmienia się układ tła i częstotliwość zoomu. Koszt kolejnej klatki
+około 47 tys. cykli, na poziomie tuneli. W tych samych 8 bankach zostaje
+344 B (zamiast wcześniejszych 9910 B). Terminal i timeline zachowane.
+`V241_SZYBKIE_BANANY_BEZ_RLE.md`.
+
+[ODCZYT] V241: 184/184 testy, 123,5 s; cały utwór stereo Atari800
+zgodny z v035 (11 610 936 B). Build roboczy zgodny z v241.
+
+V242: naprawione miganie leżącego chłopca między niższym i starszym wyższym
+kadrem. Guard przywracania normalnej display listy używa teraz aktualnego
+outro_text.START (51850), zamiast starego 53850. Test kolejnych callbacków
+odtwarza błąd v241 i potwierdza brak przełączeń w v242.
+`V242_STALY_KADR_BEZ_RESETOW.md`.
+
+[ODCZYT] V242: 185/185 testów, 122,9 s; cały utwór stereo Atari800
+zgodny z v035 (10 731 888 B). Tylko 2 zmienione bajty XEX względem v241.
+
+
+V243: przywrócone gęste rozmieszczenie bananów sprzed v241: wszystkie
+64 bitmapy identyczne z v240, pełne 32 fazy obu motywów i dotychczasowy zegar.
+Przyspieszenie dotyczy dekodera RLE, bez zmiany wzoru. Najdroższy rozgrzany
+callback: kiść 75139 zamiast 78748 cykli, obrany 72819 zamiast 78599.
+To odpowiednio 4,6% i 7,4% mniej CPU; nadal drożej od surowego tunelu
+(47233 cykle). To pomiar CPU bez ANTIC DMA, nie deklaracja FPS.
+Te same osiem banków; 3755 B wolnego. Pozostałe banki i naprawa finału v242
+pozostają identyczne. `V243_GESTE_BANANY_SZYBSZY_DEKODER.md`.
+
+[ODCZYT] `make check PYTHON=/tmp/finale197-venv/bin/python`: **186/186
+testów**, bez pominięć, 137,5 s. Cały utwór Atari800 stereo: 11376072
+identycznych bajtów względem v035. Build roboczy zgodny z v243.
+
+
+V244: oba banany odtwarzane bez RLE po przygotowaniu w tle. Banki planszy
+tytułowej 40–48 są używane ponownie po zakończeniu tytułu; liczba fizycznych
+banków nadal 64. Właściwe klatki, zoom, palety, piłka i ticki pozostają.
+[ODCZYT] Atari800 PAL/1088XE: cache gotowy w ticku 8609, przed pierwszym
+rotatorem 11968. Odczyt kolejnych faz: 63 przejścia kiści i 38 obranego,
+wszystkie o jeden krok, bez pominięcia. Rozgrzany callback: 47323/47402
+cykle wobec tunelu 47245. Muzyka stereo: 10589472 identyczne bajty z v035.
+`V244_SUROWE_BANANY_I_BANKI_PO_TYTULE.md`.
+
+[ODCZYT] `make check PYTHON=/tmp/finale197-venv/bin/python`: **189/189
+testów**, bez pominięć, 151,2 s. Build roboczy i v244 identyczne.

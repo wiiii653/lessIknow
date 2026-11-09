@@ -10,10 +10,10 @@ This project is an Atari XE 1 MB audiovisual demo for “The Less I Know The Bet
 
 `tools/` generates NMOS 6502 code and assets; `tests/` executes callbacks with py65; `assets/` contains source artwork. `build/visual-prototype-dev.xex` and its JSON are working artifacts. Preserve numbered releases; use a new output name for each release.
 
-## Current Project Progress — v197
+## Current Project Progress — v244
 
 The user targets Silly Venture. The latest visual release is
-`build/visual-prototype-v197.xex`; use its matching JSON. The replaceable
+`build/visual-prototype-v244.xex`; use its matching JSON. The replaceable
 `visual-prototype-dev` pair is the development target. These are full demo
 builds using the original v035 music, not replacements for the supplied player.
 Use `docs/PLAN_STATUS.md` for remaining production work and V1–V7 status.
@@ -25,9 +25,9 @@ V145 implements the user-approved story changes (2026-11-07): the third
 ribbon shot is overhead and the thrown girl approaches the lens while the
 court/bases recede; the boy shatters the backboard during the dunk; the last
 outro shot at ticks 59085–59833 shows him on the floor with four orbiting
-stars and fades to permanent black. In v193, this same image begins at tick
-53850 as the planned credits/greetz background; the text overlays remain
-unimplemented. The full final-shot timing remains unchanged.
+stars and fades to permanent black. In v240, the same fixed lower image
+and terminal begin at tick 51850; text ends at 59085, and the final fade
+and black ending retain their original timing.
 See `docs/V145_WYRZUT_TABLICA_FINAL.md` for assets, memory and validation.
 V146 removes the grid/court markings and all ribbon masks from the overhead
 shot. Its preparation has quiet black ground; from tick 20662 the launch
@@ -67,8 +67,8 @@ missile trails and two side fireworks. See `docs/V148_DYNAMICZNY_WYRZUT.md`.
 - Act 4 has the common-gym Trevor entrance, timed wind-ups/punch combinations,
   alternating BANG/BAM, coloured player cloud fragments and missile debris.
   Hit timestamps and hand sequence remain in `tools/trevor_polished.py`.
-- Act 5 keeps the banana rotator at tick 32909 and shows both animation halves
-  through tick 35900 (bar 96); the spiral tunnel then runs until the organic
+- Act 5 keeps the banana rotator at tick 32909, with continuous 32-frame
+  full turns through tick 35900 (bar 96); the spiral tunnel then runs until the organic
   texture change at 40388. The organic tunnel holds through tick 41983 so the
   global cycle starts on a complete tunnel phase at 41984. Trevor mosaic at 41884 and
   eyes at 43379 remain unfinished. Acts 6–7 and credits/greetz overlays remain
@@ -221,7 +221,7 @@ missile trails and two side fireworks. See `docs/V148_DYNAMICZNY_WYRZUT.md`.
   Only dunk phases 0–74 use orbits. First crack (phase 75) immediately restores
   the original glass-fragment trajectories and missile sizes; dribble unchanged.
   Live PMG rewrite now requires bounded VCOUNT 124–127, skipping late blanking.
-  Hero helper is 2859 B, ending `$4B2A`; 85 B remain before `$4B80`.
+  Hero helper is 2892 B, ending at exclusive `$4B4C`; 52 B remain before `$4B80`.
   New orbit tables are 256 B at `$7E40–$7F3F`, after the board patches;
   192 B remain at the bank tail. Cost +463 B in loader bank 1 only; net
   recovery vs v141 is 34,305 B (33.50 KiB). No scene/tick/music changes.
@@ -274,9 +274,23 @@ missile trails and two side fireworks. See `docs/V148_DYNAMICZNY_WYRZUT.md`.
 
 ## Current Memory Ownership
 
-V188 main code fills $1400–$1DFF (2560 B), with ZERO bytes before the row
-pool at $1E00. Any further unbanked growth requires refactoring/relocation;
-never overlap the row pool. Earlier 8-byte-headroom notes are historical.
+V244 main code occupies $1400–$1DFC (2557 B), with only THREE bytes before
+the row pool at $1E00. Any further unbanked growth requires refactoring;
+never overlap the row pool. Earlier headroom figures are historical.
+
+V244 adds lifetime ownership: title banks 40–48 are only title assets until
+tick 2992. Starting at tick 3072, retired banks 40–47 become 32 raw peeled
+banana frames; compressed banana banks 3–10 become 32 raw bunch frames.
+Bank 48 is staging space ($4000–$4EFF) and raw-helper templates
+($6000–$67FF). No 65th bank and no other scene's gaps are consumed.
+Do not add post-title assets to banks 40–48. The retired intro draw region
+is also reused: worker $E580–$E956, scratch $EA00–$EAFF, private state
+$EB00–$EB1F; FLAG=$0DDF. Typewriter at $EB44 stays untouched. Intro restart
+or seeking back into the title after preparation requires reloading the XEX;
+this is a forward-playback lifetime overlay. Fresh late seeks use the
+existing compressed renderer; they do not represent warmed playback costs.
+Normal playback finishes preparation well before the first rotator.
+
 
 All 64 expansion banks of the tested 1 MB configuration are allocated. Loader
 indices below mean the `school_portrait_bank.bank_value()` indices, not PORTB
@@ -305,18 +319,18 @@ values or the original player's bank numbers. Never assume there is a free bank.
   `$7E00–$7F1F` (288 B), wind shapes `$7F20–$7F9F` (128 B).
   Ribbon/fireworks/wind controller is 2246 B, ending `$5CC5`.
   Engine growth must fit below `$6A00`; installers reject
-  overlap. The v163 Trevor helper is 2466 B, leaving 94 B in its slot.
+  overlap. The current Trevor helper is 2500 B, leaving 60 B before `$6A00`.
   `docs/V120_PRZEGLAD_PAMIECI.md` describes historical free space,
   some of which v142 recovered. Use this current map for availability.
-- Index 49 also holds the final-boy controller at `$5CD0–$5FFB` (812 B),
+- Index 49 also holds the final-boy controller at `$5CD0–$5FFF` (816 B),
   with only 10 B between controllers and 4 B before Trevor code at `$6000`.
   Preserve both code ranges; the installer rejects overlap.
-- Index 1 (hero): code is 2859 B at `$4000–$4B2A`, bitmap/ball data
+- Index 1 (hero): code is 2892 B at `$4000–$4B4B`, bitmap/ball data
   `$4B80–$7E3B`. Three 48×24 board patches occupy `$7ADC–$7E3B`;
   85 B code gap remains. Dunk orbit tables occupy `$7E40–$7F3F` (256 B),
   with 192 B bank tail and 4 B between patches and orbit tables.
   Do not add full hero frames without a new budget.
-- Main code occupies `$1400–$1DF1` (2546 B), with 14 B left before the
+- Main code occupies `$1400–$1DFC` (2557 B), with 3 B left before the
   scanline pool at `$1E00`. The old full-height pompom dispatch is removed;
   its independently archived project is unaffected. V151's unbanked
   `hero_cutaway` trampoline reuses the normal tunnel renderer. Its nested
@@ -590,3 +604,244 @@ rainbow colours, inactive PMG buffers and final fade. Glyphs retain the original
 8-bit silhouettes with single PMG rows for the smaller finale framing. Final
 controller: 809 B at $5CD0, 48 B at $69C4 and 95 B at $7FA0 in bank 49;
 net +140 B versus v196, no new banks. See docs/V197_NUTKI_W_FINALE.md.
+
+V198 changes only the orbiting glyph palette: 19 vivid GTIA colours cycle every
+256 ticks, with a four-colour phase offset between planes. Orbit, timing, masks,
+fade and memory use are unchanged. See docs/V198_TECZOWE_KOLORY_FINALE.md.
+
+V216 adds credits/greetz in existing windows (53850–56842–59085). See
+`docs/V216_CREDITS_GREETZ.md`. No expansion-bank gaps are consumed. Loader
+`$3E58–$3FC3` (364 B) and 1738 B of compressed resources occupy explicit
+unbanked player gaps; resource tail starts at `$3FC4`. Scratch `$0DD0–$0DD7`
+must stay outside shared row storage. Finale controller now fills exactly
+`$5CD0–$5FFF` (816 B): do not grow it. On finale entry, the held bitmap owns
+`$9000`; the retired second bitmap buffer holds compressed staging at
+`$B000`, saved normal DLIST at `$B800–$BAFF`, private caption DLIST at
+`$BC00–$BE53`, and unpacked text/font/code at
+`$C000–$CEFF`. These addresses must never receive static assets at load time.
+The 5-row ANTIC-2 band keeps the complete bitmap; caption DLI positions are
+1/79/157/235 lines, preserving four 78-line music intervals. Restore only the
+inactive DLIST and publish inside VCOUNT 124–127. Do not read write-only
+ANTIC registers to infer the active DLIST or PMG bank; use engine state.
+
+Caption DLIST must stay within one 1 KiB ANTIC DL page. The normal lists end
+at `$8249`/`$8649`; bytes after these are static artwork, not DLIST padding.
+When restoring, copy exactly 586 B per normal list, never 768 B. Invalidate
+bitmap and DL cache keys after restoring the reusable framebuffer.
+
+V218 keeps the lower 235-line outro layout and PMG +32-line shift through
+the final fade; after tick 59085 replace text pointers with blank records,
+never restore the higher framing. Normal-DLIST reset at `$C340` is for seeks
+out of the outro only. Top bitmap rules at source rows 5/9 are removed.
+ANTIC-2 terminal palette uses hue `$C0`, foreground luminance `$0E` and `>`
+prompts; bitmap palette is restored at its raster boundary. See
+`docs/V218_STALY_KADR_TERMINAL.md`.
+
+V222 adds true typewriter output, cursor and Enter/scroll. See
+`docs/V222_TERMINAL_PISANIE.md`. Reserved intro-helper size is now 1824 B:
+its original code ends at `$EB43`, terminal code fills `$EB44–$EBDF`, and
+shared scanline storage begins at `$EBE0`. Do not grow either helper without
+checking all owners. Dead original UI `$23CE–$2450` holds line timing/lengths;
+`$23CD` is RTS. Disabled font initializer `$2D00–$2D26` now stores packed
+data: its `$218F` call must stay disabled. Terminal screen is `$BF00–$BFC7`
+and scratch extends through `$0DD8`. The cursor uses ANTIC inverse-space,
+not the finale PMG. Restore old UI/font code before ever re-enabling it.
+
+V225 replaces foreground terminal palette polling with a display-list split.
+ANTIC 4 draws green COLPF0 letters on true COLBK black; do not write COLPF2
+from terminal foreground code. Extra DLI after line 41 is palette-only:
+`outro_palette` router `$2451–$248F` skips music and restores the NMI stack,
+while the original 1/79/157/235 music ticks remain. Normal music entry calls
+the router in place of its old WSYNC (same 3 B). Code occupies retired UI
+and old font-copy space; never re-enable these routines without relocating
+it. Cursor is glyph `$5F`, font 3×7. Trevor entrance uses `$48/$68/$2A`, same
+base as the punches; helper size/labels preserved. See
+`docs/V225_PALETY_TERMINAL_I_TREVOR.md`.
+
+V227 final-boy controller is 814 B (`$5CD0–$5FFD`). PMG back-buffer choice
+uses RAM shadow `$83E8`, never a read from write-only PMBASE `$D407`. Final
+Y tables include +16 PMG bytes (+32 raster lines) directly. Do not reapply
+the shift in outro_text: PMG RAM must not be written after publication.
+First entry disables PMG while preparing inherited buffers; warm updates
+write only the inactive buffer. See `docs/V227_CZYSTE_PMG_NAD_GLOWA.md`.
+
+V230: fixed-column six-row terminal (one status plus five typed history rows),
+no horizontal wobble. First eight BLACK bitmap scanlines are replaced by the
+extra text row, leaving all character pixels at the same physical position.
+Caption DLI now occur at 1/49/79/157/235; only 49 is palette-only (VCOUNT 28).
+Ink $CE, rare foreground-only white/noise pulse. Router ends $249A; player
+variables $249C–$24A4 must NEVER hold code/data. Intro reservation 1888 B,
+typer $EB44–$EC05, static row pool starts $EC20. PMG grip data has a fixed
+centre stem in every phase; base pose-3 and quarter-sheet palm annotations
+are corrected and snapped to the individual actor's skin. Side anchors stay
+unchanged. Ribbon PMBASE also uses RAM shadow $83E8. See
+`docs/V230_TERMINAL_I_CHWYTY_SZARF.md`.
+
+V231 directs only the existing post-Trevor tunnel windows, ticks 41984–53849.
+72 half-bar/phrase-fill cues select existing spiral/organic frames, forward
+or reverse playback and normal/double speed. Original banana windows and
+all earlier effects remain unchanged; lying-boy entry stays at 53850.
+Director is 337 B at $EC20–$ED70, reservation 384 B; intro reservation is
+now 2272 B and shared static rows start at $EDA0. Scratch $0DDA belongs
+to the director; do not reuse it during the callback. Main code is 2524 B.
+No new expansion banks or effect bitmaps. Ball/satellites retain the
+existing masks and cover the tunnel hole at every tested cue boundary.
+See `docs/V231_DYNAMICZNY_TUNEL_PO_TREVORZE.md`.
+
+V233 adds a single wink (overhead frame 14) then puckered kiss (frame 15),
+with an eight-phase shaded heart leaving the lips at tick 20662. The launch
+still ends at 20942. Facial artwork changes stay inside the existing head;
+framing, flight and dancer keyframes are retained. During the final kiss,
+four PMG players draw the growing/yawing heart; all four missile air trails
+remain. Earlier launch stages retain their player wind and side bursts.
+Heart uses 992 B at $7C00–$7FDF in original player-table bank index 10
+(ribbon tail index 2); the other ribbon tails remain untouched. Total tail
+space left is 5152 B. The unbanked trampoline is 31 B at $0F00–$0F1E;
+RUNTIME_END is now $0F40, protecting it from static-row allocation.
+Private foreground scratch $0DDB/$0DDC must not be used by NMI code.
+Ribbon controller is 2252 B, ending $5CCB; final-boy code still starts
+$5CD0. Main is 2551 B, leaving 9 B before $1E00. Heart colours are restored
+by the existing reentrant rainbow helper after music DLI; do not add a
+music tick or banked palette lookup. See `docs/V233_OCZKO_BUZIAK_SERCE.md`.
+
+V234 uses seven terminal rows: status plus six typed history rows. Extra
+text replaces eight more BLACK bitmap lines (16 skipped in total); the
+boy, PMG orbit and every remaining bitmap pixel keep their physical Y.
+Private DLIST bitmap starts $BC16, has 176 rows, footer $BE26 and 554 B
+total. DLI positions 1/57/79/157/235; only 57 is palette-only, VCOUNT 32.
+Screen rows occupy $BF00–$BFEF. Timing has 48 entries (96 B) at
+$23CE–$242D; lengths moved to 47 unused control-glyph bytes $C828–$C856,
+loaded with the font. Do not install these statically over the second
+framebuffer. Typer is 195 B, $EB44–$EC06. Compressed outro is 1743 B;
+loader is 373 B at $3E58–$3FCC, only one byte before the $3FCE resource
+gap. Do not grow it without auditing both owners. Main remains 2551 B;
+no expansion-bank gaps were consumed. See
+`docs/V234_SIODMY_WIERSZ_TERMINALA.md`.
+
+V235 adds `HUMAN VISION / LLM CODE` to credits page 1's sixth row and
+`AI TOOLS / ATARI SOUL` to the SV page. Existing text schedules, greetz,
+framing and act boundaries remain. Raw text has 38 lines, 47 display slots;
+timing stays 48 entries. Compressed outro is 1795 B. Resource staging now
+also owns retired UI $242E–$2450 (12 B used, 35 B reserved); timing must
+end by $242E, palette router still starts $2451. Adjacent $2C81–$2D00 and
+$2D00–$2E00 gaps are merged for chunk copying, so the bootstrap remains
+373 B despite the added staging region. Total staging capacity 1818 B;
+main remains 2551 B, no expansion-bank gaps consumed. See
+`docs/V235_LLM_AI_W_CREDITS.md`.
+
+V236 fixes banana rotation at both sources: mosaic pixels now use phase
+directly for the angle (360 degrees/32 frames), rather than phase/4 (90
+degrees with a discontinuous wrap). Act 5 masks the clock with 31 and
+no longer loops its 16-frame halves separately or forces bit 4 at bar 92.
+All scene ticks and post-Trevor tunnel cuts remain unchanged. Banana tile,
+palette, zoom, PMG masks and the eight tunnel banks are preserved; only
+the banana-oriented bitmap data and Act-5 frame selection change. Same
+32 stored banana frames, same bank allocation; main shrinks to 2521 B
+(39 B before $1E00). See `docs/V236_PELNY_OBROT_BANANOW.md`.
+
+V239 alternates the bunch and a half-peeled single banana by visible
+banana-window appearance: 12288 bunch, 14336 peeled, the whole Act-5
+32909–35900 bunch, then alternating post-Trevor windows from 43008 peeled.
+Both motifs keep 32 full-turn frames and the same tick/16 clock. The
+peeled cycle starts at the opposite zoom/angle phase to balance bank
+payload sizes; it never loses a frame or switches motif mid-appearance.
+The existing eight banana banks (loader 3–10) now store both motifs in
+byte-RLE, not raw 4-frame payloads. Runtime entry stays $7C00; banana-only
+helper $7840–$7BFE, entry $7C00–$7C6B, copy $7C80–$7C9B, decoder
+$7D00–$7D90, eight pointer pairs $7F80–$7F8F. Data occupies $4000 up
+to $7840; bank 0 fills that region exactly. Total compressed graphics
+111114 B, code/tables 1256 B per bank; 9910 B remains across these eight
+banks. No other bank gaps or additional banks are used. Main remains
+2521 B. Scratch $0DDD owns the variant key and $0DDE the private cache;
+$0DC0/$0DC1 is the existing foreground source pointer. Never borrow these
+in NMI. Banana entry invalidates the shared $83FA key on return, and
+checks layout/ownership before reusing its private cache, preventing
+collisions with school and compressed-ribbon renderers. Tunnel banks
+remain byte-identical to v236. v237/v238 were discarded slow LZ
+prototypes; use v239. See `docs/V239_KISC_I_OBRANY_BANAN.md`.
+
+V240 implements the user's explicit 10-second-earlier terminal request:
+outro_text.START/final_boy.START are 51850 (formerly 53850). Text END is
+still 59085, demo END/fade still 59833/59705. Eight page starts are
+51850/52850/53850/54850/55697/56544/57391/58238: three credits pages and
+five complete greetz paragraphs. Each page types in 55–180 ticks then
+holds for 667–900 ticks; no history scroll. Prefix is `>`, cursor glyph
+$5F is a baseline underscore and always follows tick bit 6, including
+during typing and read holds. Typer 172 B at $EB44–$EBEF. Timing now
+loads WITH the font into unused control glyphs: 55 entries / 110 B at
+$C828–$C895; 54 lengths $C8A8–$C8DD. Never install these statically over
+the reusable second bitmap. Retired UI $23CE–$2450 now belongs entirely
+to compressed staging (49 B used, 131 B capacity); $23CD remains RTS,
+router starts $2451, live player vars $249C remain protected. Total
+staging capacity 1914 B, payload 1832 B, bootstrap still 373 B. Post-Trevor
+director stops at 51850, 60 cues / 301 B at $EC20–$ED4C; reservation
+unchanged. Main still 2521 B, all 64 bank payloads identical to v239.
+Seven-row layout, boy/orbit position and four music updates are unchanged.
+See `docs/V240_WCZESNIEJSZY_TERMINAL_I_PLANSZE.md`.
+
+V241 removes runtime RLE from both banana motifs. Their 128×128 source
+patterns contain opposite, point-symmetric pairs of unchanged fruit shapes;
+zoom repeats per half-turn. Sixteen unique raw images per motif therefore
+represent all 32 angular samples exactly, with continuous 15→16 and 31→0
+steps. This changes the background arrangement/density; it does not claim
+32 unique bitmap payloads. Eight banks hold four 3840-byte frames each;
+bunch banks 0–3, peeled banks 4–7 within the banana bank group. Each has
+a 981-byte helper at $7C00–$7FD4, leaving 43 B (344 B total, superseding
+v239's 9910 B free-space report). No runtime decoder or RLE streams remain.
+The selector maps the logical phase/motif to the raw bank without changing
+the PMG clock. New unbanked routines occupy existing helper reservations:
+$EBF0–$EC11 (34 B) and $ED4D–$ED8F (67 B). Typewriter must end by $EBF0;
+post-Trevor director must end by $ED4D. Asserts and allocation validation
+protect both. Main is 2518 B. Private $0DDD/$0DDE cache ownership remains;
+no zero-page scratch is borrowed. Both variants cost ~47k CPU cycles warm,
+matching tunnels; the regression cap is now 62k including cold setup.
+Eight tunnel banks remain byte-identical to v240. Terminal and all scene
+ticks remain v240. See `docs/V241_SZYBKIE_BANANY_BEZ_RLE.md`.
+
+V242 fixes repeated normal-DLIST restoration during ticks 51850–53849.
+The intro invalidate/seek guard still compared against the old hardcoded
+53850 after v240 moved the outro to 51850. Every warm callback therefore
+published the old higher normal list, then rebuilt/published $BC00 again.
+Use outro_text.START in BOTH bytes of that guard, never a copied literal.
+New regression traces repeated callbacks across the complete early window:
+$D403 must not be rewritten after the first publication, normal DLISTs
+must not be restored, and the lower bitmap mapping stays fixed. This test
+fails v241 immediately at tick 51854 and passes v242. No graphics, timing,
+memory layout, PMG or music changes. See `docs/V242_STALY_KADR_BEZ_RESETOW.md`.
+
+
+V243 restores all 64 dense banana bitmaps byte for byte from v240. The user
+rejected v241's sparse point-symmetric layout; do not restore it to save CPU.
+Both motifs retain 32 independent phases, original zoom/orientation and the
+same timeline clock. Banana banks 3–10 use page-bounded RLE: input Y and
+output X advance independently; literals copy two bytes and fills eight per
+loop. Packet boundaries cannot cross either source or destination pages;
+token zero advances the input page, and exactly 15 output pages end decoding.
+The helper remains at $7840, entry $7C00, selector $7C80, decoder $7D00,
+fill loop $7E00, dispatch $7F00 and frame pointers $7F80. Scratch is
+$0DC0–$0DC1 and $0DC4–$0DC6; no zero-page or music scratch is borrowed.
+Private cache $0DDE and key $0DDD still isolate bananas from other renderers.
+Only eight banana banks and 13 bytes of the unbanked selector differ from
+v242; all other banks (including tunnels, PMG and the fixed outro) match.
+Packed graphics 113981 B, code/tables 1667 B per bank, free 3755 B in these
+same eight banks. See `docs/V243_GESTE_BANANY_SZYBSZY_DEKODER.md`.
+
+
+V244 eliminates runtime decompression during normal banana playback. The
+background worker prepares one 256-byte page per callback during ticks
+3072–11775, then both motifs use the same raw COPY_PAGES path as tunnels.
+Bootstrap is only armed while tick high byte is $0C; a fresh development
+seek to a later scene does not destroy live title code. Original eight
+archive banks are expanded in reverse frame order; frames overlapping
+compressed input use bank 48 as temporary raw storage. Peeled frames and
+helper templates are copied before any corresponding archive is overwritten.
+Every job preserves PORTB and avoids framebuffer/PMG/display registers.
+Atari800 PAL/1088XE reaches READY at tick 8609; first mosaic selection at
+11976 sees READY=2. Native phase trace shows all 32 phases, 63 consecutive
+bunch transitions and 38 peeled transitions without skips. Max warm CPU:
+bunch 47323, peeled 47402, tunnel 47245 cycles. Graphical assets/timeline
+remain v243. `docs/V244_SUROWE_BANANY_I_BANKI_PO_TYTULE.md` describes the
+lifetime map, tests and the distinction between startup and runtime budgets.
+
+V244 validation: make check 189/189, 151.2 s; full-track stereo POKEY
+10589472 bytes identical to v035. No physical Atari run has been made.

@@ -1,7 +1,9 @@
-"""Banked geometric rotozoom and polar mosaic. 64 frames, 160x96, ANTIC E.
+"""Banked rotozoom and polar mosaic. 64 runtime frame IDs, 160x96, ANTIC E.
 
-Four frames and identical $7C00 copy code per bank. Only the inactive RAM
-framebuffer is written; ANTIC never fetches from a banked window.
+Banana banks store both dense 32-frame motifs using page-bounded RLE.
+Tunnel banks keep four raw frames and $7C00
+copy code. Only the inactive RAM framebuffer is written;
+ANTIC never fetches from a banked window.
 """
 import math
 from pmg_preview import atari_rgb
@@ -46,12 +48,17 @@ def banana_tile():
                 tile[y*64+x]=0 if y<6 or x<30 or x>40 else 1
     return bytes(tile)
 
-@lru_cache(maxsize=64)
-def pixels(frame):
-    phase=(frame&31)/32*math.tau
-    angle=phase/4
+@lru_cache(maxsize=128)
+def pixels(frame,variant=0):
+    phase=((frame+(16 if variant and frame<32 else 0))&31)/32*math.tau
+    # A full turn over all 32 stored frames. A quarter-turn cannot wrap
+    # seamlessly for the asymmetric banana tile.
+    angle=phase
     scale=0.78+0.3*math.cos(phase)
     co,si=math.cos(angle)*scale,math.sin(angle)*scale
+    if frame<32:
+        from banana_variants import peeled_tile
+        tile=peeled_tile() if variant else banana_tile()
     out=bytearray()
     for y in range(96):
         for x in range(160):
@@ -59,7 +66,7 @@ def pixels(frame):
             if frame<32:
                 u=int(co*xx-si*yy+32)%64
                 v=int(si*xx+co*yy+32)%64
-                color=banana_tile()[v*64+u]
+                color=tile[v*64+u]
             else:
                 radius=math.hypot(xx,yy)
                 theta=math.atan2(yy,xx)
@@ -109,17 +116,22 @@ def contrast_indices():
     return [i for i,(a,b) in enumerate(palette_pairs())
             if math.dist(atari_rgb(a*16+8),atari_rgb(b*16+8))<105]
 
-def helper():
-    c=Code(ENTRY)
+def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,cache_address=0x83fa,raw=False,peeled=False):
+    c=Code(origin)
     def a(op,address):c.emit(op,address&255,address>>8)
     # Frame number is computed from the coherent music clock by the main callback.
-    a(0xad,0x83ed);c.emit(0x09,0x80);a(0xcd,0x83fa)
+    a(0xad,0x83ed)
+    if cache_key is None:c.emit(0x09,0x80)
+    else:a(0x0d,cache_key)
+    a(0xcd,cache_address)
     c.branch(0xd0,'changed');c.jump(0x4c,'colors')
-    c.label('changed');a(0x8d,0x83fa)
-    a(0xad,0x83ed);c.emit(0x29,3,0xaa)
-    c.jump(0xbd,'source_hi');c.emit(0x48)
+    c.label('changed');a(0x8d,cache_address)
+    if not banana_only or raw:
+        a(0xad,0x83ed);c.emit(0x29,3,0xaa)
+        c.jump(0xbd,'source_hi');c.emit(0x48)
     a(0xad,0x83e6);c.emit(0x29,4,0x0a,0x0a,0x0a,0x49,0xb0);a(0x8d,0x83fe)
-    c.emit(0x68,0xa2,3);a(0x20,COPY_PAGES)
+    if not banana_only or raw:c.emit(0x68,0xa2,3)
+    a(0x20,copy_entry)
     cached_display_list(c, 1)
     a(0xad,0x83e6);c.jump(0x8d,'dl1_hi');c.jump(0x8d,'dl2_hi')
     c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');c.emit(0xa9,4);c.jump(0x8d,'dl2_lo');c.emit(0xa0,0)
@@ -168,26 +180,29 @@ def helper():
     a(0xad,0x83eb);c.emit(0x29,0x0f,0x0a,0x0a,0x0a,0x0a);a(0x0d,0x83ea);a(0x8d,0xd017)
     # Banana tiles stay yellow. The short Act 3 cutaway keeps its original
     # white. After Trevor, cycle Act 5 tunnel highlights once per frame.
-    a(0xad,0x83ed);c.emit(0xc9,32);c.branch(0x90,'banana_highlight')
-    a(0xad,0x24a8);c.emit(0xc9,38892>>8);c.branch(0x90,'white_highlight');c.branch(0xd0,'tunnel_hue')
-    a(0xad,0x24a7);c.emit(0xc9,38892&255);c.branch(0x90,'white_highlight')
-    c.label('tunnel_hue')
-    a(0xad,0x83ed);c.emit(0x29,15,0xaa)
-    c.jump(0xbd,'hue_pairs');c.emit(0x09,0x0e);a(0x8d,0xd018)
-    c.jump(0x4c,'highlight_done')
-    c.label('white_highlight');c.emit(0xa9,0x0e);a(0x8d,0xd018)
-    c.jump(0x4c,'highlight_done')
-    c.label('banana_highlight');c.emit(0xa9,0x1e);a(0x8d,0xd018)
-    c.emit(0xa9,0x18);a(0x8d,0xd016)
+    if not banana_only:
+        a(0xad,0x83ed);c.emit(0xc9,32);c.branch(0x90,'banana_highlight')
+        a(0xad,0x24a8);c.emit(0xc9,38892>>8);c.branch(0x90,'white_highlight');c.branch(0xd0,'tunnel_hue')
+        a(0xad,0x24a7);c.emit(0xc9,38892&255);c.branch(0x90,'white_highlight')
+        c.label('tunnel_hue')
+        a(0xad,0x83ed);c.emit(0x29,15,0xaa)
+        c.jump(0xbd,'hue_pairs');c.emit(0x09,0x0e);a(0x8d,0xd018)
+        c.jump(0x4c,'highlight_done')
+        c.label('white_highlight');c.emit(0xa9,0x0e);a(0x8d,0xd018)
+        c.jump(0x4c,'highlight_done')
+    c.label('banana_highlight');c.emit(0xa9,0x0e if peeled else 0x1e);a(0x8d,0xd018)
+    c.emit(0xa9,0x1a if peeled else 0x18);a(0x8d,0xd016)
     c.label('highlight_done')
     # Keep the previous ball and its DMA alive until the PMG helper can
     # safely update it. A second wait may cross an entire frame boundary.
     for addr,val in ((0xd01a,0),):
         c.emit(0xa9,val);a(0x8d,addr)
+    if raw:c.emit(0xa9,0xff);a(0x8d,0x83fa)
     c.emit(0x60)
     for label in ('dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
-    c.label('source_hi');c.emit(0x40,0x4f,0x5e,0x6d)
+    if not banana_only or raw:
+        c.label('source_hi');c.emit(0x40,0x4f,0x5e,0x6d)
     c.label('divisor_lo');c.emit(*((187<<i)&255 for i in range(8)))
     c.label('divisor_hi');c.emit(*((187<<i)>>8 for i in range(8)))
     c.label('quotient_bits');c.emit(*(1<<i for i in range(8)))
@@ -201,6 +216,10 @@ def helper():
 def banks():
     code=helper()
     for bank in range(16):
+        if bank<8:
+            from banana_variants import bank as banana_bank
+            yield banana_bank(bank)
+            continue
         out=bytearray(16384)
         out[0x3c00:0x3c00+len(code)]=code
         for half,offset in enumerate((0,0x0f00,0x1e00,0x2d00)):

@@ -13,6 +13,8 @@ PAIRS=((0,32),(1,32),(1,33),(3,33),(2,3),(2,32),
        (4,5),(5,34),(6,34),(6,7),(8,9),(9,35),(10,35),(8,10))
 POSES=(0,1,2,3,4,5,0,1,6,4,7,0,8,4)
 QUARTER_POSES=(0,1,2,3)
+QUARTER_HANDS=(((.23,.12),(.22,.42)),((.18,.55),(.52,.48)),
+               ((.22,.59),(.80,.24)),((.17,.24),(.87,.20)))
 HANDS=(((.23,.337),(.34,.103)),((.164,.384),(.205,.457)),
        ((.166,.619),(.414,.645)),((.258,.547),(.703,.159)),
        ((.124,.258),(.804,.052)),((.166,.255),(.310,.335)),
@@ -38,7 +40,8 @@ def quarter_at(tick,step):
     mid=step_midpoint(step)
     if mid is None or not 6<=mid<10:return None
     quarter=(3*d.STEPS[step]+d.STEPS[step+1])//4
-    return mid if tick>=quarter else None
+    # Match the shipped selector: it gates quarter selection on midpoint first.
+    return mid if tick>=max(quarter,(d.STEPS[step]+d.STEPS[step+1])//2) else None
 
 
 @lru_cache(maxsize=28)
@@ -182,8 +185,8 @@ def selector():
     return code
 
 
-def decoder():
-    c=Code(DECODER)
+def decoder(origin=DECODER):
+    c=Code(origin)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     for offset,name in ((0,'get_lo'),(1,'get_hi')):a(0xad,SOURCE+offset);c.jump(0x8d,name)
     c.emit(0xa9,0);c.jump(0x8d,'write_lo');a(0xad,0x83fe);c.jump(0x8d,'write_hi')

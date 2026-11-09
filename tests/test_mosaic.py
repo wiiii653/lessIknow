@@ -7,6 +7,8 @@ from crush_portraits import START as CRUSH_START
 from test_engine_cache import TrackedMemory
 from school_portrait_bank import loader, bank_value
 from extract_music import segments
+from post_trevor_director import frame_at, START, END
+from banana_variants import variant_at
 
 @unittest.skipIf(sequence.MPU is None, 'py65 required')
 class MosaicTests(unittest.TestCase):
@@ -20,15 +22,21 @@ class MosaicTests(unittest.TestCase):
 
     def test_all_frames_and_inactive_buffer_ownership(self):
         cpu=sequence.MPU(memory=TrackedMemory(XEX.read_bytes()))
+        # The post-Trevor director now chooses motif/direction/speed. Exercise
+        # every stored frame at a tick where the following callback holds it.
+        ticks={}
+        for tick in range(START,END-1):
+            frame=frame_at(tick)
+            if frame_at(tick+1)==frame:ticks.setdefault(frame,tick)
+        self.assertEqual(set(ticks),set(range(64)))
         for frame in range(64):
-            tick=45056+(frame&31)*16+(1024 if frame>=32 else 0)
-            # Inverse of ((tick>>4)&31) | ((tick>>5)&32).
-            frame_expected=((tick>>4)&31)|((tick>>5)&32)
+            tick=ticks[frame]
+            frame_expected=frame
             active=cpu.memory[0xd403]<<8
             old_frame=0x9000 if active==0x8400 else 0xb000
             cpu.memory.writes.clear();before=cpu.processorCycles
             sequence.execute(tick,cpu)
-            art=pixels(frame_expected)
+            art=pixels(frame_expected,variant_at(tick) if frame_expected<32 else 0)
             expected=bytes(art[y//2*160+x] for y in range(192) for x in range(160))
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected,frame)
             self.assertFalse(any(old_frame<=a<old_frame+3840 for a in cpu.memory.writes),frame)

@@ -37,9 +37,12 @@ RAINBOW = (0x2e,0x3c,0x4e,0x5c,0x6e,0x7c,0x8e,0x9c,
            0xae,0xbc,0xce,0xdc,0xee,0xfc,0x1e,0x2c)
 
 
-def rainbow_palette(tick, band, airflow=False):
+def rainbow_palette(tick, band, airflow=False, kiss=False):
     phase=((tick & 255)>>4)+band*3
     inks=tuple(RAINBOW[(phase+offset)&15] for offset in (0,4,8,12,2))
+    if kiss:
+        from launch_kiss import COLORS
+        return COLORS+(inks[4]|14,)
     return ((0x0e,inks[1],inks[2],0x9e) if airflow else inks[:4])+(inks[4]|14,)
 
 
@@ -60,13 +63,18 @@ def emit_rainbow(c):
     c.emit(0xc9,16);c.branch(0xb0,'wind_colours_done')
     c.emit(0xa9,0x0e);a(0x8d,0xd012);c.emit(0xa9,0x9e);a(0x8d,0xd015)
     c.label('wind_colours_done')
+    a(0xad,0x83ed);c.emit(0xc9,15);c.branch(0xd0,'kiss_colours_done')
+    from launch_kiss import COLORS
+    for plane,color in enumerate(COLORS):
+        c.emit(0xa9,color);a(0x8d,0xd012+plane)
+    c.label('kiss_colours_done')
     c.emit(0x60)
     for i in range(5):
         c.label(f'ribbon_ink{i}')
         c.emit(*(rainbow_palette(phase*16,band)[i] for band in range(4) for phase in range(16)))
 # Hand locations in source cells, left and right in screen space.
 HANDS = (((.12,.34),(.70,.05)), ((.12,.55),(.17,.61)),
-         ((.12,.27),(.88,.27)), ((.12,.52),(.76,.12)),
+         ((.12,.27),(.88,.27)), ((.685,.115),(.685,.115)),
          ((.20,.25),(.26,.33)), ((.22,.63),(.75,.64)),
          ((.20,.02),(.74,.02)), ((.20,.03),(.78,.03)))
 SIDE_HANDS = (((.18,.36),(.70,.05)),((.20,.47),(.64,.09)),
@@ -155,11 +163,17 @@ def actor(canvas, pose, center, baseline, scale, mirror=False,side=False,mask=No
         if mask is not None:mask[y*160+x]=1
     hands=[]
     if mid:
-        from ribbon_inbetweens import HANDS as MID_HANDS
-    for hx,hy in (MID_HANDS if mid else SIDE_HANDS if side else HANDS)[pose]:
+        from ribbon_inbetweens import HANDS as MID_HANDS,QUARTER_HANDS
+    for hx,hy in (QUARTER_HANDS if mid==3 else MID_HANDS if mid else SIDE_HANDS if side else HANDS)[pose]:
         ox=hx*443
         if mirror:ox=443-ox
         hands.append((round(center+(ox-222)*sx),round(baseline+(hy*443-402)*sy)))
+    if not side and (pose<6 or mid):
+        for i,(hx,hy) in enumerate(hands):
+            skin=[((x-hx)**2+(y-hy)**2,x,y) for (x,y),ink in points.items()
+                  if ink==3 and abs(x-hx)<=4 and abs(y-hy)<=4]
+            if not skin:raise ValueError(f'hand missing skin: pose={pose} mid={mid} at {(hx,hy)}')
+            _,x,y=min(skin);hands[i]=(x,y)
     return hands
 
 
@@ -233,6 +247,8 @@ def overhead_artwork(frame):
     right=overhead_actor(p,1,round(109-depth*17),round(45-depth*7),small)
     scale=(.105,.11,.115,.12,.155,.195,.24,.285)[pose]
     hero=overhead_actor(p,pose,80,32,scale)
+    from launch_kiss import face
+    face(p,frame)
     return bytes(p),[hero[0],hero[1],left[0],right[1]]
 
 
@@ -356,7 +372,8 @@ def install_runtime(runtime):
     assert out[offset:offset+len(data)]==bytes(len(data))
     out[offset:offset+len(data)]=data
     from ribbon_inbetweens import install_runtime as install_midpoint_runtime
-    return install_midpoint_runtime(out)
+    from launch_kiss import install_runtime as install_kiss_runtime
+    return install_kiss_runtime(install_midpoint_runtime(out))
 
 
 def ribbon_streams():
@@ -389,6 +406,8 @@ def ribbon_streams():
                     for dy,bits in enumerate((1,3,2,1)):
                         if age>11 and dy>1:continue
                         if 0<=y+dy<64:out[y+dy]|=bits<<(i*2)
+            if plane<4:
+                for y in (31,32,33):out[y]|=0x18  # grip bridges both centre columns
             result.extend(out)
     assert len(result)==5120
     return bytes(result)
@@ -442,7 +461,8 @@ def metadata():
 
 def frame_bank(index):
     assert 0<=index<6
-    return b''.join(packed_frame(index*6+i) for i in range(6))+bytes(1024)
+    from launch_kiss import install_tail
+    return install_tail(b''.join(packed_frame(index*6+i) for i in range(6))+bytes(1024),index)
 
 
 def install_control(bank, copy_address, palette_address):
@@ -498,7 +518,7 @@ def helper(copy_address, palette_address=0):
     c.label('swap')
     c.label('prepare_pmg')
     # Back PMG base is $08 or $88. The unused prefix may hold static rows.
-    a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e8)
+    a(0xad,0x83e8);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e8)
     c.emit(0xa9,0xa,0x0d,0xe8,0x83)
     for label,delta in (('clear0',0),('clear1',0),('clear2',1),('clear3',1)):
         if delta and label=='clear2':c.emit(0x18,0x69,1)
@@ -513,7 +533,8 @@ def helper(copy_address, palette_address=0):
     c.emit(0xa9,3);a(0x8d,0x83e7)
     a(0xad,0x83ed);c.emit(0xc9,12);c.branch(0x90,'normal_ribbons');c.emit(0xc9,16);c.branch(0xb0,'normal_ribbons')
     c.label('overhead_pmg');c.emit(0xa9,1);a(0x8d,0x83e7)
-    c.jump(0x20,'launch_fireworks');c.jump(0x4c,'wait')
+    from launch_kiss import PREPARE,COMMIT
+    c.jump(0x20,'launch_fireworks');a(0x20,PREPARE);c.jump(0x4c,'wait')
     c.label('normal_ribbons')
     # Copy five separately positioned 64-byte streams into inactive PMG RAM.
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x29,15,0xaa)
@@ -545,6 +566,7 @@ def helper(copy_address, palette_address=0):
     for addr,val in ((0xd01b,0x11),(0xd01d,3),(0xd400,0x2e),
                      (0xd01a,0),(0xd016,0x48),(0xd017,0x9a),(0xd018,0x2c)):
         c.emit(0xa9,val);a(0x8d,addr)
+    a(0x20,COMMIT)
     a(0x20,palette_address)
     c.emit(0x60)
     c.label('get');c.emit(0xbd,0,0);c.emit(0x60)

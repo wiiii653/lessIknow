@@ -26,8 +26,9 @@ class RibbonInbetweenTests(unittest.TestCase):
                 self.assertEqual(d.frame_at(tick),d.frame_for_step(step))
             else:
                 self.assertEqual(d.frame_at(tick-1),d.frame_for_step(step))
-                self.assertEqual(d.frame_at(tick),37+index)
-                self.assertEqual(d.frame_at(d.STEPS[step+1]-1),37+index)
+                selected=45+index if 6<=index<10 else 37+index
+                self.assertEqual(d.frame_at(tick),selected)
+                self.assertEqual(d.frame_at(d.STEPS[step+1]-1),selected)
                 seen.add(index)
         self.assertEqual(seen,set(range(14)))
         self.assertIsNone(mid.step_midpoint(31));self.assertIsNone(mid.step_midpoint(63))
@@ -36,8 +37,8 @@ class RibbonInbetweenTests(unittest.TestCase):
         for step in range(117):
             index=mid.step_midpoint(step)
             if index not in range(6,10):continue
-            tick=(3*d.STEPS[step]+d.STEPS[step+1])//4
-            self.assertEqual(d.frame_at(tick-1),37+index)
+            tick=(d.STEPS[step]+d.STEPS[step+1])//2
+            self.assertEqual(d.frame_at(tick-1),d.frame_for_step(step))
             self.assertEqual(d.frame_at(tick),45+index)
             quarter_seen.add(index)
         self.assertEqual(quarter_seen,set(range(6,10)))
@@ -54,7 +55,7 @@ class RibbonInbetweenTests(unittest.TestCase):
         for index in range(14,18):
             bank,source,encoded=mid.payloads()[index]
             self.assertEqual(bank,32+index-14)
-            self.assertEqual(source,mid.payloads()[index-14][1]+len(mid.payloads()[index-14][2]))
+            self.assertEqual(source,mid.payloads()[index-7][1]+len(mid.payloads()[index-7][2]))
             self.assertEqual(mid.decompress(encoded),mid.packed(index))
         self.assertLess(sum(len(data) for bank,source,data in mid.payloads()),22000)
 
@@ -64,7 +65,7 @@ class RibbonInbetweenTests(unittest.TestCase):
             index=mid.step_midpoint(step)
             if index not in range(6,10) or index in seen:continue
             seen.add(index)
-            start=d.STEPS[step];tick=(3*start+d.STEPS[step+1])//4
+            start=d.STEPS[step];tick=(start+d.STEPS[step+1])//2
             cpu=seq.execute(start,cpu);before=cpu.processorCycles
             cpu=seq.execute(tick,cpu);costs.append(cpu.processorCycles-before)
             pixels,hands=d.scene_artwork(tick)

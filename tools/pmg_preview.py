@@ -34,7 +34,8 @@ def player_masks(pixels, memory, height, raster_start=17, rainbow_bands=False,
                 from ribbon_dance import rainbow_palette
                 # Ideal DLI bands; real transitions include decoder latency.
                 band=min(3,(y+9)//78)
-                color=rainbow_palette(memory[0x83e2],band,airflow=12<=memory[0x83ed]<16)[4 if missile else index]
+                color=rainbow_palette(memory[0x83e2],band,airflow=12<=memory[0x83ed]<16,
+                                      kiss=memory[0x83e0]==14 and memory[0x83ed]==15)[4 if missile else index]
                 ink=colors.get(color,4+(color>>1))
             line = y + raster_start
             value = memory[address + (line if single else line // 2)]

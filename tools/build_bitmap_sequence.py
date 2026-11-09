@@ -18,12 +18,19 @@ from extract_music import segments
 from school_story import (story_frames, SCHOOL_PHASES, girl_front_pixels,
                           GIRL_PORTRAIT_SCENE, SCHOOL_PORTRAIT_TICK,
                           SCHOOL_PORTRAIT_END)
-from school_portrait_bank import loader as school_bank_loader, BANK_VALUE
+from school_portrait_bank import loader as school_bank_loader, BANK_VALUE, bank_value
 from mosaic import banks as mosaic_banks
 import ribbon_dance
 import ribbon_inbetweens
 import title_fireworks
 import final_boy
+import outro_loader
+import terminal_typing
+import outro_palette
+import post_trevor_director
+import launch_kiss
+import banana_variants
+import banana_cache
 from school_parallax import banks as school_pan_banks
 from trevor_awakens import END as TREVOR_END, HIT as TREVOR_HIT, bank as trevor_bank
 from trevor_polished import bank as polished_trevor_bank
@@ -48,6 +55,14 @@ def packed_rows(pixels):
     return [bytes(sum(pixels[y * 160 + x + dx] << (6 - 2 * dx)
                       for dx in range(4)) for x in range(0, 160, 4))
             for y in range(192)]
+
+
+def validate_allocations(inserts):
+    """Check all persistent RAM owners, including framebuffer RAM under ROM."""
+    ordered = sorted(inserts)
+    for (start, data), (next_start, _) in zip(ordered, ordered[1:]):
+        if start + len(data) > next_start:
+            raise ValueError(f'memory overlap at ${next_start:04X}')
 
 
 def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
@@ -162,6 +177,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     chunks = [(regions[index][0], blob) for index, blob in enumerate(blobs) if blob]
     blank = unique[bytes(40)]
     plasma_code, plasma_labels = plasma_build(table_end, blank)
+    assert plasma_labels['draw']<=banana_cache.ENTRY
+    assert not banana_cache.ENTRY<=plasma_labels['mask_key']<banana_cache.ENTRY+len(banana_cache.worker())
+    assert banana_cache.STATE+32<=terminal_typing.ENTRY
     effect_code = effects_helper(intro_color=plasma_labels['color'])
     addresses = [[unique[row] for row in scene] for scene in rows]
     for frame in range(2, 6):
@@ -242,6 +260,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         absolute(0xcd, TICK + offset)
         c.branch(0xd0, 'snapshot')
     absolute(0x20, plasma_labels['invalidate'])
+    absolute(0xad,TICK+1);c.emit(0xc9,12);c.branch(0x90,'banana_work_done');c.emit(0xc9,46);c.branch(0xb0,'banana_work_done')
+    c.label('banana_work_hook');c.jump(0x20,'banana_bootstrap')
+    c.label('banana_work_done')
     compare_tick(final_boy.START,'final_boy','before_final_boy')
     c.label('final_boy')
     c.emit(0xa9,17);absolute(0x8d,SCENE)
@@ -667,23 +688,18 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     # This wrapper reproduces the original entry including its WSYNC.
     c.label('mosaic')
     c.emit(0xa9,0);absolute(0x8d,SHIFT)
-    absolute(0xad,TICK+1);c.emit(0x29,1,0x0a,0x0a,0x0a,0x0a);absolute(0x8d,STATE+13)
-    absolute(0xad,TICK);c.emit(0x4a,0x4a,0x4a,0x4a);absolute(0x0d,STATE+13);absolute(0x8d,STATE+13)
-    absolute(0xad,TICK+1);c.emit(0x29,4,0x0a,0x0a,0x0a);absolute(0x0d,STATE+13);absolute(0x8d,STATE+13)
+    absolute(0x20,post_trevor_director.ENTRY)
     # Act 5 uses the existing two motifs deliberately, rather than allowing
     # the six-bit animation clock to alternate between them every 512 ticks.
     compare_tick(TREVOR_END, 'act5_select', 'mosaic_frame_ready')
     c.label('act5_select')
     compare_tick16(ACT5_CYCLE_TICK, 'mosaic_frame_ready', 'act5_motif', True)
     c.label('act5_motif')
-    # Hold both halves of the banana rotozoom through bar 96, then run the
-    # tunnel until its existing bar-108 texture change.
+    # Run all 32 banana phases continuously through bar 96. Separately
+    # looping each 16-frame half caused jumps at every half-turn/bar 92.
     compare_tick16(tick_at_bar(96), 'act5_tunnel', 'act5_kaleido', True)
     c.label('act5_kaleido')
-    absolute(0xad,STATE+13);c.emit(0x29,15);absolute(0x8d,STATE+13)
-    compare_tick16(tick_at_bar(92), 'act5_kaleido_second', 'mosaic_frame_ready')
-    c.label('act5_kaleido_second')
-    absolute(0xad,STATE+13);c.emit(0x09,16);absolute(0x8d,STATE+13)
+    absolute(0xad,STATE+13);c.emit(0x29,31);absolute(0x8d,STATE+13)
     c.jump(0x4c,'mosaic_frame_ready')
     c.label('act5_tunnel')
     absolute(0xad,STATE+13);c.emit(0x29,15);absolute(0x8d,STATE+13)
@@ -694,8 +710,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('act5_tunnel_texture2')
     absolute(0xad,STATE+13);c.emit(0x09,48);absolute(0x8d,STATE+13)
     c.label('mosaic_frame_ready')
-    absolute(0xad,STATE+13)
-    c.emit(0x4a,0x4a,0xaa)
+    absolute(0x20,banana_variants.SELECT_ENTRY)
     absolute(0xad,0xd301);c.emit(0x48)
     absolute(0xbd,0x08c3);absolute(0x8d,0xd301);absolute(0x20,0x7c00)
     absolute(0xad,0x24b5);absolute(0x8d,0xd301);absolute(0x20,0x7800)
@@ -720,7 +735,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.labels['effect_bank_operand']=c.labels['banked_effects']+5
     c.label('music_entry')
     c.emit(0x48, 0x8a, 0x48, 0x98, 0x48)
-    absolute(0x8d, 0xd40a)
+    absolute(0x20, outro_palette.ENTRY)
     absolute(0xad, 0xd301)
     absolute(0x8d, STATE + 14)
     absolute(0xac, 0x24a5)
@@ -748,6 +763,10 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('ribbon_source_ready');c.emit(0xa2,2);absolute(0x20,ribbon_dance.SIDE_COMPOSITOR)
     c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
     ribbon_dance.emit_rainbow(c)
+    c.label('banana_bootstrap')
+    absolute(0xad,TICK+1);c.emit(0xc9,12);c.branch(0xd0,'banana_bootstrap_done')
+    absolute(0xad,0xd301);c.emit(0x48);absolute(0xad,bank_value(banana_cache.RESOURCE_BANK));absolute(0x8d,0xd301);absolute(0x20,banana_cache.BOOT)
+    c.emit(0x68);absolute(0x8d,0xd301);c.label('banana_bootstrap_done');c.emit(0x60)
     c.label('ribbon_banks');c.emit(*(8+i//6 for i in range(ribbon_dance.FRAME_COUNT)))
     c.label('ribbon_sources');c.emit(*(0x40+(i%6)*10 for i in range(ribbon_dance.FRAME_COUNT)))
     code = c.finish()
@@ -773,17 +792,14 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                (0x8000, display(0x8000)),
                (0x8300, descriptors[:0x3f]), (STATE, descriptors[0xe0:]),
                (0x8400, display(0x8400)), (TITLE_MODE_ENTRY, title_mode_helper()),
-               (table_end, plasma_code)] + chunks
+               (table_end, plasma_code)] + chunks + banana_variants.selector_inserts() + outro_loader.inserts() + terminal_typing.inserts() + [(outro_palette.ENTRY,outro_palette.helper()), (post_trevor_director.ENTRY,post_trevor_director.helper())]
+    # Framebuffers own their complete runtime spans, including RAM under ROM.
+    inserts += [(base, bytes(0x1f00)) for base in FRAME_BASES]
     # Reject every overlap, including accidental code/data growth.
-    ordered = sorted(inserts)
-    for (start, data), (next_start, _) in zip(ordered, ordered[1:]):
-        if start + len(data) > next_start:
-            raise ValueError(f'memory overlap at ${next_start:04X}')
+    validate_allocations(inserts)
     rom_chunks = [(address, data) for address, data in inserts if address >= 0xc000]
     rom = bytearray(os_image(rom_chunks))
     rom[-6:-4] = c.labels['music_entry'].to_bytes(2, 'little')
-    # Framebuffers are cleared only at load time.
-    inserts += [(base, bytes(0x1f00)) for base in FRAME_BASES]
     output = bytearray(b'\xff\xff')
     patched = inserted = False
     bank_number = 0
@@ -835,6 +851,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             if payload[exit_offset:exit_offset + 6] != bytes.fromhex('68 a8 68 aa 68 40'):
                 raise ValueError('unexpected v035 interrupt epilogue')
             payload[exit_offset:exit_offset + 6] = bytes((0x4c,)) + c.labels['music_exit'].to_bytes(2, 'little') + bytes((0xea,)) * 3
+            payload[0x23cd-start]=0x60  # retired UI entry; its body holds terminal timing data
             patched = True
         if (start, end) == (0x02e0, 0x02e1):
             output.extend(school_bank_loader(girl_frame))
@@ -854,7 +871,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             for index, bank in enumerate(plasma_banks, PLASMA_FIRST_BANK):
                 if index in (40,41):
                     bank=title_fireworks.install(bank,protected)
-                output.extend(school_bank_loader(bank, index=index))
+                output.extend(school_bank_loader(banana_cache.install(bank,index,c.labels['banana_work_hook']), index=index))
             control=ribbon_dance.install_control(polished_trevor_bank(0, quiet=True,bank_wrapper=c.labels['banked_effects']),c.labels['ribbon_copy'],c.labels['ribbon_palette'])
             output.extend(school_bank_loader(final_boy.install_control(control,c.labels['ribbon_copy']), index=49))
             output.extend(loader(rom))
@@ -896,8 +913,18 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         'reclaimed_trevor_slots_bytes': 22016-sum(len(data) for bank,source,data in ribbon_inbetweens.payloads() if 32<=bank<39),
         'trevor_old_ball_slot_free_bytes': 8192-7*len(ribbon_inbetweens.decoder()),
         'ribbon_midpoint_remaining_bank_gap_bytes': 50644-sum(len(data) for bank,source,data in ribbon_inbetweens.payloads())-len(ribbon_inbetweens.selector())-8*len(ribbon_inbetweens.decoder()),
-        'ribbon_bank_tail_bytes': 6144,
+        'ribbon_bank_tail_bytes': 6144-len(launch_kiss.helper()),
+        'launch_kiss_entry': launch_kiss.ENTRY,
+        'launch_kiss_bank': ribbon_dance.FIRST_BANK+launch_kiss.TAIL_INDEX,
+        'launch_kiss_bytes': len(launch_kiss.helper()),
+        'launch_kiss_start': launch_kiss.START,
+        'launch_kiss_phases': 8,
         'side_actor_bytes': 16384, 'side_compositor': ribbon_dance.SIDE_COMPOSITOR,
+        'post_trevor_director': post_trevor_director.ENTRY,
+        'post_trevor_cuts': post_trevor_director.cuts(),
+        'banana_variants': banana_variants.memory_report(),
+        'banana_cache_entry': banana_cache.ENTRY, 'banana_cache_flag': banana_cache.FLAG,
+        'banana_cache_hook': c.labels['banana_work_hook'], 'banana_bootstrap': c.labels['banana_bootstrap'],
         'final_boy_start': final_boy.START, 'final_boy_end': final_boy.END,
         'final_boy_entry': final_boy.ENTRY, 'final_boy_bytes': len(final_boy.helper(c.labels['ribbon_copy'])),
         'table_bytes': len(tables),

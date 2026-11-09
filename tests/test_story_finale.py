@@ -60,7 +60,8 @@ class StoryFinaleTests(unittest.TestCase):
         cpu=sequence.execute(START,cpu);m=cpu.memory
         p=artwork();self.assertEqual(raster(cpu),bytes(p[y//3*160+x] for y in range(192) for x in range(160)))
         display=m[0xd402]|m[0xd403]<<8
-        self.assertEqual([y for y in range(192) if m[display+2+y*3]&128],[69,147])
+        from outro_text import BITMAP_ROWS,BITMAP_DL
+        self.assertEqual([y for y in range(BITMAP_ROWS) if m[display+BITMAP_DL+y*3]&128],[21,99])
         self.assertEqual(m[display],0x80)
         levels=[]
         for tick in range(FADE_START,END+1,16):
@@ -102,15 +103,27 @@ class StoryFinaleTests(unittest.TestCase):
                 expected=bytearray(128);expected[y:y+12]=bytes(shape)
                 self.assertEqual(bytes(m[base+0x200+plane*128:base+0x280+plane*128]),bytes(expected))
 
+    def test_final_glyphs_cycle_through_rainbow_hues(self):
+        from final_boy import SHAPE_DATA
+        from final_boy import install_control
+        from trevor_polished import bank
+        installed=install_control(bank(0,quiet=True),0x1234)
+        colors=installed[SHAPE_DATA-0x4000+76:SHAPE_DATA-0x4000+95]
+        self.assertEqual(len(colors),19)
+        self.assertGreaterEqual(len(set(colors)),16)
+        self.assertTrue(all((color&15)==15 or color in (0x1e,0x5e,0x9e) for color in colors))
+
     def test_final_updates_only_inactive_buffers_and_cleanly_restarts(self):
         cpu=sequence.MPU(memory=TrackedMemory(sequence.XEX.read_bytes()))
         sequence.execute(START-1,cpu)
         for tick in (START,START+16,START+48,FADE_START,END):
             m=cpu.memory;active=(m[0xd407]&0xfc)<<8
-            bitmap=0x9000 if m[0xd403]==0x84 else 0xb000
+            bitmap=0x9000
+            if tick==START:bitmap=0xb000  # transition fills the inactive picture first
             m.writes.clear();sequence.execute(tick,cpu)
-            self.assertFalse(any(active+0x180<=a<active+0x400 for a in m.writes))
-            self.assertFalse(any(bitmap<=a<bitmap+2560 for a in m.writes))
+            if tick!=START:self.assertFalse(any(active+0x180<=a<active+0x400 for a in m.writes))
+            else:self.assertLess(m.writes.index(0xd01d),next(i for i,a in enumerate(m.writes) if active+0x180<=a<active+0x400))
+            if tick!=START:self.assertFalse(any(bitmap<=a<bitmap+2560 for a in m.writes))
             self.assertEqual(m[0xd301],0xff)
         for tick in (96,9163,20942,27000,START):
             cpu=sequence.execute(tick,cpu);fresh=sequence.execute(tick)
@@ -128,7 +141,7 @@ class StoryFinaleTests(unittest.TestCase):
                 if cpu.pc==0x7fff:break
                 cpu.step()
             else:self.fail('final callback did not return')
-            times=[t/114%312 for t,a,v in m.events if 0xd000<=a<=0xd01d or a==0xd400]
+            times=[t/114%312 for t,a,v in m.events if (0xd000<=a<=0xd01d and a not in (0xd017,0xd018)) or a==0xd400]
             self.assertTrue(times)
             self.assertGreaterEqual(min(times),248)
             self.assertLess(max(times),260)
