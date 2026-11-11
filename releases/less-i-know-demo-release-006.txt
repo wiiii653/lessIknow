@@ -1,0 +1,10 @@
+THE LESS I KNOW THE BETTER — RELEASE 006 / v259
+
+Target: PAL Atari XL/XE, 1 MB expansion, stereo POKEY.
+SHA-256: b2c286dcd63eff267d138069aaf3a3903803ed21447d173a0200fe15fa747266
+
+The repeated Trevor chessboard is replaced with one close-up. The girl's eyes,
+other scenes, timing and music are unchanged. Nine focused tests passed; XEX
+comparison against v258 confirmed only one 3840-byte bitmap differs.
+The v257 baseline passed 203 tests and the full Atari800 stereo comparison.
+No physical Atari audiovisual test or competition video has been completed.

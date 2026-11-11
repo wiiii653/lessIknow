@@ -6,7 +6,6 @@ from trevor_awakens import END as TREVOR_END
 from trevor_polished import HITS
 from outro_text import START as OUTRO_START, END as TEXT_END
 from girl_eyes import START as EYE_START, END as EYE_END, frame_at as eye_frame_at
-from story_montage import selected as story_selected
 
 
 class RetimedMontageTests(unittest.TestCase):
@@ -30,7 +29,7 @@ class RetimedMontageTests(unittest.TestCase):
                 original=old.memory[0x83ed]
                 self.assertEqual(eye_frame_at(tick,original),new.memory[0x83ed],tick)
                 # Those samples intentionally use eye art or remapped tunnel phases.
-                if EYE_START<=tick<EYE_END or story_selected(tick) is not None or original>=56: continue
+                if EYE_START<=tick<EYE_END or original>=60: continue
                 self.assertEqual(seq.SequenceTests().raster(old),seq.SequenceTests().raster(new),tick)
                 self.assertEqual(old.memory[0xd000:0xd016],new.memory[0xd000:0xd016],tick)
                 self.assertEqual(old.memory[0xd016:0xd01a],new.memory[0xd016:0xd01a],tick)

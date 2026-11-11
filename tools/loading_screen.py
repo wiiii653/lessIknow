@@ -5,7 +5,7 @@ from build_visual_prototype import xex_segment
 SCREEN=0x0600
 DLIST=0x0700
 ENTRY=0x0780
-LINES=('NOW LOADING ATARI XE DEMO', 'SILLY VENTURE 2026 WE', 'AI-SLOP-OGNJEN 2026')
+LINES=('NOW LOADING ATARI XE DEMO', 'SILLY VENTURE 2026 WE', 'AI-SLOP/OGNJEN')
 
 def segments():
     # ANTIC mode 2 uses Atari screen codes (upper-case ATASCII minus 32).

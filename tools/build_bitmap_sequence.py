@@ -715,7 +715,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x20,banana_variants.SELECT_ENTRY)
     absolute(0xad,0xd301);c.emit(0x48)
     absolute(0xbd,0x08c3);absolute(0x8d,0xd301);absolute(0x20,0x7c00)
-    absolute(0xad,0x24b5);absolute(0x8d,0xd301);absolute(0x20,0x7700)
+    absolute(0xad,0x24b5);absolute(0x8d,0xd301);absolute(0x20,0x7800)
     c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
     # Banked hero delegates its opening cutaway here without growing the
     # generic 24-bit scene dispatcher. The existing return restores PORTB.

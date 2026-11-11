@@ -107,7 +107,7 @@ class TunnelBallTests(unittest.TestCase):
             tick=13312+i*16
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             # The eye scene reuses four mosaic slots, so those phases repeat.
-            phase=(20+(i&3) if i>=24 else i)
+            phase=(i-4 if i>=28 else i)
             dx,dy=tunnel_offsets()[phase];positions.add((dx,dy))
             self.assertEqual(m[0xd000],112+dx)
             self.assertEqual(m[0x83e9],dy&255)

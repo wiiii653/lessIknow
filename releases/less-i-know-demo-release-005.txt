@@ -1,0 +1,9 @@
+THE LESS I KNOW THE BETTER — RELEASE 005 / v258
+
+Target: PAL Atari XL/XE, 1 MB expansion, stereo POKEY.
+SHA-256: 7f1150dfb6007d859f17ec247916002f37f993d80f3e32cae2b696875025fbd9
+
+The loading-screen credit is AI-SLOP/OGNJEN. Only loading-screen text differs
+from release 004; its focused test passes. Release 004 passed 203 tests and
+full-track Atari800 stereo POKEY comparison. Playback has not been checked
+on physical Atari hardware and the recommended competition video is pending.

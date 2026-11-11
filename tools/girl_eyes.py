@@ -41,25 +41,20 @@ def pixels(phase):
     return bytes(out)
 
 def frame_at(tick, frame, scene=6):
-    from story_montage import selected
-    story=selected(tick) if scene == 6 else None
-    if story is not None:return story
     if scene == 6 and START <= tick < END:
         return 60 + ((tick >> 5) & 3)
-    return 52+(frame&3) if 56 <= frame < 64 else frame
+    return frame-4 if 60 <= frame < 64 else frame
 
 def helper():
     c=Code(BANK_ENTRY)
     def a(op,addr): c.emit(op,addr&255,addr>>8)
     a(0xad,0x83e0);c.emit(0xc9,6);c.branch(0xd0,'normal')
-    a(0x20,0x7600);c.branch(0x90,'no_story');c.jump(0x4c,'save')
-    c.label('no_story')
     a(0xad,0x83e3);c.emit(0xc9,START>>8);c.branch(0x90,'normal');c.branch(0xd0,'check_end')
     a(0xad,0x83e2);c.emit(0xc9,START&255);c.branch(0x90,'normal')
     c.label('check_end');a(0xad,0x83e3);c.emit(0xc9,END>>8);c.branch(0x90,'eyes');c.branch(0xd0,'normal')
     a(0xad,0x83e2);c.emit(0xc9,END&255);c.branch(0xb0,'normal')
     c.label('eyes');a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x4a,0x29,3,0x09,60);c.jump(0x4c,'save')
-    c.label('normal');a(0xad,0x83ed);c.emit(0xc9,56);c.branch(0x90,'done');c.emit(0xc9,64);c.branch(0xb0,'done');c.emit(0x29,3,0x09,52)
+    c.label('normal');a(0xad,0x83ed);c.emit(0xc9,60);c.branch(0x90,'done');c.emit(0xc9,64);c.branch(0xb0,'done');c.emit(0x38,0xe9,4)
     c.label('save');a(0x8d,0x83ed)
     c.label('done');c.emit(0x60)
     data=bytes(c.finish());assert BANK_ENTRY+len(data)<=0x7600

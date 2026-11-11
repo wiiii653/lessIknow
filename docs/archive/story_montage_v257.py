@@ -33,13 +33,9 @@ def frames():
                 xx_src=sx+tx*cw//dw;yy_src=sy+yy*ch//dh
                 if 0<=dx+xx<160 and 0<=dy+yy<96:
                     dst[(dy+yy)*160+dx+xx]=src[yy_src*sw+xx_src]
-    # Trevor's face multiplied into a comic-strip mosaic.
+    # One readable face fills the shot; avoid repeated checkerboard portraits.
     a=canvas()
-    for row in range(2):
-        for col in range(3):
-            x=2+col*53;y=2+row*47
-            rect(a,x,y,51,45,3)
-            blit(a,trevor,160,64,(58,0,46,32),(x+2,y+2,47,41),mirror=bool((row+col)&1))
+    blit(a,trevor,160,64,(48,0,80,50),(0,0,160,96))
     # The three characters in adjacent panels retain their established designs.
     b=canvas()
     for x in (1,54,107):rect(b,x,3,52,90,3)

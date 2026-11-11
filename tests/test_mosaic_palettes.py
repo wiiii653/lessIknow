@@ -5,7 +5,6 @@ from pmg_preview import atari_rgb
 import test_sequence as sequence
 from final_boy import START as FINAL_SHOT
 from banana_variants import variant_at
-from story_montage import selected
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class MosaicPaletteTests(unittest.TestCase):
@@ -29,7 +28,6 @@ class MosaicPaletteTests(unittest.TestCase):
         # both samples of a mosaic colour pair must remain inside that effect.
         ticks=[tick for tick in ticks if tick+32<FINAL_SHOT]
         for tick in ticks:
-            if selected(tick) is not None or selected(tick+32) is not None:continue
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0x83e0],6)
             if m[0x83ed] < 32:

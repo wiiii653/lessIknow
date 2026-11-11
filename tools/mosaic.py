@@ -227,9 +227,6 @@ def banks():
             if frame>=60:
                 from girl_eyes import pixels as eye_pixels
                 p=eye_pixels(frame-60)
-            elif frame>=56:
-                from story_montage import frames as story_frames
-                p=story_frames()[frame-56]
             else:
                 p=pixels(frame)
             out[offset:offset+3840]=bytes(sum(p[i+k]<<(6-k*2) for k in range(4)) for i in range(0,len(p),4))

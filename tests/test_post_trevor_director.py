@@ -24,9 +24,6 @@ class PostTrevorDirectorTests(unittest.TestCase):
             cpu=seq.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0x83ed],eye_frame_at(tick,d.frame_at(tick)),tick)
             self.assertEqual(m[0xd301],0xff)
-            if 56<=m[0x83ed]<60:
-                self.assertEqual(m[0xd01d],0)
-                continue
             self.assertEqual(m[0xd01d],3)
             if m[0x83ed]<32:continue
             seen.add(m[0x83ed]&48)

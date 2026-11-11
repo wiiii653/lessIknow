@@ -1,0 +1,11 @@
+THE LESS I KNOW THE BETTER — RELEASE 007 / v260
+
+Target: PAL Atari XL/XE, 1 MB expanded RAM, stereo POKEY.
+SHA-256: edfdc4ceb8bdc6b3f4367ed63b1f4905fb8b9e89876ee32e229039047f07d269
+
+Removes the four recent Trevor comic cutaways from the rotator/tunnel montage.
+The girl's eyes, earlier Trevor fight, ball-flight improvements and final shot
+remain. This build is identical to v256 except for the updated loading text.
+Physical Atari audiovisual playback and the competition video remain unverified.
+199/199 automated tests passed. Atari800 full-track stereo POKEY comparison
+matches the original v035; 16 272 720 identical bytes.

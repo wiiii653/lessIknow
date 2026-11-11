@@ -87,11 +87,6 @@ def install(bank):
     eye=girl_eyes.helper();offset=girl_eyes.BANK_ENTRY-0x4000
     assert not any(out[offset:offset+len(eye)])
     out[offset:offset+len(eye)]=eye
-    import story_montage
-    for address,data in ((story_montage.ENTRY,story_montage.helper()),(story_montage.GATE,story_montage.gate())):
-        offset=address-0x4000
-        assert not any(out[offset:offset+len(data)])
-        out[offset:offset+len(data)]=data
     return bytes(out)
 
 def variant_helper():

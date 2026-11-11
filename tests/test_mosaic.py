@@ -10,7 +10,6 @@ from extract_music import segments
 from post_trevor_director import frame_at, START, END
 from banana_variants import variant_at
 from girl_eyes import frame_at as eye_frame_at, pixels as eye_pixels, START as EYE_START, END as EYE_END
-from story_montage import frames as story_frames
 
 @unittest.skipIf(sequence.MPU is None, 'py65 required')
 class MosaicTests(unittest.TestCase):
@@ -39,7 +38,6 @@ class MosaicTests(unittest.TestCase):
             cpu.memory.writes.clear();before=cpu.processorCycles
             sequence.execute(tick,cpu)
             art=(eye_pixels(frame_expected-60) if frame_expected>=60 else
-                 story_frames()[frame_expected-56] if frame_expected>=56 else
                  pixels(frame_expected,variant_at(tick) if frame_expected<32 else 0))
             expected=bytes(art[y//2*160+x] for y in range(192) for x in range(160))
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected,frame)
