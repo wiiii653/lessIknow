@@ -2,6 +2,7 @@
 import unittest
 import test_sequence as seq
 import post_trevor_director as d
+from girl_eyes import frame_at as eye_frame_at
 
 class PostTrevorDirectorTests(unittest.TestCase):
     def test_music_aligned_cuts_and_fixed_outro_entry(self):
@@ -21,8 +22,11 @@ class PostTrevorDirectorTests(unittest.TestCase):
         samples=sorted({d.START,d.END-1}|{t+delta for t,m in d.cuts() for delta in (-1,0,16) if d.START<=t+delta<d.END})
         for tick in samples:
             cpu=seq.execute(tick,cpu);m=cpu.memory
-            self.assertEqual(m[0x83ed],d.frame_at(tick),tick)
+            self.assertEqual(m[0x83ed],eye_frame_at(tick,d.frame_at(tick)),tick)
             self.assertEqual(m[0xd301],0xff)
+            if 56<=m[0x83ed]<60:
+                self.assertEqual(m[0xd01d],0)
+                continue
             self.assertEqual(m[0xd01d],3)
             if m[0x83ed]<32:continue
             seen.add(m[0x83ed]&48)

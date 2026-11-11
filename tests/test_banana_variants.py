@@ -13,7 +13,7 @@ class BananaVariantTests(unittest.TestCase):
 
     def test_alternation_is_per_appearance_and_act5_never_switches_mid_turn(self):
         cpu=None
-        for index,tick in enumerate((12288,14336,28909,39008,41056,43104,45152,47200)):
+        for index,tick in enumerate((12288,14336,28909,39264,41312,43360,45152,47456)):
             variant=index&1;self.assertEqual(variants.variant_at(tick),variant)
             cpu=seq.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[variants.KEY],0x80|(variant<<6))
@@ -41,7 +41,7 @@ class BananaVariantTests(unittest.TestCase):
 
     def test_same_phase_variant_seeks_and_other_renderers_do_not_share_cache_keys(self):
         cpu=None
-        for tick in (14336,3553,14336,12288,14336,14983,14336,29280,39008,41056,59000,14336):
+        for tick in (14336,3553,14336,12288,14336,14983,14336,29280,39264,41312,59000,14336):
             cpu=seq.execute(tick,cpu)
             if tick in (3553,14983,59000):continue
             frame=((tick+(4000 if tick>=28909 else 0))>>4)&31

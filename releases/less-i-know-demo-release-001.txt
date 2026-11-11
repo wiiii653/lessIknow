@@ -1,0 +1,18 @@
+THE LESS I KNOW THE BETTER — FIRST RELEASE BUILD
+
+File: less-i-know-demo-release-001.xex
+SHA-256: 6495e63a1f4259d8ea6a6e164d889ef0401dc6a55eebef31b7774edede3177f1
+Source: visual-prototype-v254, unchanged.
+Target: PAL Atari XE with 1 MB expanded RAM and stereo POKEY.
+
+This is a complete-playthrough build, from loading screen through the final
+fade. It includes the eye close-up and credits. The planned Trevor mosaic,
+comic love-triangle and giant-Trevor scenes are not implemented; the existing
+rotator/tunnel montage fills those intervals. The reported Trevor ball-flight
+visual errors remain unresolved. This build has not been checked on real Atari
+hardware or visually verified during loading in an emulator.
+
+Validation: v253 passed 196/196 automated tests and full-track stereo POKEY
+comparison with v035 in Atari800 PAL/1088XE. V254 changes only 19 bytes of
+loading-screen text in the $0600-$0677 segment; its focused loading-screen
+test passed. This release XEX is byte-identical to v254.

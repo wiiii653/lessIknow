@@ -119,12 +119,12 @@ class StoryFinaleTests(unittest.TestCase):
         cpu=sequence.MPU(memory=TrackedMemory(sequence.XEX.read_bytes()))
         sequence.execute(START-1,cpu)
         for tick in (START,START+16,START+48,FADE_START,END):
-            m=cpu.memory;active=(m[0xd407]&0xfc)<<8
+            m=cpu.memory;active=(m[0xd407]&0xfc)<<8;enabled=m[0xd01d]&3
             bitmap=0x9000
             if tick==START:bitmap=0xb000  # transition fills the inactive picture first
             m.writes.clear();sequence.execute(tick,cpu)
             if tick!=START:self.assertFalse(any(active+0x180<=a<active+0x400 for a in m.writes))
-            else:self.assertLess(m.writes.index(0xd01d),next(i for i,a in enumerate(m.writes) if active+0x180<=a<active+0x400))
+            elif enabled:self.assertLess(m.writes.index(0xd01d),next(i for i,a in enumerate(m.writes) if active+0x180<=a<active+0x400))
             if tick!=START:self.assertFalse(any(bitmap<=a<bitmap+2560 for a in m.writes))
             self.assertEqual(m[0xd301],0xff)
         for tick in (96,9163,20942,27000,START):

@@ -29,7 +29,7 @@ class TunnelBallTests(unittest.TestCase):
             cpu=sequence.execute(tick);m=cpu.memory
             self.assertEqual(m[0xd01b],0x11)
             self.assertEqual(m[0xd01d],3)
-            dx,dy=tunnel_offsets()[(tick>>4)&31]
+            dx,dy=tunnel_offsets()[m[0x83ed]&31]
             self.assertEqual(m[0xd000:0xd004],[112+dx,128+dx,112+dx,128+dx])
             for i in range(4):self.assertTrue(any(b&(3<<(2*i)) for b in m[0x980:0xa00]))
             origin=40+(m[0x83e9] if m[0x83e9]<128 else m[0x83e9]-256)
@@ -106,7 +106,9 @@ class TunnelBallTests(unittest.TestCase):
         for i in range(32):
             tick=13312+i*16
             cpu=sequence.execute(tick,cpu);m=cpu.memory
-            dx,dy=tunnel_offsets()[i];positions.add((dx,dy))
+            # The eye scene reuses four mosaic slots, so those phases repeat.
+            phase=(20+(i&3) if i>=24 else i)
+            dx,dy=tunnel_offsets()[phase];positions.add((dx,dy))
             self.assertEqual(m[0xd000],112+dx)
             self.assertEqual(m[0x83e9],dy&255)
             for x in range(75,86):

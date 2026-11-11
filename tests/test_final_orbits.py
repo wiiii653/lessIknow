@@ -11,13 +11,24 @@ def state(m,address):
 
 
 class FinalOrbitTests(unittest.TestCase):
-    def test_adjacent_orbit_shapes_move_each_particle_at_most_one_pixel(self):
+    def test_adjacent_orbit_shapes_ease_without_a_position_jump(self):
         for phase in range(16):
             for plane in range(4):
                 for amount in range(7):
                     before=orbit.position(phase,amount,plane)
                     after=orbit.position(phase,amount+1,plane)
-                    self.assertTrue(all(abs(a-b)<=1 for a,b in zip(before,after)),(phase,plane,amount))
+                    self.assertTrue(all(abs(a-b)<=4 for a,b in zip(before,after)),(phase,plane,amount))
+
+    def test_extreme_orbits_are_visibly_tall_and_wide(self):
+        tall=[orbit.position(p,0) for p in range(16)]
+        wide=[orbit.position(p,7) for p in range(16)]
+        extent=lambda pts,axis: max(p[axis] for p in pts)-min(p[axis] for p in pts)
+        self.assertGreater(extent(tall,1),2*extent(wide,1))
+        self.assertGreater(extent(wide,0),2*extent(tall,0))
+
+    def test_line_selected_paths_have_distinct_ellipses(self):
+        for phase in (0,4,8,12):
+            self.assertNotEqual(orbit.position(phase,0),orbit.position(phase,4))
 
     def test_every_line_eases_one_step_and_duplicate_callbacks_hold(self):
         events=orbit.events()
@@ -25,7 +36,7 @@ class FinalOrbitTests(unittest.TestCase):
         self.assertTrue(all(a<b for a,b in zip(events,events[1:])))
         self.assertTrue(all(orbit.target_for(i)!=orbit.target_for(i+1) for i in range(len(events)-1)))
         cpu=None;amount=None;target=None;last_index=None;shapes=set()
-        for tick in range(outro_text.START,outro_text.END,16):
+        for tick in range(outro_text.START,outro_text.END,8):
             cpu=seq.execute(tick,cpu);m=cpu.memory
             index=bisect.bisect_right(events,tick)-1
             if amount is None:
@@ -45,7 +56,7 @@ class FinalOrbitTests(unittest.TestCase):
             self.assertEqual(m[0xd000:0xd004],[orbit.position((tick>>4)&15,amount,p)[0] for p in range(4)],tick)
             shapes.add(amount)
             last_index=index
-            if index and tick-events[index]<16:
+            if index and tick-events[index]<8:
                 seq.execute(tick,cpu)
                 self.assertEqual(state(m,orbit.AMOUNT),amount,tick)
         self.assertGreaterEqual(len(shapes),7)

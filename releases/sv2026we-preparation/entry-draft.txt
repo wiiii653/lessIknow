@@ -1,0 +1,24 @@
+THE LESS I KNOW THE BETTER — SILLY VENTURE 2026 WE
+
+Competition: Atari XL/XE Demo Standard
+Author: OGNJEN
+Target hardware: PAL Atari XL/XE, 1 MB expanded RAM, stereo POKEY
+Executable: less-i-know-demo.xex (release 004 / v257)
+
+Music: POKEY arrangement by OGNJEN, based on the composition by Tame Impala.
+Project notes identify Midishow MIDI #200337 as the principal score source;
+its uploader and licence were not independently verified. The author states
+that permission for the MIDI score and composition has been obtained, and that
+no samples from the commercial recording were used.
+
+AI disclosure: AI assistance was used for code and image assets.
+The author reports that the demo has only been shared privately.
+
+Presentation: the executable plays through to a black ending. The four new
+story cutaways are static comic compositions intercut with the existing moving
+montage. The recommended MP4 recording has not been prepared.
+
+Candidate status: 203 automated CPU tests passed. Full-track stereo POKEY data
+matched the original v035 in Atari800 PAL/1088XE. Image and sound have not yet
+been reviewed on physical target hardware; emulator tests cannot establish real
+ANTIC DMA timing or FPS. Confirm full credits before submission.

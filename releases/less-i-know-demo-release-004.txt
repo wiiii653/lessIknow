@@ -1,0 +1,13 @@
+THE LESS I KNOW THE BETTER — RELEASE 004 / v257
+
+Target: PAL Atari XL/XE, 1 MB expansion, stereo POKEY.
+SHA-256: 146f6b8952bcda7cdbc1c9d098fc90ee558632de7b6fb2b426589b3a2f482d2b
+
+Story cutaways add Trevor's mosaic, three-character panels, a confrontation
+and a large Trevor portrait. The approved eyes, ball strikes and defeated-boy
+outro remain. The new cutaways are still images intercut with the old moving
+montage, not newly animated fighting footage.
+
+203/203 automated tests passed. Atari800 PAL/1088XE full-track stereo POKEY
+comparison matched v035. Physical-hardware audiovisual playback and the
+recommended competition video remain outstanding.

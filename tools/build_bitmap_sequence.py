@@ -32,6 +32,7 @@ import launch_kiss
 import banana_variants
 import banana_cache
 import trevor_ball_flight
+import loading_screen
 from school_parallax import banks as school_pan_banks
 from trevor_awakens import END as TREVOR_END, HIT as TREVOR_HIT, bank as trevor_bank
 from trevor_polished import bank as polished_trevor_bank
@@ -714,7 +715,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x20,banana_variants.SELECT_ENTRY)
     absolute(0xad,0xd301);c.emit(0x48)
     absolute(0xbd,0x08c3);absolute(0x8d,0xd301);absolute(0x20,0x7c00)
-    absolute(0xad,0x24b5);absolute(0x8d,0xd301);absolute(0x20,0x7800)
+    absolute(0xad,0x24b5);absolute(0x8d,0xd301);absolute(0x20,0x7700)
     c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
     # Banked hero delegates its opening cutaway here without growing the
     # generic 24-bit scene dispatcher. The existing return restores PORTB.
@@ -804,6 +805,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     rom[-6:-4] = c.labels['music_entry'].to_bytes(2, 'little')
     output = bytearray(b'\xff\xff')
     patched = inserted = False
+    loading_inserted = False
     bank_number = 0
     for start, end, payload in segments(Path('less-i-know-release-v035.xex').read_bytes()):
         if start in (0x3000, 0x3100):
@@ -853,6 +855,11 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             if payload[exit_offset:exit_offset + 6] != bytes.fromhex('68 a8 68 aa 68 40'):
                 raise ValueError('unexpected v035 interrupt epilogue')
             payload[exit_offset:exit_offset + 6] = bytes((0x4c,)) + c.labels['music_exit'].to_bytes(2, 'little') + bytes((0xea,)) * 3
+            # Preserve ANTIC DMA through each original music-bank copy so the
+            # loading text remains visible; the screen is outside bank RAM.
+            if payload[0x20f1-start:0x20f4-start] != bytes.fromhex('8d 00 d4'):
+                raise ValueError('unexpected v035 bank-copy DMA instruction')
+            payload[0x20f1-start:0x20f4-start] = bytes((0xea,))*3
             payload[0x23cd-start]=0x60  # retired UI entry; its body holds terminal timing data
             patched = True
         if (start, end) == (0x02e0, 0x02e1):
@@ -884,7 +891,12 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             payload = RUN.to_bytes(2, 'little')
             inserted = True
         output.extend(xex_segment(start, payload))
-    if not patched or not inserted:
+        if (start, end) == (0x02e2, 0x02e3) and not loading_inserted:
+            if payload != bytes((0, 0x20)):
+                raise ValueError('unexpected first player INIT')
+            output.extend(loading_screen.segments())
+            loading_inserted = True
+    if not patched or not inserted or not loading_inserted:
         raise ValueError('missing v035 code or RUN vector')
     with output_path.open('wb' if replace else 'xb') as stream:
         stream.write(output)

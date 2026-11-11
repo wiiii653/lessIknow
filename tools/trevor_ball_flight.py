@@ -9,8 +9,8 @@ from trevor_polished import HITS, impact_anchor
 ENTRY=0x6800
 BANK_INDEX=19
 # One distinct vector per visible flight, including horizontal and vertical entries.
-IN_VECTORS=((-3,0),(3,0),(0,-2),(0,2),(-2,-1),(2,-1),(-2,1),(2,1),(-1,-2),(1,-2),(-1,2),(1,2),(0,-3))
-OUT_VECTORS=((3,1),(-3,1),(3,-1),(-3,-1),(2,2),(-2,2),(2,-2),(-2,-2),(1,3),(-1,3),(1,-3),(-1,-3),(0,3))
+IN_VECTORS=((-3,0),(3,0),(0,-1),(0,1),(-2,-1),(2,-1),(-2,1),(2,1),(-1,-1),(1,-1),(-1,1),(1,1),(-3,-1))
+OUT_VECTORS=((3,1),(-3,1),(3,-1),(-3,-1),(2,1),(-2,1),(2,-1),(-2,-1),(1,1),(-1,1),(1,-1),(-1,-1),(0,1))
 assert len(HITS)==len(IN_VECTORS)==len(OUT_VECTORS)
 
 
@@ -46,11 +46,19 @@ def helper():
             c.label('y_range');a(0xad,workspace);c.emit(0xc9,112);c.branch(0x90,'y_done')
             c.emit(0xa9,111);a(0x8d,workspace);c.label('y_done')
     # Large incoming sphere is 32 rows high, centred on the same contact point.
-    c.jump(0xad,'incoming');c.branch(0xf0,'buffer')
+    c.jump(0xad,'incoming');c.branch(0xf0,'fade_setup')
     a(0xad,0x83eb);c.emit(0x38,0xe9,8);a(0x8d,0x83eb)
     a(0xad,0x83ec);c.emit(0x38,0xe9,8);c.branch(0xb0,'large_y_positive');c.emit(0xa9,0)
     c.label('large_y_positive');c.emit(0xc9,97);c.branch(0x90,'large_y_done');c.emit(0xa9,96)
     c.label('large_y_done');a(0x8d,0x83ec)
+    c.label('fade_setup')
+    # Fade at the ends of the finite flight windows. This prevents balls and
+    # satellites popping in/out at full brightness while still on screen.
+    c.jump(0xad,'incoming');c.branch(0xf0,'fade_out')
+    a(0xad,0x83ea);c.emit(0x38,0xe9,25);c.jump(0x4c,'fade_select')
+    c.label('fade_out');a(0xad,0x83ea);c.emit(0x38,0xe9,18)
+    c.label('fade_select');c.branch(0xb0,'fade_lookup');c.emit(0xa9,0)
+    c.label('fade_lookup');c.emit(0xaa);c.jump(0xbd,'fade_masks');c.jump(0x8d,'fade_mask')
     c.label('buffer');a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e9)
     c.emit(0x09,9);c.jump(0x8d,'clear_m_hi')
     for plane in range(4):
@@ -118,14 +126,14 @@ def helper():
     # Vivid original palette conventions, with a bright shared missile colour.
     c.jump(0xad,'incoming');c.branch(0xf0,'small_colours')
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x29,7,0xaa)
-    for plane in range(4):c.jump(0xbd,f'hues{plane}');a(0x8d,0xd012+plane)
-    c.jump(0xbd,'spark_hues');a(0x8d,0xd019);c.emit(0xa9,0x11);a(0x8d,0xd01b)
+    for plane in range(4):c.jump(0xbd,f'hues{plane}');c.jump(0x2d,'fade_mask');a(0x8d,0xd012+plane)
+    c.jump(0xbd,'spark_hues');c.jump(0x2d,'fade_mask');a(0x8d,0xd019);c.emit(0xa9,0x11);a(0x8d,0xd01b)
     c.jump(0x4c,'colours_done')
     c.label('small_colours');a(0xad,0x83e2);c.emit(0x0a,0x0a,0x29,0xf0,0x09,6)
     for plane in range(4):
-        a(0x8d,0xd012+plane)
+        c.emit(0x48);c.jump(0x2d,'fade_mask');a(0x8d,0xd012+plane);c.emit(0x68)
         if plane<3:c.emit(0x18,0x69,0x44 if plane==0 else 0x42)
-    c.emit(0xa9,0x0e);a(0x8d,0xd019);c.emit(0xa9,1);a(0x8d,0xd01b)
+    c.emit(0xa9,0x0e);c.jump(0x2d,'fade_mask');a(0x8d,0xd019);c.emit(0xa9,1);a(0x8d,0xd01b)
     c.label('colours_done')
     for addr,val in ((0xd00c,0x55),(0xd01d,3),(0xd400,0x2e)):
         c.emit(0xa9,val);a(0x8d,addr)
@@ -148,7 +156,8 @@ def helper():
     for plane,(offset,luma) in enumerate(((0,8),(1,10),(4,14),(5,12))):
         c.label(f'hues{plane}');c.emit(*(hues[(i+offset)%8]|luma for i in range(8)))
     c.label('spark_hues');c.emit(*(hues[(i+2)%8]|14 for i in range(8)))
-    for name in ('incoming','rows_left','hit_index','x_delta','y_delta','sat_value','mx0','mx1','mx2','mx3'):
+    c.label('fade_masks');c.emit(0xfe,0xfe,0xfc,0xfc,0xf8,0xf8,0xf0,0xf0)
+    for name in ('incoming','rows_left','hit_index','x_delta','y_delta','sat_value','fade_mask','mx0','mx1','mx2','mx3'):
         c.label(name);c.emit(0)
     data=bytes(c.finish());assert ENTRY+len(data)<=0x7000,len(data)
     return data

@@ -1,0 +1,15 @@
+THE LESS I KNOW THE BETTER — RELEASE 003
+
+XEX: less-i-know-demo-release-003.xex
+SHA-256: 851c245b35d5530eaa21876ff6e7924d9a63d0adc96a675b9d4264057939a0b2
+Target: PAL Atari XE, 1 MB expanded RAM, stereo POKEY.
+
+Changes: Trevor's incoming and departing balls follow paths without sticking
+to vertical bounds; the balls and satellites fade at the start/end of each
+flight. Punch and music timing remain unchanged.
+
+Atari800 PAL/1088XE stereo POKEY comparison covers the complete song and
+matches v035. Tests and CPU previews do not measure real ANTIC DMA or FPS;
+the visual sequence has not been reviewed on a physical Atari.
+The planned comic scenes and giant Trevor remain unimplemented.
+Automated validation: 199/199 tests passed without skips.

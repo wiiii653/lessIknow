@@ -60,6 +60,7 @@ def packed(frame,variant):
 
 
 VARIANT_ENTRY=0xebf0
+EYE_MAP_ENTRY=0xec04
 SELECT_ENTRY=0xed4d
 
 def selector_inserts():
@@ -71,9 +72,13 @@ def selector_inserts():
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     a(0xad,0xd301);c.emit(0x48);a(0xad,0x24b5);a(0x8d,0xd301)
     a(0x20,0x7400);c.emit(0xaa,0x68);a(0x8d,0xd301);c.emit(0x8a,0x60)
-    variant=bytes(c.finish());assert VARIANT_ENTRY+len(variant)<=0xec20
+    variant=bytes(c.finish());assert VARIANT_ENTRY+len(variant)<=EYE_MAP_ENTRY
+    c=Code(EYE_MAP_ENTRY)
+    a(0xad,0xd301);c.emit(0x48);a(0xad,0x24b5);a(0x8d,0xd301)
+    a(0x20,0x7500);c.emit(0x68);a(0x8d,0xd301);a(0xad,0x83ed);c.emit(0x60)
+    eye_map=bytes(c.finish());assert EYE_MAP_ENTRY+len(eye_map)<=0xec20
     c=Code(SELECT_ENTRY)
-    a(0xad,0x83ed);c.emit(0xc9,32);c.branch(0x90,'banana');c.emit(0x4a,0x4a,0xaa,0x60)
+    a(0x20,EYE_MAP_ENTRY);c.emit(0xc9,32);c.branch(0x90,'banana');c.emit(0x4a,0x4a,0xaa,0x60)
     c.label('banana');a(0x20,VARIANT_ENTRY);a(0x8d,KEY)
     a(0xad,0x83fa);c.emit(0xc9,255);c.branch(0xf0,'layout');c.emit(0xa9,255);a(0x8d,CACHE)
     c.label('layout');a(0xad,0x83e6);c.emit(0x29,4,0x4a,0x4a,0x49,1,0xaa);a(0xbd,DL_KEYS);c.emit(0xc9,1);c.branch(0xf0,'index');c.emit(0xa9,255);a(0x8d,CACHE)
@@ -84,7 +89,7 @@ def selector_inserts():
     c.label('raw');c.emit(0x8a);a(0x2c,KEY);c.branch(0x50,'selected');c.emit(0x18,0x69,37,0xaa)
     c.label('selected');c.emit(0x60)
     select=bytes(c.finish());assert SELECT_ENTRY+len(select)<=0xeda0
-    return [(VARIANT_ENTRY,variant),(SELECT_ENTRY,select)]
+    return [(VARIANT_ENTRY,variant),(EYE_MAP_ENTRY,eye_map),(SELECT_ENTRY,select)]
 
 
 

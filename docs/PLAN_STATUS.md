@@ -1,5 +1,34 @@
 # Status planu dema — stan po v244
 
+Aktualizacja v257: komiksowe przebitki Trevora, trzech postaci,
+konfrontacji i dużego Trevora w istniejącym montażu; oczy i finał zachowane.
+`V257_KOMIKSOWY_MONTAZ.md`.
+
+**Aktualny montaż v256:** historyczna tabela aktów poniżej zawiera dawne
+ticki i nie jest aktualną listą scen do automatycznego odtworzenia. Od v248
+montaż zajmuje 28909–49849, a jego wirtualny zegar jest przesunięty o 4000
+ticków; outro zaczyna się w 49850. Oczy dziewczyny są w 39379–40126 (v252).
+Na polecenie autora w v257 wprowadzono komiksowe przebitki mozaiki,
+trzech postaci, konfrontacji i dużego Trevora, zachowując zmieniony finał.
+Regulamin i szkic zgłoszenia: `SV2026WE_PRZYGOTOWANIE.md`.
+
+Aktualizacja v256: loty piłek Trevora bez zatrzymywania na pionowych
+ogranicznikach; łagodne pojawianie i znikanie. `V256_LOTY_PILEK_TREVORA.md`.
+
+Aktualizacja v255: orbity finałowe płynnie zmieniają się między wyraźnie
+wąską i szeroką elipsą. `V255_WYRAZNE_ORBITY_FINALU.md`.
+
+Aktualizacja v254: podpis ekranu wczytywania `AI-SLOP-OGNJEN 2026`;
+zmienił się wyłącznie tekst ekranu. `V254_NAPIS_AI_SLOP.md`.
+
+Aktualizacja v253: ekran tekstowy podczas wczytywania banków, z nazwą
+Atari XE, Silly Venture 2026 WE i Ognjen 2026. Szczegóły i ograniczenia:
+`V253_NAPIS_PODCZAS_WCZYTYWANIA.md`.
+
+Aktualizacja v252: czterofazowe zbliżenie oczu dziewczyny w montażu,
+ticki 39379–40126. Cztery fazy tunelu ponownie wykorzystano na grafikę;
+wpływ na wcześniejsze ujęcia i walidacja: `V252_OCZY_DZIEWCZYNY.md`.
+
 Aktualizacja v250: każda nowa linia terminala zmienia cel płynnie
 przekształcanych orbit gwiazdek/nut. Szczegóły i pamięć:
 `V250_PLYNNE_ORBITY_TEKSTU.md`.
@@ -274,10 +303,10 @@ bajtów względem v035 przez cały utwór; bez próby na fizycznym Atari.
 | **Act 2 — Crush**, takty 24–56, ticki 8975–20942 | 🟡 | W 8975–11967 boczny taniec ze szarfą: cofająca się dziewczyna, przeciwbieżny scroll sali i paralaksa podłogi. Pomponiary zachowane w osobnym projekcie. Po rotozoomerze trzy ujęcia szarf: grupa, solówka, grupa i wyrzut bohaterki. Jest 36 bazowych kompozycji (16 bocznych + 20 późniejszych) oraz 14 nowych klatek pośrednich w trzech późniejszych ujęciach; ticki akcentów i cięcia bez zmian. Podwójne bufory PMG i tęczowe iskry. Testy CPU i stereo POKEY wykonane; ocena płynności obrazu z DMA i artystyczna na docelowym sprzęcie pozostaje. |
 | **Act 3 — Basketball Hero**, takty 56–64, ticki 20942–23934 | ✅ | Po niezmienionym wyrzucie 3,75 s tunelu z piłką, potem 7,5 s kozłowania i 3,75 s wsadu we wnętrzu ATARI ARENA. Animowany chłopiec, piłka i ramię; rozbicie tablicy: pęknięcie, rozpad i odłamki PMG, obracająca się tęczowa piłka oraz błysk. Tło sali przy kozłowaniu pozostaje statyczne. |
 | **Act 4 — Trevor Awakens**, takty 64–88, ticki 23934–32909 | ✅ | Ciche wejście, zamachy i kombinacje ciosów. Tunel za Trevorem zmienia kształt z prostokąta w owal i z powrotem; postać pozostaje nieruchoma względem tła. Naprzemienne BANG/BAM, kolorowe fragmenty chmurki na czterech players, rozdzielone i kurczące się szczątki na missiles. Cykle barw PMG, podwójny bufor efektów. Zachowano moment powrotu energii w 26925 i wszystkie momenty uderzeń. |
-| **Act 5 — Psychedelic Breakdown**, takty 88–120, ticki 32909–44875 | 🟡 | Bananowy rotator trwa do taktu 96 (tick 35900); v236 daje ciągłe 32-klatkowe obroty 360°, bez resetu w takcie 92. Tunel spiralny trwa 35900–40388, potem organiczne pasma do 41984. V231 dynamizuje późniejsze okna tunelu zmianami motywu, kierunku i prędkości. Mozaika Trevora w 41884 i sekwencja oczu od 43379 nadal czekają. |
-| **Act 6 — Love Triangle**, takty 120–128, ticki 44875–47867 | ⬜ | Brak zaplanowanych kadrów komiksowych i pojedynku Trevora z koszykarzem w tym zakresie. |
-| **Act 7 — Trevor Wins**, od taktu 128, ticki 47867–51850 | ⬜ | Brak osobnej kulminacji z gigantycznym Trevorem. Na polecenie użytkownika od v240 bieżący rotator/tunel ustępuje terminalowi 10 s wcześniej. |
-| **Act 8 — Outro**, ticki 51850–59833 | 🟡 | Stały niższy kadr chłopca i siedmiowierszowy terminal: trzy plansze credits, pięć greetz. Szybki wydruk, potem pauza na czytanie; prompt `>_`, kursor miga również przy pisaniu. Tekst znika w 59085; pozycja chłopca/orbity i końcowy fade pozostają. Test na fizycznym Atari pozostaje. |
+| **Act 5 — montaż po Trevorze**, ticki 28909–40874 | 🟡 | Bananowy rotator i dwa tunele; od v257 krótkie przebitki mozaiki Trevora w 37884–39378. Oczy dziewczyny w 39379–40126. Ruchomy montaż pozostaje między przebitkami. |
+| **Act 6 — relacje i konfrontacja**, ticki 40875–43866 | 🟡 | V257 przeplata komiksowe panele trzech postaci i nieruchomą kompozycję konfrontacji z ruchomym montażem. Nie jest to nowa animowana walka. |
+| **Act 7 — kulminacja**, ticki 43867–49849 | 🟡 | Montaż i od 46858 przeplatane zbliżenie Trevora; potem istniejący kadr pokonanego chłopca. Zbliżenie jest kadrem, nie nową animacją. |
+| **Act 8 — Outro**, ticki 49850–59833 | 🟡 | Stały kadr chłopca, siedmiowierszowy terminal z credits/greetz, gwiazdki i nuty, końcowy fade. Próba na fizycznym Atari pozostaje. |
 
 Intro TAME IMPALA / album title z plazmą i ditheringiem działa w tickach 0–2992 przed ujęciami szkoły. Kolory liter zmieniają się co uderzenie. V140 dodaje miasto i fajerwerki PMG; kolejność wejść na drugiej planszy to I KNOW → THE BETTER → THE LESS, z niezmienionym układem końcowym. W v140 maski chroniły litery i cienie także podczas przenikania; v149 usuwa tę ochronę na życzenie użytkownika, pokazując kompletne fajerwerki przed obrazem. To późniejszy dodatek, który zastępuje początkowe logo szkoły z timeline’u; dalszych granic nie przesunięto.
 
@@ -689,3 +718,17 @@ cykle wobec tunelu 47245. Muzyka stereo: 10589472 identyczne bajty z v035.
 
 [ODCZYT] `make check PYTHON=/tmp/finale197-venv/bin/python`: **189/189
 testów**, bez pominięć, 151,2 s. Build roboczy i v244 identyczne.
+
+V251 poprawia czytelność orbit finałowych. V250 zmieniał głównie promień,
+przez co tor nadal wyglądał niemal jak okrąg. Każda nowa linia tekstu wybiera
+teraz elipsę o innym mimośrodzie i nachyleniu; przejście zmienia pozycję
+każdego duszka najwyżej o 4 piksele na krok co 16 ticków. Rytm tekstu, scena,
+kolory i fade pozostają bez zmian. Szczegóły: `V251_WIDOCZNE_ZMIANY_ORBITY.md`.
+
+[ODCZYT] V253: `make check` 196/196, bez pominięć. Porównanie całego
+utworu stereo w Atari800 zgodne z v035 (16 080 048 bajtów). Ekran
+ładowania nie był wizualnie obserwowany w emulatorze ani na sprzęcie.
+
+[ODCZYT] V257: 203/203 testy bez pominięć; cały utwór stereo POKEY w
+Atari800 zgodny z v035 (16 377 408 bajtów). Gotowości na sprzęcie nie
+potwierdzono.

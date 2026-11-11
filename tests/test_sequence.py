@@ -63,9 +63,14 @@ class SequenceTests(unittest.TestCase):
                                 (40387, 32, 47),
                                 (40388, 48, 63), (41884, 48, 63),
                                 (41983, 48, 63), (41984, 32, 47)):
-            cpu = execute(old_tick-4000, cpu)
-            self.assertLessEqual(low, cpu.memory[0x83ed])
-            self.assertLessEqual(cpu.memory[0x83ed], high)
+            from story_montage import selected
+            tick=old_tick-4000
+            cpu = execute(tick, cpu)
+            if selected(tick) is not None:
+                self.assertEqual(cpu.memory[0x83ed],selected(tick))
+            else:
+                self.assertLessEqual(low, cpu.memory[0x83ed])
+                self.assertLessEqual(cpu.memory[0x83ed], high)
 
     def raster(self, cpu, effects=False):
         display = cpu.memory[0xd402] | cpu.memory[0xd403] << 8

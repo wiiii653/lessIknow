@@ -9,6 +9,8 @@ from school_portrait_bank import loader, bank_value
 from extract_music import segments
 from post_trevor_director import frame_at, START, END
 from banana_variants import variant_at
+from girl_eyes import frame_at as eye_frame_at, pixels as eye_pixels, START as EYE_START, END as EYE_END
+from story_montage import frames as story_frames
 
 @unittest.skipIf(sequence.MPU is None, 'py65 required')
 class MosaicTests(unittest.TestCase):
@@ -26,8 +28,8 @@ class MosaicTests(unittest.TestCase):
         # every stored frame at a tick where the following callback holds it.
         ticks={}
         for tick in range(START,END-1):
-            frame=frame_at(tick)
-            if frame_at(tick+1)==frame:ticks.setdefault(frame,tick)
+            frame=eye_frame_at(tick,frame_at(tick))
+            if eye_frame_at(tick+1,frame_at(tick+1))==frame:ticks.setdefault(frame,tick)
         self.assertEqual(set(ticks),set(range(64)))
         for frame in range(64):
             tick=ticks[frame]
@@ -36,7 +38,9 @@ class MosaicTests(unittest.TestCase):
             old_frame=0x9000 if active==0x8400 else 0xb000
             cpu.memory.writes.clear();before=cpu.processorCycles
             sequence.execute(tick,cpu)
-            art=pixels(frame_expected,variant_at(tick) if frame_expected<32 else 0)
+            art=(eye_pixels(frame_expected-60) if frame_expected>=60 else
+                 story_frames()[frame_expected-56] if frame_expected>=56 else
+                 pixels(frame_expected,variant_at(tick) if frame_expected<32 else 0))
             expected=bytes(art[y//2*160+x] for y in range(192) for x in range(160))
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected,frame)
             self.assertFalse(any(old_frame<=a<old_frame+3840 for a in cpu.memory.writes),frame)

@@ -6,7 +6,10 @@ ENTRY=0x66a0
 VALUES_X=0x69b8
 VALUES_Y=0x69bc
 AMOUNT,LAST,VALID,TARGET=0x69c0,0x69c1,0x69c2,0x69c3
-MIN_RADIUS=18
+# A clear morph between tall and wide ellipses. Adjacent shapes differ
+# by three source pixels, preserving smooth movement while making the
+# change visible over the boy's head.
+ORBIT_SHAPES=tuple((9+3*i, 30-3*i, 0) for i in range(8))
 
 
 def events():
@@ -24,8 +27,13 @@ def target_for(index):
 def position(phase,amount,plane=0):
     from final_boy import HEAD_X,HEAD_Y
     angle=((phase+plane*4)&15)*math.tau/16
-    x=HEAD_X+round((MIN_RADIUS+amount)*math.cos(angle))-4+48
-    y=round((HEAD_Y+(16+amount)*math.sin(angle)-7+17)/2)+16
+    rx,ry,tilt=ORBIT_SHAPES[amount]
+    tilt=math.radians(tilt)
+    ex=rx*math.cos(angle);ey=ry*math.sin(angle)
+    xoff=ex*math.cos(tilt)-ey*math.sin(tilt)
+    yoff=ex*math.sin(tilt)+ey*math.cos(tilt)
+    x=HEAD_X+round(xoff)-4+48
+    y=round((HEAD_Y+yoff-7+17)/2)+16
     return x,y
 
 
@@ -38,10 +46,11 @@ def helper():
     a(0xad,0x83e2);c.jump(0xdd,'lo');c.branch(0xb0,'found')
     c.label('previous');c.emit(0xca);c.branch(0x10,'find');c.emit(0xa2,0)
     c.label('found')
-    # One unit per 16 player ticks; repeated callbacks at the same time do not
+    # One unit per 8 player ticks; repeated callbacks at the same time do not
     # accelerate the morph. First entry initializes without stale scene state.
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a);a(0x8d,0x83ff)
-    a(0xad,0x83e3);c.emit(0x0a,0x0a,0x0a,0x0a);a(0x0d,0x83ff)
+    a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a);a(0x8d,0x0dd9)
+    a(0xad,0x83e3);c.emit(0x0a,0x0a,0x0a,0x0a,0x0a);a(0x0d,0x0dd9)
     a(0x8d,0x0dd9)
     a(0xad,VALID);c.branch(0xd0,'initialized')
     c.emit(0x8a,0x18,0x69,1);a(0x8d,VALID)
