@@ -4,7 +4,7 @@ from music_timing import tick_at_bar
 
 ENTRY = 0xC000
 RESET_ENTRY = 0xC340
-START, END = tick_at_bar(144)-2000, tick_at_bar(158)
+START, END = tick_at_bar(144)-4000, tick_at_bar(158)
 TEXT_POINTERS = 0xC400
 FONT = 0xC800
 TEXT_LOW = 0xC48A

@@ -29,15 +29,15 @@ class BananaRotationTests(unittest.TestCase):
 
     def test_act5_visits_all_32_phases_without_half_turn_resets(self):
         cpu=None;seen=set();previous=None
-        for tick in range(tick_at_bar(88),tick_at_bar(96),16):
+        for tick in range(tick_at_bar(88)-4000,tick_at_bar(96)-4000,16):
             cpu=seq.execute(tick,cpu);frame=cpu.memory[0x83ed]
-            self.assertEqual(frame,(tick>>4)&31,tick)
+            self.assertEqual(frame,((tick+4000)>>4)&31,tick)
             if previous is not None:self.assertEqual(frame,(previous+1)&31,tick)
             self.assertEqual(cpu.memory[0xd301],0xff)
             seen.add(frame);previous=frame
         self.assertEqual(seen,set(range(32)))
         # Bar 92 must not jump from the first half to an unrelated frame.
-        for tick in (33023,33024,34403,34404,34415,34416):
+        for tick in (29023,29024,30403,30404,30415,30416):
             cpu=seq.execute(tick,cpu)
-            self.assertEqual(cpu.memory[0x83ed],(tick>>4)&31,tick)
-        self.assertGreaterEqual(seq.execute(tick_at_bar(96),cpu).memory[0x83ed],32)
+            self.assertEqual(cpu.memory[0x83ed],((tick+4000)>>4)&31,tick)
+        self.assertGreaterEqual(seq.execute(tick_at_bar(96)-4000,cpu).memory[0x83ed],32)

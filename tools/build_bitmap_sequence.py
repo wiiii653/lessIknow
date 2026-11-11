@@ -31,6 +31,7 @@ import post_trevor_director
 import launch_kiss
 import banana_variants
 import banana_cache
+import trevor_ball_flight
 from school_parallax import banks as school_pan_banks
 from trevor_awakens import END as TREVOR_END, HIT as TREVOR_HIT, bank as trevor_bank
 from trevor_polished import bank as polished_trevor_bank
@@ -44,7 +45,7 @@ from crush_portraits import START as CRUSH_TICK, END as CRUSH_END, ENTRY as CRUS
 KALEIDO_TICK = tick_at_bar(32)  # eight bars / 15 seconds after the dancer enters
 SCHOOL_TICK = tick_at_bar(8)  # equal 7.5-second artist and title screens
 # Align the post-Act-5 global motif cycle to its next complete tunnel phase.
-ACT5_CYCLE_TICK = ((tick_at_bar(112) + 1023) // 1024) * 1024
+ACT5_CYCLE_TICK = ((tick_at_bar(112) + 1023) // 1024) * 1024 - post_trevor_director.SHIFT
 ORIGIN = 0x1400
 POOL_LOW = 0x1e00
 TABLE_BASE = 0xd800
@@ -697,13 +698,13 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('act5_motif')
     # Run all 32 banana phases continuously through bar 96. Separately
     # looping each 16-frame half caused jumps at every half-turn/bar 92.
-    compare_tick16(tick_at_bar(96), 'act5_tunnel', 'act5_kaleido', True)
+    compare_tick16(tick_at_bar(96)-post_trevor_director.SHIFT, 'act5_tunnel', 'act5_kaleido', True)
     c.label('act5_kaleido')
     absolute(0xad,STATE+13);c.emit(0x29,31);absolute(0x8d,STATE+13)
     c.jump(0x4c,'mosaic_frame_ready')
     c.label('act5_tunnel')
     absolute(0xad,STATE+13);c.emit(0x29,15);absolute(0x8d,STATE+13)
-    compare_tick16(tick_at_bar(108),'act5_tunnel_texture2','act5_tunnel_texture1',True)
+    compare_tick16(tick_at_bar(108)-post_trevor_director.SHIFT,'act5_tunnel_texture2','act5_tunnel_texture1',True)
     c.label('act5_tunnel_texture1')
     absolute(0xad,STATE+13);c.emit(0x09,32);absolute(0x8d,STATE+13)
     c.jump(0x4c,'mosaic_frame_ready')
@@ -719,6 +720,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     # generic 24-bit scene dispatcher. The existing return restores PORTB.
     c.label('hero_cutaway')
     c.emit(0xa9,6);absolute(0x8d,SCENE)
+    absolute(0x20,post_trevor_director.ENTRY)
     c.emit(0xa9,0);absolute(0x8d,SHIFT)
     absolute(0xad,TICK+1);c.emit(0x4a)
     absolute(0xad,TICK);c.emit(0x6a,0x4a,0x4a,0x4a,0x29,31,0x09,32)
@@ -856,10 +858,11 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         if (start, end) == (0x02e0, 0x02e1):
             output.extend(school_bank_loader(girl_frame))
             output.extend(school_bank_loader(hero_bank(c.labels['banked_effects'],c.labels['banked_effects']+5,c.labels['hero_cutaway']),index=1))
-            output.extend(school_bank_loader(ribbon_inbetweens.install(trevor_bank(),2),index=2))
+            output.extend(school_bank_loader(post_trevor_director.install(ribbon_inbetweens.install(trevor_bank(),2)),index=2))
             for index, frame in enumerate(mosaic_banks(),3):
                 output.extend(school_bank_loader(frame,index=index))
             for index, frame in enumerate(school_pan_banks(),19):
+                if index==trevor_ball_flight.BANK_INDEX:frame=trevor_ball_flight.install(frame)
                 output.extend(school_bank_loader(frame,index=index))
             for phase in range(16):
                 art=ribbon_dance.install_side_actor(polished_trevor_bank(phase,bank_wrapper=c.labels['banked_effects']),24+phase)

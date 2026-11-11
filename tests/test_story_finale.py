@@ -6,9 +6,11 @@ from test_engine_cache import TrackedMemory
 from test_tunnel_raster import BeamMemory
 from basketball_hero import DUNK,DUNK_PHASE_TICKS,END as HERO_END,scene_frame,frames,shatter_stage,SHATTER_X,SHATTER_WIDTH,SHATTER_HEIGHT
 from final_boy import START,END,FADE_START,artwork,fade_level,star_position
+from final_orbits import AMOUNT,position as orbit_position
 
 
 def raster(cpu):return sequence.SequenceTests().raster(cpu)
+def orbit_amount(m):return m.banks[m.values.index(m[0x08f1])][AMOUNT-0x4000]
 def active_pmg(m):
     base=(m[0xd407]&0xfc)<<8
     return bytes(m[base+0x180:base+0x400])
@@ -83,7 +85,7 @@ class StoryFinaleTests(unittest.TestCase):
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             if p is None:p=bytes(raster(cpu))
             self.assertEqual(raster(cpu),p)
-            self.assertEqual(m[0xd000:0xd004],[star_position(phase=(tick>>4)&15,plane=i)[0]+48 for i in range(4)])
+            self.assertEqual(m[0xd000:0xd004],[orbit_position((tick>>4)&15,orbit_amount(m),i)[0] for i in range(4)])
             self.assertEqual(len(set(m[0xd012:0xd016])),4)
             positions.add(tuple(m[0xd000:0xd004]));masks.add(active_pmg(m))
         self.assertGreater(len(positions),12)
@@ -99,7 +101,7 @@ class StoryFinaleTests(unittest.TestCase):
             base=(m[0xd407]&0xfc)<<8
             for plane in range(4):
                 shape=NOTE_SHAPES[plane] if notes_active(tick) else STAR_SHAPE
-                y=star_position((tick>>4)&15,plane)[1]-2
+                y=orbit_position((tick>>4)&15,orbit_amount(m),plane)[1]-2
                 expected=bytearray(128);expected[y:y+12]=bytes(shape)
                 self.assertEqual(bytes(m[base+0x200+plane*128:base+0x280+plane*128]),bytes(expected))
 

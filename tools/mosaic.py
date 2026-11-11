@@ -13,7 +13,7 @@ from build_sequence import Code
 from music_timing import tick_at_bar
 ENTRY=0x7c00
 KALEIDO_START=tick_at_bar(32)
-TREVOR_START=tick_at_bar(88)
+TREVOR_START=tick_at_bar(88)-4000
 
 @lru_cache(maxsize=1)
 def banana_tile():
@@ -145,12 +145,12 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     c.emit(0xa9,255);a(0x8d,0x83f8);a(0x8d,0x83f9)
     c.label('colors')
     # Preserve v051's visual pulse phase; scene dispatch uses the corrected clock.
-    a(0xad,0x83e3);c.emit(0xc9,32912>>8);c.branch(0x90,'intro_base')
-    c.emit(0xa2,16);a(0xad,0x83e2);c.emit(0x38,0xe9,32912&255);a(0x8d,0x83ea)
-    a(0xad,0x83e3);c.emit(0xe9,32912>>8);a(0x8d,0x83eb);c.branch(0xb0,'mod')
+    a(0xad,0x0dd4);c.emit(0xc9,32912>>8);c.branch(0x90,'intro_base')
+    c.emit(0xa2,16);a(0xad,0x0dd3);c.emit(0x38,0xe9,32912&255);a(0x8d,0x83ea)
+    a(0xad,0x0dd4);c.emit(0xe9,32912>>8);a(0x8d,0x83eb);c.branch(0xb0,'mod')
     c.emit(0xa9,0);a(0x8d,0x83ea);a(0x8d,0x83eb);c.jump(0x4c,'mod')
-    c.label('intro_base');c.emit(0xa2,0);a(0xad,0x83e2);c.emit(0x38,0xe9,11968&255);a(0x8d,0x83ea)
-    a(0xad,0x83e3);c.emit(0xe9,11968>>8);a(0x8d,0x83eb);c.branch(0xb0,'mod')
+    c.label('intro_base');c.emit(0xa2,0);a(0xad,0x0dd3);c.emit(0x38,0xe9,11968&255);a(0x8d,0x83ea)
+    a(0xad,0x0dd4);c.emit(0xe9,11968>>8);a(0x8d,0x83eb);c.branch(0xb0,'mod')
     c.emit(0xa9,0);a(0x8d,0x83ea);a(0x8d,0x83eb)
     c.label('mod');c.emit(0xa0,7)
     c.label('divide')
@@ -182,8 +182,8 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     # white. After Trevor, cycle Act 5 tunnel highlights once per frame.
     if not banana_only:
         a(0xad,0x83ed);c.emit(0xc9,32);c.branch(0x90,'banana_highlight')
-        a(0xad,0x24a8);c.emit(0xc9,38892>>8);c.branch(0x90,'white_highlight');c.branch(0xd0,'tunnel_hue')
-        a(0xad,0x24a7);c.emit(0xc9,38892&255);c.branch(0x90,'white_highlight')
+        a(0xad,0x0dd4);c.emit(0xc9,38892>>8);c.branch(0x90,'white_highlight');c.branch(0xd0,'tunnel_hue')
+        a(0xad,0x0dd3);c.emit(0xc9,38892&255);c.branch(0x90,'white_highlight')
         c.label('tunnel_hue')
         a(0xad,0x83ed);c.emit(0x29,15,0xaa)
         c.jump(0xbd,'hue_pairs');c.emit(0x09,0x0e);a(0x8d,0xd018)

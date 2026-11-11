@@ -12,7 +12,7 @@ class TerminalTypingTests(unittest.TestCase):
         self.assertEqual(self.row(cpu,1),b' '*40)
         cpu=seq.execute(text.START+16,cpu)
         self.assertEqual(self.row(cpu,0)[:13],b'>'+text.CREDITS[0][0][:12].encode())
-        self.assertEqual(self.row(cpu,0)[13],0x5f)
+        self.assertEqual(self.row(cpu,0)[13],0x5f if not (text.START+16)&typing.BLINK_MASK else 0x20)
         cpu=seq.execute(typing.schedule()[1],cpu)
         self.assertTrue(self.row(cpu,1).startswith(b'>'))
         self.assertNotIn(0x5f,self.row(cpu,0))
@@ -29,15 +29,15 @@ class TerminalTypingTests(unittest.TestCase):
         self.assertEqual(bytes(cpu.memory[text.FONT+95*8:text.FONT+96*8]),bytes([0]*6+[0x54,0]))
 
     def test_cursor_also_blinks_while_the_line_is_being_written(self):
-        start=text.page_starts()[1]
-        cpu=seq.execute(start+8)
+        start=text.page_starts()[0]
+        cpu=seq.execute(start+1)
         earlier=self.row(cpu,0)
-        self.assertNotIn(0x5f,earlier)
-        cpu=seq.execute(start+16,cpu)
+        self.assertIn(0x5f,earlier)
+        cpu=seq.execute(start+8,cpu)
         later=self.row(cpu,0)
-        self.assertIn(0x5f,later)
-        self.assertEqual(earlier[:5],later[:5])
-        self.assertGreater(len(later.rstrip()),len(earlier.rstrip()))
+        self.assertNotIn(0x5f,later)
+        self.assertEqual(earlier[0],later[0])
+        self.assertGreater(len(later.rstrip()),len(earlier.replace(b'_',b' ').rstrip()))
 
     def test_all_pages_write_quickly_then_hold_for_reading(self):
         cpu=None;starts=text.page_starts()
@@ -78,7 +78,7 @@ class TerminalTypingTests(unittest.TestCase):
 
     def test_terminal_and_boy_start_ten_seconds_earlier_with_the_same_ending(self):
         import final_boy
-        self.assertEqual(text.START,53850-2000)
+        self.assertEqual(text.START,53850-4000)
         self.assertEqual(final_boy.START,text.START)
         self.assertEqual(text.END,59085)
         cpu=seq.execute(text.START-1)

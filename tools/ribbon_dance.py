@@ -247,8 +247,6 @@ def overhead_artwork(frame):
     right=overhead_actor(p,1,round(109-depth*17),round(45-depth*7),small)
     scale=(.105,.11,.115,.12,.155,.195,.24,.285)[pose]
     hero=overhead_actor(p,pose,80,32,scale)
-    from launch_kiss import face
-    face(p,frame)
     return bytes(p),[hero[0],hero[1],left[0],right[1]]
 
 

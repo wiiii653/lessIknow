@@ -14,9 +14,6 @@ class LaunchKissTests(unittest.TestCase):
         self.assertEqual(d.frame_at(k.START),15)
         self.assertEqual(k.START,d.STEPS[122])
         self.assertEqual(d.END,20942)
-        wink=d.artwork(14)[0];kiss=d.artwork(15)[0]
-        self.assertEqual([wink[y*160+x] for x,y in ((74,14),(75,15),(76,15),(77,14))],[0]*4)
-        self.assertEqual(kiss[21*160+82],1)
         self.assertEqual(k.MOUTH,(82,67))
 
     def test_all_heart_phases_match_live_pmg_and_cover_no_active_memory(self):
@@ -54,12 +51,28 @@ class LaunchKissTests(unittest.TestCase):
         self.assertEqual(cpu.memory[0xd008:0xd00c],[3]*4)
 
     def test_shading_has_a_white_specular_and_two_distinct_lobes(self):
-        planes=k.masks(7)
+        planes=k.masks(5)
         self.assertTrue(any(planes[2]))
         rows=[((planes[0][y]|planes[2][y])<<8)|(planes[1][y]|planes[3][y]) for y in range(16)]
         top=next(v for v in rows if v)
         occupied=[x for x in range(16) if top&(0x8000>>x)]
         self.assertTrue(any(not top&(0x8000>>x) for x in range(min(occupied),max(occupied)+1)))
+
+    def test_burst_particles_scatter_outward(self):
+        def points(phase):
+            result = set()
+            for plane, rows in enumerate(k.masks(phase)):
+                for y, row in enumerate(rows):
+                    for x in range(8):
+                        if row & (0x80 >> x):
+                            result.add((x + (8 if plane & 1 else 0), y))
+            return result
+        early, late = points(6), points(7)
+        self.assertGreaterEqual(len(early), 10)
+        self.assertGreaterEqual(len(late), 10)
+        self.assertGreater(sum((x-7.5)**2+(y-7.5)**2 for x,y in late)/len(late),
+                           sum((x-7.5)**2+(y-7.5)**2 for x,y in early)/len(early))
+        self.assertTrue(all(any(p) for p in k.masks(7)))
 
     def test_late_raster_commits_and_original_music_nmi_during_heart(self):
         from test_ribbon_buffers import RibbonBufferTests

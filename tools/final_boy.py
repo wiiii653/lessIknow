@@ -77,6 +77,7 @@ def fade_level(tick):
 
 
 def helper(copy_address):
+    import final_orbits
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     c.emit(0xa9,0);a(0x8d,0x83e5)
@@ -84,7 +85,7 @@ def helper(copy_address):
     c.label('bitmap_changed');c.emit(0xa9,0x7e);a(0x8d,0x83fa)
     c.emit(0xa9,FRAME_KEY);a(0x8d,0x83ed)
     a(0x8d,0x0dfe);a(0x8d,0x0dff)
-    c.emit(0xa9,0);a(0x8d,OUTRO_FLAG);a(0x8d,0xd01d)
+    c.emit(0xa9,0);a(0x8d,OUTRO_FLAG);a(0x8d,0xd01d);a(0x8d,final_orbits.VALID)
     c.emit(0xa9,0x90);a(0x8d,0x83fe)
     a(0x20,copy_address)
     cached_display_list(c,7)
@@ -101,7 +102,7 @@ def helper(copy_address):
     c.label('next_line');c.emit(0xc8,0xc0,192);c.branch(0xd0,'rows')
     c.label('swap')
     c.label('prepare')
-    a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x29,15);a(0x8d,0x83ff)
+    a(0x20,final_orbits.ENTRY)
     # Double-buffer every glyph; keep the previous orbit visible until publication.
     a(0xad,0x83e8);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e8)
     for i,high in enumerate((9,10,10,11,11)):
@@ -114,7 +115,7 @@ def helper(copy_address):
         c.label(f'clear{i}');a(0x9d,addr)
     c.emit(0xca);c.branch(0x10,'clear')
     for plane in range(4):
-        a(0xae,0x83ff);c.jump(0xbd,f'star_y{plane}');c.emit(0x38,0xe9,2,0xa8)
+        a(0xad,final_orbits.VALUES_Y+plane);c.emit(0x38,0xe9,2,0xa8)
         a(0xad,0x83e3);c.emit(0x29,1,0xaa)
         c.jump(0xbd,f'select_lo{plane}');c.jump(0x8d,f'shape{plane}_lo')
         c.jump(0xbd,f'select_hi{plane}');c.jump(0x8d,f'shape{plane}_hi')
@@ -137,7 +138,8 @@ def helper(copy_address):
     c.emit(0xa9,0);a(0x8d,0xd402);a(0xad,0x83e6);a(0x8d,0xd403);c.emit(0x49,4);a(0x8d,0x83e6)
     c.label('held');a(0xad,0x83e8);c.emit(0x09,8);a(0x8d,0xd407)
     for plane in range(4):
-        a(0xae,0x83ff);c.jump(0xbd,f'star_x{plane}');a(0x8d,0xd000+plane)
+        a(0xad,final_orbits.VALUES_X+plane);a(0x8d,0xd000+plane)
+        a(0xae,0x83ff)
         c.jump(0xbd,'star_hues'+str(plane));a(0x0d,0x83ec);a(0x8d,0xd012+plane)
         c.emit(0xa9,0);a(0x8d,0xd004+plane);a(0x8d,0xd008+plane)
     for addr,val in ((0xd01b,1),(0xd400,0x2e),(0xd01a,0),(0xd00c,0)):
@@ -153,11 +155,6 @@ def helper(copy_address):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     for i in range(5):c.labels[f'clear{i}_hi']=c.labels[f'clear{i}']+2
     for i in range(4):c.labels[f'put{i}_hi']=c.labels[f'put{i}']+2
-    c.labels['star_x0']=ORBIT_DATA
-    c.labels['star_y0']=ORBIT_DATA+16
-    for plane in range(1,4):
-        c.label(f'star_x{plane}');c.emit(*(star_position(phase,plane)[0]+48 for phase in range(16)))
-        c.label(f'star_y{plane}');c.emit(*(star_position(phase,plane)[1] for phase in range(16)))
     for plane in range(4):
         c.labels[f'shape{plane}_lo']=c.labels[f'shape{plane}']+1
         c.labels[f'shape{plane}_hi']=c.labels[f'shape{plane}']+2
@@ -172,6 +169,7 @@ def helper(copy_address):
 
 
 def install_control(bank,copy_address):
+    import final_orbits
     out=bytearray(bank);code=helper(copy_address);offset=ENTRY-0x4000
     assert out[offset:offset+len(code)]==bytes(len(code))
     out[offset:offset+len(code)]=code
@@ -193,7 +191,7 @@ def install_control(bank,copy_address):
     offset=SHAPE_DATA-0x4000
     assert out[offset:offset+len(shapes)]==bytes(len(shapes))
     out[offset:offset+len(shapes)]=shapes
-    return bytes(out)
+    return final_orbits.install(out)
 
 
 def install_bitmap(bank,index):

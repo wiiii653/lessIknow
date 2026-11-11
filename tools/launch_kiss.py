@@ -13,7 +13,7 @@ ENTRY, LIMIT = 0x7c00, 0x8000
 TAIL_INDEX = 2  # ribbon compositions 12–17, original player bank table 10
 START = tick_at_beat(40*8+122,2)
 PHASE, DOUBLE = 0x0ddb, 0x0ddc
-COLORS = (0x4c,0x4a,0x0e,0x66)
+COLORS = (0x4e,0x2e,0x0e,0x9e)
 MOUTH = (82,67)
 
 
@@ -62,7 +62,20 @@ def face(canvas,frame):
 
 
 def masks(phase):
-    """Pink front, white left-lobe glint and an extruded violet right rim."""
+    """Shaded heart followed by two expanding, multicolour particle bursts."""
+    if phase >= 6:
+        planes = [bytearray(16) for _ in range(4)]
+        # Each particle travels radially away from the centre between phases.
+        rays = ((-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1),
+                (-2,-1),(2,-1),(-2,1),(2,1))
+        for i,(dx,dy) in enumerate(rays):
+            distance = 2 if phase == 6 else 3
+            x = max(0,min(15,round(7.5 + dx * distance)))
+            y = max(0,min(15,round(7.5 + dy * distance)))
+            # Players 0/2 occupy the left half; 1/3 the right half.
+            plane = (i % 2) * 2 + (x >= 8)
+            planes[plane][y] |= 0x80 >> (x % 8)
+        return tuple(bytes(p) for p in planes)
     _,_,size,width,height=geometry(phase)
     scale=1 if size==0 else 2
     yaw=math.sin((phase-2)*.52)*.18

@@ -15,7 +15,7 @@ class MosaicTests(unittest.TestCase):
     def test_bananas_stay_yellow_and_tunnel_highlights_cycle_hue(self):
         cpu = sequence.execute(TREVOR_START)
         self.assertEqual(cpu.memory[0xd018], 0x1e)
-        cpu = sequence.execute(38892, cpu)
+        cpu = sequence.execute(38892-4000, cpu)
         frame = cpu.memory[0x83ed] & 15
         expected_hue = palette_pairs()[frame][0]
         self.assertEqual(cpu.memory[0xd018], (expected_hue << 4) | 14)

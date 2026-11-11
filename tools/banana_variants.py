@@ -11,8 +11,10 @@ KEY,CACHE=0x0ddd,0x0dde
 FRAMES=32
 
 def variant_at(tick):
-    if tick_at_bar(88)<=tick<tick_at_bar(96):return 0
-    return (tick>>11)&1
+    from post_trevor_director import MONTAGE_START, SHIFT, END
+    clock=tick+SHIFT if MONTAGE_START<=tick<END else tick
+    if tick_at_bar(88)<=clock<tick_at_bar(96):return 0
+    return (clock>>11)&1
 
 @lru_cache(maxsize=1)
 def peeled_tile():
@@ -67,11 +69,8 @@ def selector_inserts():
     assert post_trevor_director.ENTRY+len(post_trevor_director.helper())<=SELECT_ENTRY
     c=Code(VARIANT_ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
-    a(0xad,0x83e3);c.emit(0xc9,0x80);c.branch(0x90,'global')
-    c.emit(0xc9,0x8c);c.branch(0x90,'bunch');c.branch(0xd0,'global')
-    a(0xad,0x83e2);c.emit(0xc9,0x3c);c.branch(0x90,'bunch')
-    c.label('global');a(0xad,0x83e3);c.emit(0x29,8,0x0a,0x0a,0x0a,0x09,0x80,0x60)
-    c.label('bunch');c.emit(0xa9,0x80,0x60)
+    a(0xad,0xd301);c.emit(0x48);a(0xad,0x24b5);a(0x8d,0xd301)
+    a(0x20,0x7400);c.emit(0xaa,0x68);a(0x8d,0xd301);c.emit(0x8a,0x60)
     variant=bytes(c.finish());assert VARIANT_ENTRY+len(variant)<=0xec20
     c=Code(SELECT_ENTRY)
     a(0xad,0x83ed);c.emit(0xc9,32);c.branch(0x90,'banana');c.emit(0x4a,0x4a,0xaa,0x60)

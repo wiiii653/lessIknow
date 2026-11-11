@@ -141,7 +141,7 @@ class TunnelBallTests(unittest.TestCase):
     def test_reused_cycle_memory_and_original_tunnel_covering_are_separate(self):
         cpu=None
         for i in range(32):
-            cpu=sequence.execute(38912+i*16,cpu);m=cpu.memory
+            cpu=sequence.execute(34912+i*16,cpu);m=cpu.memory
             # Extra loader bank 2 is actual RuntimeMemory bank 16.
             from tunnel_ball import rebound_helper,helper
             from ribbon_inbetweens import BANK_ENTRY,selector

@@ -45,8 +45,11 @@ PMG ani rejestrów publikacji obrazu. Cache i font terminala mają rozłączne
 zakresy; typewriter $EB44 i director $EC20 pozostają.
 
 [ODCZYT] Atari800 PAL/1088XE, Altirra OS: breakpoint zakończenia workera
-wypada w ticku **8609**. Pierwszy wybór rotatora/tunelu w ticku **11976**
-odczytuje FLAG=2. Zapas do początku tego odcinka to około **17 sekund**,
+wypada w ticku **8609**. Granica okna Act 2B jest w ticku **11968**
+(bar 32, próg sceny); pierwszy wybór rotatora/tunelu zaobserwowany w callbacku
+Atari800 następuje w ticku **11976** i odczytuje FLAG=2. To dwa różne punkty:
+próg osi czasu i pierwszy zmierzony wybór renderera. Zapas do początku okna
+to około **17 sekund**,
 a do pierwszych bananów 12288 około 18 sekund. To odczyt z emulatora
 modelującego ANTIC, nie wniosek z samego budżetu py65.
 

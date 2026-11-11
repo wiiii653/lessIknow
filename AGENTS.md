@@ -836,8 +836,9 @@ archive banks are expanded in reverse frame order; frames overlapping
 compressed input use bank 48 as temporary raw storage. Peeled frames and
 helper templates are copied before any corresponding archive is overwritten.
 Every job preserves PORTB and avoids framebuffer/PMG/display registers.
-Atari800 PAL/1088XE reaches READY at tick 8609; first mosaic selection at
-11976 sees READY=2. Native phase trace shows all 32 phases, 63 consecutive
+Atari800 PAL/1088XE reaches READY at tick 8609. Act 2B's scene threshold is
+tick 11968 (bar 32); the first measured mosaic selection callback is tick
+11976 and sees READY=2. Native phase trace shows all 32 phases, 63 consecutive
 bunch transitions and 38 peeled transitions without skips. Max warm CPU:
 bunch 47323, peeled 47402, tunnel 47245 cycles. Graphical assets/timeline
 remain v243. `docs/V244_SUROWE_BANANY_I_BANKI_PO_TYTULE.md` describes the

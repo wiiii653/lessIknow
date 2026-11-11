@@ -7,12 +7,12 @@ class PostTrevorDirectorTests(unittest.TestCase):
     def test_music_aligned_cuts_and_fixed_outro_entry(self):
         from music_timing import tick_at_bar
         cuts=d.cuts()
-        self.assertEqual(cuts[0][0],41984)
-        self.assertEqual(d.END,51850)
-        self.assertEqual(len(cuts),60)
+        self.assertEqual(cuts[0][0],37984)
+        self.assertEqual(d.END,49850)
+        self.assertEqual(len(cuts),72)
         self.assertTrue(all(tick<d.END for tick,mode in cuts))
         self.assertEqual(cuts,tuple(sorted(cuts)))
-        allowed={tick_at_bar(n,4) for n in range(112*4,144*4)}|{41984}
+        allowed={tick_at_bar(n,4)-4000 for n in range(112*4,144*4)}|{37984}
         self.assertTrue(all(t in allowed for t,m in cuts))
         self.assertLessEqual(len(d.helper()),d.SIZE)
 
@@ -39,6 +39,7 @@ class PostTrevorDirectorTests(unittest.TestCase):
 
     def test_banana_windows_and_earlier_clock_are_preserved(self):
         for tick in range(11967,d.END,17):
-            original=((tick>>4)&31)|((tick>>5)&32)
+            clock=tick+(4000 if tick>=d.MONTAGE_START else 0)
+            original=((clock>>4)&31)|((clock>>5)&32)
             if tick<d.START or original<32:
                 self.assertEqual(d.frame_at(tick),original,tick)

@@ -27,17 +27,15 @@ Demo: „The Less I Know The Better" na Silly Venture. Ostatni commit
 2. **Test na fizycznym Atari 1088XE** — dotąd tylko py65 (bez modelu
    DMA ANTIC) i Atari800 (porównanie audio z v035 i próby rastrowe).
    Trzeba potwierdzić FPS i stabilność rastrową na sprzęcie przed SV.
-3. **Niezakomitowane dokumenty sesyjne** (untracked):
-   `docs/TIMELINE_MAP.md`, `docs/BANK_MEMORY_FREE_V244.md`,
-   `docs/STATUS_V244.md` (ten raport) — do zacommitowania.
 
 ## Pamięć
 
-- 64 banki rozszerzenia wszystkie zaalokowane. Wolne w obrazie
-  załadowania: ~118 900 B, ale po tytule (tick 3072+) banki 40–47 są
-  nadpisywane surowymi klatkami bananów obranych, bank 48 pełni rolę
-  stagingu, a 3–10 przechodzi na surowe — **realnie dostępne
-  ok. 63 300 B ≈ 61,9 KiB** (raport: `docs/BANK_MEMORY_FREE_V244.md`).
+- 64 banki rozszerzenia wszystkie zaalokowane. Wolne zakresy w obrazie
+  startowym: **119 226 B ≈ 116,4 KiB**; po odjęciu całych banków 40–48
+  (overlay tytułu/stagingu) i 3–10 (surowe banany) konserwatywna pula poza
+  tymi overlayami wynosi **61 497 B ≈ 60,1 KiB**. To rozproszone luki,
+  nie jeden ciągły obszar; szczegóły i ograniczenia:
+  `docs/BANK_MEMORY_FREE_V244.md`.
 - Kod główny: `$1400–$1DFC` (2557 B), wolne **3 B przed pulą wierszy**
   `$1E00` — każdy dalszy element unbanked wymaga refactoru.
 - Szczelina: wg notatek przed `$4B80` w banku 1 (hero) ma być wolny
@@ -49,11 +47,10 @@ Demo: „The Less I Know The Better" na Silly Venture. Ostatni commit
 
 ## Plan przed SV
 
-1. Zacommitować dokumenty sesyjne; odnotować v244 w AGENTS.md.
-2. Podjąć decyzję 5C/5D (zrobić albo formalnie odpuścić).
-3. Uruchomić demo na fizycznym 1088XE w konfiguracji SV (PAL, 1 MB,
+1. Podjąć decyzję 5C/5D (zrobić albo formalnie odpuścić).
+2. Uruchomić demo na fizycznym 1088XE w konfiguracji SV (PAL, 1 MB,
    stereo POKEY) i odsłuchać cały przebieg.
-4. (Opcja) Pomiar realnych FPS na sprzęcie — dotąd mierzalne tylko
+3. (Opcja) Pomiar realnych FPS na sprzęcie — dotąd mierzalne tylko
    cykle CPU na py65.
 
 ## Pliki pomocnicze z kontroli dnia

@@ -13,13 +13,13 @@ class BananaVariantTests(unittest.TestCase):
 
     def test_alternation_is_per_appearance_and_act5_never_switches_mid_turn(self):
         cpu=None
-        for index,tick in enumerate((12288,14336,32909,43008,45056,47104,49152,51200)):
+        for index,tick in enumerate((12288,14336,28909,39008,41056,43104,45152,47200)):
             variant=index&1;self.assertEqual(variants.variant_at(tick),variant)
             cpu=seq.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[variants.KEY],0x80|(variant<<6))
-            self.assertEqual(m[0x83ed],(tick>>4)&31)
+            self.assertEqual(m[0x83ed],((tick+(4000 if tick>=28909 else 0))>>4)&31)
             self.assertEqual(tuple(m[a] for a in (0xd016,0xd018)),(0x1a,0x0e) if variant else (0x18,0x1e))
-        for tick in range(32909,35900):self.assertEqual(variants.variant_at(tick),0)
+        for tick in range(28909,31900):self.assertEqual(variants.variant_at(tick),0)
         report=variants.memory_report()
         self.assertEqual(report['banks'],8)
         self.assertEqual(report['frames_per_variant'],32)
@@ -41,12 +41,13 @@ class BananaVariantTests(unittest.TestCase):
 
     def test_same_phase_variant_seeks_and_other_renderers_do_not_share_cache_keys(self):
         cpu=None
-        for tick in (14336,3553,14336,12288,14336,14983,14336,33280,43008,45056,59000,14336):
+        for tick in (14336,3553,14336,12288,14336,14983,14336,29280,39008,41056,59000,14336):
             cpu=seq.execute(tick,cpu)
             if tick in (3553,14983,59000):continue
-            self.assertEqual(seq.SequenceTests().raster(cpu),self.expected((tick>>4)&31,variants.variant_at(tick)),tick)
+            frame=((tick+(4000 if tick>=28909 else 0))>>4)&31
+            self.assertEqual(seq.SequenceTests().raster(cpu),self.expected(frame,variants.variant_at(tick)),tick)
             seq.execute(tick+1,cpu)
-            self.assertEqual(seq.SequenceTests().raster(cpu),self.expected((tick>>4)&31,variants.variant_at(tick)),tick)
+            self.assertEqual(seq.SequenceTests().raster(cpu),self.expected(frame,variants.variant_at(tick)),tick)
 
     def test_decoder_survives_original_music_nmi_and_restores_portb(self):
         for tick in (12304,14336,14832):

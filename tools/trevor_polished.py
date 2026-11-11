@@ -13,9 +13,10 @@ EFFECT_END=136
 # 2 and 4 are the right- and left-handed punch poses respectively.
 COMBO_HALF_BEATS = (0, 3, 6, 9, 12)
 COMBO_HANDS = (2, 4, 4, 2, 4)
-HITS = tuple(32 + tick_at_beat(72*8 + block*16 + half, 2)
-             for block in range(8) for half in COMBO_HALF_BEATS)
-HANDS = COMBO_HANDS * 8
+_ALL_HITS = tuple((32 + tick_at_beat(72*8 + block*16 + half, 2), hand)
+                  for block in range(8) for half,hand in zip(COMBO_HALF_BEATS,COMBO_HANDS))
+HITS = tuple(tick for tick,hand in _ALL_HITS if tick+106 <= TREVOR_END)
+HANDS = tuple(hand for tick,hand in _ALL_HITS if tick+106 <= TREVOR_END)
 assert HITS[0] == TREVOR_HIT + 32 and HITS[-1] < TREVOR_END
 
 
@@ -313,8 +314,16 @@ def helper(bank_wrapper=0):
     # A departing splash may continue into the next hand's wind-up.
     # Before the first hit the opening wind-up sets hit_age to 255.
     a(0xad,0x83ed);c.emit(0xc9,2);c.branch(0x90,'sparks')
-    c.jump(0xad,'hit_age');c.emit(0xc9,EFFECT_END);c.branch(0xb0,'sparks')
+    c.jump(0xad,'hit_age');c.emit(0xc9,LETTER_END);c.branch(0xb0,'flight')
     c.jump(0x4c,'bang')
+    c.label('flight')
+    # Loader bank 19 owns both ball flights; the wrapper restores Trevor's bank.
+    for addr,value in ((bank_wrapper+5,0xd3),(bank_wrapper+6,0x08),(bank_wrapper+11,0),(bank_wrapper+12,0x68)):
+        c.emit(0xa9,value);a(0x8d,addr)
+    a(0x20,bank_wrapper)
+    for addr,value in ((bank_wrapper+5,0xb3),(bank_wrapper+6,0x24),(bank_wrapper+11,0),(bank_wrapper+12,0x60)):
+        c.emit(0xa9,value);a(0x8d,addr)
+    c.emit(0x60)
     c.label('sparks')
     # No unrelated ambient insects: the tunnel and Trevor carry the idle shot.
     for addr,val in ((0xd01b,1),(0xd01d,0),(0xd400,0x22)):
@@ -336,8 +345,6 @@ def helper(bank_wrapper=0):
     c.jump(0xae,'hit_index')
     c.jump(0xbd,'bang_bx');a(0x8d,0x83ec)
     c.jump(0xbd,'bang_by');a(0x8d,0x83ef)
-    c.jump(0xad,'hit_age');c.emit(0xc9,BUBBLE_END);c.branch(0x90,'bang_burst_start')
-    c.jump(0x4c,'bang_scatter')
     c.label('bang_burst_start')
     c.emit(0xa9,68,0x18);a(0x6d,0x83ef);a(0x8d,0x83eb)
     c.jump(0xad,'hit_age');c.emit(0x4a,0x4a,0x4a,0xc9,2);c.branch(0x90,'burst_phase_ready');c.emit(0xa9,2)
@@ -370,57 +377,6 @@ def helper(bank_wrapper=0):
         c.emit(0xa9,152+i*8,0x18);a(0x6d,0x83ec);c.jump(0x8d,f'impact_mx{i}')
         # Both BUM and BAM occupy three 8-clock cells in a 32-clock bubble.
         c.emit(0x18,0x69,4);c.jump(0x8d,f'impact_px{i}')
-    c.jump(0xad,'hit_age');c.emit(0xc9,LETTER_END);c.branch(0x90,'bang_word_publish')
-    c.jump(0x4c,'bang_puffs')
-    c.label('bang_word_publish')
-    c.jump(0x4c,'bang_publish')
-    c.label('bang_scatter')
-    c.emit(0xa9,1);c.jump(0x8d,'impact_prior')
-    c.jump(0xad,'hit_age');c.emit(0xc9,120,0xa9,0x55);c.branch(0x90,'missile_size_ready');c.emit(0xa9,0)
-    c.label('missile_size_ready');c.jump(0x8d,'missile_size')
-    c.jump(0xad,'hit_age');c.emit(0x38,0xe9,BUBBLE_END,0x4a);a(0x8d,0x83ea)
-    c.emit(0x4a);a(0x8d,0x83eb)
-    for i,(base,row) in enumerate(((162,51),(165,53),(171,51),(174,53))):
-        c.emit(0xa9,base,0x38 if i<2 else 0x18)
-        a(0xed if i<2 else 0x6d,0x83ea)
-        c.emit(0x18);a(0x6d,0x83ec);c.jump(0x8d,f'impact_mx{i}')
-        c.emit(0xa9,row,0x38 if i%2==0 else 0x18)
-        a(0xed if i%2==0 else 0x6d,0x83eb)
-        c.emit(0x18);a(0x6d,0x83ef);c.emit(0xa8)
-        # Several isolated bits per missile make a breaking particle train.
-        for dy,bits in enumerate((3,1,0,2,0,1)):
-            if not bits:continue
-            pmg(0xb9,0x0980+dy);c.emit(0x09,bits<<(2*i));pmg(0x99,0x0980+dy)
-    c.label('bang_puffs')
-    c.jump(0xad,'hit_index')
-    c.label('ball_mod');c.emit(0xc9,3);c.branch(0x90,'ball_mod_done');c.emit(0x38,0xe9,3);c.jump(0x4c,'ball_mod')
-    c.label('ball_mod_done');c.emit(0xc9,2);c.branch(0xd0,'normal_puffs');c.jump(0x4c,'impact_ball')
-    c.label('normal_puffs')
-    c.jump(0xad,'hit_age');c.emit(0x38,0xe9,LETTER_END,0x4a);a(0x8d,0x83ea)
-    c.emit(0x4a);a(0x8d,0x83eb)
-    c.jump(0xad,'hit_age');c.emit(0xc9,120,0xa9,1);c.branch(0x90,'puff_size_ready');c.emit(0xa9,0)
-    c.label('puff_size_ready');c.jump(0x8d,'puff_size')
-    for i,(base,row) in enumerate(((157,47),(165,55),(167,47),(175,55))):
-        c.emit(0xa9,base,0x38 if i<2 else 0x18);a(0xed if i<2 else 0x6d,0x83ea)
-        c.emit(0x18);a(0x6d,0x83ec);c.jump(0x8d,f'impact_px{i}')
-        c.emit(0xa9,row,0x38 if i%2==0 else 0x18);a(0xed if i%2==0 else 0x6d,0x83eb)
-        c.emit(0x18);a(0x6d,0x83ef);c.emit(0xa8)
-        c.jump(0xad,'hit_age');c.emit(0xc9,120,0xa2,0);c.branch(0x90,f'puff_start{i}');c.emit(0xa2,8)
-        c.label(f'puff_start{i}');c.emit(0x8a,0x18,0x69,8);a(0x8d,0x83e7)
-        c.label(f'puff_rows{i}');c.jump(0xbd,'puff_shape');pmg(0x99,0x0a00+i*128)
-        c.emit(0xe8,0xc8);a(0xec,0x83e7);c.branch(0xd0,f'puff_rows{i}')
-    c.jump(0x4c,'bang_publish')
-    c.label('impact_ball')
-    # Borrow the actual rotator ball + orbit renderer via the unbanked
-    # trampoline. Only hand/age cross banks; there are no copied ball assets.
-    c.jump(0xad,'hit_age');c.emit(0x38,0xe9,LETTER_END);a(0x8d,0x83eb)
-    c.jump(0xae,'hit_index');c.jump(0xbd,'hit_hand');a(0x8d,0x83e7)
-    for addr,value in ((bank_wrapper+5,0xb5),(bank_wrapper+6,0x24),(bank_wrapper+11,0),(bank_wrapper+12,0x40)):
-        c.emit(0xa9,value);a(0x8d,addr)
-    a(0x20,bank_wrapper)
-    for addr,value in ((bank_wrapper+5,0xb3),(bank_wrapper+6,0x24),(bank_wrapper+11,0),(bank_wrapper+12,0x60)):
-        c.emit(0xa9,value);a(0x8d,addr)
-    c.emit(0x60)
     c.label('bang_publish')
     c.label('impact_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'impact_wait');c.emit(0xc9,128);c.branch(0xb0,'impact_wait')
     a(0xad,0x83e9);c.emit(0x09,8);a(0x8d,0xd407)

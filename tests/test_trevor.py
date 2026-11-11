@@ -42,10 +42,12 @@ class TrevorTests(unittest.TestCase):
             source=art[pose] if pose<2 else tunnel_frames(0 if tick < HIT else (tick>>4)&15)[pose-2]
             expected=bytes(source[y//3*160+x] for y in range(192) for x in range(160))
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected)
-            age = tick - max((t for t in HITS if t <= tick), default=tick)
-            active=pose in (2,4) and age<120
-            self.assertEqual(cpu.memory[0xd01d],(3 if age<72 else 1) if active else 0)
-            if active:
+            prior = max((t for t in HITS if t <= tick), default=None)
+            age = tick-prior if prior is not None else None
+            incoming = tick>=HIT and any(0 < t-tick <= 32 for t in HITS)
+            active = incoming or (age is not None and age<106)
+            self.assertEqual(cpu.memory[0xd01d],3 if active else 0)
+            if age is not None and age<80:
                 base=(cpu.memory[0xd407]&0xfc)<<8
                 self.assertTrue(any(cpu.memory[base+0x180:base+0x200]))
                 self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),expected)
@@ -92,7 +94,7 @@ class TrevorTests(unittest.TestCase):
         self.assertTrue(all(140 <= gap <= 188 for gap in gaps))
         self.assertGreater(max(gaps), min(gaps) + 40)
         self.assertEqual([sequence.execute(t).memory[0x83ed] for t in HITS[:8]], list(HANDS[:8]))
-        for index in (0, 1, 2, 7, 8, 19, 20, 30, 38, 39):
+        for index in (0, 1, 2, 7, 8, len(HITS)-1):
             cpu = sequence.execute(HITS[index])
             self.assertEqual(cpu.memory[0x83ed], HANDS[index], index)
             self.assertEqual(cpu.memory[0xd01d], 3, index)
@@ -109,7 +111,7 @@ class TrevorTests(unittest.TestCase):
         for impact, punch in zip(HITS[:9], HANDS[:9]):
             cpu=sequence.execute(impact-4,cpu)
             self.assertEqual(cpu.memory[0x83ed], punch+1)
-            self.assertEqual(cpu.memory[0xd01d], 0)
+            self.assertEqual(cpu.memory[0xd01d], 3)
             source=tunnel_frames(((impact-4)>>4)&15)[punch-1]
             expected=bytes(source[y//3*160+x] for y in range(192) for x in range(160))
             self.assertEqual(sequence.SequenceTests().raster(cpu), expected)
@@ -137,7 +139,7 @@ class TrevorTests(unittest.TestCase):
             self.assertEqual(cpu.memory[0xd01d],0,tick)
         cpu=sequence.execute(HIT,cpu)
         self.assertEqual(cpu.memory[0x83ed],3)
-        self.assertEqual(cpu.memory[0xd01d],0)
+        self.assertEqual(cpu.memory[0xd01d],3)
         cpu=sequence.execute(HITS[0],cpu)
         self.assertEqual(cpu.memory[0x83ed],2)
         self.assertEqual(cpu.memory[0xd01d],3)
@@ -180,7 +182,8 @@ class TrevorTests(unittest.TestCase):
                 cpu=sequence.execute(tick,cpu)
                 pose=(HANDS[index]+1 if age<0 else HANDS[index] if age<120 or index==len(HITS)-1 else HANDS[index+1]+1)
                 self.assertEqual(cpu.memory[0x83ed],pose,(index,age))
-                expected_pm=0 if age<0 or age>=136 else 3
+                incoming_next = index+1 < len(HITS) and 0 < HITS[index+1]-tick <= 32
+                expected_pm=3 if age<0 or age<106 or incoming_next else 0
                 self.assertEqual(cpu.memory[0xd01d],expected_pm,(index,age))
                 m=cpu.memory;display=m[0xd402]|m[0xd403]<<8
                 actual=b''.join(bytes(m[(m[display+3+y*9]|m[display+4+y*9]<<8):

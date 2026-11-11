@@ -24,7 +24,7 @@ class ImpactPlacementTests(unittest.TestCase):
                 actual=tuple(v if v<128 else v-256 for v in (m[0x83ec],m[0x83ef]))
                 self.assertEqual(actual,expected,(i,age))
                 self.assertEqual(m[0xd004],152+expected[0])
-        for hand in positions:self.assertGreaterEqual(len(positions[hand]),8)
+        for hand in positions:self.assertGreaterEqual(len(positions[hand]),min(4,HANDS.count(hand)))
 
     def test_u_is_inverted_a_without_crossbar(self):
         from trevor_polished import impact_glyphs

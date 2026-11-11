@@ -1,5 +1,24 @@
 # Status planu dema — stan po v244
 
+Aktualizacja v250: każda nowa linia terminala zmienia cel płynnie
+przekształcanych orbit gwiazdek/nut. Szczegóły i pamięć:
+`V250_PLYNNE_ORBITY_TEKSTU.md`.
+
+Aktualizacja v249: do ciosów Trevora przylatuje piłka rotatora z satelitami,
+po BUM/BAM odlatuje piłka wsadu z własnymi orbitami; tory są różne dla
+każdego lotu. Szczegóły i pamięć: `V249_PILKI_I_SATELITY_TREVORA.md`.
+
+Aktualizacja v248: pełny montaż 32909–53850 przeniesiono na 28909–49850,
+skracając ujęcie Trevora i przywracając wcześniej utraconą końcówkę montażu;
+outro zaczyna się o 2000 ticków wcześniej niż w v247. Szczegóły, pamięć
+i ograniczenia w `V248_WCZESNIEJSZE_OUTRO_PELNY_ROTATOR.md`.
+
+Aktualizacja v247: w scenie Trevora każdemu zachowanemu ciosowi towarzyszy
+przylot małej piłki, pełne BUM/BAM i odlot piłki. Oryginalne pozy i ticki
+pozostają bez zmian. Szczegóły i bieżące zajęcie banku 2:
+`V247_TREVOR_PILKI_I_CIOSY.md`. Zmiana nie zamyka braków fabularnych ani
+testów na fizycznym sprzęcie opisanych niżej.
+
 Legenda: ✅ wykonane w buildzie lub potwierdzone; 🟡 częściowo wykonane / ograniczone do prototypu albo emulatora; ⬜ niezaimplementowane lub nieweryfikowane. Ticki pozostają zgodne z zatwierdzonym timeline’em.
 
 Punktem wyjścia był audyt kodu i XEX v144 z 2026-11-07
@@ -661,8 +680,10 @@ V244: oba banany odtwarzane bez RLE po przygotowaniu w tle. Banki planszy
 tytułowej 40–48 są używane ponownie po zakończeniu tytułu; liczba fizycznych
 banków nadal 64. Właściwe klatki, zoom, palety, piłka i ticki pozostają.
 [ODCZYT] Atari800 PAL/1088XE: cache gotowy w ticku 8609, przed pierwszym
-rotatorem 11968. Odczyt kolejnych faz: 63 przejścia kiści i 38 obranego,
-wszystkie o jeden krok, bez pominięcia. Rozgrzany callback: 47323/47402
+wyborem renderera w ticku 11976. Granica okna Act 2B pozostaje w ticku
+11968 (bar 32); 11976 to pierwszy zmierzony wybór rotatora/tunelu w callbacku.
+Odczyt kolejnych faz: 63 przejścia kiści i 38 obranego, wszystkie o jeden krok,
+bez pominięcia. Rozgrzany callback: 47323/47402
 cykle wobec tunelu 47245. Muzyka stereo: 10589472 identyczne bajty z v035.
 `V244_SUROWE_BANANY_I_BANKI_PO_TYTULE.md`.
 
