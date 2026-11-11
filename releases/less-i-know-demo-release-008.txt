@@ -1,0 +1,8 @@
+THE LESS I KNOW THE BETTER — RELEASE 008 / v261
+
+Target: PAL Atari XL/XE, 1 MB expanded RAM, stereo POKEY.
+SHA-256: fff207ea35990a0d4694e1e510f4c785fa43a7c06d3d2010733c2165b8a6d836
+
+Greetz now include KEY-G and FALCON. FOORMAN and the existing page/timing
+layout are preserved. This release has not been checked in an emulator or
+on physical Atari hardware.

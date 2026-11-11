@@ -1,5 +1,9 @@
 # Status planu dema — stan po v244
 
+Aktualizacja v261: do listy greetz dodano KEY-G i FALCON; FOORMAN,
+podział wierszy i czas terminala pozostają bez zmian.
+`V261_KEY_G_FALCON.md`.
+
 Aktualizacja v260: na życzenie użytkownika usunięto wszystkie cztery
 ostatnie komiksowe przebitki Trevora z rotatorów/tuneli; oczy, walka
 i finał zachowane. `V260_ROTATORY_BEZ_TREVORA.md`.

@@ -59,8 +59,8 @@ class TerminalTypingTests(unittest.TestCase):
     def test_paragraphs_get_separate_pages_without_losing_any_greeting(self):
         self.assertEqual(tuple(line for page in text.pages() for line in page),tuple(line for line in text.all_lines() if line))
         cpu=seq.execute(text.page_starts()[6]+300)
-        self.assertIn(b'VIRUS / FOORMAN / MAQ',self.row(cpu,0))
-        self.assertIn(b'ATARIONLINE.PL / PTODT',self.row(cpu,1))
+        self.assertIn(b'VIRUS / FOORMAN / MAQ / KEY-G',self.row(cpu,0))
+        self.assertIn(b'FALCON / ATARIONLINE.PL / PTODT',self.row(cpu,1))
         cpu=seq.execute(text.page_starts()[7],cpu)
         self.assertTrue(all(self.row(cpu,r)==b' '*40 for r in range(1,text.HISTORY_ROWS)))
         cpu=seq.execute(text.END-1,cpu)
