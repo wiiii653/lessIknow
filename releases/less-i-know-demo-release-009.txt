@@ -1,0 +1,12 @@
+THE LESS I KNOW THE BETTER — RELEASE 009 / v269
+
+PAL XL/XE, 1 MB extended RAM. Two builds: stereo for two POKEYs and
+mono for one POKEY. The mono build uses the first four voices of the stereo
+arrangement; it does not mix all eight voices into four.
+
+Longer reversals in the post-Trevor rotator and tunnel montage.
+Playback verified in Atari800 1088XE; physical hardware not verified.
+The reported failure to start on real 1 MB hardware remains unresolved.
+
+SHA-256 stereo: 4131a777fbb10b9dbbcd127edb98ad9edc0f04d819b627cd758b3b21f777269b
+SHA-256 mono:   784f918b5a8e753888267622dc977e251d9c236bcb05aaafcaa3193c5066f46b

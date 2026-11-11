@@ -771,3 +771,22 @@ po tej zmianie tekstu ani próby fizycznej. Katalog
 `releases/less-i-know-sv2026we-v260-candidate/` (nieśledzony) oraz
 `releases/less-i-know-sv2026we-v260-candidate.zip` są starszymi artefaktami
 v260/release 007; nie są pakietem release 008 i pozostały nietknięte.
+
+### Uruchomienie przez AVG na fizycznym Atari — 2026-11-12
+
+[ODCZYT użytkownika] Na Atari z rozszerzeniem 1088 Rambo, ładowanym przez
+AVG, obie ostatnie wersje diagnostyczne pełnego dema wystartowały:
+`releases/avg-compact-late-start-001.xex` oraz
+`releases/avg-final-segment-trace-001.xex`.
+
+[ODCZYT] Te pliki są mniejsze niż 1 MiB. Dane 64 banków wariantu
+kompaktowego odtworzono bajt w bajt względem poprzedniego obrazu; pełne
+porównanie stereo POKEY w Atari800 przeszło dla obu wariantów. Dane niskiej
+pamięci są ładowane do bufora i kopiowane w ostatnim INIT, po czym następuje
+bezpośredni skok do playera. Szczegóły: `V273_START_AVG_RAMBO.md`.
+
+[OGRANICZENIE] Potwierdzono start, nie pełny przebieg, płynność, odsłuch na
+sprzęcie ani gotowość konkursową. Wariant mono oraz wcześniejsze pliki release
+nie zostały objęte tym potwierdzeniem. Dokładna przyczyna wcześniejszej awarii
+nie została rozstrzygnięta; limit rozmiaru i kolizja loadera pozostają
+hipotezami.

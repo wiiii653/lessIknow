@@ -70,7 +70,10 @@ def pixels(frame,variant=0):
             else:
                 radius=math.hypot(xx,yy)
                 theta=math.atan2(yy,xx)
-                tunnel_phase=(frame&15)/16*math.tau
+                # The eye portrait owns IDs 60–63, so the organic tunnel
+                # uses twelve evenly spaced frames in IDs 48–59. Its phase
+                # still completes a full revolution at the same cadence.
+                tunnel_phase=((frame-48)%12)/12*math.tau if frame>=48 else (frame&15)/16*math.tau
                 if frame<48:
                     # First tunnel texture: the existing curling spiral.
                     wave=math.sin(theta*6+math.log(max(3,radius))*4-tunnel_phase)

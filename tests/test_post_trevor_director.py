@@ -5,17 +5,46 @@ import post_trevor_director as d
 from girl_eyes import frame_at as eye_frame_at
 
 class PostTrevorDirectorTests(unittest.TestCase):
-    def test_music_aligned_cuts_and_fixed_outro_entry(self):
+    def test_long_music_aligned_passes_and_fixed_outro_entry(self):
         from music_timing import tick_at_bar
         cuts=d.cuts()
-        self.assertEqual(cuts[0][0],37984)
+        self.assertEqual(cuts[0][0],tick_at_bar(108)-4000)
+        self.assertEqual(cuts[1][0],d.CYCLE_START)
         self.assertEqual(d.END,49850)
-        self.assertEqual(len(cuts),72)
+        self.assertEqual(len(cuts),17)
         self.assertTrue(all(tick<d.END for tick,mode in cuts))
         self.assertEqual(cuts,tuple(sorted(cuts)))
-        allowed={tick_at_bar(n,4)-4000 for n in range(112*4,144*4)}|{37984}
+        allowed={tick_at_bar(n,4)-4000 for n in range(112*4,144*4)}|{d.START,d.CYCLE_START}
         self.assertTrue(all(t in allowed for t,m in cuts))
+        lengths=[b[0]-a[0] for a,b in zip(cuts,(*cuts[1:],(d.END,0)))]
+        self.assertEqual(lengths[0],d.CYCLE_START-d.START)
+        self.assertGreaterEqual(min(lengths[1:]),640)
+        self.assertLessEqual(max(lengths[1:]),749)
+        self.assertEqual([mode for _,mode in cuts[1:9]],list(d.PATTERN))
+        self.assertEqual([mode for _,mode in cuts[9:]],list(d.PATTERN))
         self.assertLessEqual(len(d.helper()),d.SIZE)
+        self.assertLessEqual(d.BANK_ENTRY+len(d.bank_helper()),0x7250)
+
+    def test_long_passes_keep_phase_through_reversals_and_avoid_eye_slots(self):
+        timeline=d.timeline()
+        self.assertEqual(len(timeline),17)
+        for previous,current in zip(timeline,timeline[1:]):
+            _,old_mode,old_q,old_base=previous
+            _,mode,q,base=current
+            if (old_mode&16)!=(mode&16):
+                self.assertEqual(base,0)
+                continue
+            period=12 if mode&16 else 16
+            speed=2 if old_mode&64 else 1
+            direction=-1 if old_mode&128 else 1
+            self.assertEqual(base,(old_base+direction*speed*((q-old_q)&255))%period)
+        from girl_eyes import START as eyes_start, END as eyes_end, frame_at as eye_frame_at
+        for tick in range(d.START,d.END,16):
+            frame=eye_frame_at(tick,d.frame_at(tick))
+            if frame>=60:
+                self.assertTrue(eyes_start<=tick<eyes_end,tick)
+            else:
+                self.assertLess(frame,60,tick)
 
     def test_live_frames_at_cuts_and_ball_hole_coverage(self):
         cpu=None;seen=set()
@@ -42,5 +71,5 @@ class PostTrevorDirectorTests(unittest.TestCase):
         for tick in range(11967,d.END,17):
             clock=tick+(4000 if tick>=d.MONTAGE_START else 0)
             original=((clock>>4)&31)|((clock>>5)&32)
-            if tick<d.START or original<32:
+            if tick<d.START or (tick>=d.CYCLE_START and original<32):
                 self.assertEqual(d.frame_at(tick),original,tick)

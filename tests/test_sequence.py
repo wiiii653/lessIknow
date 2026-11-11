@@ -54,15 +54,15 @@ def bitmap_layout(memory,display):
 @unittest.skipIf(MPU is None, 'install requirements-dev.txt for 6502 scene tests')
 class SequenceTests(unittest.TestCase):
     def test_act5_motif_boundaries(self):
-        # Act 5 uses banana phases 0–31, spiral tunnel phases 32–47 and
-        # the new radial-lattice tunnel phases 48–63 after bar 108.
+        # Act 5 uses banana phases 0–31, spiral phases 32–47 and twelve
+        # organic phases 48–59; eye art owns IDs 60–63.
         cpu = None
         for old_tick, low, high in ((38892, 32, 47), (32909, 8, 8),
                                 (34403, 6, 6), (34404, 6, 6),
                                 (35899, 3, 3), (35900, 32, 47),
                                 (40387, 32, 47),
-                                (40388, 48, 63), (41884, 48, 63),
-                                (41983, 48, 63), (41984, 32, 47)):
+                                (40388, 48, 59), (41884, 48, 59),
+                                (41983, 48, 59), (41984, 32, 47)):
             cpu = execute(old_tick-4000, cpu)
             self.assertLessEqual(low, cpu.memory[0x83ed])
             self.assertLessEqual(cpu.memory[0x83ed], high)

@@ -15,10 +15,11 @@ def segments():
     def store(address,value): c.emit(0xa9,value,0x8d,address&255,address>>8)
     # Set both OS shadows and hardware. Existing bank INITs re-enable VBI,
     # which otherwise replaces hardware registers with old shadow values.
+    # CHBASE is $D409. $D018 is COLPF2, the text background colour.
     for address,value in ((0x022f,0x22),(0x0230,DLIST&255),(0x0231,DLIST>>8),
                           (0x02f4,0xe0),(0x02c5,0x0e),(0x02c6,0x00),
                           (0xd402,DLIST&255),(0xd403,DLIST>>8),
-                          (0xd409,0xe0),(0xd017,0x0e),(0xd018,0x00),
+                          (0xd409,0xe0),(0xd017,0x0e),(0xd018,0xe0),
                           (0xd400,0x22)):
         store(address,value)
     c.emit(0x60)
