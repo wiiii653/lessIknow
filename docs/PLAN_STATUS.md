@@ -1,8 +1,10 @@
-# Status planu dema — stan po v244
+# Status planu dema — stan po v261
 
-Aktualizacja v261: do listy greetz dodano KEY-G i FALCON; FOORMAN,
-podział wierszy i czas terminala pozostają bez zmian.
-`V261_KEY_G_FALCON.md`.
+Aktualizacja v261: do listy greetz dodano KEY-G i FALCON; FOORMAN, podział
+wierszy i czas terminala pozostają bez zmian. Release 008 oraz
+`build/visual-prototype-v261.xex` mają ten sam SHA-256. Pełne testy bieżącego
+builda: 199/199. Nie wykonano ponownego odtworzenia w Atari800 ani na sprzęcie.
+Szczegóły: `V261_KEY_G_FALCON.md`.
 
 Aktualizacja v260: na życzenie użytkownika usunięto wszystkie cztery
 ostatnie komiksowe przebitki Trevora z rotatorów/tuneli; oczy, walka
@@ -18,13 +20,13 @@ Aktualizacja v257: komiksowe przebitki Trevora, trzech postaci,
 konfrontacji i dużego Trevora w istniejącym montażu; oczy i finał zachowane.
 `V257_KOMIKSOWY_MONTAZ.md`.
 
-**Aktualny montaż v256:** historyczna tabela aktów poniżej zawiera dawne
-ticki i nie jest aktualną listą scen do automatycznego odtworzenia. Od v248
-montaż zajmuje 28909–49849, a jego wirtualny zegar jest przesunięty o 4000
-ticków; outro zaczyna się w 49850. Oczy dziewczyny są w 39379–40126 (v252).
-Przebitki komiksowe v257 wycofano na polecenie użytkownika w v260;
-aktualny montaż, oczy i finał przywrócono do układu v256.
-Regulamin i szkic zgłoszenia: `SV2026WE_PRZYGOTOWANIE.md`.
+**Aktualny montaż:** układ v256 przywrócono w v260 i nie zmieniono go w v261.
+Od v248 zajmuje ticki 28909–49849; wewnętrzny zegar wyboru motywów jest
+przesunięty o 4000 ticków, ale muzyka nie. Outro zaczyna się w 49850. Oczy
+dziewczyny są w 39379–40126 (v252). Przebitki komiksowe v257 wycofano w v260.
+Dokładna mapa: `AKTUALNY_MONTAZ_V256.md`. Regulamin, status zgłoszenia i
+rozróżnienie między release 008 a starszym pakietem v260:
+`SV2026WE_PRZYGOTOWANIE.md`.
 
 Aktualizacja v256: loty piłek Trevora bez zatrzymywania na pionowych
 ogranicznikach; łagodne pojawianie i znikanie. `V256_LOTY_PILEK_TREVORA.md`.
@@ -62,14 +64,17 @@ pozostają bez zmian. Szczegóły i bieżące zajęcie banku 2:
 `V247_TREVOR_PILKI_I_CIOSY.md`. Zmiana nie zamyka braków fabularnych ani
 testów na fizycznym sprzęcie opisanych niżej.
 
-Legenda: ✅ wykonane w buildzie lub potwierdzone; 🟡 częściowo wykonane / ograniczone do prototypu albo emulatora; ⬜ niezaimplementowane lub nieweryfikowane. Ticki pozostają zgodne z zatwierdzonym timeline’em.
+Legenda: ✅ wykonane w buildzie lub potwierdzone; 🟡 częściowo wykonane /
+ograniczone do prototypu albo emulatora; ⬜ niezaimplementowane lub
+nieweryfikowane. Wczesne granice zachowują zatwierdzony timeline; v248
+przesuwa wizualny montaż po Trevorze względem muzyki.
 
 Punktem wyjścia był audyt kodu i XEX v144 z 2026-11-07
-(`AUDYT_BRAKOW_V144.md`). Poniższa tabela uwzględnia późniejsze zmiany
-aż do v240. Audyt v144 jest historycznym zapisem: nie opisuje bieżącego
-wydania, pamięci ani walidacji v198. Późniejszy przegląd nie zmienił
-priorytetów. V240 na wyraźne polecenie użytkownika przesuwa wejście
-terminala i leżącego chłopca o 2000 ticków wcześniej, do 51850.
+(`AUDYT_BRAKOW_V144.md`). Tabela aktów niżej opisuje oryginalny timeline,
+a nie kompletną listę bieżących ujęć. Audyt v144 jest historyczny i nie
+opisuje obecnego wydania, pamięci ani walidacji. V240 przesunęło terminal
+do 51850; v248 później przesunęło montaż o 4000 ticków i wejście outro
+do 49850. Granice utworu i zegar muzyki pozostały bez zmian.
 
 Zmiany scenariusza zatwierdzone przez użytkownika 2026-11-07,
 **zaimplementowane w v145**:
@@ -80,7 +85,9 @@ Zmiany scenariusza zatwierdzone przez użytkownika 2026-11-07,
 - Ostatni kadr outro: ten sam chłopiec pobity na podłodze, z gwiazdkami
   krążącymi wokół głowy; potem wygaszenie do czerni. Credits/greetz są zaimplementowane w v216 w dotychczasowych oknach.
 
-Zegar muzyki pozostaje bez zmian. V151 na zlecenie użytkownika zmienia wewnętrzne zakresy aktu 3, zachowując długość wyrzutu; v240 przyspiesza początek outro o około 10 s.
+Zegar muzyki pozostaje bez zmian. V151 na zlecenie użytkownika zmienia
+wewnętrzne zakresy aktu 3, zachowując długość wyrzutu. V248 przesuwa
+wizualny montaż względem muzyki; obecne ticki opisano w mapie v256.
 
 [ODCZYT] V145: 109 testów, 106 zaliczonych, 3 pominięte (brak v126).
 Atari800 PAL/1088XE, Altirra OS, stereo POKEY: 15 572 808 identycznych
@@ -313,14 +320,13 @@ bajtów względem v035 przez cały utwór; bez próby na fizycznym Atari.
 
 | Akt / zakres z timeline’u | Status | Co mamy teraz |
 |---|---|---|
-| **Act 1 — School Days**, takty 0–24, ticki 0–8975 | 🟡 | Fasada ATARI ARENA zamiast szkoły, wejście dziewczyny z Fuji na plecach, ujęcia chłopca i dziewczyny, sala gimnastyczna oraz animowana piłka. W v170 chłopiec w pierwszym szkolnym ujęciu puszcza oko i gwiżdże; pikselowe klucze wiolinowe i nuty wychodzą od ust, pod dziewczyną warstwą tła. Brak Trevora w tle szkoły, przewidzianego w 1B; pierwotne intro świadomie zastąpiono planszami tytułowymi. |
+| **Act 1 — School Days**, takty 0–24, ticki 0–8975 | 🟡 | Fasada ATARI ARENA zamiast szkoły, wejście dziewczyny z Fuji na plecach, ujęcia chłopca i dziewczyny, sala gimnastyczna oraz animowana piłka. Chłopiec obserwuje dziewczynę i gwiżdże; nuty/klucz wiolinowy są PMG. Brak planowanego Trevora w tle wczesnego aktu; pierwotne intro zastąpiono planszami tytułowymi. |
 | **Act 2 — Crush**, takty 24–56, ticki 8975–20942 | 🟡 | W 8975–11967 boczny taniec ze szarfą: cofająca się dziewczyna, przeciwbieżny scroll sali i paralaksa podłogi. Pomponiary zachowane w osobnym projekcie. Po rotozoomerze trzy ujęcia szarf: grupa, solówka, grupa i wyrzut bohaterki. Jest 36 bazowych kompozycji (16 bocznych + 20 późniejszych) oraz 14 nowych klatek pośrednich w trzech późniejszych ujęciach; ticki akcentów i cięcia bez zmian. Podwójne bufory PMG i tęczowe iskry. Testy CPU i stereo POKEY wykonane; ocena płynności obrazu z DMA i artystyczna na docelowym sprzęcie pozostaje. |
 | **Act 3 — Basketball Hero**, takty 56–64, ticki 20942–23934 | ✅ | Po niezmienionym wyrzucie 3,75 s tunelu z piłką, potem 7,5 s kozłowania i 3,75 s wsadu we wnętrzu ATARI ARENA. Animowany chłopiec, piłka i ramię; rozbicie tablicy: pęknięcie, rozpad i odłamki PMG, obracająca się tęczowa piłka oraz błysk. Tło sali przy kozłowaniu pozostaje statyczne. |
-| **Act 4 — Trevor Awakens**, takty 64–88, ticki 23934–32909 | ✅ | Ciche wejście, zamachy i kombinacje ciosów. Tunel za Trevorem zmienia kształt z prostokąta w owal i z powrotem; postać pozostaje nieruchoma względem tła. Naprzemienne BANG/BAM, kolorowe fragmenty chmurki na czterech players, rozdzielone i kurczące się szczątki na missiles. Cykle barw PMG, podwójny bufor efektów. Zachowano moment powrotu energii w 26925 i wszystkie momenty uderzeń. |
-| **Act 5 — montaż po Trevorze**, ticki 28909–40874 | 🟡 | Bananowy rotator i dwa tunele; ruchomy montaż bez przebitek Trevora od v260. Oczy dziewczyny w 39379–40126. |
-| **Act 6 — relacje i konfrontacja**, ticki 40875–43866 | 🟡 | Od v260 przywrócony ruchomy montaż; komiksowe panele i konfrontację v257 usunięto na polecenie użytkownika. |
-| **Act 7 — kulminacja**, ticki 43867–49849 | 🟡 | Ruchomy montaż bez dodanego portretu Trevora; potem istniejący kadr pokonanego chłopca. |
-| **Act 8 — Outro**, ticki 49850–59833 | 🟡 | Stały kadr chłopca, siedmiowierszowy terminal z credits/greetz, gwiazdki i nuty, końcowy fade. Próba na fizycznym Atari pozostaje. |
+| **Act 4 — Trevor Awakens**, ticki 23934–28908 | ✅ | Ciche wejście, 13 kompletnych ciosów BUM/BAM z lotami piłek; ograniczenie do 28909 w v248 zachowuje ostatni efekt. |
+| **Act 5 — montaż po Trevorze**, ticki 28909–49849 | 🟡 | Rotator/tunele i muzycznie sterowany montaż; oczy dziewczyny 39379–40126. Cztery komiksowe przebitki v257 wycofano w v260. |
+| **Akty 6–7 — historyczne etykiety timeline’u** | 🟡 | Obecny build kontynuuje montaż rotatora/tuneli; nie ma w nim przebitek komiksowych ani nowej sceny konfrontacji. Granice z oryginalnej tabeli nie są bieżącym podziałem ujęć. |
+| **Act 8 — Outro**, ticki 49850–59833 | 🟡 | Stały kadr chłopca, siedmiowierszowy terminal, 3 strony credits i 5 stron greetz (w tym KEY-G/FALCON), gwiazdki/nuty i końcowy fade. Próba na fizycznym Atari pozostaje. |
 
 Intro TAME IMPALA / album title z plazmą i ditheringiem działa w tickach 0–2992 przed ujęciami szkoły. Kolory liter zmieniają się co uderzenie. V140 dodaje miasto i fajerwerki PMG; kolejność wejść na drugiej planszy to I KNOW → THE BETTER → THE LESS, z niezmienionym układem końcowym. W v140 maski chroniły litery i cienie także podczas przenikania; v149 usuwa tę ochronę na życzenie użytkownika, pokazując kompletne fajerwerki przed obrazem. To późniejszy dodatek, który zastępuje początkowe logo szkoły z timeline’u; dalszych granic nie przesunięto.
 
@@ -582,7 +588,8 @@ V198: 19 nasyconych kolorów GTIA cyklicznie barwi orbitujące gwiazdki i symbol
 
 ## V216 — credits i greetz
 
-Credits 53850–56842, falujący scroll greetz 56842–59085; pełny chłopiec
+W v216 credits zajmowały 53850–56842, a greetz 56842–59085; był to
+historyczny rozkład czasu, później przesunięty przez v240 i v248. Pełny chłopiec
 i PMG zachowane, od 59085 wraca stary finał. Brak nowych banków.
 Zasoby 1738 B + loader 364 B w lukach podstawowej pamięci. Prywatny DL
 `$BC00` zachowuje muzyczne DLI co 78 linii. Patrz `V216_CREDITS_GREETZ.md`.
@@ -617,8 +624,8 @@ ujęć solo/trio i dodatkowych klatek. Kadr chłopca i zegar muzyki zachowane.
 
 V231: montaż po Trevorze przeplata istniejące dwa tunele, odwraca kierunek
 i wprowadza przyspieszenia 2× w rytmie półtaktów oraz krótkich zakończeń fraz.
-Dotyczy tylko dotychczasowych okien tunelu od 41984; banany i wejście finału
-w 53850 pozostają. Bez nowych bitmap/banków; główny kod 2524 B, director
+W v231 dotyczyło okien 41984–53849; v248 przesunęło montaż i wejście finału.
+Bez nowych bitmap/banków w v231; główny kod 2524 B, director
 337 B w pamięci podstawowej. 38 testów ukierunkowanych i pełne porównanie
 stereo Atari800 zaliczone. `V231_DYNAMICZNY_TUNEL_PO_TREVORZE.md`.
 
@@ -746,3 +753,21 @@ utworu stereo w Atari800 zgodne z v035 (16 080 048 bajtów). Ekran
 [ODCZYT] V257: 203/203 testy bez pominięć; cały utwór stereo POKEY w
 Atari800 zgodny z v035 (16 377 408 bajtów). Gotowości na sprzęcie nie
 potwierdzono.
+
+V258 zmienia podpis ekranu ładowania na `AI-SLOP/OGNJEN`. V259 zastąpiło
+szachownicę Trevora pojedynczym zbliżeniem; v260 wycofało wszystkie cztery
+komiksowe przebitki i przywróciło ruchomy montaż v256. Oczy dziewczyny,
+walka, ticki i finał pozostają. Pełne `make check` v260: 199/199; Atari800
+PAL/1088XE, Altirra OS, stereo POKEY: 16 272 720 identycznych bajtów z v035.
+Testy CPU nie potwierdzają DMA/FPS ani działania na sprzęcie.
+`V260_ROTATORY_BEZ_TREVORA.md`.
+
+V261 dodaje KEY-G i FALCON do dwóch istniejących wierszy greetz, zachowując
+FOORMAN, liczbę stron i harmonogram. `build/visual-prototype-v261.xex` oraz
+`releases/less-i-know-demo-release-008.xex` są identyczne (SHA-256
+`fff207ea35990a0d4694e1e510f4c785fa43a7c06d3d2010733c2165b8a6d836`).
+Pełne `make check`: 199/199, 152,147 s. Nie powtórzono odtworzenia w Atari800
+po tej zmianie tekstu ani próby fizycznej. Katalog
+`releases/less-i-know-sv2026we-v260-candidate/` (nieśledzony) oraz
+`releases/less-i-know-sv2026we-v260-candidate.zip` są starszymi artefaktami
+v260/release 007; nie są pakietem release 008 i pozostały nietknięte.

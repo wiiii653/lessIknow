@@ -9,6 +9,12 @@ generatora (`tools/build_bitmap_sequence.py` — dispatch scen,
 `tools/post_trevor_director.py`, `tools/banana_variants.py`,
 `tools/outro_text.py`, `tools/final_boy.py`), nie ze starych tabel README.
 
+> **To historyczny snapshot, nie timeline v261.** V248 przesunęło montaż
+> po Trevorze do ticków 28909–49849 i outro do 49850; v252 dodało oczy
+> dziewczyny w 39379–40126; v260 wycofało komiksowe przebitki v257, a v261
+> zmieniło wyłącznie greetz. Aktualna mapa montażu:
+> `AKTUALNY_MONTAZ_V256.md`; pełny status: `PLAN_STATUS.md`.
+
 ## 1. Intro — plansze plazmowe
 
 | Start–koniec | SCENE | Ujęcie |
@@ -184,8 +190,8 @@ piłka leci raz przez całe ujęcie.
 
 ## Znane luki produkcji
 
-- **5C „Trevor Mosaic”** i **5D „Eyes”** — nigdy nie zaimplementowane; ten
-  odcinek timeline pokazuje ciągły tunel organiczny, przytrzymany do
-  wejścia dyrektora (V194 wyrównał cykl po-Act-5 do globalnej fazy tunelu).
-- Planowane akty 6–7 zostały zastąpione dyrektorem post-Trevor,
-  terminalem i finałem (V216/V231/V240).
+- W tym snapshotcie 5C „Trevor Mosaic” i 5D „Eyes” nie były jeszcze
+  zaimplementowane. V252 później dodało czterofazowe oczy dziewczyny
+  w 39379–40126. Pozostałe późniejsze cięcia opisuje aktualna mapa montażu.
+- Planowane akty 6–7 zostały zastąpione dyrektorem post-Trevor, terminalem
+  i finałem; v257 dodało cztery statyczne przebitki, wycofane w v260.

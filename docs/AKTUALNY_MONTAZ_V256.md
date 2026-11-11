@@ -1,9 +1,9 @@
-# V256 — mapa montażu do aktualizacji historii
+# V256 — mapa montażu przywróconego w v260
 
-[ODCZYT] Faktyczne granice ze źródeł v256; liczby są tickami playera.
-Opis starych aktów niżej to odniesienie historyczne, a nie decyzja, że mają
-zostać przywrócone. Zegar muzyki jest rzeczywisty; tylko wybór montażu
-używa przesunięcia o 4000 ticków (v248).
+[ODCZYT] Faktyczne granice ze źródeł v256. V260 wycofało cztery komiksowe
+przebitki v257 i przywróciło ten ruchomy montaż; v261 zmienia wyłącznie tekst
+greetz i nie rusza tych scen. Liczby są tickami playera. Zegar muzyki jest
+rzeczywisty; tylko wybór montażu używa przesunięcia o 4000 ticków (v248).
 
 | Rzeczywiste ticki | Aktualne ujęcie / historyczne odniesienie |
 |---|---|

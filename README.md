@@ -12,12 +12,28 @@ atari800 -1088xe -pal -nobasic -run build/visual-prototype-dev.xex
 Install `requirements-dev.txt` in a virtual environment and run
 `make check PYTHON=/path/to/venv/bin/python` for the required 6502 tests.
 Numbered releases remain preserved; the current visual release is
-`build/visual-prototype-v244.xex` (prepares both dense banana motifs as raw frames in retired title banks, matching tunnel playback cost).
-See `docs/V244_SUROWE_BANANY_I_BANKI_PO_TYTULE.md`.
+`build/visual-prototype-v261.xex`; the matching numbered XEX is
+`releases/less-i-know-demo-release-008.xex`. They are byte-identical.
+V261 adds KEY-G and FALCON to the existing greetz without changing timing.
+See `docs/V261_KEY_G_FALCON.md` and `docs/PLAN_STATUS.md`.
+The current post-Trevor montage is the v256 layout restored in v260; its map
+is `docs/AKTUALNY_MONTAZ_V256.md`. V260 withdrew the four comic cutaways from
+v257. See `docs/V260_ROTATORY_BEZ_TREVORA.md`, `docs/V259_TREVOR_BEZ_SZACHOWNICY.md`,
+`docs/V258_NAPIS_AI_SLOP_OGNJEN.md`, and `docs/V257_KOMIKSOWY_MONTAZ.md` for
+the superseded experiment and recent text changes.
+See `docs/V256_LOTY_PILEK_TREVORA.md`, `docs/V255_WYRAZNE_ORBITY_FINALU.md`,
+`docs/V252_OCZY_DZIEWCZYNY.md`, `docs/V251_WIDOCZNE_ZMIANY_ORBITY.md`,
+`docs/V250_PLYNNE_ORBITY_TEKSTU.md`, `docs/V249_PILKI_I_SATELITY_TREVORA.md`,
+`docs/V248_WCZESNIEJSZE_OUTRO_PELNY_ROTATOR.md`, `docs/V247_TREVOR_PILKI_I_CIOSY.md`,
+and `docs/V246_SERCE_CZASTECZKI.md`.
+The Silly Venture preparation notes distinguish release 008 from the older
+v260 candidate bundle: `docs/SV2026WE_PRZYGOTOWANIE.md`.
+See `docs/V244_SUROWE_BANANY_I_BANKI_PO_TYTULE.md` for the banana-cache
+preparation and `docs/V240_WCZESNIEJSZY_TERMINAL_I_PLANSZE.md` for the original
+terminal page schedule.
 See `docs/V243_GESTE_BANANY_SZYBSZY_DEKODER.md` and `build/banana-v243-variants.png`.
 See `docs/V242_STALY_KADR_BEZ_RESETOW.md`.
 See `docs/V241_SZYBKIE_BANANY_BEZ_RLE.md` and `build/banana-v241-variants.png`.
-See `docs/V240_WCZESNIEJSZY_TERMINAL_I_PLANSZE.md` and `build/terminal-v240.gif`.
 See `docs/V239_KISC_I_OBRANY_BANAN.md` and `build/banana-v239-variants.png`.
 See `docs/V236_PELNY_OBROT_BANANOW.md` and `build/bananas-v236.gif`.
 See `docs/V235_LLM_AI_W_CREDITS.md`.
@@ -47,9 +63,9 @@ See `docs/V149_ZURAW_I_PIERWSZY_PLAN.md` and `build/v149-intro.gif` for the open
 See `docs/V148_DYNAMICZNY_WYRZUT.md` for the restored dance and fast action.
 See `docs/V146_WYRZUT_FAJERWERKI.md` for the quiet background and launch bursts.
 See `docs/V145_WYRZUT_TABLICA_FINAL.md` for the new scenes, source images,
-prompts and validation. V166 adds compressed inbetweens; v173 refines four
-solo-dance phases in decoder-equipped banks. Confirmed free bank gaps total
-27,323 B.
+prompts and validation. V166 adds 14 compressed inbetweens; v172/v173 add and
+refine four solo-dance quarter phases. The old 27,323 B free-gap report is a
+v178 snapshot and is not a current allocation figure.
 See `docs/V144_DUZY_ZURAW.md` for the large crane, compact upper lettering and
 the historical PMG protection, superseded by v149 foreground bursts.
 See `docs/V143_PRZEJSCIE_Z_SZARFA.md` for the moving actor.
@@ -81,36 +97,28 @@ CPU measurements and validation. To test an archived build, set
 | 20942–21689 | 105–108.75 s | Short spiral-tunnel cutaway with the neon ball, after the unchanged throw |
 | 21690–23185 | 108.75–116.25 s | Low-angle dribble in ATARI ARENA, animated arm and PMG ball |
 | 23186–23933 | 116.25–120 s | Fast dunk breaks the backboard: cracks, split panel, glass fragments and missile debris; spinning rainbow ball and light flash |
-| 23934–26924 | 120–135 s | Two illustrated Trevor entrance poses composited over the same dark gym |
-| 26925–32908 | 135–165 s | Neon tunnel, punch combinations, alternating BANG/BAM, cycling PMG cloud fragments and missile debris |
-| 32909–35899 | 165–180 s | Continuous 32-frame banana rotator, full 360-degree cycles |
-| 35900–40387 | 180–202.5 s | Spiral tunnel |
-| 40388–41883 | 202.5–210 s | Organic tunnel texture |
-| 41884–41983 | 210–210.5 s | Organic tunnel tail; prevents a partial banana phase from flashing |
-| 41984–51849 | 210.5–260 s | Rotator/tunnel cycle, ending 10 seconds earlier for the terminal |
-| 51850–54849 | 260–275 s | Three terminal credits pages above the fixed lying boy; fast typing, then reading pauses |
-| 54850–59084 | 275–296.25 s | Five greetz paragraph pages, with a blinking underscore cursor |
-| 59085–59832 | 296.25–300 s | Defeated boy, four orbiting PMG stars, fade to black |
-| 59833 onward | 300 s onward | Black picture; original music DLI layout retained |
+| 23934–28908 | 2:00–2:25 | Trevor fight, ending after 13 complete BUM/BAM hits and ball flights |
+| 28909–31899 | 2:25–2:40 | 32-frame banana rotator |
+| 31900–36387 | 2:40–3:02 | Spiral tunnel |
+| 36388–37983 | 3:02–3:10 | Organic tunnel |
+| 37984–39378 | 3:10–3:17 | Musically directed rotator/tunnel montage |
+| 39379–40126 | 3:17–3:21 | Girl's four-phase eye close-up |
+| 40127–49849 | 3:21–4:10 | Moving rotator/tunnel montage; v257 comic cutaways are withdrawn |
+| 49850–52849 | 4:10–4:25 | Three credits pages above the fixed lying boy |
+| 52850–59084 | 4:25–4:56 | Five greetz pages, with a blinking underscore cursor |
+| 59085–59832 | 4:56–5:00 | Defeated boy, four orbiting PMG stars, fade to black |
+| 59833 onward | 5:00 onward | Black picture; original music DLI layout retained |
 
 The opening cards emerge from dark as full-screen GTIA 11 plasma with ordered dithering between hues. Each word emerges through an ordered raster and dissolves unevenly at the end. The artist lettering changes into the title while the same plasma continues behind it. Sixteen phases, cumulative text masks and dissolve masks occupy nine additional expansion banks; the current demo uses all 64 banks available on the tested 1 MB configuration. Compact lettering occupies the upper half; a 36×29 pixel Gdańsk Żuraw occupies the lower half, with cyan brick towers, warm tiled roofs and dark projecting timberwork. Complete PMG fireworks pass in front of the text and crane.
-Artist and title each last 1496 ticks. The ATARI ARENA exterior lasts 15 seconds, followed by 15 seconds of gym practice;
-its four depth placements (position and decreasing scale) are staged in
-`tools/school_story.py`. She stays left of the portrait and approaches the
-school steps. Her jacket
-says NORTH in a hand-set bitmap font that survives the Atari conversion.
-The first girl view is enlarged to 96×128 in the 160×64 school canvas,
-so the lower edge crops her at the waist. NORTH uses a compact 3×4 font
-entirely within the original teal jacket panel. The following views shrink
-to show her walking away.
-The boy starts facing forward and turns to watch her walk toward the school.
-At tick 5984, the camera cuts inside for three illustrated shots, matching the
-school exterior palette and portrait style. Cuts occur at 5984, 6981 and 7978;
-dance starts at tick 8975. Three 160×64 images share one 8 KiB bank slot;
-each source row displays three times. These are held cinematic shots, with
-a rainbow PMG ball and colored missile spray during the second shot. The source contact sheet is
-`assets/art/source/act1_practice_storyboard_v011.png`.
-The side-profile shot uses eight new illustrated poses and sixteen gym phases.
+Artist and title each last 1496 ticks. The ATARI ARENA exterior runs from
+2992–5983; the girl appears at four scales with a Fuji on her jacket, and the
+boy's gaze/whistle reaction follows her pass. `tools/school_story.py` stages
+the poses. From tick 5984 the camera cuts inside for three illustrated gym
+shots, with cuts at 5984, 6981 and 7978; dance starts at 8975. A rainbow PMG
+ball and missile spray animate the second shot. Source storyboard:
+`assets/art/source/act1_practice_storyboard_v011.png`. This is the current
+ATARI ARENA setting, not the former school/NORTH description in older notes.
+The side-profile shot uses eight illustrated poses and sixteen gym phases.
 The girl faces left and steps backwards from x=40 to x=128; windows
 and wall bars move left, with the floor moving at half speed. Four players
 draw rainbow ribbons and missiles add sparks. The later three shots gain four
@@ -123,43 +131,39 @@ recovery compared with v141 in v145. V146 replaces overhead ribbons with
 fireworks and removes the court grid. V148 restores dance before the rapid
 two-angle throw and adds air streaks. V149 refines the opening fireworks;
 V150 adds the new 16-phase sphere; V151 adds the arena and cutaway.
-All 64 expansion banks are allocated; the audited gaps inside them total
-31,623 bytes, with no whole free bank. Historical net-recovery figures above
-measure differences against older releases, not the current free-space map.
-See [the v169 release note](docs/V169_ZMIANA_TEKSTURY_TUNELU.md),
-[the v168 memory map](docs/MAPA_PAMIECI_V168.md), and `AGENTS.md`.
+All 64 expansion banks are allocated; historical free-gap totals above do not
+describe v261. V244 reuses title banks 40–48 for banana playback after the
+title, and later releases add further banked scene data. Do not infer current
+free space from old net-recovery figures; use the latest build metadata and
+the relevant release notes. See `docs/V244_SUROWE_BANANY_I_BANKI_PO_TYTULE.md`,
+`docs/V247_TREVOR_PILKI_I_CIOSY.md`, `docs/V249_PILKI_I_SATELITY_TREVORA.md`,
+`docs/V252_OCZY_DZIEWCZYNY.md`, and `docs/V256_LOTY_PILEK_TREVORA.md`.
 The original pompom scene survives as a self-contained
 project in `projects/pompom-dance`, with exact reference frames and a playable
 `build/pompom-dance-v001.xex` inside that project.
-The builder refuses to replace an existing XEX. For the next revision use
-`python3 tools/build_bitmap_sequence.py --output build/visual-prototype-v028.xex`;
-each new XEX gets a matching `.json` metadata file.
-Scene timing
-and 6502 code are generated by `tools/build_bitmap_sequence.py`.
+`make` rebuilds the replaceable `visual-prototype-dev` pair. Preserve numbered
+XEX releases and their matching JSON metadata; the v261 build metadata is
+`build/visual-prototype-v261.json`. Scene timing and 6502 code are generated by
+`tools/build_bitmap_sequence.py`.
 
 ## Continuous raster and memory
 
-The two opening cards use ANTIC F with GTIA 11: up to 16 hues at a shared,
-pulsing luminance. Subsequent scenes use ANTIC E. There are no blank DLI bands
-inside the picture. Music DLI positions remain at lines 0, 78, 156 and 234.
-A foreground routine prepares the inactive display list and swaps during
-vertical blank. Practice and ribbon footage keep content/layout keys for the
-unbanked framebuffers. Practice loads a 7936-byte atlas; ribbon footage copies
-2560 bytes when its composition changes and leaves the bitmap untouched on
-held poses. The ribbons and sparks continue moving. Practice shares its atlas
-across all three cuts. ANTIC keeps reading the previous buffer;
-music NMIs remain enabled. A wrapper selects the decoder's current bank on NMI
-entry and restores the interrupted foreground bank before returning.
+The two opening cards use ANTIC F with GTIA 11. Subsequent scenes use ANTIC E.
+The original four music updates per PAL frame remain at raster lines 0, 78,
+156 and 234. Display lists and PMG effects use inactive buffers and bounded
+publication; the NMI wrapper restores the interrupted foreground bank.
+Ribbon footage keeps its composition cache while PMG ribbons and sparks move.
+The post-title banana worker prepares raw frames during ticks 3072–11775 by
+reusing retired title assets; this is a forward-playback lifetime overlay, not
+a warm-start guarantee for arbitrary late seeks. See
+`docs/V244_SUROWE_BANANY_I_BANKI_PO_TYTULE.md`.
 
-Static artwork uses shared scanlines packed into unbanked RAM. Row tables
-occupy 3,264 bytes. Practice uses two framebuffer pages with a 16-byte gap at
-the 4 KiB DMA boundary. Ribbon footage fits below that boundary and repeats
-each row three times. Players draw ribbons with raster rainbow bands;
-missiles draw sparks. PMG preparation uses the inactive buffer, followed by
-publication in a bounded early blanking window.
-
-See `docs/ENGINE_PROFILE_V013.md` for measured callback costs and validation.
-The full-track stereo POKEY recording matches the original player byte for byte.
+Current v261 metadata reports 2,560 bytes of main code (`$1400–$1DFF`), 298
+unique shared rows (11,494 bytes), runtime helpers through `$0F3F`, and the
+static row allocator beginning at `$1E00`. The exact generated row addresses
+are in `build/visual-prototype-v261.json`. All 64 expansion banks are allocated;
+older memory maps and free-gap totals are historical, not allocation authority.
+For later bank overlays see the v247–v260 notes and `AGENTS.md`.
 
 For the additional school frames, the executable uses RAM under OS ROM. The
 asset INIT in `tools/os_ram.py` temporarily disables ROM, copies data into
@@ -176,30 +180,30 @@ The original screen countdown digits were relocated to
 `$83F0–$83F4`; its instruction timing is preserved. The old meter UI and font
 initialization are disabled, freeing `$3300–$3BFF` for static artwork. `$D000–$D7FF` remains hardware.
 
-Runtime layout:
+Runtime layout (current high-level map):
 
-- `$0C00–$0EFF`: compact bitmap runtime helper and masked side-dancer compositor.
-- `$13E0`: OS-off entry; `$1400–$1DD2`: scene callback, NMI wrapper and tables; 45 B remain before `$1E00`.
-- `$1E00`: start of the low shared-row pool; exact row addresses are in the JSON.
-- `$0980–$0BFF`, `$8980–$8BFF`: alternating PMG buffers; do not clear their prefixes.
-- `$9000–$AEFF`, `$B000–$CEFF`: alternating unbanked bitmap buffers.
-- `$AF00`: ordinary PMG effects helper; `$CF00`: legacy practice copy helper.
-- `$FEF0–$FF92`: intro display-list mode helper in RAM under OS ROM.
-- `$8000`, `$8400`: double-buffered display lists, each within one 1 KiB page.
-- `$8300–$833F`: row-table descriptors; `$83E0–$83FF`: scene state.
-- `$D800–$E4BF`: compact scanline-address tables (3,264 bytes).
-- `$E4C0–$EBBF`: reserved intro plasma code and data; `$EBC0–$FEEF`: remaining bitmap rows; `$FFFA–$FFFF`: hardware vectors.
+- `$0C00–$0F3F`: runtime helpers; `$1400–$1DFF`: main scene callback and
+  tables; `$1E00`: start of the shared-row allocator.
+- `$0980–$0BFF` and `$8980–$8BFF`: alternating PMG buffers; clear only the
+  owned spans, not their PMBASE prefixes.
+- `$9000` and `$B000`: unbanked bitmap buffers; `$8000` and `$8400`:
+  double-buffered display lists, each within one 1 KiB page.
+- OS-RAM loader and intro assets have lifetime-dependent ownership; the outro
+  reuses the retired framebuffer. Consult the current release notes before
+  placing data in any formerly unused region.
 
-Each 40-byte bitmap row stays within a 4 KiB DMA page. During dance, the CPU reads video banks through `$4000–$7FFF`; the NMI wrapper
-restores bank ownership around every music update. ANTIC always reads unbanked RAM. The older standalone kaleidoscope can
-still be built with `make build/kaleidoscope.xex`.
+Each 40-byte bitmap row stays within a 4 KiB DMA page. During dance, the CPU
+reads video banks through `$4000–$7FFF`; the NMI wrapper restores bank
+ownership around every music update. ANTIC always reads unbanked RAM. The
+older standalone kaleidoscope can still be built with
+`make build/kaleidoscope.xex`.
 
 ## Verification and artwork
 
 Run `make check` for display-list and music-bank checks. Install optional
 `requirements-dev.txt` into a virtual environment and use
 `make check PYTHON=.venv/bin/python` to execute the 6502 callback, verify live
-scanlines, scene boundaries, readable NORTH lettering, ROM-loader behavior,
+scanlines, scene boundaries, the readable Fuji jacket mark, ROM-loader behavior,
 and the side-profile and three-shot ribbon compositions;
 the original solo/duo/trio reference checks live in `projects/pompom-dance`.
 

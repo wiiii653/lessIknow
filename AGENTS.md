@@ -10,24 +10,45 @@ This project is an Atari XE 1 MB audiovisual demo for “The Less I Know The Bet
 
 `tools/` generates NMOS 6502 code and assets; `tests/` executes callbacks with py65; `assets/` contains source artwork. `build/visual-prototype-dev.xex` and its JSON are working artifacts. Preserve numbered releases; use a new output name for each release.
 
-## Current Project Progress — v244
+## Current Project Progress — v261
 
-The user targets Silly Venture. The latest visual release is
-`build/visual-prototype-v244.xex`; use its matching JSON. The replaceable
-`visual-prototype-dev` pair is the development target. These are full demo
-builds using the original v035 music, not replacements for the supplied player.
-Use `docs/PLAN_STATUS.md` for remaining production work and V1–V7 status.
-The plan audit `docs/AUDYT_BRAKOW_V144.md` verifies gaps against the actual
-v144 callback: last ~90 seconds are placeholders; Act 1 still lacks Trevor
-in the school background, and bar 92 changes phases rather than source/mirror.
+The user targets Silly Venture. The latest visual build is
+`build/visual-prototype-v261.xex`; the numbered distribution build is
+`releases/less-i-know-demo-release-008.xex`. Their SHA-256 is
+`fff207ea35990a0d4694e1e510f4c785fa43a7c06d3d2010733c2165b8a6d836`.
+The replaceable `visual-prototype-dev` pair is current after `make check`.
+These are full demo builds using the original v035 music, not replacements
+for the supplied player. Use `docs/PLAN_STATUS.md` for current status and
+`docs/AKTUALNY_MONTAZ_V256.md` for the montage restored in v260.
+
+V261 adds KEY-G and FALCON to two existing greetz lines; spelling, page count,
+scene timing, and bank ownership are unchanged. Full `make check` passes
+199/199 tests (152.147 s). The last full-track Atari800 stereo POKEY comparison
+was v260; v261's text-only change was not replayed in an emulator. No physical
+Atari run has been made. The untracked
+`releases/less-i-know-sv2026we-v260-candidate/` directory and the preserved
+`releases/less-i-know-sv2026we-v260-candidate.zip` are older v260 candidate
+artifacts: preserve them and do not treat them as release 008.
+
+V248 moved the Trevor-to-outro montage 4000 ticks earlier relative to music:
+Trevor ends at 28909, the montage occupies 28909–49849, and the fixed outro
+starts at 49850. The final fade/black remains at 59085/59833. V252 puts the
+girl-eye close-up at 39379–40126. V257's four comic cutaways were withdrawn in
+v260, restoring the moving v256 rotator/tunnel montage; do not restore them
+without a new request. V253/V254/V258 loading-screen text history ends with
+`AI-SLOP/OGNJEN`. See the individual V246–V261 notes for exact changes.
+
+The v144 plan audit `docs/AUDYT_BRAKOW_V144.md` is historical; it predates
+credits/greetz, the v248 retiming, girl-eye scene and current post-Trevor
+montage. Do not use it as a current scene or memory map.
 
 V145 implements the user-approved story changes (2026-11-07): the third
 ribbon shot is overhead and the thrown girl approaches the lens while the
 court/bases recede; the boy shatters the backboard during the dunk; the last
 outro shot at ticks 59085–59833 shows him on the floor with four orbiting
-stars and fades to permanent black. In v240, the same fixed lower image
-and terminal begin at tick 51850; text ends at 59085, and the final fade
-and black ending retain their original timing.
+stars and fades to permanent black. The fixed lower image and terminal now
+begin at tick 49850 (v248); text ends at 59085 and the fade/black timing is
+unchanged.
 See `docs/V145_WYRZUT_TABLICA_FINAL.md` for assets, memory and validation.
 V146 removes the grid/court markings and all ribbon masks from the overhead
 shot. Its preparation has quiet black ground; from tick 20662 the launch
@@ -39,8 +60,8 @@ The close-up arrives in under a second. Only the throw runs once; dance may
 cycle. Both flight angles have white/cyan player wind streaks, moving narrow
 missile trails and two side fireworks. See `docs/V148_DYNAMICZNY_WYRZUT.md`.
 
-- Acts 1–3 have their core renderers (Act 1's planned background Trevor is
-  still missing); act 2 now opens with the approved side-profile
+- Acts 1–3 have their core renderers (the original storyboard's Act 1 Trevor
+  background cameo is still absent); act 2 now opens with the approved side-profile
   ribbon backstep in ticks 8975–11966. In v143 the girl moves across the frame
   from x=40 to x=128 together with all ribbon/spark HPOS registers, while
   the gym scrolls left in two depth layers. The former pompom dance is preserved as the
@@ -67,13 +88,11 @@ missile trails and two side fireworks. See `docs/V148_DYNAMICZNY_WYRZUT.md`.
 - Act 4 has the common-gym Trevor entrance, timed wind-ups/punch combinations,
   alternating BANG/BAM, coloured player cloud fragments and missile debris.
   Hit timestamps and hand sequence remain in `tools/trevor_polished.py`.
-- Act 5 keeps the banana rotator at tick 32909, with continuous 32-frame
-  full turns through tick 35900 (bar 96); the spiral tunnel then runs until the organic
-  texture change at 40388. The organic tunnel holds through tick 41983 so the
-  global cycle starts on a complete tunnel phase at 41984. Trevor mosaic at 41884 and
-  eyes at 43379 remain unfinished. Acts 6–7 and credits/greetz overlays remain
-  placeholders; the lying-boy backdrop now starts at 53850, and the full final
-  shot and black ending retain their original 59085–59833 timing.
+- The current Trevor-to-outro montage runs from tick 28909 to 49849 with a
+  +4000 virtual clock for motif selection. It includes the banana/tunnel
+  sequence, directed cuts, and girl eyes at 39379–40126. The four v257 comic
+  cutaways were removed in v260. Credits/greetz start at 49850; the complete
+  final shot/fade and permanent black still start/end at 59085/59833.
 - V135 fixes the tunnel ball's PMG enable race. V136 introduces double-buffered
   ribbon PMG, V137 rainbow raster colours/sparks, V138 double-buffered impacts.
   Do not remove those protections when adding more effects.
@@ -272,11 +291,12 @@ missile trails and two side fireworks. See `docs/V148_DYNAMICZNY_WYRZUT.md`.
   distinctions in progress reports. Three v126 comparison tests are skipped
   when that archived XEX is absent; report the skips explicitly.
 
-## Current Memory Ownership
+## Memory Ownership Baseline (v244) and Later Overlays
 
-V244 main code occupies $1400–$1DFC (2557 B), with only THREE bytes before
-the row pool at $1E00. Any further unbanked growth requires refactoring;
-never overlap the row pool. Earlier headroom figures are historical.
+V261 main code occupies `$1400–$1DFF` (2560 B), with no bytes left before
+the row pool at `$1E00`. Any further unbanked growth requires refactoring;
+never overlap the row pool. The v261 build JSON reports 298 unique shared
+rows / 11,494 B. Do not use older code-size figures as current headroom.
 
 V244 adds lifetime ownership: title banks 40–48 are only title assets until
 tick 2992. Starting at tick 3072, retired banks 40–47 become 32 raw peeled
@@ -291,37 +311,50 @@ this is a forward-playback lifetime overlay. Fresh late seeks use the
 existing compressed renderer; they do not represent warmed playback costs.
 Normal playback finishes preparation well before the first rotator.
 
+The detailed ranges below are a v244-era baseline, not a complete v261
+allocation map. Later releases overlay/extend assets in loader indices 2,
+17–19 and 49: see `docs/V247_TREVOR_PILKI_I_CIOSY.md`,
+`docs/V248_WCZESNIEJSZE_OUTRO_PELNY_ROTATOR.md`,
+`docs/V249_PILKI_I_SATELITY_TREVORA.md`, `docs/V250_PLYNNE_ORBITY_TEKSTU.md`,
+`docs/V252_OCZY_DZIEWCZYNY.md`, `docs/V256_LOTY_PILEK_TREVORA.md`, and the v257/v260
+notes. V260 removes v257's four story images; V261 adds no bank data. All 64
+physical banks are allocated. Never treat a historical gap total as currently
+free; check the active builder, release JSON and installer overlap assertions.
+
 
 All 64 expansion banks of the tested 1 MB configuration are allocated. Loader
 indices below mean the `school_portrait_bank.bank_value()` indices, not PORTB
 values or the original player's bank numbers. Never assume there is a free bank.
+The ranges below describe the v244 baseline; every listed free-space amount is
+historical and must be rechecked against later overlays before reuse.
 
 - Loader index 2: original rebound `$4000–$402B`; midpoint/quarter selector
   `$4040–$4599` (1370 B); compressed frames `$4600–$5AA6` and
   `$6000–$6E0E` (8886 B); decoder `$5E00–$5E8B` (140 B);
   original tunnel-ball helper/data `$7800–$7FFF` (2048 B).
-  Free gaps total 3896 B after v178; largest is `$6E0F–$77FF` (2545 B).
-- Loader indices 24–31: side actor pixels/masks `$4A00–$51FF` unchanged;
-  `$5200–$53FF` remains free (4096 B total across eight banks).
+  V178-era free-gap figures are historical and superseded by later overlays.
+- Loader indices 24–31: side actor pixels/masks `$4A00–$51FF` unchanged in the
+  baseline. The `$5200–$53FF` free-space report is historical.
 - Loader indices 32–38: compressed midpoint frames start at `$4A00`,
   using 944/940/994/1303/1303/1265/1251 B respectively. V173 places four
   refined solo-quarter streams after those in indices 32–35: 983/1006/986/970 B.
-  Tails to `$53FF` total 5975 B free. Each also owns decoder `$5E00–$5E8B`; only
-  `$5E8C–$5FFF` (372 B per bank) remains free in that old ball slot.
-- Loader indices 24–31 and 39: `$5E00–$5FFF` stays free (9 × 512 B).
-  Combined with the seven 372 B tails this is 7212 B in former ball slots.
+  V173-era tail figures are historical. Each also owned decoder `$5E00–$5E8B`;
+  check the corresponding later release notes before reuse.
+- Loader indices 24–31 and 39: the `$5E00–$5FFF` free-space report is historical
+  (9 × 512 B in the v244-era map).
+  V178-era figure only; later additions reuse former ball slots.
 - Index 39: final-boy bitmap owns `$4A00–$53FF` (2560 B). Never clear it.
-  All these known bank gaps plus six original player-bank tails total 27,323 B
-  after v178. Original player-bank indices 8–13 each retain six compact
-  ribbon frames at `$4000–$7BFF` and a free 1 KiB tail at `$7C00–$7FFF`.
+  The 27,323 B figure is a v178 snapshot, not current free space. Original
+  player-bank indices 8–13 each retained six compact ribbon frames at
+  `$4000–$7BFF`; later v233 used one of the tails for the launch heart.
 - Index 49: quiet Trevor art `$4000–$53FF`, ribbon controller at `$5400`,
   Trevor engine `$6000–$69FF`, ribbon streams `$6A00–$7DFF`, anchor metadata
   `$7E00–$7F1F` (288 B), wind shapes `$7F20–$7F9F` (128 B).
   Ribbon/fireworks/wind controller is 2246 B, ending `$5CC5`.
-  Engine growth must fit below `$6A00`; installers reject
-  overlap. The current Trevor helper is 2500 B, leaving 60 B before `$6A00`.
+  This is the v244-era map. Later final-orbit data/helpers use bank 49;
+  consult v250–v255 notes and current installer checks before extending it.
   `docs/V120_PRZEGLAD_PAMIECI.md` describes historical free space,
-  some of which v142 recovered. Use this current map for availability.
+  some of which v142 recovered. This is not an availability map for v261.
 - Index 49 also holds the final-boy controller at `$5CD0–$5FFF` (816 B),
   with only 10 B between controllers and 4 B before Trevor code at `$6000`.
   Preserve both code ranges; the installer rejects overlap.
@@ -330,17 +363,17 @@ values or the original player's bank numbers. Never assume there is a free bank.
   85 B code gap remains. Dunk orbit tables occupy `$7E40–$7F3F` (256 B),
   with 192 B bank tail and 4 B between patches and orbit tables.
   Do not add full hero frames without a new budget.
-- Main code occupies `$1400–$1DFC` (2557 B), with 3 B left before the
+- Main code occupies `$1400–$1DFF` (2560 B), with no room before the
   scanline pool at `$1E00`. The old full-height pompom dispatch is removed;
   its independently archived project is unaffected. V151's unbanked
   `hero_cutaway` trampoline reuses the normal tunnel renderer. Its nested
   returns restore the hero bank, then the caller's bank. Preserve this order.
-- Runtime reservation stays `$0C00–$0EFF`; the bank-safe masked compositor
+- Runtime reservation is `$0C00–$0F3F`; the bank-safe masked compositor
   starts at `$0E00`, now routing midpoint frames before its original copy.
   Midpoint selector wrapper `$0D60–$0DAF`, copy entry `$0DB0–$0DB9`,
   private source/bank/step/anchor workspace `$0DC0–$0DCF`; DL keys remain
   `$0DFE–$0DFF`. Do not place assets in these formerly empty runtime gaps.
-  Shared-row pool still begins at `$0F00`. Side-dancer cache keys include
+  Side-dancer cache keys include
   translation as well as pose/layout; midpoint keys add `$83E5` to the tag.
 - Plasma indices 40–41 now also contain fireworks in their formerly empty
   tails: 1428-byte controller at `$6C00–$7193`, commit entry `$7000`,

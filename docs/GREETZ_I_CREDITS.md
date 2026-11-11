@@ -1,11 +1,11 @@
-# Wstępny szkic credits i greetz
+# Credits i greetz — aktualny tekst v261
 
-**Status:** credits i greetz wdrożone; v240 ma stały terminal z siedmioma
-wierszami (status + sześć tekstu), szybkim pisaniem całych plansz i pauzami
-na czytanie. Prompt `>_`, kursor miga również w czasie pisania.
+**Status:** credits i greetz wdrożone. V261 ma siedem wierszy terminala
+(status + sześć tekstu), szybkie pisanie całych plansz i pauzy na czytanie.
+Prompt `>_`, kursor miga również w czasie pisania. Dodano KEY-G i FALCON;
+pisownia FOORMAN i liczba stron pozostają bez zmian.
 V235 dodaje dwie linie o tworzeniu z LLM/AI (`V235_LLM_AI_W_CREDITS.md`).
-Komunikat otwierający
-i dodatkowe `[NAME]` pozostają propozycjami i nie są wyświetlane.
+Komunikat otwierający pozostaje propozycją i nie jest wyświetlany.
 
 ## 1. Komunikat otwierający
 
@@ -31,25 +31,27 @@ Wybór sposobu i długości wyświetlania pozostaje do zatwierdzenia po podgląd
 
 | Sekwencja | Ticki | Czas | Tło / ograniczenia |
 |---|---:|---:|---|
-| 8A — credits | 51850–54850 | około 15 s | Stały kadr chłopca, trzy szybko wpisywane plansze z pauzą. |
-| 8B — greetz | 54850–59085 | około 21,25 s | To samo tło; pięć plansz, osobno każdy akapit, bez scrollowania podczas czytania. |
+| 8A — credits | 49850–52850 | około 15 s | Stały kadr chłopca, trzy szybko wpisywane plansze z pauzą. |
+| 8B — greetz | 52850–59085 | około 31,2 s | To samo tło; pięć plansz, osobno każdy akapit, bez scrollowania podczas czytania. |
 | 8C — finał | 59085–59833 | 3,75 s | Oddzielny finałowy kadr i fade. Żaden tekst credits/greetz nie może wejść w ten zakres. |
 
 Granice są zgodne z `TLIKTB_Atari_Timeline_v2.md`. W v197 finał 8C
 naprzemiennie pokazuje orbitujące gwiazdki oraz nuty/klucz wiolinowy; tekst
-greetz znika w ticku 59085 i nie ingeruje w ten efekt. V240 przyspiesza
-start terminala/chłopca o 2000 ticków na wyraźne polecenie użytkownika.
+greetz znika w ticku 59085 i nie ingeruje w ten efekt. V240 przesunęło
+terminal do 51850, a v248 dalej przeniosło go do 49850 razem z montażem.
+Obecne początki ośmiu stron to 49850, 50850, 51850, 52850, 54097, 55344,
+56591 i 57838.
 
-## 3. Proponowany tekst ekranowy
+## 3. Tekst ekranowy w v261
 
-Tekst ekranowy jest po angielsku. Pisownię uchwytów zachowano w formie podanej
-przez OGNJENA. Drobne zmiany łamania wierszy będą potrzebne po wyborze kroju i
-rozmiaru fontu.
+Tekst ekranowy jest po angielsku. Poniższe wiersze odpowiadają aktualnym
+stronom w `tools/outro_text.py`; nagłówki statusu terminala nie są częścią
+treści credits/greetz.
 
 ### 8A — Credits
 
-Trzy krótkie plansze, odpowiadające wstępnie `logo_group`, `logo_music` i
-`logo_sv` — około 5 sekund na planszę, bez przesuwania granic 8A.
+Trzy strony, około 5 sekund na stronę; po szybkim wpisaniu każda pozostaje
+widoczna do następnej granicy.
 
 **Plansza 1 — autor / grupa**
 
@@ -64,11 +66,10 @@ HUMAN VISION / LLM CODE
 **Plansza 2 — muzyka**
 
 ```text
-ORIGINAL SONG
-TAME IMPALA — THE LESS I KNOW THE BETTER
-POKEY ADAPTATION BY OGNJEN
-WITH OPENAI CODEX
-MIDI SCORE REFERENCE: MIDISHOW #200337
+SONG / TAME IMPALA
+THE LESS I KNOW THE BETTER
+POKEY / OGNJEN / CODEX
+MIDI / MIDISHOW 200337
 ```
 
 **Plansza 3 — wydarzenie**
@@ -81,42 +82,46 @@ AI TOOLS / ATARI SOUL
 
 ### 8B — Greetz
 
-Poniższy wariant zachowuje osobistą dedykację i wszystkie dotychczas wskazane
-osoby oraz grupy. V240 pokazuje pięć osobnych plansz akapitów: szybkie
-wpisanie wszystkich wierszy, potem nieruchomy tekst do czytania.
+Pięć plansz pokazuje te akapity osobno; wiersze są szybko wpisywane, po czym
+pozostają nieruchome do następnej strony.
 
 ```text
 GREETINGS TO ALL MY CHOOMS!
+ESPECIALLY MY SON VICVIP AND HIS
+MUM, MY MUM AND DAD,
+AND THE REST OF MY FAMILY.
+```
 
-Especially my son Vicvip and his mum,
-my mum and dad,
-and the rest of my family.
+```text
+I TOLD MUM: "IT'S AN ATARI DEMO."
+SHE SAID: "I CAN HEAR THAT!"
+SHE'D HEARD AN ATARI XE
+ABOUT 30 YEARS AGO.
+```
 
-I told Mum: “It’s an Atari demo.”
-She said: “I can hear that!”
-She’d heard an Atari XE
-about 30 years ago.
+```text
+TO MY FRIENDS AND NEIGHBOURS -
+SPECIAL THANKS TO D3CKER,
+WHO INTRODUCED ME TO AI AGENTS,
+AND BLASPH, WHO GAVE ME THE IDEA:
+TAME IMPALA ON THE ATARI!
+```
 
-To my friends and neighbours —
-special thanks to D3cker,
-who introduced me to AI agents,
-and Blasph, who gave me the idea:
-Tame Impala on the Atari!
+```text
+VIRUS / FOORMAN / MAQ / KEY-G
+FALCON / ATARIONLINE.PL / PTODT
+```
 
-Virus · Foorman · Maq
-atarionline.pl · PTODT
-
-All the guests at Silly Venture,
-the whole Silly Venture crew,
-and everyone watching —
-each of you, personally!
-
-[MORE CHOOMS: NAME · NAME · NAME]
+```text
+ALL THE GUESTS AT SILLY VENTURE,
+THE WHOLE SILLY VENTURE CREW,
+AND EVERYONE WATCHING -
+EACH OF YOU, PERSONALLY!
 ```
 
 ## 4. Wskazówki do realizacji obrazu
 
-- Zachować aktualne ticki 51850, 54850 i 59085; nie skracać finału 8C.
+- Zachować aktualne ticki 49850, 52850 i 59085; nie skracać finału 8C.
 - Najpierw przygotować podgląd nakładki tekstowej na istniejącym tle leżącego
   chłopca. Postać zajmuje dużą część kadru, a wokół głowy poruszają się obiekty
   PMG, więc nie umieszczać tekstu na twarzy ani na orbicie gwiazdek/nut.
@@ -126,8 +131,8 @@ each of you, personally!
 - Zachować czytelność nad jasnymi fragmentami stroju: rozważyć niewielki,
   ciemny pas/podkład lub obrys liter. Nie zakładać, że tekst będzie czytelny
   bezpośrednio na całym obrazie.
-- Przed implementacją uzupełnić dodatkowe sloty `[NAME]` i potwierdzić pisownię
-  wszystkich uchwytów oraz nazw grup.
+- Przed kolejną edycją potwierdzić pisownię uchwytów i nazw grup; obecne strony
+  nie zawierają dodatkowych slotów `[NAME]`.
 - Wszystkie 64 banki są przydzielone. Przed dodaniem fontu, danych lub kodu
   sprawdzić aktualną mapę pamięci w `AGENTS.md` i nie zakładać, że historyczne
   luki nadal są wolne. Zachować własność banków, podwójne bufory PMG i istniejący
@@ -143,15 +148,17 @@ each of you, personally!
   Próba odczytu strony w trakcie przygotowania szkicu zwróciła HTTP 403;
   uploadera i licencji MIDI nie udało się zweryfikować. Nie przypisujemy więc
   autorstwa MIDI ani statusu licencji bez dodatkowego potwierdzenia.
-- Krótki napis ekranowy `MIDISHOW #200337` jest tylko propozycją identyfikacji
-  źródła; pełny link warto zachować w dokumentacji lub metadanych wydania.
+- Ekran pokazuje skrócony opis `MIDI / MIDISHOW 200337`; pełny link pozostaje
+  w dokumentacji, bo źródło i licencja nie zostały niezależnie zweryfikowane.
 
 ## 6. Walidacja przed włączeniem do wydania
 
-1. Obejrzeć podgląd 8A/8B z tekstem, chłopcem i aktualnym PMG.
-2. Sprawdzić, że scroll zaczyna się i kończy w oknie 8B, a przy ticku 59085
+1. Przed zgłoszeniem obejrzeć v261 na Atari800/Altirrze oraz, jeśli dostępne,
+   na docelowym Atari; testy automatyczne nie zastępują oceny A/V.
+2. Sprawdzić, że pięć stron greetz mieści się w oknie 8B, a przy ticku 59085
    pozostaje wyłącznie planowany finał 8C.
-3. Uruchomić testy granic scen i buforów PMG; następnie obejrzeć pełne
-   odtwarzanie na Atari800/Altirrze oraz docelowym Atari, jeśli jest dostępne.
+3. Po zmianach tekstu uruchomić testy granic scen i terminala. V261 przechodzi
+   pełne `make check` (199/199); po v261 nie wykonano odtworzenia emulatorowego
+   ani testu sprzętowego.
 4. Nie traktować testów CPU jako potwierdzenia czytelności, płynności rastra ani
    działania na fizycznym sprzęcie.
