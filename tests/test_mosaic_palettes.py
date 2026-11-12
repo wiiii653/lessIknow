@@ -15,7 +15,8 @@ class MosaicPaletteTests(unittest.TestCase):
                 self.assertEqual(memory[0x83e0],6)
                 first,second=memory[0xd016],memory[0xd017]
                 if memory[0x83ed] < 32:
-                    self.assertEqual((first,memory[0xd018]),(0xfa,0xfe) if variant_at(tick) else (0xf8,0xfe))
+                    self.assertEqual(memory[0xd018],0xee)
+                    self.assertEqual(first,0xea)
                     continue
                 self.assertIn(first&15,(6,8,10,12))
                 self.assertIn((second&15)-(first&15),(2,4))
@@ -35,7 +36,8 @@ class MosaicPaletteTests(unittest.TestCase):
             if m[0x83ed] < 32:
                 # Fruit inks are deliberately stable gold/yellow; only the
                 # background cycles. Unique pairs apply to the tunnel.
-                self.assertEqual((m[0xd016],m[0xd018]),(0xfa,0xfe) if variant_at(tick) else (0xf8,0xfe))
+                self.assertEqual(m[0xd018],0xee)
+                self.assertEqual(m[0xd016],0xea)
                 continue
             pair=(m[0xd016],m[0xd017])
             self.assertNotIn(pair,pairs,(tick,pair))

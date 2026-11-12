@@ -9,20 +9,24 @@ https://sillyventure.eu/en/compos
   Organizator podaje XL/XE z Ultimate 1 MB i stereo POKEY jako konfigurację
   standardową. Lokalny test Atari800/1088XE nie dowodzi zgodności z konkretnym
   rozszerzeniem na party.
-- Najnowszy numerowany stereo XEX to release 052/v319:
-  `releases/less-i-know-demo-release-052-stereo.xex` (936,106 B), zbudowany
+- Najnowszy numerowany stereo XEX to release 054/v322:
+  `releases/less-i-know-demo-release-054-stereo.xex` (936,106 B), zbudowany
   dla AVG i 1 MB RAM/stereo POKEY. SHA-256:
-  `0e1fd31bdb9a666bda5783b5f4f3fbffb83e1fc154f9357dfd463f24c1f5e8fa`.
+- W v322 nasycono złoto i żółte refleksy bananowego rotatora. Testy palet,
+  reżysera i timeline’u przechodzą 8/8; wydanie nie było sprawdzane na
+  fizycznym Atari.
+- W v320 zmieniono kierunek i prędkość tuneli po Trevorze. Testy reżysera
+  oraz oczu przechodzą 5/5.
 - W v319 poprawiono maskę przy lewym ramieniu i przedramieniu kozłującego
-  zawodnika. Test porównujący maskę z release 001 przechodzi. Najnowszego
-  wydania nie uruchomiono na fizycznym Atari; wcześniejsze
+  zawodnika. Test porównujący maskę z release 001 przechodzi. Wydań 052–053
+  nie uruchomiono na fizycznym Atari; wcześniejsze
   wydania uruchamiały się z AVG na konfiguracji 1088 Rambo. Testy CPU nie
   potwierdzają obrazu z DMA, FPS ani zgodności z konkretną maszyną party.
 - Pełne porównanie całego utworu stereo POKEY z oryginalnym v035 dotyczy
   starszego builda v260: 16,272,720 bajtów zgodnych. Release 048 nie został
   ponownie porównany przez Atari800.
-- Aktualny pakiet zgłoszeniowy dla release 052 znajduje się w
-  `releases/less-i-know-sv2026we-v319-submission/` i w ZIP obok. Starsze
+- Aktualny pakiet zgłoszeniowy dla release 054 znajduje się w
+  `releases/less-i-know-sv2026we-v322-submission/` i w ZIP obok. Starsze
   szkice v257/v260 zachowano bez zmian. Formularz organizatora wymaga pliku
   TXT i wykonywalnego pliku; film MP4 1920×1080/50 fps jest opcjonalny,
   zalecany przez organizatora i nie został dołączony. Pakiet nie został

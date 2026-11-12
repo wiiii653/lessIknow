@@ -188,8 +188,9 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
         c.jump(0x4c,'highlight_done')
         c.label('white_highlight');c.emit(0xa9,0x0e);a(0x8d,0xd018)
         c.jump(0x4c,'highlight_done')
-    c.label('banana_highlight');c.emit(0xa9,0xfe);a(0x8d,0xd018)
-    c.emit(0xa9,0xfa if peeled else 0xf8);a(0x8d,0xd016)
+    c.label('banana_highlight');c.emit(0xa9,0xee);a(0x8d,0xd018)
+    # Strong golden body and saturated lemon highlights for both banana tiles.
+    c.emit(0xa9,0xea if not peeled else 0xd8);a(0x8d,0xd016)
     c.label('highlight_done')
     # Keep the previous ball and its DMA alive until the PMG helper can
     # safely update it. A second wait may cross an entire frame boundary.

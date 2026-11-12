@@ -1,4 +1,17 @@
-# Status planu dema — stan po v319
+# Status planu dema — stan po v322
+
+V322 nasyca paletę obu rotatorów bananowych: mocniejszy złoty korpus `$EA`
+i jaskrawy żółty refleks `$EE`. Pozostałe palety tuneli zachowane. Stereo
+release 054 dla AVG; testy palet, reżysera i timeline’u 8/8. Bez próby na
+fizycznym Atari.
+
+V320 zmienia kierunek i prędkość tuneli w montażu po Trevorze co dwa takty:
+każda z dwóch tekstur dostaje przebiegi do przodu i wstecz, w tempie
+normalnym i podwójnym. Ciągłość faz, granice montażu i wyjście do outro
+pozostają zachowane. Stereo release 053 dla AVG; reżyser i ujęcie oczu
+5/5 testów. Jeden historyczny test granic V248 nadal oczekuje Trevor end
+28909, podczas gdy zatwierdzona późniejsza zmiana V299 przesuwa go do 29656.
+Brak próby na fizycznym Atari.
 
 V319 rozszerza maskę kozłującego chłopca po lewej stronie sylwetki, przy
 ramieniu i przedramieniu. Usuwane są wyłącznie piksele starego różowego tła

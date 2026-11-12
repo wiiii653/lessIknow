@@ -22,6 +22,10 @@ class PostTrevorDirectorTests(unittest.TestCase):
         self.assertGreater(lengths[-1],0)
         self.assertEqual([mode for _,mode in cuts[1:9]],list(d.PATTERN))
         self.assertEqual([mode for _,mode in cuts[9:]],list(d.PATTERN))
+        for texture in (0,0x10):
+            modes=[mode for _,mode in cuts[1:] if mode&0x10==texture]
+            self.assertEqual({bool(mode&0x40) for mode in modes},{False,True})
+            self.assertEqual({bool(mode&0x80) for mode in modes},{False,True})
         self.assertLessEqual(len(d.helper()),d.SIZE)
         self.assertLessEqual(d.BANK_ENTRY+len(d.bank_helper()),0x7250)
 

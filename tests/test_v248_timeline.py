@@ -10,7 +10,7 @@ import post_trevor_director as director
 
 class RetimedMontageTests(unittest.TestCase):
     def test_boundaries_and_complete_last_punch(self):
-        self.assertEqual((TREVOR_END,OUTRO_START,TEXT_END),(28909,49850,59085))
+        self.assertEqual((TREVOR_END,OUTRO_START,TEXT_END),(29656,49850,59085))
         self.assertLessEqual(HITS[-1]+106,TREVOR_END)
         cpu=seq.execute(TREVOR_END-1)
         self.assertEqual(cpu.memory[0x83e0],16)
