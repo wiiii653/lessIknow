@@ -43,11 +43,13 @@ class SchoolParallaxTests(unittest.TestCase):
                           (5236,'build/school-front.rgb'),(5610,'build/school.rgb')):
             source=load_rgb(path);cpu=sequence.execute(tick,cpu)
             pixels=sequence.SequenceTests().raster(cpu)
-            for x0,y0,x1,y1 in ((120,8,147,19),(117,56,130,64),(149,55,160,64)):
+            for x0,y0,x1,y1 in ((120,8,147,19),(117,56,130,64),(149,55,158,64)):
                 for y in range(y0,y1):
                     for x in range(x0,x1):
                         for dy in range(3):
                             self.assertEqual(pixels[(y*3+dy)*160+x],source[y*160+x],(tick,x,y))
+            for y in range(55,64):
+                self.assertEqual(pixels[(y*3)*160+158:(y*3)*160+160],bytes((1,1)))
 
     def test_reaction_follows_girl_and_whistle_waits_for_doors(self):
         from school_story import boy_poses

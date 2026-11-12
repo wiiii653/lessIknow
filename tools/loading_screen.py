@@ -6,7 +6,7 @@ SCREEN=0x0600
 DLIST=0x0700
 ENTRY=0x0780
 LINES=('THE LESS I KNOW THE BETTER', 'LOADING BANKS / ATARI XE STEREO',
-       'PROD. BY OGNJEN / SILLY VENTURE 2026 WE')
+       'A\\SLOP BY OGNJEN / SILLY VENTURE 2026 WE')
 
 def segments():
     # ANTIC mode 2 uses Atari screen codes (upper-case ATASCII minus 32).

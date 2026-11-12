@@ -8,10 +8,10 @@ from extract_music import segments
 LOW=((0x0400,0x07e4),(0x0800,0x08bf),(0x0900,0x0974),
      (0x0980,0x09ff),(0x0a00,0x0bff))
 
-def bootstrap():
+def bootstrap(low=LOW):
     c=Code(0x4800)
     c.emit(0x78,0xa9,0,0x8d,0x0e,0xd4) # disable interrupts and NMI
-    for index,(start,end) in enumerate(LOW):
+    for index,(start,end) in enumerate(low):
         size=end-start+1
         full,tail=divmod(size,256)
         for page in range(full):
@@ -31,14 +31,19 @@ def bootstrap():
 
 def build(data):
     entries=list(segments(data)); last=max(i for i,(a,b,p) in enumerate(entries) if (a,b)==(0x02e2,0x02e3))
+    limits={0x0400:0x07ff,0x0800:0x08bf,0x0900:0x097f,0x0980:0x09ff,0x0a00:0x0bff}
+    low=tuple(sorted((a,b) for a,b,p in entries[last+1:] if a in limits))
+    assert len(low)==len(limits) and {a for a,b in low}==set(limits),low
+    assert all(a<=b<=limits[a] for a,b in low),low
+    assert all((a,b) in low for a,b,p in entries[last+1:] if a<=0x0bff and b>=0x0400)
     staged=bytearray(0x800);found=set();out=bytearray(b'\xff\xff')
     for i,(a,b,p) in enumerate(entries):
-        if i>last and (a,b) in LOW:
+        if i>last and (a,b) in low:
             staged[a-0x400:b-0x400+1]=p;found.add((a,b));continue
         if (a,b)==(0x02e0,0x02e1):
-            assert found==set(LOW),found
+            assert found==set(low),found
             out.extend(xex_segment(0x4000,staged))
-            out.extend(xex_segment(0x4800,bootstrap()))
+            out.extend(xex_segment(0x4800,bootstrap(low)))
             out.extend(xex_segment(0x02e2,b'\x00\x48'))
         out.extend(xex_segment(a,p))
     return bytes(out)

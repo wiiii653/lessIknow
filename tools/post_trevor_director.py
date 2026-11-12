@@ -7,8 +7,8 @@ SIZE=384
 BANK_ENTRY=0x6e20
 SHIFT=4000
 MONTAGE_START=tick_at_bar(88)-SHIFT
-START=tick_at_bar(108)-SHIFT
-CYCLE_START=((tick_at_bar(112)+1023)//1024)*1024-SHIFT
+START=tick_at_bar(98)
+CYCLE_START=tick_at_bar(102)
 from outro_text import START as END
 DESC=0x0dda
 VLO,VHI=0x0dd3,0x0dd4
@@ -26,8 +26,8 @@ PATTERN=(0x00,0x00,0x80,0x80,0x10,0x10,0x90,0x90)
 def cuts():
     # Finish one calm organic revolution before the long-form choreography.
     result=[(START,0x10)]
-    for index,bar in enumerate(range(112,144,2)):
-        tick=CYCLE_START if index==0 else tick_at_bar(bar)-SHIFT
+    for index,bar in enumerate(range(102,134,2)):
+        tick=tick_at_bar(bar)
         result.append((tick,PATTERN[index%len(PATTERN)]))
     return tuple((tick,mode) for tick,mode in result if tick<END)
 

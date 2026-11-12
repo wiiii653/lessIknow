@@ -126,9 +126,9 @@ class TrevorTests(unittest.TestCase):
                      HITS[2]+64, HITS[3]-8, HITS[3]+8):
             cpu=sequence.execute(tick)
             poses.add(cpu.memory[0x83ed])
-            self.assertEqual(cpu.memory[0xd016]&15, 10)
-            self.assertIn(cpu.memory[0xd017]&15, (8,10))
-            self.assertEqual(cpu.memory[0xd018], 0x2c)
+            self.assertEqual(cpu.memory[0xd016], 0x48)
+            self.assertIn(cpu.memory[0xd017], (0x66,0x68))
+            self.assertEqual(cpu.memory[0xd018], 0x2a)
         self.assertEqual(poses,{2,3,4,5})
 
     def test_entrance_never_raises_a_fist(self):
@@ -183,7 +183,7 @@ class TrevorTests(unittest.TestCase):
                 pose=(HANDS[index]+1 if age<0 else HANDS[index] if age<120 or index==len(HITS)-1 else HANDS[index+1]+1)
                 self.assertEqual(cpu.memory[0x83ed],pose,(index,age))
                 incoming_next = index+1 < len(HITS) and 0 < HITS[index+1]-tick <= 32
-                expected_pm=3 if age<0 or age<106 or incoming_next else 0
+                expected_pm=3 if age<136 or incoming_next else 0
                 self.assertEqual(cpu.memory[0xd01d],expected_pm,(index,age))
                 m=cpu.memory;display=m[0xd402]|m[0xd403]<<8
                 actual=b''.join(bytes(m[(m[display+3+y*9]|m[display+4+y*9]<<8):

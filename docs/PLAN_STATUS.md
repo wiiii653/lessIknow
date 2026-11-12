@@ -1,5 +1,40 @@
 # Status planu dema — stan po v261
 
+V305 przywraca ujęcie oczu z v292: cztery bitmapy oraz zmienną paletę.
+Bitmapy są zgodne bajt po bajcie; numery klatek i kolory zgodne w 187
+próbkach czasu. Test ujęcia oczu przechodzi. Stereo release 040 dla AVG;
+bez próby na fizycznym Atari.
+
+V304 przyciemnia paletę wszystkich póz Trevora: mocniejszy fiolet i róż oraz
+cieplejsza skóra, szczególnie podczas odbijania piłek. Stereo release 039 dla
+AVG. Sprawdzono kolory póz i uderzenia w py65; bez oceny na fizycznym Atari.
+
+V303 zmienia wiersz loadera na `A\SLOP BY OGNJEN / SILLY VENTURE 2026 WE`.
+Stereo release 038 dla AVG zawiera ten dokładny wiersz; mieści się on w 40
+znakach. Nie uruchamiano buildu na fizycznym Atari.
+
+V302 usuwa resztki niebieskiego tła przy twarzy chłopca i upraszcza rysy
+dziewczyny w bocznym spacerze. Stereo release 037 dla AVG; testy sceny
+szkolnej 4/4, bootstrap AVG poprawnie odtwarza pięć segmentów w py65.
+Obejrzano podgląd twarzy dziewczyny; brak próby na fizycznym Atari.
+
+V301 poprawia obrysy chłopca w trzech pozach przed areną i uzupełnia kurtkę
+przy prawej krawędzi. Stereo release 036 dla AVG; podgląd trzech póz i testy
+sceny szkolnej 4/4. Bootstrap AVG odtworzył pięć niskich segmentów w py65;
+nie wykonano próby na fizycznym Atari ani pełnego odsłuchu Atari800.
+
+V300 ustawia punkty zmiany kierunku i tekstury późnych tuneli na początki
+taktów 98 oraz 102–132 co dwa takty. Ciągłość faz przy nawrotach zachowana.
+Sam wybór okien rotatorów i tuneli nadal korzysta ze starego zegara motywów;
+zmiana kierunku działa w aktywnym oknie tunelu. Stereo release 035 dla AVG;
+testy reżysera montażu 4/4. Bez odsłuchu w Atari800 i na fizycznym Atari.
+
+V299 wydłuża scenę Trevora z odbijaniem piłek do ticku 29656 (o 747
+ticków), dodaje pięć uderzeń i wzmacnia paletę jego ujęć. Stereo release
+034 dla AVG zbudowano; testy uderzeń 9/9. Nie wykonano próby na Atari800
+ani fizycznym Atari. Początek późniejszego montażu jest odpowiednio krótszy;
+koniec dema i czas outro pozostają bez zmian.
+
 Aktualizacja v261: do listy greetz dodano KEY-G i FALCON; FOORMAN, podział
 wierszy i czas terminala pozostają bez zmian. Release 008 oraz
 `build/visual-prototype-v261.xex` mają ten sam SHA-256. Pełne testy bieżącego

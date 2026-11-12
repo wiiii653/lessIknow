@@ -54,15 +54,17 @@ def boy_poses():
     for name in ('build/school-neutral.rgb',None,'build/school-front.rgb'):
         canvas=bytearray(turned)
         if name:
-            source=portrait(load_rgb(name))
+            source=portrait(load_rgb(name),'neutral' if name=='build/school-neutral.rgb' else 'whistle')
             for y in range(64):
                 canvas[y*160+104:(y+1)*160]=source[y*160+104:(y+1)*160]
         if name=='build/school-front.rgb':
             # Remove the old source image's whistle rays outside the face.
-            from arena_art import background
+            from arena_art import background,inside,PORTRAIT_OUTLINES
             bg=background()
             for y in range(31,43):
-                for x in range(104,116):canvas[y*160+x]=bg[y*200+x]
+                for x in range(104,116):
+                    if not inside(x+.5,y+.5,PORTRAIT_OUTLINES['whistle']):
+                        canvas[y*160+x]=bg[y*200+x]
             # A clean, deliberately drawn puckered mouth survives 160x64.
             lips=(".##.","#...",".##.","#...",".##.")
             for y,row in enumerate(lips):

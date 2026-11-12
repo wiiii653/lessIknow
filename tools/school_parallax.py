@@ -7,9 +7,7 @@ ENTRY=0x7000
 START=tick_at_bar(19,2)
 # Face details in source pixels, translated with the existing walk frames.
 FACE_OFFSETS=(0,2,4,6,8,11,13,15,17,20,22,24,26,29,31,33,35,38)
-FACE_DETAILS=((51,11,1),(52,11,1),(52,12,0),(53,12,0),
-              (52,13,0),(53,13,0),(55,14,1),(55,15,0),
-              (52,16,0),(53,16,0),(54,16,1))
+FACE_DETAILS=((53,12,0),(55,14,1),(54,16,1))
 
 def frames():
     # Exact precomposed v175 walk: framing, direction, pose and parallax.

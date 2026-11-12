@@ -8,18 +8,18 @@ class PostTrevorDirectorTests(unittest.TestCase):
     def test_long_music_aligned_passes_and_fixed_outro_entry(self):
         from music_timing import tick_at_bar
         cuts=d.cuts()
-        self.assertEqual(cuts[0][0],tick_at_bar(108)-4000)
+        self.assertEqual(cuts[0][0],tick_at_bar(98))
         self.assertEqual(cuts[1][0],d.CYCLE_START)
         self.assertEqual(d.END,49850)
         self.assertEqual(len(cuts),17)
         self.assertTrue(all(tick<d.END for tick,mode in cuts))
         self.assertEqual(cuts,tuple(sorted(cuts)))
-        allowed={tick_at_bar(n,4)-4000 for n in range(112*4,144*4)}|{d.START,d.CYCLE_START}
-        self.assertTrue(all(t in allowed for t,m in cuts))
+        self.assertEqual([t for t,m in cuts[1:]],[tick_at_bar(n) for n in range(102,134,2)])
         lengths=[b[0]-a[0] for a,b in zip(cuts,(*cuts[1:],(d.END,0)))]
         self.assertEqual(lengths[0],d.CYCLE_START-d.START)
-        self.assertGreaterEqual(min(lengths[1:]),640)
-        self.assertLessEqual(max(lengths[1:]),749)
+        self.assertGreaterEqual(min(lengths[1:-1]),747)
+        self.assertLessEqual(max(lengths[1:-1]),748)
+        self.assertGreater(lengths[-1],0)
         self.assertEqual([mode for _,mode in cuts[1:9]],list(d.PATTERN))
         self.assertEqual([mode for _,mode in cuts[9:]],list(d.PATTERN))
         self.assertLessEqual(len(d.helper()),d.SIZE)

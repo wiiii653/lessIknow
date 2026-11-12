@@ -9,17 +9,12 @@ BANK_ENTRY = 0x7500
 
 @lru_cache(maxsize=4)
 def pixels(phase):
-    """The blonde girl's close-up: sideways glance, upward roll and blink."""
+    """Four hand-drawn 160x96 ANTIC E images: glance, glance, blink, glance."""
     out = bytearray(160 * 96)
     for y in range(96):
         for x in range(160):
-            # Blonde hair and swept fringe echo the girl outside the arena.
-            color = 1 if 15 < x < 145 and y > 17 else 0
-            fringe=22+6*math.sin((x-12)*math.pi/130)
-            if 6<x<154 and (y<fringe or (x<20 or x>140)):
-                color=2
-                if y<20 and (x+2*y)%31<2:color=0
-            if 18<x<125 and abs(y-(18+0.10*(x-18)))<1.3:color=0
+            # A dark face framing the eyes, with two arched eyebrows.
+            color = 1 if 15 < x < 145 and 17 < y < 78 else 0
             for cx in (47, 113):
                 dx=x-cx
                 brow=25 + .008 * dx * dx
@@ -29,15 +24,14 @@ def pixels(phase):
                     u=abs(dx)/28
                     middle=50 + .035*dx*(1 if cx==47 else -1)
                     height=(1-u*u)*10
-                    if phase == 3: height=0.7
+                    if phase == 2: height=0.7
                     if abs(y-middle)<=height+2: color=0
                     if height>2 and abs(y-middle)<height-1: color=3
-                    pupil_x=cx+(-5,0,5,0)[phase]
-                    pupil_y=middle+(1,-5,1,0)[phase]
-                    if height>2 and ((x-pupil_x)/6)**2+((y-pupil_y)/8)**2<1 and abs(y-middle)<height-1:
+                    pupil_x=cx+(-5,0,0,5)[phase]
+                    if height>2 and ((x-pupil_x)/6)**2+((y-middle)/8)**2<1:
                         color=2
-                        if ((x-pupil_x)/3)**2+((y-pupil_y)/5)**2<1: color=0
-                        if (x-pupil_x+2)**2+(y-pupil_y+3)**2<3: color=3
+                        if ((x-pupil_x)/3)**2+((y-middle)/5)**2<1: color=0
+                        if (x-pupil_x+2)**2+(y-middle+3)**2<3: color=3
                 # Thick eyelashes at outer corners.
                 for lash in range(3):
                     lx=cx + (-1 if cx==47 else 1)*(19+lash*3)

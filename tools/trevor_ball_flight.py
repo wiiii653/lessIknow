@@ -11,6 +11,8 @@ BANK_INDEX=19
 # One distinct vector per visible flight, including horizontal and vertical entries.
 IN_VECTORS=((-3,0),(3,0),(0,-1),(0,1),(-2,-1),(2,-1),(-2,1),(2,1),(-1,-1),(1,-1),(-1,1),(1,1),(-3,-1))
 OUT_VECTORS=((3,1),(-3,1),(3,-1),(-3,-1),(2,1),(-2,1),(2,-1),(-2,-1),(1,1),(-1,1),(1,-1),(-1,-1),(0,1))
+IN_VECTORS=(IN_VECTORS+((-3,1),(3,1),(-2,0),(2,0),(1,0)))[:len(HITS)]
+OUT_VECTORS=(OUT_VECTORS+((-3,0),(3,0),(0,-1),(1,0),(-2,0)))[:len(HITS)]
 assert len(HITS)==len(IN_VECTORS)==len(OUT_VECTORS)
 
 

@@ -93,10 +93,43 @@ def actor_mask(image,polygons,height):
     return set(range(160*height))-outside
 
 
-def portrait(image):
-    guide=((104,8),(118,0),(145,0),(160,4),(160,64),(81,64),
-           (87,57),(100,52),(115,47),(116,43),(108,37),(106,27),(102,20))
-    mask=actor_mask(image,(guide,),64)
+PORTRAIT_OUTLINES={
+    'neutral': ((125,2),(136,1),(143,3),(151,6),(157,11),(160,16),
+                (160,64),(81,64),(85,59),(94,54),(106,49),(115,44),
+                (117,40),(112,35),(110,31),(111,25),(108,23),(107,17),
+                (110,12),(115,8),(120,5)),
+    'turned': ((124,2),(140,2),(147,4),(154,7),(160,13),(160,64),
+               (81,64),(85,59),(94,54),(106,49),(115,44),(116,40),
+               (112,37),(110,32),(110,26),(107,24),(105,20),(106,16),
+               (110,11),(116,8),(119,5)),
+    'whistle': ((125,2),(135,1),(143,3),(151,6),(157,11),(160,16),
+                (160,64),(81,64),(85,59),(94,54),(106,49),(115,44),
+                (117,40),(113,37),(111,33),(111,28),(108,26),(106,21),
+                (107,16),(110,12),(115,8),(120,5)),
+}
+
+
+def portrait(image,pose='turned'):
+    # The black hair and jacket are opaque inside the traced silhouette.
+    # Everything outside comes from the clean arena plate.
+    guide=PORTRAIT_OUTLINES[pose]
     bg=background()
-    return bytearray(image[n] if n in mask else bg[n//160*200+n%160]
-                     for n in range(160*64))
+    out=bytearray(image[y*160+x] if inside(x+.5,y+.5,guide) else bg[y*200+x]
+                  for y in range(64) for x in range(160))
+    # Blue inside the head guide belongs to the old school background.
+    for y in range(17,40):
+        for x in range(105,159):
+            if inside(x+.5,y+.5,guide) and image[y*160+x]==2:
+                out[y*160+x]=bg[y*200+x]
+    # Separate the skin from the blue arena with the portrait's black keyline.
+    before=bytes(out)
+    for y in range(18,40):
+        for x in range(105,159):
+            if (inside(x+.5,y+.5,guide) and before[y*160+x]==2 and
+                any(before[(y+dy)*160+x+dx]==3 for dx,dy in ((0,1),(0,-1),(1,0),(-1,0)))):
+                out[y*160+x]=0
+    # The source is cropped at the right border. Continue the jacket fabric
+    # behind its dark seam so the cutout reaches the edge of the picture.
+    for y in range(51,64):
+        for x in (158,159):out[y*160+x]=1
+    return out
