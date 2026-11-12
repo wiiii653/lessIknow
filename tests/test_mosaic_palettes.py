@@ -27,6 +27,8 @@ class MosaicPaletteTests(unittest.TestCase):
         # V145 replaces the last 8C interval with its own picture and fade;
         # both samples of a mosaic colour pair must remain inside that effect.
         ticks=[tick for tick in ticks if tick+32<FINAL_SHOT]
+        from girl_eyes import START as EYES_START, END as EYES_END
+        ticks=[tick for tick in ticks if not (tick<EYES_END and tick+32>=EYES_START)]
         for tick in ticks:
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0x83e0],6)

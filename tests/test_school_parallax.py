@@ -21,13 +21,19 @@ class SchoolParallaxTests(unittest.TestCase):
     def test_walk_matches_archived_v175_frames(self):
         from pathlib import Path
         from extract_music import segments
+        from school_parallax import FACE_OFFSETS, FACE_DETAILS
         banks=[payload for lo,hi,payload in segments(
             Path('build/visual-prototype-v175.xex').read_bytes())
             if (lo,hi)==(0x8000,0xbfff)]
         for i,pixels in enumerate(frames()):
             packed=banks[14+19+i//4][(i%4)*2560:(i%4+1)*2560]
             expected=bytes(v>>shift&3 for v in packed for shift in (6,4,2,0))
-            self.assertEqual(pixels,expected,i)
+            expected=bytearray(expected)
+            for x,y,ink in FACE_DETAILS:
+                pos=y*160+x+FACE_OFFSETS[i]
+                self.assertEqual(expected[pos],3,(i,x,y))
+                expected[pos]=ink
+            self.assertEqual(pixels,bytes(expected),i)
 
     def test_boy_hair_and_jacket_stay_opaque_in_both_portraits(self):
         from school_story import load_rgb

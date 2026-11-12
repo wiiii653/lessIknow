@@ -32,9 +32,12 @@ FIREWORK_CENTRES = ((18,42),(18,132),(142,54),(142,147))
 FIREWORK_ROWS = tuple((y+17)//2-8 for x,y in FIREWORK_CENTRES)
 SIDE_STEPS = tuple(tick_at_beat(24*8+i,2) for i in range(64))
 ALL_STEPS = SIDE_STEPS + STEPS
-PALETTE = (0, 0x4a, 0x9c, 0x2e)
-RAINBOW = (0x2e,0x3c,0x4e,0x5c,0x6e,0x7c,0x8e,0x9c,
-           0xae,0xbc,0xce,0xdc,0xee,0xfc,0x1e,0x2c)
+# Deep warm playfield inks keep faces readable against the dark gym.  Ribbon
+# hues use mid/high luminance rather than near-white highlights, retaining
+# saturated colour while remaining brighter than the dancers and backdrop.
+PALETTE = (0, 0x38, 0x68, 0x2c)
+RAINBOW = (0x2c,0x3a,0x4c,0x5a,0x6c,0x7a,0x8c,0x9a,
+           0xac,0xba,0xcc,0xda,0xec,0xfa,0x1c,0x2a)
 
 
 def rainbow_palette(tick, band, airflow=False, kiss=False):
@@ -562,7 +565,7 @@ def helper(copy_address, palette_address=0):
     a(0xad,0x83e7);c.emit(0x4a);c.branch(0xf0,'missile_size_ready');c.emit(0xa9,0x55)
     c.label('missile_size_ready');a(0x8d,0xd00c)
     for addr,val in ((0xd01b,0x11),(0xd01d,3),(0xd400,0x2e),
-                     (0xd01a,0),(0xd016,0x4a),(0xd017,0x9c),(0xd018,0x2e)):
+                     (0xd01a,PALETTE[0]),(0xd016,PALETTE[1]),(0xd017,PALETTE[2]),(0xd018,PALETTE[3])):
         c.emit(0xa9,val);a(0x8d,addr)
     a(0x20,COMMIT)
     a(0x20,palette_address)

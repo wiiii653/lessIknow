@@ -818,3 +818,63 @@ poprawia wycieki fioletowego tła wokół nóg, w tym w łatach kozłowania.
 Stereo release 018 korzysta z kompaktowego loadera AVG. Ocena i odsłuch tego
 buildu na fizycznym Atari pozostają do wykonania. Szczegóły:
 `V281_KOSZYKOWKA_RELEASE001_MASKI.md`.
+
+V282 stosuje paletę z referencji do całej pierwszej sekwencji szkolnej, ociepla
+i przyciemnia sceny w hali, a ekranowi ładowania nadaje granatowe tło i
+brzoskwiniowy tekst z informacją o produkcji. Komunikat o ładowaniu banków
+pozostaje. Stereo release 019 ma 935 281 B i używa kompaktowego loadera AVG.
+Sprawdzono podglądy rendererem; nie uruchamiano testów ani Atari800 i nie
+sprawdzono go na fizycznym Atari. Szczegóły: `V282_PALETA_SCEN_I_EKRAN_LADOWANIA.md`.
+
+V283 dopisuje `WE` po `2026` na ekranie ładowania, skracając `PRODUCED` do
+`PROD.` tak, aby zachować tekst w limicie 40 znaków. Stereo release 020 ma
+935 281 B; w gotowym XEX potwierdzono wiersz `PROD. BY OGNJEN / SILLY VENTURE 2026 WE`.
+Nie uruchamiano testów ani fizycznego Atari.
+
+V284 usuwa zaznaczone przez użytkownika tło zza ramienia i drobny fragment
+przy twarzy w pozycji kozłowania; korekta obejmuje też łaty ruchomej ręki.
+Stereo release 021 używa kompaktowego loadera AVG. Trzy testy porównania z
+release 001 przeszły; build nie był sprawdzony na fizycznym Atari.
+
+V285 uzupełnia brakujące piksele kolana w pozycji kozłowania i jej trzech
+łatach ręki. Ubytek występował w grafice release 001, a maska stykała się z
+jego krawędzią. Stereo release 022 używa kompaktowego loadera AVG; trzy testy
+porównania z release 001 przeszły. Brak próby na fizycznym Atari.
+
+V286 naprawia regresję v282: przywraca pierwotne przypisanie pikseli grafiki
+szkolnej, zachowując paletę GTIA. Klatki sceny szkolnej w siedmiu punktach
+mają identyczne indeksy pikseli jak v281; testy szkoły 4/4 i koszykówki 3/3.
+Stereo release 023 dla AVG nie był sprawdzony na fizycznym Atari.
+
+V287 dodaje oko, nos i usta dziewczyny do wszystkich 18 klatek spaceru przed
+areną. Detale przesuwają się razem z postacią; pozostałe piksele klatek są
+zgodne z zachowaną grafiką. Stereo release 024 dla AVG; testy panoramy 4/4.
+Brak próby na fizycznym Atari.
+
+V288 powiększa rysy dziewczyny we wszystkich klatkach spaceru i dodaje
+wyraźną otwartą paszczę Trevorowi w obu pozach ciosu oraz ich odbiciach.
+Stereo release 025 dla AVG; testy panoramy 4/4 i Trevora 13/13. Brak próby
+na fizycznym Atari.
+
+V291 wzmacnia satelity po BUM/BAM: większy kształt, wolniejszy odlot,
+kolory oparte na cyklu dymków v215 i dłuższe wygaszanie. Nadlatująca
+kolejna piłka ma pierwszeństwo, dlatego przy krótkich odstępach odlot
+poprzedniej kończy się wcześniej. Paleta samego dymka odpowiadała już v215.
+Stereo release 028 dla AVG; testy uderzeń 9/9. Brak próby na fizycznym Atari.
+Release 026 był pośredni i ma błąd nakładania lotów; nie używać go.
+
+V292 usuwa dużą paszczę dorysowaną w v288 i uzupełnia po kilka pikseli
+środka oryginalnej linii ust w obu pozach ciosu. Stereo release 029 dla AVG;
+testy uderzeń 9/9. Brak próby na fizycznym Atari.
+
+V293 upraszcza tempo późnych rotatorów w nawiązaniu do v215: normalna prędkość,
+dłuższe przejścia do przodu i czterotaktowe cofnięcia, przy zachowaniu
+dodatkowych tekstur i okna oczu. Portret oczu ma jasne włosy, paletę skóry,
+białka i spojrzenie w górę, nawiązując do dziewczyny spod areny. Stereo
+release 030 dla AVG; testy montażu, oczu, palet i rastra 8/8. Podgląd
+callbacku obejrzany; Atari800: 15 116 112 identycznych bajtów stereo POKEY
+względem v035. Brak oceny płynności i kolorów na fizycznym Atari.
+
+V294 przyciemnia i ociepla całą sekwencję szarf i wyrzutu, a szarfom nadaje
+intensywniejszy cykl barw. Stereo release 031 dla AVG; testy sceny 27/27,
+Atari800 stereo POKEY zgodny z v035. Szczegóły: `V294_SZARFY_CIEPLA_PALETA.md`.

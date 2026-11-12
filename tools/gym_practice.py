@@ -3,6 +3,7 @@
 import math
 from gym_background import gym_pixels
 from music_timing import tick_at_bar
+from scene_palettes import ART_PALETTE
 
 PRACTICE_TICK = tick_at_bar(16)
 PRACTICE_SCENE = 13
@@ -21,7 +22,7 @@ PRACTICE_CUTS = (tick_at_bar(16), tick_at_bar(56, 3), tick_at_bar(64, 3))
 def practice_pixels():
     from pathlib import Path
     # Three 160x64 shots share a single 8 KiB frame slot.
-    palette = ((0, 0, 0), (255, 50, 160), (0, 220, 255), (255, 190, 150))
+    palette = ART_PALETTE
     rgb = Path('build/practice-storyboard.rgb').read_bytes()
     if len(rgb) != 160 * 192 * 3:
         raise ValueError('expected 160x192 RGB storyboard')

@@ -19,7 +19,9 @@ MODE=0x0dd7
 # Two-bar passes let the tunnel finish an arc before changing direction.
 # The first half of each eight-segment cycle accelerates forward, then runs
 # back through the same space. Organic and spiral textures each hold eight bars.
-PATTERN=(0x00,0x40,0xc0,0x80,0x10,0x50,0xd0,0x90)
+# The v215 montage advances at the normal frame cadence. Keep that steadier
+# pace, with four-bar reverse passages through each current tunnel texture.
+PATTERN=(0x00,0x00,0x80,0x80,0x10,0x10,0x90,0x90)
 
 def cuts():
     # Finish one calm organic revolution before the long-form choreography.

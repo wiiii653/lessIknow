@@ -71,6 +71,8 @@ class RibbonBufferTests(unittest.TestCase):
             active_bitmap=0x9000 if active_dl==0x8400 else 0xb000
             memory.writes.clear()
             sequence.execute(tick,cpu)
+            from ribbon_dance import PALETTE
+            self.assertEqual(memory[0xd016:0xd019],list(PALETTE[1:]),tick)
             self.assertFalse(any(active+0x180<=a<active+0x400 for a in memory.writes),tick)
             self.assertFalse(any(active_bitmap<=a<active_bitmap+2560 for a in memory.writes),tick)
             self.assertIn(memory[0xd407],(8,0x88))

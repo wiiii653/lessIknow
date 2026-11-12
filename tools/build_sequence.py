@@ -6,10 +6,11 @@ from pathlib import Path
 from build_title import render
 from gym_background import dance_gym_pixels
 from music_timing import tick_at_bar
+from scene_palettes import ART_PALETTE
 
 TITLE_TICK = tick_at_bar(4)  # 4 bars = 7.5 seconds
 DANCE_TICK = tick_at_bar(24)  # 24 bars = 45 seconds
-PALETTE = ((0, 0, 0), (255, 50, 160), (0, 220, 255), (255, 190, 150))
+PALETTE = ART_PALETTE
 DANCE_WIDTH, DANCE_HEIGHT = 48, 128
 DANCE_SECOND_TICK = tick_at_bar(26)  # two bars later: 48.75 seconds
 DANCE_THIRD_TICK = tick_at_bar(28)  # four bars later: 52.5 seconds

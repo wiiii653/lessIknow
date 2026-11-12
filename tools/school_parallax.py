@@ -5,14 +5,26 @@ from build_sequence import Code
 from music_timing import tick_at_bar
 ENTRY=0x7000
 START=tick_at_bar(19,2)
+# Face details in source pixels, translated with the existing walk frames.
+FACE_OFFSETS=(0,2,4,6,8,11,13,15,17,20,22,24,26,29,31,33,35,38)
+FACE_DETAILS=((51,11,1),(52,11,1),(52,12,0),(53,12,0),
+              (52,13,0),(53,13,0),(55,14,1),(55,15,0),
+              (52,16,0),(53,16,0),(54,16,1))
 
 def frames():
     # Exact precomposed v175 walk: framing, direction, pose and parallax.
     packed=Path('assets/art/reference/v175/arena-pan.bin').read_bytes()
     if len(packed)!=18*2560:
         raise ValueError('v175 arena pan must contain eighteen 160x64 frames')
-    return [bytes(value>>shift&3 for value in packed[i*2560:(i+1)*2560]
-                  for shift in (6,4,2,0)) for i in range(18)]
+    result=[]
+    for i,offset in enumerate(FACE_OFFSETS):
+        frame=bytearray(value>>shift&3 for value in packed[i*2560:(i+1)*2560]
+                        for shift in (6,4,2,0))
+        for x,y,ink in FACE_DETAILS:
+            assert frame[y*160+x+offset]==3
+            frame[y*160+x+offset]=ink
+        result.append(bytes(frame))
+    return result
 
 
 def helper():
@@ -39,7 +51,8 @@ def helper():
     c.emit(0xa9,255);a(0x8d,0x83f8);a(0x8d,0x83f9)
     c.label('colors')
     c.label('color_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'color_wait')
-    for addr,val in ((0xd01a,0),(0xd016,0x4a),(0xd017,0x9c),(0xd018,0x2e),(0xd01d,0),(0xd400,0x22)):
+    # Match the complete first-story palette, including the opening pan.
+    for addr,val in ((0xd01a,0),(0xd016,0x38),(0xd017,0x88),(0xd018,0x2c),(0xd01d,0),(0xd400,0x22)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
     for label in ('dl1','dl2'):

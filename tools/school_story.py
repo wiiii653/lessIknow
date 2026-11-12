@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from build_sequence import PALETTE
 from gym_practice import PRACTICE_TICK, PRACTICE_SCENE
 from music_timing import tick_at_bar
+from scene_palettes import ART_PALETTE
 
 # The opening scene keeps its established camera framing and timing.
 GIRL_PORTRAIT_SCENE = 14
@@ -31,9 +31,8 @@ NORTH = {
     'H': ('101', '111', '101', '101'),
 }
 
-
 def color(rgb):
-    return min(range(4), key=lambda i: sum((rgb[c] - PALETTE[i][c]) ** 2 for c in range(3)))
+    return min(range(4), key=lambda i: sum((rgb[c] - ART_PALETTE[i][c]) ** 2 for c in range(3)))
 
 
 def load_rgb(path):

@@ -27,7 +27,8 @@ class OptimizationTests(unittest.TestCase):
         # v252 reuses tunnel frames 60–63 for the eye close-up.
         if pair[1].memory[0x83e0]==6 and 60<=pair[0].memory[0x83ed]<64:return
         banana=pair[1].memory[0x83e0]==6 and pair[1].memory[0x83ed]<32
-        if not banana:
+        recoloured=pair[1].memory[0x83e0] in (2,3,4,5,13,15)
+        if not banana and not recoloured:
             self.assertEqual(sequence.SequenceTests().raster(pair[0]),
                              sequence.SequenceTests().raster(pair[1]), tick)
         elif pair[0].memory[0x83ed]!=pair[1].memory[0x83ed]:
@@ -53,6 +54,9 @@ class OptimizationTests(unittest.TestCase):
                     old_values[offset]=new_values[offset]
             if 8<=pair[1].memory[0x83e0]<=12:
                 self.assertEqual(new_values[0x16:0x19],[0x38,0x88,0x2c],tick)
+                old_values[0x16:0x19]=new_values[0x16:0x19]
+            elif 2<=pair[1].memory[0x83e0]<=5 or pair[1].memory[0x83e0] in (13,15):
+                self.assertEqual(new_values[0x16:0x19],[0x38,0x68,0x2a],tick)
                 old_values[0x16:0x19]=new_values[0x16:0x19]
             from trevor_awakens import START,HIT
             if lo==0xd000 and START<=tick<HIT:

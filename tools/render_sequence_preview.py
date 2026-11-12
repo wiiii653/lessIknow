@@ -14,6 +14,7 @@ from build_sequence import PALETTE
 from scene_memory import video_memory, RuntimeMemory
 from pmg_preview import player_masks, atari_rgb
 from mosaic import KALEIDO_START
+from scene_palettes import SCHOOL_PALETTE, GYM_PALETTE
 
 
 def preview(tick, name, cpu=None):
@@ -73,7 +74,12 @@ def preview(tick, name, cpu=None):
     else:
         indices = player_masks(indices, memory, height, raster_start=8,
                                pmg_color_offset=16)
-    original={0:PALETTE[0],0x48:PALETTE[1],0x9a:PALETTE[2],0x2c:PALETTE[3],0x82:(12,24,48)}
+    scene=memory[0x83e0]
+    original={0:PALETTE[0],0x82:(12,24,48)}
+    if scene in (7,8,9,10,11,12,14):
+        original.update({0x38:SCHOOL_PALETTE[1],0x88:SCHOOL_PALETTE[2],0x2c:SCHOOL_PALETTE[3]})
+    elif scene in (2,3,4,5,13,15):
+        original.update({0x38:GYM_PALETTE[1],0x68:GYM_PALETTE[2],0x2a:GYM_PALETTE[3]})
     if memory[0x83e0] == 16:
         original = {}  # consistent GTIA approximation across every Trevor pose
     palette=tuple(original.get(color,atari_rgb(color)) for color in

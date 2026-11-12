@@ -19,11 +19,12 @@ class TrevorBangTests(unittest.TestCase):
         self.assertEqual(len(set(IN_VECTORS)),len(HITS))
         self.assertEqual(len(set(OUT_VECTORS)),len(HITS))
         for index, hit in enumerate(HITS):
-            for age in (-32,-16,-1,80,92,105):
+            for age in (-32,-16,-1,80,92,105,120,135):
+                if index+1<len(HITS) and age>=HITS[index+1]-hit-32:continue
                 m = sequence.execute(hit+age).memory
                 base = (m[0xd407]&0xfc)<<8
                 ax,ay=__import__('trevor_polished').impact_anchor(index)
-                incoming=age<0; distance=-age if incoming else age-80
+                incoming=age<0; distance=-age if incoming else (age-80)//2
                 vx,vy=(IN_VECTORS if incoming else OUT_VECTORS)[index]
                 x=(160+ax+vx*distance)&255
                 y=max(0,min(111,45+ay+vy*distance))
@@ -38,7 +39,7 @@ class TrevorBangTests(unittest.TestCase):
                 self.assertEqual(m[0xd00c],0x55)
                 self.assertEqual(m[0xd01b],0x11 if incoming else 1)
                 fade_masks=(0xfe,0xfe,0xfc,0xfc,0xf8,0xf8,0xf0,0xf0)
-                fade=fade_masks[max(0,distance-(25 if incoming else 18))]
+                fade=fade_masks[max(0,distance-(25 if incoming else 20))]
                 if incoming:
                     hues=(0x40,0x60,0x80,0xa0,0xc0,0xe0,0x20,0x30);phase_h=((hit+age)>>4)&7
                     palette=[hues[(phase_h+offset)%8]|luma for offset,luma in ((0,8),(1,10),(4,14),(5,12))]
@@ -47,7 +48,9 @@ class TrevorBangTests(unittest.TestCase):
                     first=(((hit+age)<<2)&0xf0)|6
                     palette=[first,(first+0x44)&255,(first+0x86)&255,(first+0xc8)&255]
                 self.assertEqual(m[0xd012:0xd016],[value&fade for value in palette],(index,age))
-                if not incoming:self.assertEqual(m[0xd019],0x0e&fade)
+                if not incoming:
+                    from trevor_polished import IMPACT_HUES
+                    self.assertEqual(m[0xd019],(IMPACT_HUES[(((distance*2+80)>>3)+2)&15]|14)&fade)
                 phase=((hit+age)>>3)&31
                 expected_missiles=bytearray(128)
                 for plane in range(4):
@@ -59,7 +62,7 @@ class TrevorBangTests(unittest.TestCase):
                         shape=(1,1,3,1,1) if plane%2==0 else (2,2,3,2,2)
                     else:
                         ox,oy=orbits[plane][phase];sx=(x+6+ox)&255;sy=(y+6+oy)&255
-                        shape=(1,3,1)
+                        shape=(1,3,3,3,1)
                     self.assertEqual(m[0xd004+plane],sx,(index,age,plane))
                     if sy<123:
                         for row,bits in enumerate(shape):expected_missiles[sy+row]|=bits<<(2*plane)
@@ -72,18 +75,19 @@ class TrevorBangTests(unittest.TestCase):
         for index, hit in enumerate(HITS):
             base_y=45+impact_anchor(index)[1]
             self.assertTrue(all(8<=base_y+IN_VECTORS[index][1]*d<=104 for d in range(1,33)),index)
-            self.assertTrue(all(0<=base_y+OUT_VECTORS[index][1]*d<=111 for d in range(26)),index)
-            for age in (-32,-28,-24,-1,80,98,102,105):
+            self.assertTrue(all(0<=base_y+OUT_VECTORS[index][1]*d<=111 for d in range(28)),index)
+            for age in (-32,-28,-24,-1,80,98,120,128,135):
+                if age>=0 and index+1<len(HITS) and age>=HITS[index+1]-hit-32:continue
                 m=sequence.execute(hit+age).memory
-                if age in (-32,105):
+                if age in (-32,135):
                     self.assertTrue(all((v&15)==0 for v in m[0xd012:0xd016]),(index,age))
                     self.assertEqual(m[0xd019]&15,0,(index,age))
-                elif age in (-24,-1,80,98):
+                elif age in (-24,-1,80,98,120):
                     self.assertTrue(any(v&15 for v in m[0xd012:0xd016]),(index,age))
 
-    @unittest.skipUnless((sequence.ROOT/'build/visual-prototype-v246.xex').exists(), 'v246 comparison XEX required')
+    @unittest.skipUnless((sequence.ROOT/'build/visual-prototype-v288.xex').exists(), 'v288 comparison XEX required')
     def test_flight_preserves_front_buffer_and_trevor_graphics(self):
-        reference = sequence.ROOT/'build/visual-prototype-v246.xex'
+        reference = sequence.ROOT/'build/visual-prototype-v288.xex'
         cpu=sequence.MPU(memory=TrackedMemory(sequence.XEX.read_bytes()))
         old=sequence.MPU(memory=sequence.RuntimeMemory(reference.read_bytes()))
         sequence.execute(HITS[0]-33,cpu); sequence.execute(HITS[0]-33,old)
@@ -94,10 +98,17 @@ class TrevorBangTests(unittest.TestCase):
                 enabled=m[0xd01d]&3
                 m.writes.clear(); sequence.execute(tick,cpu); sequence.execute(tick,old)
                 if enabled:self.assertFalse(any(active+0x180<=a<active+0x400 for a in m.writes),(index,age))
-                self.assertEqual(sequence.SequenceTests().raster(cpu),sequence.SequenceTests().raster(old),(index,age))
+                current=sequence.SequenceTests().raster(cpu);previous=sequence.SequenceTests().raster(old)
+                # v292 redraws Trevor's mouth, including mirrored punch poses.
+                for y in range(192):
+                    if 57<=y<75:
+                        self.assertEqual(current[y*160:y*160+54],previous[y*160:y*160+54],(index,age,y))
+                        self.assertEqual(current[y*160+106:(y+1)*160],previous[y*160+106:(y+1)*160],(index,age,y))
+                    else:
+                        self.assertEqual(current[y*160:(y+1)*160],previous[y*160:(y+1)*160],(index,age,y))
 
     def test_flight_registers_commit_in_early_blanking(self):
-        for age in (-32,-1,80,105,106):
+        for age in (-32,-1,80,120,135,136):
             for start in (248,255,290,305,311):
                 m=BeamMemory(sequence.XEX.read_bytes()); cpu=sequence.MPU(memory=m)
                 sequence.execute(HITS[1]+age,cpu)

@@ -71,6 +71,11 @@ def frames():
                     for color in (1,3):
                         if original[pos] == 0 and neighbors.count(color) >= 7:
                             pixels[pos]=color
+            # Complete only the middle of the existing, thin smile. Mirrored
+            # poses inherit these same small corrections.
+            y,xs=(19,(83,84,85)) if i==2 else (20,(77,78,79,80))
+            for x in xs:
+                pixels[y*160+x]=0
         if i < 2:
             # Polish the quiet gym with restrained paired neon glints at its
             # edges, keeping Trevor and the centre of the original art intact.

@@ -4,7 +4,7 @@ from build_sequence import Code
 from rainbow_ball import spin_masks
 from basketball_hero import satellite_orbits
 from tunnel_ball import masks as large_masks
-from trevor_polished import HITS, impact_anchor
+from trevor_polished import HITS, impact_anchor, IMPACT_HUES
 
 ENTRY=0x6800
 BANK_INDEX=19
@@ -21,8 +21,16 @@ def helper():
     c.emit(0xa2,0)
     c.label('scan');a(0xad,0x83e2);c.emit(0x38);c.jump(0xfd,'hit_lo');a(0x8d,0x83ea)
     a(0xad,0x83e3);c.jump(0xfd,'hit_hi');c.branch(0x90,'future');c.branch(0xd0,'next')
-    a(0xad,0x83ea);c.emit(0xc9,80);c.branch(0x90,'next');c.emit(0xc9,106);c.branch(0xb0,'next')
-    c.emit(0x38,0xe9,80);a(0x8d,0x83ea);c.emit(0xa9,0);c.jump(0x8d,'incoming');c.jump(0x4c,'position')
+    a(0xad,0x83ea);c.emit(0xc9,80);c.branch(0x90,'next');c.emit(0xc9,136);c.branch(0xb0,'next')
+    # A following incoming ball takes priority over the departing effect.
+    c.emit(0xe0,len(HITS)-1);c.branch(0xb0,'outgoing_ready');c.emit(0xe8)
+    c.jump(0xbd,'hit_lo');c.emit(0x38);a(0xed,0x83e2);c.jump(0x8d,'next_delta')
+    c.jump(0xbd,'hit_hi');a(0xed,0x83e3);c.branch(0xd0,'no_overlap')
+    c.jump(0xad,'next_delta');c.emit(0xc9,33);c.branch(0xb0,'no_overlap')
+    c.jump(0x4c,'scan')
+    c.label('no_overlap');c.emit(0xca)
+    c.label('outgoing_ready');a(0xad,0x83ea)
+    c.emit(0x38,0xe9,80,0x4a);a(0x8d,0x83ea);c.emit(0xa9,0);c.jump(0x8d,'incoming');c.jump(0x4c,'position')
     c.label('next');c.emit(0xe8,0xe0,len(HITS));c.branch(0xd0,'scan');c.jump(0x4c,'hide')
     c.label('future');c.jump(0xbd,'hit_lo');c.emit(0x38);a(0xed,0x83e2);a(0x8d,0x83ea)
     c.jump(0xbd,'hit_hi');a(0xed,0x83e3);c.branch(0xf0,'future_low');c.jump(0x4c,'hide')
@@ -56,7 +64,7 @@ def helper():
     # satellites popping in/out at full brightness while still on screen.
     c.jump(0xad,'incoming');c.branch(0xf0,'fade_out')
     a(0xad,0x83ea);c.emit(0x38,0xe9,25);c.jump(0x4c,'fade_select')
-    c.label('fade_out');a(0xad,0x83ea);c.emit(0x38,0xe9,18)
+    c.label('fade_out');a(0xad,0x83ea);c.emit(0x38,0xe9,20)
     c.label('fade_select');c.branch(0xb0,'fade_lookup');c.emit(0xa9,0)
     c.label('fade_lookup');c.emit(0xaa);c.jump(0xbd,'fade_masks');c.jump(0x8d,'fade_mask')
     c.label('buffer');a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e9)
@@ -102,11 +110,8 @@ def helper():
         c.label(f'sat_y{plane}');c.emit(0xc9,123);c.branch(0x90,f'sat_visible{plane}');c.jump(0x4c,f'sat_done{plane}')
         c.label(f'sat_visible{plane}');c.emit(0xa8)
         for row in range(5):
-            if row>=3:
-                c.jump(0xad,'incoming');c.branch(0xd0,f'sat_continue{plane}_{row}');c.jump(0x4c,f'sat_done{plane}')
-                c.label(f'sat_continue{plane}_{row}')
             bits=((1,1,3,1,1) if plane%2==0 else (2,2,3,2,2))[row] << (2*plane)
-            small_bits=(1,3,1,0,0)[row] << (2*plane)
+            small_bits=(1,3,3,3,1)[row] << (2*plane)
             c.label(f'sat{plane}_{row}_read');a(0xb9,0x980+row)
             c.jump(0x8d,'sat_value');c.jump(0xad,'incoming');c.branch(0xf0,f'small_bits{plane}_{row}')
             c.jump(0xad,'sat_value');c.emit(0x09,bits);c.jump(0x4c,f'write_bits{plane}_{row}')
@@ -133,7 +138,8 @@ def helper():
     for plane in range(4):
         c.emit(0x48);c.jump(0x2d,'fade_mask');a(0x8d,0xd012+plane);c.emit(0x68)
         if plane<3:c.emit(0x18,0x69,0x44 if plane==0 else 0x42)
-    c.emit(0xa9,0x0e);c.jump(0x2d,'fade_mask');a(0x8d,0xd019);c.emit(0xa9,1);a(0x8d,0xd01b)
+    a(0xad,0x83ea);c.emit(0x0a,0x18,0x69,80,0x4a,0x4a,0x4a,0x29,15,0xaa)
+    c.jump(0xbd,'impact_hues');c.emit(0x09,14);c.jump(0x2d,'fade_mask');a(0x8d,0xd019);c.emit(0xa9,1);a(0x8d,0xd01b)
     c.label('colours_done')
     for addr,val in ((0xd00c,0x55),(0xd01d,3),(0xd400,0x2e)):
         c.emit(0xa9,val);a(0x8d,addr)
@@ -156,8 +162,9 @@ def helper():
     for plane,(offset,luma) in enumerate(((0,8),(1,10),(4,14),(5,12))):
         c.label(f'hues{plane}');c.emit(*(hues[(i+offset)%8]|luma for i in range(8)))
     c.label('spark_hues');c.emit(*(hues[(i+2)%8]|14 for i in range(8)))
+    c.label('impact_hues');c.emit(*(IMPACT_HUES[(i+2)&15] for i in range(16)))
     c.label('fade_masks');c.emit(0xfe,0xfe,0xfc,0xfc,0xf8,0xf8,0xf0,0xf0)
-    for name in ('incoming','rows_left','hit_index','x_delta','y_delta','sat_value','fade_mask','mx0','mx1','mx2','mx3'):
+    for name in ('incoming','rows_left','hit_index','x_delta','y_delta','sat_value','fade_mask','next_delta','mx0','mx1','mx2','mx3'):
         c.label(name);c.emit(0)
     data=bytes(c.finish());assert ENTRY+len(data)<=0x7000,len(data)
     return data

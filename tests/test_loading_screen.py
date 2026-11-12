@@ -26,5 +26,6 @@ class LoadingScreenTests(unittest.TestCase):
             cpu.step()
         else:self.fail('loading display initializer did not return')
         for addr,value in ((0x22f,0x22),(0x230,0),(0x231,7),(0xd400,0x22),
-                           (0xd402,0),(0xd403,7),(0xd409,0xe0),(0xd017,0x0e)):
+                           (0xd402,0),(0xd403,7),(0xd409,0xe0),
+                           (0xd016,0x38),(0xd017,0x2c),(0xd018,0x88),(0xd01a,0x82)):
             self.assertEqual(cpu.memory[addr],value,hex(addr))

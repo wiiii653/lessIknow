@@ -3,6 +3,7 @@ import math
 from build_sequence import Code
 from engine_effects import EFFECT_ORIGIN
 from crush_portraits import START as CRUSH_START
+from scene_palettes import SCHOOL_GTIA, GYM_GTIA
 ENTRY=0x6000
 RESTORE=0x6f00
 from gym_practice import PRACTICE_CUTS
@@ -48,10 +49,27 @@ def helper():
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     from whistle_pmg import ENTRY as WHISTLE_ENTRY
+    # The first still of the school story shares the palette used by its later
+    # encounter shots. Gym shots and dance scenes use a separate warm palette.
+    a(0xad,0x83e0);c.emit(0xc9,7);c.branch(0xd0,'not_school_open')
+    for address,color in zip((0xd016,0xd017,0xd018),SCHOOL_GTIA):
+        c.emit(0xa9,color);a(0x8d,address)
+    c.label('not_school_open')
+    a(0xad,0x83e0);c.emit(0xc9,13);c.branch(0xf0,'gym_palette')
+    c.emit(0xc9,15);c.branch(0xd0,'not_gym')
+    c.label('gym_palette')
+    for address,color in zip((0xd016,0xd017,0xd018),GYM_GTIA):
+        c.emit(0xa9,color);a(0x8d,address)
+    c.label('not_gym')
+    a(0xad,0x83e0);c.emit(0xc9,2);c.branch(0x90,'not_dance')
+    c.emit(0xc9,6);c.branch(0xb0,'not_dance')
+    for address,color in zip((0xd016,0xd017,0xd018),GYM_GTIA):
+        c.emit(0xa9,color);a(0x8d,address)
+    c.label('not_dance')
     # Warm, darker colours for the arena encounter and its reaction shots.
     a(0xad,0x83e0);c.emit(0xc9,8);c.branch(0x90,'encounter_done')
     c.emit(0xc9,13);c.branch(0xb0,'encounter_done')
-    for address,color in ((0xd016,0x38),(0xd017,0x88),(0xd018,0x2c)):
+    for address,color in zip((0xd016,0xd017,0xd018),SCHOOL_GTIA):
         c.emit(0xa9,color);a(0x8d,address)
     c.label('encounter_done')
     a(0xad,0x83e0);c.emit(0xc9,10);c.branch(0x90,'not_whistle')

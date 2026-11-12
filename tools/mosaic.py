@@ -191,6 +191,12 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     c.label('banana_highlight');c.emit(0xa9,0xfe);a(0x8d,0xd018)
     c.emit(0xa9,0xfa if peeled else 0xf8);a(0x8d,0xd016)
     c.label('highlight_done')
+    if not banana_only:
+        # Eye frames are a portrait, with stable skin, blonde hair and sclera.
+        a(0xad,0x83ed);c.emit(0xc9,60);c.branch(0x90,'portrait_palette_done')
+        for addr,val in ((0xd016,0x2c),(0xd017,0xfa),(0xd018,0x0e)):
+            c.emit(0xa9,val);a(0x8d,addr)
+        c.label('portrait_palette_done')
     # Keep the previous ball and its DMA alive until the PMG helper can
     # safely update it. A second wait may cross an entire frame boundary.
     for addr,val in ((0xd01a,0),):
