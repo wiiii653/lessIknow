@@ -1,6 +1,6 @@
 # Silly Venture 2026 WE — przygotowanie zgłoszenia
 
-Stan sprawdzenia: 2026-11-11. Oficjalny regulamin v4.2.2:
+Stan sprawdzenia: 2026-11-12. Oficjalny regulamin v4.2.2:
 https://sillyventure.eu/en/compos
 
 - Termin zgłoszeń: 2026-11-12, 12:00 CET. Zgłoszenie przez formularz na
@@ -9,30 +9,31 @@ https://sillyventure.eu/en/compos
   Organizator podaje XL/XE z Ultimate 1 MB i stereo POKEY jako konfigurację
   standardową. Lokalny test Atari800/1088XE nie dowodzi zgodności z konkretnym
   rozszerzeniem na party.
-- Najnowszy numerowany XEX to release 008/v261:
-  `releases/less-i-know-demo-release-008.xex` (1,111,730 B), bajtowo zgodny
-  z `build/visual-prototype-v261.xex`. SHA-256:
-  `fff207ea35990a0d4694e1e510f4c785fa43a7c06d3d2010733c2165b8a6d836`.
-  V261 dodaje KEY-G i FALCON do greetz, zachowując FOORMAN i harmonogram.
-- Pełne `make check` v261: 199/199 testów, 152.147 s. Nie wykonano po v261
-  odtworzenia w Atari800 ani na fizycznym Atari. Ostatnie pełne porównanie
-  stereo POKEY dotyczy v260: 16,272,720 bajtów zgodnych z v035. Testy CPU
-  nie potwierdzają obrazu z DMA, FPS ani zgodności rozszerzenia pamięci.
-- Pliki przygotowania konkursowego są starsze od release 008 i nie tworzą
-  aktualnego pakietu v261: `releases/sv2026we-preparation/entry-draft.txt`
-  opisuje v257, a `releases/less-i-know-sv2026we-v260-candidate/` oraz
-  `releases/less-i-know-sv2026we-v260-candidate.zip` zawierają v260/release 007.
-  Katalog jest nieśledzony, ZIP jest zachowany jako numerowany artefakt; oba
-  pozostały nietknięte.
-  Przed zgłoszeniem trzeba wybrać wersję i przygotować zgodny XEX, TXT,
-  checksumę oraz ewentualny ZIP. Nazwy, pełne credits i szczegóły autorstwa
-  wymagają potwierdzenia. Status zgłoszenia należy potwierdzić poza repozytorium.
+- Najnowszy numerowany stereo XEX to release 052/v319:
+  `releases/less-i-know-demo-release-052-stereo.xex` (936,106 B), zbudowany
+  dla AVG i 1 MB RAM/stereo POKEY. SHA-256:
+  `0e1fd31bdb9a666bda5783b5f4f3fbffb83e1fc154f9357dfd463f24c1f5e8fa`.
+- W v319 poprawiono maskę przy lewym ramieniu i przedramieniu kozłującego
+  zawodnika. Test porównujący maskę z release 001 przechodzi. Najnowszego
+  wydania nie uruchomiono na fizycznym Atari; wcześniejsze
+  wydania uruchamiały się z AVG na konfiguracji 1088 Rambo. Testy CPU nie
+  potwierdzają obrazu z DMA, FPS ani zgodności z konkretną maszyną party.
+- Pełne porównanie całego utworu stereo POKEY z oryginalnym v035 dotyczy
+  starszego builda v260: 16,272,720 bajtów zgodnych. Release 048 nie został
+  ponownie porównany przez Atari800.
+- Aktualny pakiet zgłoszeniowy dla release 052 znajduje się w
+  `releases/less-i-know-sv2026we-v319-submission/` i w ZIP obok. Starsze
+  szkice v257/v260 zachowano bez zmian. Formularz organizatora wymaga pliku
+  TXT i wykonywalnego pliku; film MP4 1920×1080/50 fps jest opcjonalny,
+  zalecany przez organizatora i nie został dołączony. Pakiet nie został
+  wysłany przez formularz; status zgłoszenia trzeba potwierdzić poza repo.
 - Aktualny montaż po Trevorze to ruchomy rotator/tunel z oczami dziewczyny;
   komiksowe przebitki v257 wycofano w v260. MP4/1920×1080/50 fps nie zostało
   przygotowane. Długie powtarzające się fragmenty mogą zostać przez
   organizatora skrócone.
-- Użycie AI w demo należy jasno zgłosić w komentarzu; opis w szkicu wymaga
-  potwierdzenia szczegółów.
+- Użycie AI opisano w `info.txt`: programowanie i grafika były wspomagane
+  przez AI, a produkcja obejmowała dwa tygodnie intensywnej pracy dzień i noc
+  z agentami AI (deklaracja autora).
 - Regulamin zabrania wcześniejszej publikacji i całych samplowanych fragmentów
   cudzych chronionych utworów. Autor potwierdza, że użyto partytury MIDI
   i nie ma sampli z komercyjnego nagrania. Autor potwierdził, że demo było

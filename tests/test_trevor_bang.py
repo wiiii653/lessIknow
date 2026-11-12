@@ -25,16 +25,21 @@ class TrevorBangTests(unittest.TestCase):
                 base = (m[0xd407]&0xfc)<<8
                 ax,ay=__import__('trevor_polished').impact_anchor(index)
                 incoming=age<0; distance=-age if incoming else (age-80)//2
-                vx,vy=(IN_VECTORS if incoming else OUT_VECTORS)[index]
+                vx,vy=IN_VECTORS[index] if incoming else (0,0)
                 x=(160+ax+vx*distance)&255
                 y=max(0,min(111,45+ay+vy*distance))
                 if incoming:x=(x-8)&255;y=max(0,min(96,y-8))
-                frame=large[((hit+age)>>4)&15] if incoming else frames[((hit+age)>>3)&7]
-                expected_x=[x,(x+16)&255,x,(x+16)&255] if incoming else [x]*4
+                else:y=y+2-distance//2
+                puff=bytes((0x18,0x3c,0x6e,0xff,0xfb,0x76,0x3c,0x18))
+                frame=large[((hit+age)>>4)&15] if incoming else (puff,)*4
+                expected_x=([x,(x+16)&255,x,(x+16)&255] if incoming else
+                            [(x-distance-3)&255,(x+distance+15)&255,
+                             (x-distance-3)&255,(x+distance+15)&255])
                 self.assertEqual(m[0xd000:0xd004],expected_x,(index,age))
                 for plane in range(4):
-                    length=32 if incoming else 16
-                    self.assertEqual(bytes(m[base+0x200+plane*128+y:base+0x200+plane*128+y+length]),bytes(frame[plane]),(index,age,plane))
+                    length=32 if incoming else 8
+                    row=y if incoming or plane<2 else y+8+2*(distance//2)
+                    self.assertEqual(bytes(m[base+0x200+plane*128+row:base+0x200+plane*128+row+length]),bytes(frame[plane]),(index,age,plane))
                 self.assertEqual(m[0xd008:0xd00c],[1]*4)
                 self.assertEqual(m[0xd00c],0x55)
                 self.assertEqual(m[0xd01b],0x11 if incoming else 1)
@@ -45,8 +50,10 @@ class TrevorBangTests(unittest.TestCase):
                     palette=[hues[(phase_h+offset)%8]|luma for offset,luma in ((0,8),(1,10),(4,14),(5,12))]
                     self.assertEqual(m[0xd019],(hues[(phase_h+2)%8]|14)&fade)
                 else:
-                    first=(((hit+age)<<2)&0xf0)|6
-                    palette=[first,(first+0x44)&255,(first+0x86)&255,(first+0xc8)&255]
+                    color=(((hit+age)<<2)&0xf0)|10
+                    palette=[]
+                    for increment in (0x44,0x42,0x42,0):
+                        color|=10;palette.append(color);color=(color+increment)&255
                 self.assertEqual(m[0xd012:0xd016],[value&fade for value in palette],(index,age))
                 if not incoming:
                     from trevor_polished import IMPACT_HUES

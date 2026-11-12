@@ -9,3 +9,5 @@ GYM_PALETTE = ((0, 0, 0), (142, 69, 66), (166, 112, 66), (194, 137, 112))
 # GTIA colour/luminance bytes for the matching scene families.
 SCHOOL_GTIA = (0x38, 0x88, 0x2c)
 GYM_GTIA = (0x38, 0x68, 0x2a)
+# Deep petrol balances the warm brick, amber and peach gym colours.
+PRACTICE_WALL_GTIA = 0x96

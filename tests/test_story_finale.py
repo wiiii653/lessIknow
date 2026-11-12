@@ -56,7 +56,7 @@ class StoryFinaleTests(unittest.TestCase):
         self.assertGreater(skin[-1],skin[0]*1.8)
         self.assertEqual(len(set(pictures)),3)
 
-    def test_final_shot_keeps_music_dlis_and_stays_black_after_end(self):
+    def test_final_shot_keeps_music_dlis_and_shows_final_card_after_end(self):
         cpu=sequence.execute(START-1)
         self.assertEqual(cpu.memory[0x83e0],6)
         cpu=sequence.execute(START,cpu);m=cpu.memory
@@ -74,7 +74,13 @@ class StoryFinaleTests(unittest.TestCase):
         for tick in (END,END+1000,65536,0xffffff):
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0x83e0],17)
-            self.assertEqual(m[0xd016:0xd019],[0,0,0])
+            from outro_text import FINAL_CARD_DL,FINAL_CARD_LINES,all_lines,_line_addresses
+            self.assertEqual(m[0xd016:0xd019],[0x0e,0,0])
+            self.assertEqual(m[0xd402]|m[0xd403]<<8,FINAL_CARD_DL)
+            addresses=dict(zip(all_lines(),_line_addresses()))
+            for line in FINAL_CARD_LINES:
+                start=addresses[line]
+                self.assertEqual(bytes(m[start:start+40]).decode('ascii').strip(),line)
             self.assertEqual(m[0xd01d],0)
             self.assertEqual(m[0xd400],0x2e) # keep ANTIC + original music DLIs
 

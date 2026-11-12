@@ -173,6 +173,14 @@ def install_control(bank,copy_address):
     out=bytearray(bank);code=helper(copy_address);offset=ENTRY-0x4000
     assert out[offset:offset+len(code)]==bytes(len(code))
     out[offset:offset+len(code)]=code
+    import outro_text
+    card=card_helper();offset=outro_text.FINAL_CARD_ENTRY-0x4000
+    assert offset+len(card)<=0x2000 and not any(out[offset:offset+len(card)])
+    out[offset:offset+len(card)]=card
+    display=outro_text.final_card_display_list();offset=outro_text.FINAL_CARD_SOURCE-0x4000
+    assert outro_text.FINAL_CARD_ENTRY+len(card)<=outro_text.FINAL_CARD_SOURCE
+    assert offset+len(display)<=0x2000 and not any(out[offset:offset+len(display)])
+    out[offset:offset+len(display)]=display
     orbit=bytes(star_position(phase,0)[0]+48 for phase in range(16))
     orbit+=bytes(star_position(phase,0)[1] for phase in range(16))
     for plane in range(4):
@@ -192,6 +200,25 @@ def install_control(bank,copy_address):
     assert out[offset:offset+len(shapes)]==bytes(len(shapes))
     out[offset:offset+len(shapes)]=shapes
     return final_orbits.install(out)
+
+
+def card_helper():
+    import outro_text as t
+    c=Code(t.FINAL_CARD_ENTRY)
+    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    a(0xad,0x83e4);c.branch(0xd0,'card')
+    a(0xad,0x83e3);c.emit(0xc9,END>>8);c.branch(0x90,'normal');c.branch(0xd0,'card')
+    a(0xad,0x83e2);c.emit(0xc9,END&255);c.branch(0xb0,'card')
+    c.label('normal');a(0x4c,t.ENTRY)
+    c.label('card');a(0xad,t.STATE_FLAG);c.emit(0xc9,3);c.branch(0xf0,'color')
+    c.emit(0xa2,len(t.final_card_display_list())-1);c.label('copy')
+    a(0xbd,t.FINAL_CARD_SOURCE);a(0x9d,t.FINAL_CARD_DL);c.emit(0xca);c.branch(0x10,'copy')
+    c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait');c.emit(0xc9,128);c.branch(0xb0,'wait')
+    for address,value in ((0xd402,t.FINAL_CARD_DL&255),(0xd403,t.FINAL_CARD_DL>>8),(t.STATE_FLAG,3)):
+        c.emit(0xa9,value);a(0x8d,address)
+    c.label('color');c.emit(0xa9,0x0e);a(0x8d,0xd016);c.emit(0x60)
+    result=bytes(c.finish());assert t.FINAL_CARD_ENTRY+len(result)<=0x6000,len(result)
+    return result
 
 
 def install_bitmap(bank,index):

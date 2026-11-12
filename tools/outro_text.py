@@ -25,9 +25,13 @@ BITMAP_DL = 1+TEXT_ROWS*3
 FOOTER_DL = BITMAP_DL+BITMAP_ROWS*3
 PALETTE_VCOUNT = (1+TEXT_ROWS*8+7)//2
 PROMPT = b'>'
+FINAL_CARD_ENTRY = 0x5F90
+FINAL_CARD_DL = 0xBE80
+FINAL_CARD_SOURCE = 0x5FDA
+FINAL_CARD_LINES = ('A\\SLOP BY OGNJEN 2026', 'SILLY VENTURE WE')
 
 CREDITS = (
-    ("SYS.OPEN CREDITS [OK]", "THE LESS I KNOW THE BETTER", "AN ATARI XE 1 MB DEMO", "BY OGNJEN",
+    ("SYS.OPEN CREDITS [OK]", "THE LESS I KNOW THE BETTER", "AN ATARI XE 1 MB DEMO", "A\\SLOP BY OGNJEN",
      "MADE WITH OPENAI CODEX", "HUMAN VISION / LLM CODE"),
     ("SYS.OPEN AUDIO.LOG [OK]", "SONG / TAME IMPALA", "THE LESS I KNOW THE BETTER",
      "POKEY / OGNJEN / CODEX", "MIDI / MIDISHOW 200337"),
@@ -53,6 +57,7 @@ GREETZ = (
     "",
     "VIRUS / FOORMAN / MAQ / KEY-G",
     "FALCON / ATARIONLINE.PL / PTODT",
+    "ATARIMUZEUM.PL",
     "",
     "ALL THE GUESTS AT SILLY VENTURE,",
     "THE WHOLE SILLY VENTURE CREW,",
@@ -108,15 +113,16 @@ GLYPHS = {
     ':':('00000','00110','00110','00000','00110','00110','00000'),
     '-':('00000','00000','00000','11111','00000','00000','00000'),
     '/':('00001','00010','00010','00100','01000','01000','10000'),
+    '\\':('10000','01000','01000','00100','00010','00010','00001'),
     '+':('00000','00100','00100','11111','00100','00100','00000'),
 }
 
 
 def all_lines():
-    lines = tuple(line for page in CREDITS for line in page) + GREETZ
+    lines = tuple(dict.fromkeys(tuple(line for page in CREDITS for line in page) + GREETZ + FINAL_CARD_LINES))
     if len(lines) > 38 or any(len(line) > 36 for line in lines):
         raise ValueError('outro text exceeds its compact line layout')
-    if len(GREETZ) > 23:
+    if len(GREETZ) > 24:
         raise ValueError('greetz needs more than the reserved scroll window')
     return lines
 
@@ -175,7 +181,10 @@ def line_data():
             pos = TEXT_HIGH
         addresses.append(pos)
         encoded = line.upper().encode('ascii')
-        records.extend((PROMPT if line else b' ') + encoded.ljust(40-len(PROMPT), b' ') + b' ' * 4)
+        if line in FINAL_CARD_LINES:
+            records.extend(encoded.center(40,b' ') + b' '*4)
+        else:
+            records.extend((PROMPT if line else b' ') + encoded.ljust(40-len(PROMPT), b' ') + b' ' * 4)
         pos += 44
     ptrs.extend(address & 255 for address in addresses)
     ptrs.extend(address >> 8 for address in addresses)
@@ -292,6 +301,16 @@ def _line_addresses():
             high=True;pos=TEXT_HIGH
         result.append(pos);pos+=44
     return result
+
+
+def final_card_display_list():
+    addresses=dict(zip(all_lines(),_line_addresses()))
+    data=[0x80]+[0x70]*6+[0xf0]+[0x70,0x70,0xd0,0x70]
+    for line in FINAL_CARD_LINES:
+        address=addresses[line]
+        data.extend((0x44,address&255,address>>8))
+    data.extend([0x70]*6+[0xd0]+[0x70]*9+[0xd0,0x41,FINAL_CARD_DL&255,FINAL_CARD_DL>>8])
+    return bytes(data)
 
 
 def display_addresses():

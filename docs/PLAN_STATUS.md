@@ -1,4 +1,60 @@
-# Status planu dema — stan po v261
+# Status planu dema — stan po v319
+
+V319 rozszerza maskę kozłującego chłopca po lewej stronie sylwetki, przy
+ramieniu i przedramieniu. Usuwane są wyłącznie piksele starego różowego tła
+i odtwarzany jest w tych miejscach obraz hali. Pozy i klatki pozostają
+bez zmian. Stereo release 052 dla AVG; test maski z porównaniem release 001
+zaliczony. Bez próby na fizycznym Atari.
+
+V317 ustawia zieleń `$C6` dla ścian trzech ujęć treningu przy drabinkach.
+Ten rejestr koloru obejmuje również część ciemnych detali postaci i sali.
+Pozostałe sceny zachowują swoje palety. Stereo release 050 dla AVG; trzy
+ujęcia sprawdzone w py65, testy piłki 4/4. Bez próby na fizycznym Atari.
+
+V316 rozszerza ręczne obszary usuwania starego różowego tła przy tylnej
+ręce i nogach koszykarza oraz w czterech pozach wsadu. Zastępuje tylko
+kolor starego tła pikselami hali; pozy, klatki i trajektoria piłki pozostają
+bez zmian. Stereo release 049 dla AVG; 13 testów koszykówki zaliczonych.
+Bez próby na fizycznym Atari. Paczka party v315 nadal zawiera release 048.
+
+V315 prowadzi cztery kolorowe dymki od narożników BUM/BAM na zewnątrz,
+po przekątnych. Usuwa ukośnik z końcowego dwuwiersza. Stereo release 048
+dla AVG; testy uderzeń i finału 19/19 w py65, podgląd faz obejrzany. Brak
+oceny na fizycznym Atari.
+
+V314 rozdziela fazy czterech szarf w solowym ujęciu przodem: dwa pasma
+poruszają się przeciwnie, jedno dwukrotnie szybciej. Zachowano zaczepy
+w dłoniach i istniejące pozy. Stereo release 047 dla AVG; testy buforów,
+kotwic i klatek pośrednich 17/17 w py65. Koszt utrzymywanej klatki solówki
+w próbce wzrósł o 108 cykli; to nie jest pomiar FPS ani próba na Atari.
+
+V313 unieruchamia `LOADING BANKS` w loaderze; animują się tylko trzy pozycje
+kropek. Stereo release 046 dla AVG: pozycja napisu sprawdzona we wszystkich
+133 stanach początkowego ekranu i wrapperów. Brak próby na fizycznym Atari.
+
+V312 przyciemnia róż w sekwencji tańca i wyrzutu z `$4E` do `$4A`.
+Stereo release 045 dla AVG; testy buforów i palety 7/7. Ocena koloru na
+fizycznym Atari pozostaje do wykonania.
+
+V311 zastępuje numery INIT i adresy w loaderze animowanymi kropkami, dodaje
+ATARIMUZEUM.PL do greetz i pozostawia po wygaszeniu wyśrodkowany podpis
+`A\SLOP BY OGNJEN 2026 / SILLY VENTURE WE`. Stereo release 044 dla AVG.
+Testy finału i outro 15/15; sprawdzono 66 etapów loadera oraz rozstaw DLI
+karty końcowej w py65. Brak próby na fizycznym Atari i odsłuchu końcówki.
+
+V309 dodaje podpis `A\SLOP BY OGNJEN` do creditsów i glif odwrotnego
+ukośnika. Stereo release 043 dla AVG; testy tekstu outro 5/5. Bez próby na
+fizycznym Atari.
+
+V308 zmienia fioletową składową obrazu tańca i wyrzutu na intensywny róż
+`$4E`. Wszystkie ujęcia szarf i lot korzystają ze wspólnej palety. Stereo
+release 042 dla AVG; testy buforów i palety szarf 7/7. Brak oceny na
+fizycznym Atari.
+
+V307 przywraca cztery kolorowe dymki po napisach BUM/BAM Trevora, na wzór
+v215. Nadlatująca piłka pozostaje przed ciosem; kolejna nadlatująca piłka
+ma pierwszeństwo przed kończącym się efektem. Stereo release 041 dla AVG;
+testy uderzeń 9/9 w py65. Brak oceny na fizycznym Atari.
 
 V305 przywraca ujęcie oczu z v292: cztery bitmapy oraz zmienną paletę.
 Bitmapy są zgodne bajt po bajcie; numery klatek i kolory zgodne w 187

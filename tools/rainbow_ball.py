@@ -3,7 +3,7 @@ import math
 from build_sequence import Code
 from engine_effects import EFFECT_ORIGIN
 from crush_portraits import START as CRUSH_START
-from scene_palettes import SCHOOL_GTIA, GYM_GTIA
+from scene_palettes import SCHOOL_GTIA, GYM_GTIA, PRACTICE_WALL_GTIA
 ENTRY=0x6000
 RESTORE=0x6f00
 from gym_practice import PRACTICE_CUTS
@@ -61,6 +61,9 @@ def helper():
     for address,color in zip((0xd016,0xd017,0xd018),GYM_GTIA):
         c.emit(0xa9,color);a(0x8d,address)
     c.label('not_gym')
+    a(0xad,0x83e0);c.emit(0xc9,13);c.branch(0xd0,'not_practice_wall')
+    c.emit(0xa9,PRACTICE_WALL_GTIA);a(0x8d,0xd016)
+    c.label('not_practice_wall')
     a(0xad,0x83e0);c.emit(0xc9,2);c.branch(0x90,'not_dance')
     c.emit(0xc9,6);c.branch(0xb0,'not_dance')
     for address,color in zip((0xd016,0xd017,0xd018),GYM_GTIA):

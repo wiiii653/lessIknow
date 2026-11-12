@@ -58,7 +58,7 @@ def bootstrap():
     _,_,chunks=resources()
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
-    a(0xad,FLAG);c.branch(0xf0,'load');a(0x4c,outro_text.ENTRY)
+    a(0xad,FLAG);c.branch(0xf0,'load');a(0x4c,outro_text.FINAL_CARD_ENTRY)
     c.label('load')
     for i,(src,data,dst) in enumerate(chunks):
         c.emit(0xa2,len(data));c.label(f'chunk{i}')

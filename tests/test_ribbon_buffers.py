@@ -8,6 +8,25 @@ from ribbon_dance import START, SIDE_START, SIDE_END, STEPS, FIREWORK_START, LAU
 
 
 class RibbonBufferTests(unittest.TestCase):
+    def test_front_solo_ribbons_have_independent_phases_and_keep_their_grips(self):
+        from ribbon_dance import CUTS, ribbon_streams
+        streams=ribbon_streams()
+        for tick in (CUTS[1]+64,CUTS[1]+80,CUTS[1]+96,CUTS[2]-16):
+            cpu=sequence.execute(tick);m=cpu.memory
+            _,hands=scene_artwork(tick)
+            phase=(tick>>3)&15
+            phases=(phase,((phase^15)+3)&15,(phase*2+8)&15,((phase^15)+11)&15)
+            base=(m[0xd407]&0xfc)<<8
+            for plane,(x,y) in enumerate(hands):
+                self.assertEqual(m[0xd000+plane],x+34,(tick,plane))
+                origin=((y*3+17)//2-32)&255
+                expected=bytearray(128)
+                shape=streams[plane*1024+phases[plane]*64:plane*1024+(phases[plane]+1)*64]
+                for row,value in enumerate(shape):
+                    if origin+row<128:expected[origin+row]=value
+                start=base+0x200+plane*128
+                self.assertEqual(bytes(m[start:start+128]),bytes(expected),(tick,plane))
+
     def test_side_dancer_and_all_pmg_move_right_together_without_phase_wrap(self):
         cpu=None
         for tick in (SIDE_START,SIDE_START+128,SIDE_START+1024,SIDE_END-1):

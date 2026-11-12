@@ -49,7 +49,8 @@ def wrapper(number,target):
     else:c.emit(0x60)
     for state in ('ENTER','RETURN'):
         c.label(state+'_text')
-        c.emit(*(ord(x)-32 for x in f'INIT {number:02d} {state} ${target:04X}'.center(40)))
+        dots='.'*((number*2+(state=='RETURN'))%4)
+        c.emit(*(ord(x)-32 for x in ('LOADING BANKS'+dots.ljust(3)).center(40)))
     result=bytes(c.finish());assert 0x3900+len(result)<0x3c00
     return result
 

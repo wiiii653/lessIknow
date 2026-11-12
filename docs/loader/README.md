@@ -1,11 +1,12 @@
 # Dokumentacja loadera — The Less I Know The Better (Atari XE)
 
-Katalog opisuje **obecny, działający loader** dema: bazowy obraz 64 banków,
-kompaktowanie XEX, ekran ładowania w wysokiej pamięci oraz późny start
-z niskiej pamięci. Dokumentacja jest opisem stanu kodu i zweryfikowanych
-obserwacji, nie zbiorem założeń.
+Katalog opisuje potok 64 banków, kompaktowanie XEX, ekran ładowania
+w wysokiej pamięci i późny start z niskiej pamięci. Część szczegółowych
+tabel niżej pochodzi ze starszego release 018; sprawdzaj je względem aktualnego
+builda i instalatorów przed zmianami.
 
-Stan na: 2026-11-12, na podstawie `releases/less-i-know-demo-release-018-stereo.xex`.
+Stan wydania: 2026-11-12, stereo release 048/v315,
+`releases/less-i-know-demo-release-048-stereo.xex`.
 
 Legenda (zgodnie z `AGENTS.md`):
 
@@ -21,7 +22,8 @@ Legenda (zgodnie z `AGENTS.md`):
 1. Ładuje oryginalny player v035 (muzyka, 14 banków) i podmienia jego
    wejście na własny kod.
 2. Ładuje do 50 dodatkowych banków 16 KiB z grafiką i kodem scen.
-3. Pokazuje ekran ładowania i (w obecnym buildzie) numer INIT-a.
+3. Pokazuje stały napis `LOADING BANKS` z animowanymi kropkami, bez numerów
+   INIT-ów ani adresów.
 4. Na końcu odtwarza niską pamięć wykonawczą i **skacze bezpośrednio do
    playera** (`JMP $13E0`), bez polegania na wektorze RUN.
 
@@ -54,6 +56,8 @@ Szczegóły i komendy: [01_potok_budowania.md](01_potok_budowania.md).
 | [07_przelaczanie_runtime.md](07_przelaczanie_runtime.md) | przełączanie banków w czasie odtwarzania |
 | [08_diagnostyka.md](08_diagnostyka.md) | pliki diagnostyczne i co dowiodły |
 | [09_odtwarzanie_i_testy.md](09_odtwarzanie_i_testy.md) | reprodukcja, testy, checklista |
+| [10_analiza_optymalizacji.md](10_analiza_optymalizacji.md) | analiza zysków i ryzyk, bez zmian w kodzie |
+| [11_mozaiki_szkola_i_banany.md](11_mozaiki_szkola_i_banany.md) | profile scen, propozycje przyspieszenia i naprzemienny obrót bananów |
 
 ## 4. Szybka ściąga
 
@@ -64,7 +68,7 @@ Szczegóły i komendy: [01_potok_budowania.md](01_potok_budowania.md).
 | `$3800–$3877` | ekran tekstowy 3×40 (ATASCII−32) |
 | `$3880–$388A` | display lista ANTIC 2 |
 | `$38A0–$38DC` | INIT ekranu ładowania (kolory, DLIST, CHBASE, DMA) |
-| `$3900–$398B` | wrapper INIT-a: wypisuje `INIT nn ENTER/RETURN $xxxx` |
+| `$3900–$398B` | wrapper INIT-a: aktualizuje kropki `LOADING BANKS` |
 | `$3A00–$3A24` | kod czyszczący $8000–$BFFF przed każdym bankiem |
 | `$4000–$47FF` | bufor niskiej pamięci (2 KiB) |
 | `$4800–$4873` | bootstrap: kopiuje bufor do $0400–$0BFF, `JMP $13E0` |
@@ -86,13 +90,14 @@ Szczegóły i komendy: [01_potok_budowania.md](01_potok_budowania.md).
 | Plik | Rozmiar |
 | --- | ---: |
 | `build/visual-prototype-dev.xex` (baza 64 banków) | ~1 111 730 B (1.06 MiB) |
-| `releases/less-i-know-demo-release-011-avg-stereo.xex` | 1 111 730 B |
-| `releases/avg-compact-late-start-001.xex` | 935 921 B |
-| `releases/less-i-know-demo-release-018-stereo.xex` | 935 472 B |
+| `releases/less-i-know-demo-release-048-stereo.xex` | 936 121 B |
+| `releases/less-i-know-demo-release-018-stereo.xex` (historyczny) | 935 472 B |
 | `releases/avg-final-segment-trace-001.xex` | 938 896 B |
 
-`[ODCZYT]` Release 018: 1775 segmentów, 64 bloki banków, INIT-y:
-`$38A0`×1, `$3900`×66, `$3A00`×64, `$4800`×1, RUN `$13E0`.
+`[ODCZYT]` Historyczny release 018: 1775 segmentów, 64 bloki banków,
+INIT-y `$38A0`×1, `$3900`×66, `$3A00`×64, `$4800`×1, RUN `$13E0`.
+Release 048 jest aktualnym pakietem party; pełnego przebiegu na fizycznym
+Atari nie potwierdzono.
 
 ## 5. Czego ta dokumentacja nie potwierdza
 

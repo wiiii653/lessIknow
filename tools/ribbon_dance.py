@@ -35,7 +35,7 @@ ALL_STEPS = SIDE_STEPS + STEPS
 # Deep warm playfield inks keep faces readable against the dark gym.  Ribbon
 # hues use mid/high luminance rather than near-white highlights, retaining
 # saturated colour while remaining brighter than the dancers and backdrop.
-PALETTE = (0, 0x38, 0x68, 0x2c)
+PALETTE = (0, 0x38, 0x4a, 0x2c)
 RAINBOW = (0x2c,0x3a,0x4c,0x5a,0x6c,0x7a,0x8c,0x9a,
            0xac,0xba,0xcc,0xda,0xec,0xfa,0x1c,0x2a)
 
@@ -510,12 +510,14 @@ def helper(copy_address, palette_address=0):
     # Inactive bitmap DL, 64 source rows tripled to 192 display lines.
     cached_display_list(c,7)
     a(0xad,0x83e6);c.jump(0x8d,'dl1_hi');c.jump(0x8d,'dl2_hi')
-    c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');c.emit(0xa9,4);c.jump(0x8d,'dl2_lo');c.emit(0xa0,0)
-    c.label('rows');c.jump(0xb9,'row_lo');c.label('dl1');c.emit(0x8d,0,0)
-    c.jump(0xb9,'row_hi');c.emit(0x18);a(0x6d,0x83fe);c.label('dl2');c.emit(0x8d,0,0)
+    c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');a(0x8d,0x83e9);c.emit(0xa9,4);c.jump(0x8d,'dl2_lo');c.emit(0xa0,0,0xa2,0)
+    c.label('rows');c.jump(0xbd,'row_lo');c.label('dl1');c.emit(0x8d,0,0)
+    c.jump(0xbd,'row_hi');c.emit(0x18);a(0x6d,0x83fe);c.label('dl2');c.emit(0x8d,0,0)
     for label in ('dl1','dl2'):
         c.emit(0x18);c.jump(0xad,label+'_lo');c.emit(0x69,3);c.jump(0x8d,label+'_lo');c.branch(0x90,label+'ok');c.jump(0xee,label+'_hi');c.label(label+'ok')
-    c.emit(0xc8,0xc0,192);c.branch(0xd0,'rows')
+    c.emit(0xc8);a(0xce,0x83e9);c.branch(0xd0,'source_row_ready')
+    c.emit(0xe8,0xa9,3);a(0x8d,0x83e9)
+    c.label('source_row_ready');c.emit(0xc0,192);c.branch(0xd0,'rows')
     c.label('swap')
     c.label('prepare_pmg')
     # Back PMG base is $08 or $88. The unused prefix may hold static rows.
@@ -538,11 +540,20 @@ def helper(copy_address, palette_address=0):
     c.jump(0x20,'launch_fireworks');a(0x20,PREPARE);c.jump(0x4c,'wait')
     c.label('normal_ribbons')
     # Copy five separately positioned 64-byte streams into inactive PMG RAM.
-    a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x29,15,0xaa)
-    c.jump(0xbd,'phase_lo');c.jump(0x8d,'get_lo');c.jump(0xbd,'phase_hi');c.jump(0x8d,'get_hi')
+    from ribbon_inbetweens import STEP
     for plane in range(5):
-        if plane:
-            c.jump(0xad,'get_hi');c.emit(0x18,0x69,4);c.jump(0x8d,'get_hi')
+        a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x29,15)
+        if plane<4:
+            a(0xae,STEP);c.emit(0xe0,96);c.branch(0x90,f'phase_ready{plane}')
+            c.emit(0xe0,128);c.branch(0xb0,f'phase_ready{plane}')
+            if plane==2:c.emit(0x0a,0x29,15)
+            if plane in (1,3):c.emit(0x49,15)
+            c.emit(0x18,0x69,(0,3,8,11)[plane],0x29,15)
+            c.label(f'phase_ready{plane}')
+        c.emit(0xaa);c.jump(0xbd,'phase_lo');c.jump(0x8d,'get_lo')
+        c.jump(0xbd,'phase_hi')
+        if plane:c.emit(0x18,0x69,4*plane)
+        c.jump(0x8d,'get_hi')
         a(0xae,0x83ed);a(0xbd,META+4*FRAME_COUNT+(plane if plane<4 else 0)*FRAME_COUNT);c.emit(0xa8)
         c.emit(0xa9,(0xa if plane<2 else 0xb if plane<4 else 9));a(0x0d,0x83e8);c.jump(0x8d,f'put{plane}_hi')
         c.emit(0xa2,0)
@@ -616,7 +627,7 @@ def helper(copy_address, palette_address=0):
     c.label('step_lo');c.emit(*(t&255 for t in ALL_STEPS))
     c.label('step_hi');c.emit(*(t>>8 for t in ALL_STEPS))
     c.label('frames');c.emit(*(tuple([16]*64)+tuple(frame_for_step(i) for i in range(128))))
-    c.label('row_lo');c.emit(*((y//3*40)&255 for y in range(192)))
-    c.label('row_hi');c.emit(*((y//3*40)>>8 for y in range(192)))
+    c.label('row_lo');c.emit(*((y*40)&255 for y in range(64)))
+    c.label('row_hi');c.emit(*((y*40)>>8 for y in range(64)))
     c.labels['position_cache_value']=c.labels['position_cache']+1
     return c.finish()
