@@ -48,6 +48,12 @@ def helper():
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     from whistle_pmg import ENTRY as WHISTLE_ENTRY
+    # Warm, darker colours for the arena encounter and its reaction shots.
+    a(0xad,0x83e0);c.emit(0xc9,8);c.branch(0x90,'encounter_done')
+    c.emit(0xc9,13);c.branch(0xb0,'encounter_done')
+    for address,color in ((0xd016,0x38),(0xd017,0x88),(0xd018,0x2c)):
+        c.emit(0xa9,color);a(0x8d,address)
+    c.label('encounter_done')
     a(0xad,0x83e0);c.emit(0xc9,10);c.branch(0x90,'not_whistle')
     c.emit(0xc9,12);c.branch(0xb0,'not_whistle')
     a(0x4c,WHISTLE_ENTRY)
@@ -110,5 +116,5 @@ def helper():
         c.label(f'spray_x{i}');c.emit(*(max(50,min(202,x+48+dx+(j%4-2)*2)) for j,(x,y) in enumerate(positions)))
         c.label(f'spray_y{i}');c.emit(*(max(9,min(103,(y+17)//2+((i*3+j)%9)-4)) for j,(x,y) in enumerate(positions)))
         c.label(f'hues{i}');c.emit(*((((j+i*4)%15+1)<<4)|(6,10,12,14)[i] for j in range(16)))
-    result=c.finish();assert ENTRY+len(result)<RESTORE
+    result=c.finish();assert ENTRY+len(result)<=WHISTLE_ENTRY
     return result

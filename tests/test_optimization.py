@@ -44,13 +44,23 @@ class OptimizationTests(unittest.TestCase):
                 old_values[:0x16]=new_values[:0x16]
                 old_values[0x19]=new_values[0x19]
             from banana_variants import variant_at
-            if banana and variant_at(tick):
-                self.assertEqual((new_values[0x16],new_values[0x18]),(0x1a,0x0e))
+            if banana:
+                self.assertEqual((new_values[0x16],new_values[0x18]),(0xfa,0xfe) if variant_at(tick) else (0xf8,0xfe))
                 old_values[0x16]=new_values[0x16];old_values[0x18]=new_values[0x18]
+            elif pair[1].memory[0x83e0]==6:
+                for offset in (0x16,0x17):
+                    self.assertEqual(old_values[offset]&0xf0,new_values[offset]&0xf0,tick)
+                    old_values[offset]=new_values[offset]
+            if 8<=pair[1].memory[0x83e0]<=12:
+                self.assertEqual(new_values[0x16:0x19],[0x38,0x88,0x2c],tick)
+                old_values[0x16:0x19]=new_values[0x16:0x19]
             from trevor_awakens import START,HIT
             if lo==0xd000 and START<=tick<HIT:
                 self.assertEqual(new_values[0x16:0x19],[0x48,0x68,0x2a])
                 old_values[0x16:0x19]=new_values[0x16:0x19]
+            for offset,old,new in ((0x16,0x48,0x4a),(0x17,0x9a,0x9c),(0x18,0x2c,0x2e)):
+                if old_values[offset]==old and new_values[offset]==new:
+                    old_values[offset]=new
             self.assertEqual(old_values,new_values,tick)
         old_base=(pair[0].memory[0xd407]&0xfc)<<8
         new_base=(pair[1].memory[0xd407]&0xfc)<<8

@@ -115,10 +115,6 @@ def palette_pairs():
     alternate=[pair for pair in pairs if all(separated(*pair,l+2,l-2) for l in (6,10))]
     return pairs+alternate[-17:]
 
-def contrast_indices():
-    return [i for i,(a,b) in enumerate(palette_pairs())
-            if math.dist(atari_rgb(a*16+8),atari_rgb(b*16+8))<105]
-
 def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,cache_address=0x83fa,raw=False,peeled=False):
     c=Code(origin)
     def a(op,address):c.emit(op,address&255,address>>8)
@@ -164,7 +160,7 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     c.emit(0x8a,0x18);c.jump(0x79,'quotient_bits');c.emit(0xaa)
     c.label('divide_next');c.emit(0x88);c.branch(0x10,'divide')
     a(0xad,0x83ea)
-    c.label('beat');c.emit(0xc9,24,0xa9,8);c.branch(0xb0,'luma');c.emit(0xa9,12)
+    c.label('beat');c.emit(0xc9,24,0xa9,6);c.branch(0xb0,'luma');c.emit(0xa9,10)
     c.label('luma');a(0x8d,0x83ea)
     c.label('color_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'color_wait')
     c.label('palette');c.emit(0xe0,161);c.branch(0x90,'palette_index_ok');c.emit(0xa2,160)
@@ -172,13 +168,12 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     a(0xad,0x83ea);c.emit(0x18,0x69,2);a(0x8d,0x83ea)
     c.label('brightness_ready');c.jump(0xbd,'hue_pairs');a(0x8d,0x83eb)
     c.emit(0x29,0xf0);a(0x0d,0x83ea);a(0x8d,0xd016)
-    # Boost only the second ink of hue pairs that need more contrast at
-    # low luminance. Keep the pale pulse below the four-bit maximum.
-    a(0xad,0x83ea);c.emit(0xc9,12);c.branch(0xb0,'second_luma_ready')
-    c.emit(0xa0,0)
-    c.label('contrast_lookup');c.emit(0x8a);c.jump(0xd9,'contrast_indices');c.branch(0xf0,'contrast_boost')
-    c.emit(0xc8,0xc0,len(contrast_indices()));c.branch(0xd0,'contrast_lookup');c.jump(0x4c,'second_luma_ready')
-    c.label('contrast_boost');a(0xad,0x83ea);c.emit(0x18,0x69,4);a(0x8d,0x83ea)
+    # Keep the second ink brighter while the darker first ink keeps the PAL
+    # hues strong. Every pair retains contrast in both pulse states.
+    a(0xad,0x83ea);c.emit(0xc9,10);c.branch(0xb0,'bright_second')
+    c.emit(0x18,0x69,4);c.jump(0x4c,'save_second')
+    c.label('bright_second');c.emit(0x18,0x69,2)
+    c.label('save_second');a(0x8d,0x83ea)
     c.label('second_luma_ready')
     a(0xad,0x83eb);c.emit(0x29,0x0f,0x0a,0x0a,0x0a,0x0a);a(0x0d,0x83ea);a(0x8d,0xd017)
     # Banana tiles stay yellow. The short Act 3 cutaway keeps its original
@@ -193,8 +188,8 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
         c.jump(0x4c,'highlight_done')
         c.label('white_highlight');c.emit(0xa9,0x0e);a(0x8d,0xd018)
         c.jump(0x4c,'highlight_done')
-    c.label('banana_highlight');c.emit(0xa9,0x0e if peeled else 0x1e);a(0x8d,0xd018)
-    c.emit(0xa9,0x1a if peeled else 0x18);a(0x8d,0xd016)
+    c.label('banana_highlight');c.emit(0xa9,0xfe);a(0x8d,0xd018)
+    c.emit(0xa9,0xfa if peeled else 0xf8);a(0x8d,0xd016)
     c.label('highlight_done')
     # Keep the previous ball and its DMA alive until the PMG helper can
     # safely update it. A second wait may cross an entire frame boundary.
@@ -209,7 +204,6 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     c.label('divisor_lo');c.emit(*((187<<i)&255 for i in range(8)))
     c.label('divisor_hi');c.emit(*((187<<i)>>8 for i in range(8)))
     c.label('quotient_bits');c.emit(*(1<<i for i in range(8)))
-    c.label('contrast_indices');c.emit(*contrast_indices())
     c.label('hue_pairs');c.emit(*((a<<4)|b for a,b in palette_pairs()))
     c.label('row_lo');c.emit(*((y//2*40)&255 for y in range(192)))
     c.label('row_hi');c.emit(*((y//2*40)>>8 for y in range(192)))

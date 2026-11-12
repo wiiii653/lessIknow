@@ -18,7 +18,7 @@ class BananaVariantTests(unittest.TestCase):
             cpu=seq.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[variants.KEY],0x80|(variant<<6))
             self.assertEqual(m[0x83ed],((tick+(4000 if tick>=28909 else 0))>>4)&31)
-            self.assertEqual(tuple(m[a] for a in (0xd016,0xd018)),(0x1a,0x0e) if variant else (0x18,0x1e))
+            self.assertEqual(tuple(m[a] for a in (0xd016,0xd018)),(0xfa,0xfe) if variant else (0xf8,0xfe))
         for tick in range(28909,31900):self.assertEqual(variants.variant_at(tick),0)
         report=variants.memory_report()
         self.assertEqual(report['banks'],8)

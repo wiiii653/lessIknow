@@ -65,7 +65,7 @@ class HeroTests(unittest.TestCase):
         cpu=sequence.execute(DUNK+656,cpu)
         self.assertEqual(cpu.memory[0xd017],14)
         cpu=sequence.execute(DUNK+680,cpu)
-        self.assertEqual(cpu.memory[0xd017],0x9a)
+        self.assertEqual(cpu.memory[0xd017],0x9c)
 
     def test_held_pose_uses_cached_bitmap_and_restart_restores_pmg(self):
         cpu=sequence.execute(START)

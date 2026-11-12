@@ -126,9 +126,9 @@ class TrevorTests(unittest.TestCase):
                      HITS[2]+64, HITS[3]-8, HITS[3]+8):
             cpu=sequence.execute(tick)
             poses.add(cpu.memory[0x83ed])
-            self.assertEqual(cpu.memory[0xd016]&15, 8)
-            self.assertIn(cpu.memory[0xd017]&15, (6,8))
-            self.assertEqual(cpu.memory[0xd018], 0x2a)
+            self.assertEqual(cpu.memory[0xd016]&15, 10)
+            self.assertIn(cpu.memory[0xd017]&15, (8,10))
+            self.assertEqual(cpu.memory[0xd018], 0x2c)
         self.assertEqual(poses,{2,3,4,5})
 
     def test_entrance_never_raises_a_fist(self):

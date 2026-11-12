@@ -56,10 +56,32 @@ def reference_art():
 def unpack(raw):
     return bytes(value>>shift&3 for value in raw for shift in (6,4,2,0))
 
+@lru_cache(maxsize=1)
+def cleaned_art():
+    """Retain release 001 poses while replacing small leaked background areas."""
+    from hero_mask_cleanup import clean
+    raw=reference_art()
+    original=[unpack(raw[i*2240:(i+1)*2240]) for i in range(5)]
+    corrected=[clean(frame,index) for index,frame in enumerate(original)]
+    def pack(pixels):
+        return bytes(sum(pixels[i+j]<<(6-2*j) for j in range(4)) for i in range(0,len(pixels),4))
+    patches=[];offset=5*2240
+    for _ in range(3):
+        patch=unpack(raw[offset:offset+DRIBBLE_PATCH_BYTES]);offset+=DRIBBLE_PATCH_BYTES
+        image=bytearray(original[0])
+        for y in range(DRIBBLE_HEIGHT):
+            at=(DRIBBLE_Y+y)*160+DRIBBLE_X
+            image[at:at+DRIBBLE_WIDTH]=patch[y*DRIBBLE_WIDTH:(y+1)*DRIBBLE_WIDTH]
+        image=clean(image,0)
+        pixels=bytes(image[(DRIBBLE_Y+y)*160+x]
+                     for y in range(DRIBBLE_HEIGHT) for x in range(DRIBBLE_X,DRIBBLE_X+DRIBBLE_WIDTH))
+        patches.append(pack(pixels))
+    return b''.join(map(pack,corrected))+b''.join(patches)+raw[offset:]
+
 
 @lru_cache(maxsize=1)
 def frames():
-    raw=reference_art()
+    raw=cleaned_art()
     full=[unpack(raw[i*2240:(i+1)*2240]) for i in range(5)]
     poses={0:full[0],**{i+2:p for i,p in enumerate(full[1:])}}
     offset=5*2240
@@ -80,7 +102,7 @@ def shattered_frame(stage):
     if stage==0:return frames()[5]
     if stage not in (1,2,3):raise ValueError('invalid board fracture stage')
     offset=5*2240+3*DRIBBLE_PATCH_BYTES+(stage-1)*SHATTER_PATCH_BYTES
-    patch=unpack(reference_art()[offset:offset+SHATTER_PATCH_BYTES])
+    patch=unpack(cleaned_art()[offset:offset+SHATTER_PATCH_BYTES])
     image=bytearray(frames()[5])
     for y in range(SHATTER_HEIGHT):
         start=y*160+SHATTER_X
@@ -94,7 +116,7 @@ def scene_frame(tick,pose):
 
 
 def packed():
-    return reference_art()
+    return cleaned_art()
 
 
 def ball_paths():
@@ -275,7 +297,7 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
             a(0xb9,0x980+dy);c.emit(0x09,bits<<(2*i));a(0x99,0x980+dy)
     c.label('spray_ready');a(0xad,0x83e2);c.emit(0x0a,0x0a,0x29,0xf0,0x09,6)
     for i in range(4):a(0x8d,0xd012+i);c.emit(0x18,0x69,0x44 if i==0 else 0x42)
-    for addr,val in ((0xd01a,0),(0xd016,0x48),(0xd017,0x9a),(0xd018,0x2c),(0xd407,8),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0)):
+    for addr,val in ((0xd01a,0),(0xd016,0x4a),(0xd017,0x9c),(0xd018,0x2e),(0xd407,8),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0)):
         c.emit(0xa9,val);a(0x8d,addr)
     a(0xad,0x83ed);c.branch(0xf0,'missile_size_ready')
     a(0xad,0x83e5);c.branch(0xd0,'missile_size_ready')

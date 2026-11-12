@@ -790,3 +790,31 @@ sprzęcie ani gotowość konkursową. Wariant mono oraz wcześniejsze pliki rele
 nie zostały objęte tym potwierdzeniem. Dokładna przyczyna wcześniejszej awarii
 nie została rozstrzygnięta; limit rozmiaru i kolizja loadera pozostają
 hipotezami.
+
+V275 rozjaśnia palety scen fabularnych i nadaje obu wariantom bananów żółte
+odcienie PAL. Release 013 stereo używa kompaktowego loadera z późnym startem.
+Pełna muzyka stereo sprawdzona w Atari800; dalsze buildy tylko stereo.
+Wizualna ocena nowej palety i start release 013 na Atari pozostają do próby.
+Szczegóły: `V275_SOCZYSTE_PALETY.md`.
+
+V277 wzmacnia wizualnie kolory rotatorów przez dobór jasności i kontrastu;
+spotkanie przed areną (sceny 8–12) ma nową, cieplejszą paletę. Stereo
+release 015 używa kompaktowego loadera AVG z późnym startem. Ocena kolorów
+i tego builda na fizycznym Atari pozostaje do wykonania. Zob. `V277_PALETY_ARENA_ROTATORY.md`.
+
+V278 przywraca chłopca z sześciu póz v177 w kozłowaniu i wsadzie, z pełnymi
+klatkami ruchu zamiast dawnych zbyt małych łat. Osobne łaty rozbicia tablicy
+uwzględniają nową postać. Stereo release 016 ma kompaktowy loader AVG;
+ocena obrazu i płynności na fizycznym Atari pozostaje do wykonania. Zob.
+`V278_KOSZYKARZ_V177.md`.
+
+V280 poprawia proporcje sześciu póz koszykarza v177, ustawienie na parkiecie,
+etapy wyskoku i tor piłki względem dłoni. Stereo release 017 korzysta z
+kompaktowego loadera AVG; sprawdzenie animacji na Atari pozostaje do wykonania.
+Szczegóły: `V280_PILKA_I_PROPORCJE_KOSZYKARZA.md`.
+
+V281 przywraca pozy, klatki kluczowe i tor piłki koszykarza z release 001;
+poprawia wycieki fioletowego tła wokół nóg, w tym w łatach kozłowania.
+Stereo release 018 korzysta z kompaktowego loadera AVG. Ocena i odsłuch tego
+buildu na fizycznym Atari pozostają do wykonania. Szczegóły:
+`V281_KOSZYKOWKA_RELEASE001_MASKI.md`.

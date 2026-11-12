@@ -15,7 +15,7 @@ from girl_eyes import frame_at as eye_frame_at, pixels as eye_pixels, START as E
 class MosaicTests(unittest.TestCase):
     def test_bananas_stay_yellow_and_tunnel_highlights_cycle_hue(self):
         cpu = sequence.execute(TREVOR_START)
-        self.assertEqual(cpu.memory[0xd018], 0x1e)
+        self.assertEqual(cpu.memory[0xd018], 0xfe)
         cpu = sequence.execute(38892-4000, cpu)
         frame = cpu.memory[0x83ed] & 15
         expected_hue = palette_pairs()[frame][0]
