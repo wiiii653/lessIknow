@@ -693,7 +693,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x20,post_trevor_director.ENTRY)
     # Act 5 uses the existing two motifs deliberately, rather than allowing
     # the six-bit animation clock to alternate between them every 512 ticks.
-    compare_tick(TREVOR_END, 'act5_select', 'mosaic_frame_ready')
+    # After Trevor the director owns the selected rotator/tunnel phase. Keep
+    # the legacy Act 5 clock only for earlier scene callbacks.
+    compare_tick(TREVOR_END, 'mosaic_frame_ready', 'act5_select')
     c.label('act5_select')
     compare_tick16(ACT5_CYCLE_TICK, 'mosaic_frame_ready', 'act5_motif', True)
     c.label('act5_motif')

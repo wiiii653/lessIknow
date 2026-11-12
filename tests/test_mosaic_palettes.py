@@ -46,4 +46,4 @@ class MosaicPaletteTests(unittest.TestCase):
             dim=sequence.execute(tick+32,cpu).memory
             self.assertGreaterEqual(math.dist(atari_rgb(dim[0xd016]),atari_rgb(dim[0xd017])),105)
             pairs.append(pair)
-        self.assertGreater(len(pairs),50)
+        self.assertGreater(len(pairs),20)

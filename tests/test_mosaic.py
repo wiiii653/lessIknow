@@ -2,7 +2,7 @@
 from artifact import XEX, METADATA
 import unittest
 import test_sequence as sequence
-from mosaic import pixels, KALEIDO_START, TREVOR_START, palette_pairs
+from mosaic import pixels, KALEIDO_START, palette_pairs
 from crush_portraits import START as CRUSH_START
 from test_engine_cache import TrackedMemory
 from school_portrait_bank import loader, bank_value
@@ -14,9 +14,11 @@ from girl_eyes import frame_at as eye_frame_at, pixels as eye_pixels, START as E
 @unittest.skipIf(sequence.MPU is None, 'py65 required')
 class MosaicTests(unittest.TestCase):
     def test_bananas_stay_yellow_and_tunnel_highlights_cycle_hue(self):
-        cpu = sequence.execute(TREVOR_START)
-        self.assertEqual(cpu.memory[0xd018], 0xfe)
-        cpu = sequence.execute(38892-4000, cpu)
+        from trevor_awakens import END as TREVOR_END
+        from music_timing import tick_at_bar
+        cpu = sequence.execute(TREVOR_END)
+        self.assertEqual(cpu.memory[0xd018], 0xee)
+        cpu = sequence.execute(tick_at_bar(96)+16, cpu)
         frame = cpu.memory[0x83ed] & 15
         expected_hue = palette_pairs()[frame][0]
         self.assertEqual(cpu.memory[0xd018], (expected_hue << 4) | 14)
@@ -29,8 +31,14 @@ class MosaicTests(unittest.TestCase):
         for tick in range(START,END-1):
             frame=eye_frame_at(tick,frame_at(tick))
             if eye_frame_at(tick+1,frame_at(tick+1))==frame:ticks.setdefault(frame,tick)
-        self.assertEqual(set(ticks),set(range(64)))
+        # The compressed post-Trevor montage intentionally visits a shorter
+        # curated phase set. Every live phase must still be a real stored frame.
+        live=set(ticks)
+        self.assertTrue({0,16,32,40,48,56,60,63}<=live)
+        self.assertTrue(live<=set(range(64)))
         for frame in range(64):
+            self.assertEqual(len(pixels(frame,0)),160*96)
+        for frame in sorted(live):
             tick=ticks[frame]
             frame_expected=frame
             active=cpu.memory[0xd403]<<8
@@ -66,9 +74,10 @@ class MosaicTests(unittest.TestCase):
         self.assertEqual(m[0xd301],0xff)
 
     def test_scene_handoffs_and_restart(self):
+        from trevor_awakens import END as TREVOR_END
         cpu=None
         for tick,scene in ((KALEIDO_START-1,14),(KALEIDO_START,6),(CRUSH_START-1,6),(CRUSH_START,14),
-                           (TREVOR_START-1,16),(TREVOR_START,6),(96,0),(9163,14),(KALEIDO_START,6)):
+                           (TREVOR_END-1,16),(TREVOR_END,6),(96,0),(9163,14),(KALEIDO_START,6)):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0x83e0],scene)
             if scene==6:self.assertEqual(cpu.memory[0xd01d],3)

@@ -15,7 +15,8 @@ class OutroPaletteTests(unittest.TestCase):
         self.fail('NMI did not return')
 
     def test_extra_dli_does_not_change_music_or_skin_palette(self):
-        cpu=seq.execute(54000);m=cpu.memory
+        from outro_text import START as OUTRO_START
+        cpu=seq.execute(OUTRO_START+1000);m=cpu.memory
         before=bytes(m[0x24a7:0x24aa]);skin=m[0xd018];shirt=m[0xd017]
         self.interrupt(cpu,64)
         self.assertEqual(bytes(m[0x24a7:0x24aa]),before)
@@ -23,7 +24,8 @@ class OutroPaletteTests(unittest.TestCase):
         self.assertEqual(m[0xd301],0xff)
 
     def test_first_dli_sets_green_ink_without_colouring_the_background(self):
-        cpu=seq.execute(54000);m=cpu.memory
+        from outro_text import START as OUTRO_START
+        cpu=seq.execute(OUTRO_START+1000);m=cpu.memory
         # Exit immediately after the router's regular-music RTS to isolate palette work.
         from outro_palette import ENTRY
         cpu.pc=ENTRY;cpu.sp=0xfd;m[0x1fe:0x200]=[0xfe,0x7f];m[0xd40b]=4

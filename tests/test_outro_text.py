@@ -11,7 +11,7 @@ class OutroTests(unittest.TestCase):
         memory=TrackedMemory(seq.XEX.read_bytes());cpu=seq.MPU(memory=memory)
         seq.execute(text.START,cpu)
         saved=bytes(memory[0xbc00+text.BITMAP_DL:0xbc00+text.FOOTER_DL])
-        for tick in range(text.START+4,53870,16):
+        for tick in range(text.START+4,text.END,16):
             memory.writes.clear();seq.execute(tick,cpu)
             self.assertEqual(memory[0xdd0],2,tick)
             self.assertEqual(memory[0xd403],0xbc,tick)
@@ -36,7 +36,8 @@ class OutroTests(unittest.TestCase):
         self.assertEqual(bytes(m[0xc800:0xcf00]),loader.resources()[0][0x800:])
         self.assertEqual(m[0xd409],0xc8)
         bitmap_mapping=None
-        for tick in (text.START,54847,55844,56842,58000,text.END-1):
+        for tick in (text.START,text.START+1000,text.START+3000,
+                     text.END-1000,text.END-1):
             cpu=seq.execute(tick,cpu)
             display=m[0xd402]|m[0xd403]<<8
             if bitmap_mapping is None:bitmap_mapping=bytes(m[display+text.BITMAP_DL:display+text.FOOTER_DL])
@@ -62,7 +63,7 @@ class OutroTests(unittest.TestCase):
         cpu=seq.execute(text.START-1);m=cpu.memory
         spans=((0x824a,0x8300),(0x8340,0x83e0),(0x864a,0x8980))
         saved=[bytes(m[a:b]) for a,b in spans]
-        for tick in (text.START,56842,text.END):
+        for tick in (text.START,text.START+3000,text.END):
             seq.execute(tick,cpu)
             self.assertEqual([bytes(m[a:b]) for a,b in spans],saved)
         seq.execute(text.START,cpu)

@@ -1,14 +1,15 @@
 """Long-form speed/reverse choreography for the post-Trevor rotator montage."""
 from build_sequence import Code
 from music_timing import tick_at_bar
+from trevor_awakens import END as TREVOR_END
 ENTRY=0xec20
 TIMELINE_ENTRY=ENTRY+8
 SIZE=384
 BANK_ENTRY=0x6e20
 SHIFT=4000
 MONTAGE_START=tick_at_bar(88)-SHIFT
-START=tick_at_bar(98)
-CYCLE_START=tick_at_bar(102)
+START=TREVOR_END
+CYCLE_START=tick_at_bar(80)
 from outro_text import START as END
 DESC=0x0dda
 VLO,VHI=0x0dd3,0x0dd4
@@ -16,15 +17,16 @@ QSTART,ELAPSED=0x0ddb,0x0ddc
 ACTLO,ACTHI=0x0dd5,0x0dd6
 MODE=0x0dd7
 
-# Two-bar passes keep changes on musical accents while alternating forward
-# and reverse travel at normal and double speed. Each texture gets both paces
-# and directions before the cycle repeats.
-PATTERN=(0x40,0xc0,0x00,0x80,0x50,0xd0,0x10,0x90)
+# One-bar passes cover the banana rotator as well as both tunnel textures,
+# alternating forward/reverse travel at normal/double speed.
+PATTERN=(0x60,0xe0,0x20,0xa0,0x40,0xc0,0x00,0x80,
+         0x50,0xd0,0x10,0x90)
 
 def cuts():
-    # Finish one calm organic revolution before the long-form choreography.
-    result=[(START,0x10)]
-    for index,bar in enumerate(range(102,134,2)):
+    # Take ownership at the first post-fight callback, then change pace/direction
+    # on every following musical bar across bananas and both tunnel textures.
+    result=[(START,0x20)]
+    for index,bar in enumerate(range(80,112)):
         tick=tick_at_bar(bar)
         result.append((tick,PATTERN[index%len(PATTERN)]))
     return tuple((tick,mode) for tick,mode in result if tick<END)
@@ -33,9 +35,13 @@ def timeline():
     """Attach a phase origin to every pass so reversals never jump frames."""
     result=[]
     for index,(tick,mode) in enumerate(cuts()):
-        period=12 if mode&0x10 else 16
+        period=32 if mode&0x20 else 12 if mode&0x10 else 16
         qstart=(tick>>4)&255
-        if index==0 or (mode&0x10)!=(result[-1][1]&0x10):
+        if index==0:
+            clock=tick+SHIFT if MONTAGE_START<=tick<END else tick
+            original=((clock>>4)&31)|((clock>>5)&32)
+            base=original&31
+        elif (mode&0x30)!=(result[-1][1]&0x30):
             base=0
         else:
             _,previous_mode,previous_q,previous_base=result[-1]
@@ -51,15 +57,15 @@ def frame_at(tick):
     clock=tick+SHIFT if MONTAGE_START<=tick<END else tick
     original=((clock>>4)&31)|((clock>>5)&32)
     if tick<START:return original
-    if not original&32:
-        return 48|(original&15) if tick<CYCLE_START else original
     _,mode,qstart,base=next(item for item in reversed(timeline()) if tick>=item[0])
-    period=12 if mode&0x10 else 16
+    if mode&0x20:
+        period=32
+    else:period=12 if mode&0x10 else 16
     elapsed=((tick>>4)-qstart)&255
     speed=2 if mode&0x40 else 1
     direction=-1 if mode&0x80 else 1
     phase=(base+direction*speed*elapsed)%period
-    return (48 if tick<CYCLE_START or mode&0x10 else 32)+phase
+    return phase if mode&0x20 else (48 if mode&0x10 else 32)+phase
 
 def helper():
     c=Code(ENTRY)
@@ -88,8 +94,6 @@ def bank_helper():
     c.label('check_start_low');c.branch(0xd0,'apply_timeline')
     a(0xad,0x83e2);c.emit(0xc9,START&255);c.branch(0xb0,'apply_timeline');c.jump(0x4c,'done')
     c.label('apply_timeline')
-    a(0xad,0x83ed);c.emit(0x29,32);c.branch(0xd0,'has_tunnel');c.jump(0x4c,'done')
-    c.label('has_tunnel')
     c.emit(0xa2,len(cuts())-1)
     c.label('find');a(0xad,ACTHI);c.jump(0xdd,'hi');c.branch(0x90,'previous');c.branch(0xd0,'selected')
     a(0xad,ACTLO);c.jump(0xdd,'lo');c.branch(0xb0,'selected')
@@ -101,7 +105,16 @@ def bank_helper():
     a(0xad,ACTLO);c.emit(0x4a,0x4a,0x4a,0x4a);a(0x8d,ELAPSED)
     a(0xad,ACTHI);c.emit(0x29,15,0x0a,0x0a,0x0a,0x0a);a(0x0d,ELAPSED)
     c.emit(0x38);a(0xed,QSTART);a(0x8d,ELAPSED)
+    a(0xad,DESC);c.emit(0x29,32);c.branch(0xd0,'banana_phase')
     a(0xad,DESC);c.emit(0x29,16);c.branch(0xd0,'organic_phase');c.jump(0x4c,'spiral_phase')
+    # Banana frames use all 32 orientations and share the same speed/direction
+    # controls; unlike tunnel art, they are selected even during their own cycle.
+    c.label('banana_phase');a(0xad,ELAPSED);c.emit(0x29,31);a(0x8d,ELAPSED)
+    a(0xad,DESC);c.emit(0x29,64);c.branch(0xf0,'banana_reverse')
+    a(0xad,ELAPSED);c.emit(0x0a,0x29,31);a(0x8d,ELAPSED)
+    c.label('banana_reverse');a(0xad,DESC);c.emit(0x29,128);c.branch(0xf0,'banana_add')
+    a(0xad,ELAPSED);c.emit(0x49,31,0x18,0x69,1,0x29,31);a(0x8d,ELAPSED)
+    c.label('banana_add');a(0xad,ELAPSED);c.emit(0x18);c.jump(0x7d,'base');c.emit(0x29,31);a(0x8d,0x83ed);c.jump(0x4c,'done')
     # Organic art has twelve stored rotations. Reduce elapsed and speed before
     # applying direction, then wrap within those twelve real frames.
     c.label('organic_phase')

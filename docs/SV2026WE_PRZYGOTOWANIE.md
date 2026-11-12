@@ -9,9 +9,15 @@ https://sillyventure.eu/en/compos
   Organizator podaje XL/XE z Ultimate 1 MB i stereo POKEY jako konfigurację
   standardową. Lokalny test Atari800/1088XE nie dowodzi zgodności z konkretnym
   rozszerzeniem na party.
-- Najnowszy numerowany stereo XEX to release 054/v322:
-  `releases/less-i-know-demo-release-054-stereo.xex` (936,106 B), zbudowany
-  dla AVG i 1 MB RAM/stereo POKEY. SHA-256:
+- Najnowszy numerowany stereo XEX to release 058/v330:
+  `releases/less-i-know-demo-release-058-stereo.xex` (936,240 B),
+  zbudowany dla AVG i 1 MB RAM/stereo POKEY. SHA-256:
+- V330 skraca demo do około 4:20.7 przez skrócenie rotatorów/tuneli po
+  Trevorze. Director przejmuje sterowanie od razu po walce; rytm zmian jest
+  taktowy od taktu 80. Credits/greetz i finał
+  zachowują czas ekspozycji. 28 testów przejść, rytmu i creditsów zaliczonych.
+  Fizycznego Atari nie testowano. SHA-256 release 058:
+  `f3c14bc36b96220ead8fbe24df2e0dfc7ef5d30371d5cd83d11f808b62706b8f`.
 - W v322 nasycono złoto i żółte refleksy bananowego rotatora. Testy palet,
   reżysera i timeline’u przechodzą 8/8; wydanie nie było sprawdzane na
   fizycznym Atari.
@@ -25,8 +31,8 @@ https://sillyventure.eu/en/compos
 - Pełne porównanie całego utworu stereo POKEY z oryginalnym v035 dotyczy
   starszego builda v260: 16,272,720 bajtów zgodnych. Release 048 nie został
   ponownie porównany przez Atari800.
-- Aktualny pakiet zgłoszeniowy dla release 054 znajduje się w
-  `releases/less-i-know-sv2026we-v322-submission/` i w ZIP obok. Starsze
+- Aktualny pakiet zgłoszeniowy dla release 058 znajduje się w
+  `releases/less-i-know-sv2026we-v330-submission/` i w ZIP obok. Starsze
   szkice v257/v260 zachowano bez zmian. Formularz organizatora wymaga pliku
   TXT i wykonywalnego pliku; film MP4 1920×1080/50 fps jest opcjonalny,
   zalecany przez organizatora i nie został dołączony. Pakiet nie został

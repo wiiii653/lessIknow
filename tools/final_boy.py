@@ -17,7 +17,7 @@ GLYPH_ROWS=12
 def notes_active(tick):
     return bool((tick >> 8) & 1)
 
-END=tick_at_bar(160)
+END=tick_at_bar(139)
 FADE_START=END-128
 ENTRY=0x5cd0
 ORBIT_DATA=0x69c4  # 60-byte gap after the Trevor controller

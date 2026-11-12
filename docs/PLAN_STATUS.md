@@ -1,4 +1,15 @@
-# Status planu dema — stan po v322
+# Status planu dema — stan po v330
+
+V330 skraca demo do około 4:20.7 przez skrócenie wyłącznie montażu
+rotatorów/tuneli po Trevorze. Outro wchodzi na takcie 112 (tick 41884),
+napisy kończą się na takcie 137 (tick 51232), a ekran gaśnie na takcie 139
+(tick 51980). Pełny czas credits/greetz i ostatniego kadru został zachowany.
+Director przejmuje rotatory na pierwszym callbacku po Trevorze (tick 29656),
+zachowując fazę bananów. Od taktu 80 zmienia tempo/kierunek i przechodzi
+między bananami, tunelem spiralnym i organicznym co takt. 28 testów rotatorów,
+granic i creditsów zaliczonych na buildzie v330. Brak fizycznego testu Atari.
+Stereo release 058:
+`releases/less-i-know-demo-release-058-stereo.xex`.
 
 V322 nasyca paletę obu rotatorów bananowych: mocniejszy złoty korpus `$EA`
 i jaskrawy żółty refleks `$EE`. Pozostałe palety tuneli zachowane. Stereo
@@ -124,11 +135,14 @@ Aktualizacja v257: komiksowe przebitki Trevora, trzech postaci,
 konfrontacji i dużego Trevora w istniejącym montażu; oczy i finał zachowane.
 `V257_KOMIKSOWY_MONTAZ.md`.
 
-**Aktualny montaż:** układ v256 przywrócono w v260 i nie zmieniono go w v261.
-Od v248 zajmuje ticki 28909–49849; wewnętrzny zegar wyboru motywów jest
-przesunięty o 4000 ticków, ale muzyka nie. Outro zaczyna się w 49850. Oczy
-dziewczyny są w 39379–40126 (v252). Przebitki komiksowe v257 wycofano w v260.
-Dokładna mapa: `AKTUALNY_MONTAZ_V256.md`. Regulamin, status zgłoszenia i
+**Aktualny montaż:** v330 skraca powtarzalny fragment po Trevorze. Plansza
+końcowa wchodzi na takcie 112 (tick 41884), creditsy kończą się na takcie 137,
+a trwała czerń zaczyna na takcie 139 (tick 51980, około 4:20.7). Pełny czas
+credits/greetz i ostatniego ujęcia pozostaje; skrócono rotatory/tunele.
+Director przejmuje kontrolę na ticku 29656; pierwszy zsynchronizowany taktowy
+przebieg wypada na takcie 80. Oczy dziewczyny pozostają w 39379–40126.
+Szczegóły w
+`AKTUALNY_MONTAZ_V256.md`. Regulamin, status zgłoszenia i
 rozróżnienie między release 008 a starszym pakietem v260:
 `SV2026WE_PRZYGOTOWANIE.md`.
 

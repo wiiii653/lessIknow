@@ -4,7 +4,9 @@ from music_timing import tick_at_bar
 
 ENTRY = 0xC000
 RESET_ENTRY = 0xC340
-START, END = tick_at_bar(144)-4000, tick_at_bar(158)
+# Keep the complete credits/greetz read-time while shortening the post-Trevor
+# rotator montage. The new ending lands on bars 112 / 137 / 139 (~4:20 total).
+START, END = tick_at_bar(112), tick_at_bar(137)
 TEXT_POINTERS = 0xC400
 FONT = 0xC800
 TEXT_LOW = 0xC48A

@@ -10,7 +10,9 @@ import post_trevor_director as director
 
 class RetimedMontageTests(unittest.TestCase):
     def test_boundaries_and_complete_last_punch(self):
-        self.assertEqual((TREVOR_END,OUTRO_START,TEXT_END),(29656,49850,59085))
+        from music_timing import tick_at_bar
+        self.assertEqual((TREVOR_END,OUTRO_START,TEXT_END),
+                         (29656,tick_at_bar(112),tick_at_bar(137)))
         self.assertLessEqual(HITS[-1]+106,TREVOR_END)
         cpu=seq.execute(TREVOR_END-1)
         self.assertEqual(cpu.memory[0x83e0],16)
@@ -18,7 +20,7 @@ class RetimedMontageTests(unittest.TestCase):
         seq.execute(OUTRO_START-1,cpu);self.assertEqual(cpu.memory[0x83e0],6)
         seq.execute(OUTRO_START,cpu);self.assertEqual(cpu.memory[0x83e0],17)
 
-    def test_long_rotator_timeline_and_eye_frame_mapping(self):
+    def test_short_rotator_timeline_and_eye_frame_mapping(self):
         cuts=director.cuts()
         samples=sorted({director.START,director.END-1,
                         *(tick+delta for tick,_ in cuts for delta in (-16,-1,0,1,16)

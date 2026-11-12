@@ -33,7 +33,7 @@ class TerminalTypingTests(unittest.TestCase):
         cpu=seq.execute(start+1)
         earlier=self.row(cpu,0)
         self.assertIn(0x5f,earlier)
-        cpu=seq.execute(start+8,cpu)
+        cpu=seq.execute(start+65,cpu)
         later=self.row(cpu,0)
         self.assertNotIn(0x5f,later)
         self.assertEqual(earlier[0],later[0])
@@ -57,7 +57,9 @@ class TerminalTypingTests(unittest.TestCase):
         self.assertTrue(all(self.row(cpu,r)==b' '*40 for r in range(text.HISTORY_ROWS)))
 
     def test_paragraphs_get_separate_pages_without_losing_any_greeting(self):
-        self.assertEqual(tuple(line for page in text.pages() for line in page),tuple(line for line in text.all_lines() if line))
+        display_lines=tuple(line for page in text.pages() for line in page)
+        expected=tuple(line for page in text.CREDITS for line in page if line)+tuple(line for line in text.GREETZ if line)
+        self.assertEqual(display_lines,expected)
         cpu=seq.execute(text.page_starts()[6]+300)
         self.assertIn(b'VIRUS / FOORMAN / MAQ / KEY-G',self.row(cpu,0))
         self.assertIn(b'FALCON / ATARIONLINE.PL / PTODT',self.row(cpu,1))
@@ -76,11 +78,13 @@ class TerminalTypingTests(unittest.TestCase):
         self.assertIn(b'AI TOOLS / ATARI SOUL',self.row(cpu,3))
         self.assertEqual(cpu.memory[0xd403],0xbc)
 
-    def test_terminal_and_boy_start_ten_seconds_earlier_with_the_same_ending(self):
+    def test_terminal_keeps_read_time_and_finale_ends_on_bar_139(self):
         import final_boy
-        self.assertEqual(text.START,53850-4000)
+        from music_timing import tick_at_bar
+        self.assertEqual(text.START,tick_at_bar(112))
         self.assertEqual(final_boy.START,text.START)
-        self.assertEqual(text.END,59085)
+        self.assertEqual(text.END,tick_at_bar(137))
+        self.assertEqual(final_boy.END,tick_at_bar(139))
         cpu=seq.execute(text.START-1)
         self.assertEqual(cpu.memory[0x83e0],6)
         cpu=seq.execute(text.START,cpu)

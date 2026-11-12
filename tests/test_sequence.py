@@ -56,16 +56,17 @@ class SequenceTests(unittest.TestCase):
     def test_act5_motif_boundaries(self):
         # Act 5 uses banana phases 0–31, spiral phases 32–47 and twelve
         # organic phases 48–59; eye art owns IDs 60–63.
-        cpu = None
-        for old_tick, low, high in ((38892, 32, 47), (32909, 8, 8),
-                                (34403, 6, 6), (34404, 6, 6),
-                                (35899, 3, 3), (35900, 32, 47),
-                                (40387, 32, 47),
-                                (40388, 48, 59), (41884, 48, 59),
-                                (41983, 48, 59), (41984, 32, 47)):
-            cpu = execute(old_tick-4000, cpu)
-            self.assertLessEqual(low, cpu.memory[0x83ed])
-            self.assertLessEqual(cpu.memory[0x83ed], high)
+        from post_trevor_director import START, CYCLE_START, END, cuts
+        for tick in sorted({START-1,START,CYCLE_START-1,CYCLE_START,39379,
+                            40126,END-1,END,*[t for t,_ in cuts()]}):
+            cpu=execute(tick)
+            if tick==START-1:
+                self.assertEqual(cpu.memory[0x83e0],16)
+            elif tick<END:
+                self.assertEqual(cpu.memory[0x83e0],6)
+                self.assertLess(cpu.memory[0x83ed],64)
+            else:
+                self.assertEqual(cpu.memory[0x83e0],17)
 
     def raster(self, cpu, effects=False):
         display = cpu.memory[0xd402] | cpu.memory[0xd403] << 8
@@ -454,8 +455,8 @@ class SequenceTests(unittest.TestCase):
                                    (DANCE_TICK+48, 14, 0),
                                    (DANCE_TICK+96, 14, 0),
                                    (KALEIDO_TICK-1, 14, 0), (KALEIDO_TICK, 6, 0),
-                                   (49849, 6, 0), (49850,17,0),
-                                   (59084, 17, 0), (59085,17,0),
+                                   (41883, 6, 0), (41884,17,0),
+                                   (51231, 17, 0), (51232,17,0),
                                    (65536, 17, 0), (0xffffff, 17, 0)):
             with self.subTest(tick=tick):
                 cpu = execute(tick)
