@@ -9,7 +9,7 @@ Aktualizacja: 2026-11-12, po upływie terminu zgłoszeń (12:00 CET).
 - Autor potwierdził prywatne udostępnianie wcześniejszych wersji, użycie partytury MIDI bez sampli z komercyjnego nagrania oraz posiadanie zgody na wykorzystanie partytury i kompozycji. Źródło partytury: MidiShow, pozycja 200337 (podane w creditsach i `info.txt`).
 - Informacja o użyciu AI jest w `info.txt`; deklaruje programowanie i grafikę wspomagane przez AI oraz dwa tygodnie intensywnej pracy z agentami.
 - 28 ukierunkowanych testów py65 zaliczonych dla v330. Pełnego `make check` nie uruchomiono po ostatnich zmianach.
-- Brak fizycznej próby release 058. Ostatnie pełne porównanie audio POKEY z v035 dotyczy v260. Nie twierdzić, że v330 jest zweryfikowane na docelowym sprzęcie.
+- Użytkownik potwierdził, że release 058 działa bez zarzutu z karty AVG na Atari 1088 Rambo. To test praktyczny na sprzęcie; nie wykonano osobnego pomiaru FPS. Ostatnie pełne porównanie audio POKEY z v035 dotyczy v260.
 - Film MP4 nie został przygotowany.
 
 Szczegóły bieżącego montażu i ograniczeń: [status projektu](PLAN_STATUS.md) oraz [montaż v330](AKTUALNY_MONTAZ_V330.md).

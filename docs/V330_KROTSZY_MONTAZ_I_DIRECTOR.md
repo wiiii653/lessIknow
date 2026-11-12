@@ -16,5 +16,6 @@ SHA-256: `f3c14bc36b96220ead8fbe24df2e0dfc7ef5d30371d5cd83d11f808b62706b8f`.
 
 28 ukierunkowanych testów py65 obejmujących reżysera, rotatory, granice
 montażu, timeline i credits zaliczyło v330. Pełnego `make check` po zmianie
-nie uruchomiono. Nie wykonano fizycznej próby Atari ani nowego pełnego
-porównania stereo POKEY dla v330.
+nie uruchomiono. Użytkownik potwierdził bezproblemowy przebieg v330 z karty
+AVG na Atari 1088 Rambo. Nie wykonano nowego pełnego porównania stereo
+POKEY dla v330.

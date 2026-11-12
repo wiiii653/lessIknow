@@ -35,8 +35,9 @@ Install `requirements-dev.txt` in a virtual environment. `make all
 PYTHON=/path/to/venv/bin/python` builds the replaceable dev pair;
 `make check PYTHON=/path/to/venv/bin/python` runs all discovered tests.
 `tools/check_playback.py` compares stereo POKEY output in Atari800. Current
-v330 has 28 focused py65 checks recorded; full `make check` and physical Atari
-playback have not been repeated for this release. State precisely what was run.
+v330 has 28 focused py65 checks recorded. The user confirmed flawless playback
+from an AVG card on Atari 1088 Rambo. Full `make check` and a new POKEY
+comparison were not run for this release. State precisely what was run.
 
 For hardware work, record PAL/NTSC, Atari model, memory expansion and stereo
 configuration. py65 does not model ANTIC DMA or physical raster deadlines.

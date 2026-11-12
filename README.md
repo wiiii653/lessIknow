@@ -25,9 +25,8 @@ py65. Szczegóły ograniczeń oraz zweryfikowany stan wydania są w
 [statusie projektu](docs/PLAN_STATUS.md) i [przygotowaniu SV](docs/SV2026WE_PRZYGOTOWANIE.md).
 
 v330: 28 ukierunkowanych testów py65 zaliczonych. Pełnego `make check` po
-ostatnich zmianach nie uruchomiono. Brak próby na fizycznym Atari dla v330;
-test CPU/emulatora nie potwierdza stabilności rastra ani odbioru A/V na
-sprzęcie.
+ostatnich zmianach nie uruchomiono. Użytkownik potwierdził poprawny pełny
+przebieg v330 na Atari 1088 Rambo uruchomionym z karty AVG.
 
 ## Zasady pracy
 
