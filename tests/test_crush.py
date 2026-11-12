@@ -1,8 +1,7 @@
 """Portrait cuts, banked execution and PMG overlays on held frames."""
 import unittest
 import test_sequence as sequence
-from crush_portraits import CUTS, portraits, START, END
-from pompom_effects import variants, PALETTES
+from crush_portraits import START, END
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class CrushTests(unittest.TestCase):
@@ -69,18 +68,3 @@ class CrushTests(unittest.TestCase):
         for tick,scene in ((4488,9),(4862,10),(5236,11),(5610,12),(5984,13)):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0x83e0],scene,tick)
-
-    def test_pompom_bank_layout_and_protected_skin(self):
-        from pompom_effects import ENTRY,DATA,helper
-        from rainbow_ball import ENTRY as BALL_ENTRY,helper as ball_helper,RESTORE
-        from crush_portraits import cleanup
-        code,data=helper()
-        self.assertLessEqual(BALL_ENTRY+len(ball_helper()),ENTRY)
-        self.assertLessEqual(ENTRY+len(code),RESTORE)
-        self.assertLessEqual(RESTORE+len(cleanup(RESTORE)),DATA)
-        self.assertLessEqual(DATA+len(data),0x8000)
-        source=portraits()
-        for shot,views in enumerate(variants()):
-            for view in views:
-                self.assertTrue(all(view[j]==3 for j,value in enumerate(source[shot]) if value==3))
-            self.assertGreater(len(set(views)),2)

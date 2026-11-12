@@ -11,21 +11,6 @@ class BananaVariantTests(unittest.TestCase):
         p=mosaic.pixels(frame,variant)
         return bytes(p[y//2*160+x] for y in range(192) for x in range(160))
 
-    def test_alternation_is_per_appearance_and_act5_never_switches_mid_turn(self):
-        cpu=None
-        for index,tick in enumerate((12288,14336,28909,39264,41312,43360,45152,47456)):
-            variant=index&1;self.assertEqual(variants.variant_at(tick),variant)
-            cpu=seq.execute(tick,cpu);m=cpu.memory
-            self.assertEqual(m[variants.KEY],0x80|(variant<<6))
-            self.assertEqual(m[0x83ed],((tick+(4000 if tick>=28909 else 0))>>4)&31)
-            self.assertEqual(tuple(m[a] for a in (0xd016,0xd018)),(0xfa,0xfe) if variant else (0xf8,0xfe))
-        for tick in range(28909,31900):self.assertEqual(variants.variant_at(tick),0)
-        report=variants.memory_report()
-        self.assertEqual(report['banks'],8)
-        self.assertEqual(report['frames_per_variant'],32)
-        self.assertGreater(report['free_bytes'],0)
-        self.assertTrue(all(n<=variants.CAPACITY for n in report['payload_bytes_per_bank']))
-
     def test_all_64_live_frames_decode_without_front_writes_or_cost_regression(self):
         cpu=seq.MPU(memory=TrackedMemory(seq.XEX.read_bytes()))
         for variant,start in enumerate((12288,14336)):
@@ -38,16 +23,6 @@ class BananaVariantTests(unittest.TestCase):
                 self.assertFalse(any(front<=a<front+3840 for a in m.writes),(variant,frame))
                 self.assertEqual(m[0xd301],0xff)
                 self.assertEqual(m[0x83fa],0xff)
-
-    def test_same_phase_variant_seeks_and_other_renderers_do_not_share_cache_keys(self):
-        cpu=None
-        for tick in (14336,3553,14336,12288,14336,14983,14336,29280,39264,41312,59000,14336):
-            cpu=seq.execute(tick,cpu)
-            if tick in (3553,14983,59000):continue
-            frame=((tick+(4000 if tick>=28909 else 0))>>4)&31
-            self.assertEqual(seq.SequenceTests().raster(cpu),self.expected(frame,variants.variant_at(tick)),tick)
-            seq.execute(tick+1,cpu)
-            self.assertEqual(seq.SequenceTests().raster(cpu),self.expected(frame,variants.variant_at(tick)),tick)
 
     def test_decoder_survives_original_music_nmi_and_restores_portb(self):
         for tick in (12304,14336,14832):

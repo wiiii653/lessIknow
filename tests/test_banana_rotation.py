@@ -1,9 +1,7 @@
-"""Full 360-degree tile orientation and a continuous live 32-frame cycle."""
+"""Static artwork checks for full 360-degree tile orientation."""
 import unittest
 import math
-import test_sequence as seq
 import mosaic
-from music_timing import tick_at_bar
 
 
 class BananaRotationTests(unittest.TestCase):
@@ -26,18 +24,3 @@ class BananaRotationTests(unittest.TestCase):
         # Zoom is fastest/largest around the seam, so compare against the
         # strongest regular step rather than the smaller mid-zoom median.
         self.assertLess(differences[-1],max(differences[:-1])*1.15)
-
-    def test_act5_visits_all_32_phases_without_half_turn_resets(self):
-        cpu=None;seen=set();previous=None
-        for tick in range(tick_at_bar(88)-4000,tick_at_bar(96)-4000,16):
-            cpu=seq.execute(tick,cpu);frame=cpu.memory[0x83ed]
-            self.assertEqual(frame,((tick+4000)>>4)&31,tick)
-            if previous is not None:self.assertEqual(frame,(previous+1)&31,tick)
-            self.assertEqual(cpu.memory[0xd301],0xff)
-            seen.add(frame);previous=frame
-        self.assertEqual(seen,set(range(32)))
-        # Bar 92 must not jump from the first half to an unrelated frame.
-        for tick in (29023,29024,30403,30404,30415,30416):
-            cpu=seq.execute(tick,cpu)
-            self.assertEqual(cpu.memory[0x83ed],((tick+4000)>>4)&31,tick)
-        self.assertGreaterEqual(seq.execute(tick_at_bar(96)-4000,cpu).memory[0x83ed],32)

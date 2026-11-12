@@ -13,7 +13,7 @@ generatora (`tools/build_bitmap_sequence.py` — dispatch scen,
 > po Trevorze do ticków 28909–49849 i outro do 49850; v252 dodało oczy
 > dziewczyny w 39379–40126; v260 wycofało komiksowe przebitki v257, a v261
 > zmieniło wyłącznie greetz. Aktualna mapa montażu:
-> `AKTUALNY_MONTAZ_V256.md`; pełny status: `PLAN_STATUS.md`.
+> `AKTUALNY_MONTAZ_V330.md`; pełny status: `PLAN_STATUS.md`.
 
 ## 1. Intro — plansze plazmowe
 
