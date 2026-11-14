@@ -4,8 +4,6 @@ from music_timing import tick_at_bar
 
 ENTRY = 0xC000
 RESET_ENTRY = 0xC340
-# Keep the complete credits/greetz read-time while shortening the post-Trevor
-# rotator montage. The new ending lands on bars 112 / 137 / 139 (~4:20 total).
 START, END = tick_at_bar(112), tick_at_bar(137)
 TEXT_POINTERS = 0xC400
 FONT = 0xC800
@@ -31,7 +29,6 @@ FINAL_CARD_ENTRY = 0x5F90
 FINAL_CARD_DL = 0xBE80
 FINAL_CARD_SOURCE = 0x5FDA
 FINAL_CARD_LINES = ('A\\SLOP BY OGNJEN 2026', 'SILLY VENTURE WE')
-
 CREDITS = (
     ("SYS.OPEN CREDITS [OK]", "THE LESS I KNOW THE BETTER", "AN ATARI XE 1 MB DEMO", "A\\SLOP BY OGNJEN",
      "MADE WITH OPENAI CODEX", "HUMAN VISION / LLM CODE"),
@@ -148,6 +145,7 @@ TERMINAL_FONT = {
 'U':"101 101 101 101 101 101 111",'V':"101 101 101 101 101 101 010",
 'W':"101 101 101 111 111 111 101",'X':"101 101 010 010 010 101 101",
 'Y':"101 101 101 010 010 010 010",'Z':"111 001 001 010 100 100 111",
+'7':"111 001 001 010 010 100 100",
 }
 
 def font_data():

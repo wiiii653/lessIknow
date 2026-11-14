@@ -58,13 +58,22 @@ def tunnel_offsets():
 def helper():
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
+    # The director owns the PMG while it draws BUM/BAM over banana frames.
+    a(0xad,0x0dd2);c.branch(0xf0,'ball_clock');c.emit(0x60)
+    c.label('ball_clock')
     # Match the translated Act 5 clock; other scenes retain real music time.
     a(0x20,0x7480)
-    # Tunnel: gentle two-axis motion; rotator: full left/right sweep.
+    # Eye frames occupy 60–63; give their ball a clock-driven figure eight.
+    # Other tunnel frames keep their gentle centred drift.
+    a(0xad,0x83ed);c.emit(0x29,0xfc,0xc9,60);c.branch(0xf0,'eye_path')
     a(0xad,0x83ed);c.emit(0x29,32);c.branch(0xd0,'centered')
-    a(0xad,0x83ed);c.emit(0x29,31);a(0x8d,0x83e8)
+    a(0xad,0x83ed);c.emit(0x29,31);c.jump(0x4c,'phase_low')
+    c.label('eye_path');a(0xad,0x0dd3);c.emit(0x4a,0x4a,0x4a,0x4a,0x29,15);a(0x8d,0x83e8)
+    a(0xad,0x0dd4);c.emit(0x29,1,0x0a,0x0a,0x0a,0x0a);a(0x0d,0x83e8)
+    c.label('phase_low');a(0x8d,0x83e8)
     a(0xad,0x0dd4);c.emit(0x29,2,0x0a,0x0a,0x0a,0x0a);a(0x0d,0x83e8);c.emit(0xaa)
     c.jump(0xbd,'sweep');a(0x8d,0x83e8)
+    c.emit(0x8a,0x29,31,0xaa)
     c.jump(0xbd,'sweep_y');a(0x8d,0x83e9);c.jump(0x4c,'offset_ready')
     c.label('centered');a(0xad,0x83ed);c.emit(0x29,31,0xaa)
     c.jump(0xbd,'tunnel_x');a(0x8d,0x83e8);c.jump(0xbd,'tunnel_y');a(0x8d,0x83e9)
@@ -127,7 +136,7 @@ def helper():
     for label,offset,luma in (('rainbow_p0',0,8),('rainbow_p1',1,10),('rainbow_p2',4,14),('rainbow_p3',5,12),('rainbow_sparks',2,14)):
         c.label(label);c.emit(*(hues[(i+offset)%8]|luma for i in range(8)))
     c.label('sweep');c.emit(*(v&255 for v in rotator_offsets()))
-    c.label('sweep_y');c.emit(*(v&255 for v in rotator_vertical_offsets()))
+    c.label('sweep_y');c.emit(*(v&255 for v in rotator_vertical_offsets()[:32]))
     c.label('tunnel_x');c.emit(*(x&255 for x,y in tunnel_offsets()))
     c.label('tunnel_y');c.emit(*(y&255 for x,y in tunnel_offsets()))
     # Align the two 512-byte panel tables to pages; outline lookup uses

@@ -37,6 +37,7 @@ class HeroTests(unittest.TestCase):
     def test_unchanged_throw_then_two_bar_tunnel_and_short_dunk(self):
         from mosaic import pixels
         from girl_eyes import frame_at as eye_frame_at
+        from post_trevor_director import frame_at as director_frame_at
         from music_timing import tick_at_bar
         self.assertEqual((CUTAWAY_START,START,DUNK,END),tuple(tick_at_bar(b) for b in (56,58,62,64)))
         self.assertEqual(DUNK_PHASE_TICKS,8)
@@ -45,7 +46,7 @@ class HeroTests(unittest.TestCase):
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             if CUTAWAY_START<=tick<START:
                 self.assertEqual(m[0x83e0],6)
-                self.assertEqual(m[0x83ed],eye_frame_at(tick,32|((tick>>4)&31)))
+                self.assertEqual(m[0x83ed],eye_frame_at(tick,director_frame_at(tick)))
                 p=pixels(m[0x83ed])
                 self.assertEqual(sequence.SequenceTests().raster(cpu),bytes(p[y//2*160+x] for y in range(192) for x in range(160)))
                 self.assertEqual(m[0xd01d],3)

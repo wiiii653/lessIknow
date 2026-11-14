@@ -691,11 +691,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('mosaic')
     c.emit(0xa9,0);absolute(0x8d,SHIFT)
     absolute(0x20,post_trevor_director.ENTRY)
-    # Act 5 uses the existing two motifs deliberately, rather than allowing
-    # the six-bit animation clock to alternate between them every 512 ticks.
-    # After Trevor the director owns the selected rotator/tunnel phase. Keep
-    # the legacy Act 5 clock only for earlier scene callbacks.
-    compare_tick(TREVOR_END, 'mosaic_frame_ready', 'act5_select')
+    # The director owns the selected rotator/tunnel phase from the first shot.
+    # Keep the legacy selection below for callbacks before that first shot.
+    compare_tick(KALEIDO_TICK, 'mosaic_frame_ready', 'act5_select')
     c.label('act5_select')
     compare_tick16(ACT5_CYCLE_TICK, 'mosaic_frame_ready', 'act5_motif', True)
     c.label('act5_motif')
@@ -725,9 +723,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.emit(0xa9,6);absolute(0x8d,SCENE)
     absolute(0x20,post_trevor_director.ENTRY)
     c.emit(0xa9,0);absolute(0x8d,SHIFT)
-    absolute(0xad,TICK+1);c.emit(0x4a)
-    absolute(0xad,TICK);c.emit(0x6a,0x4a,0x4a,0x4a,0x29,31,0x09,32)
-    absolute(0x8d,STATE+13);c.jump(0x4c,'mosaic_frame_ready')
+    c.jump(0x4c,'mosaic_frame_ready')
     c.label('banked_effects')
     absolute(0xad,0xd301)
     c.emit(0x48)
@@ -865,17 +861,17 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             payload[0x23cd-start]=0x60  # retired UI entry; its body holds terminal timing data
             patched = True
         if (start, end) == (0x02e0, 0x02e1):
-            output.extend(school_bank_loader(girl_frame))
-            output.extend(school_bank_loader(hero_bank(c.labels['banked_effects'],c.labels['banked_effects']+5,c.labels['hero_cutaway']),index=1))
-            output.extend(school_bank_loader(post_trevor_director.install(ribbon_inbetweens.install(trevor_bank(),2)),index=2))
+            output.extend(school_bank_loader(girl_frame,progress=True))
+            output.extend(school_bank_loader(hero_bank(c.labels['banked_effects'],c.labels['banked_effects']+5,c.labels['hero_cutaway']),index=1,progress=True))
+            output.extend(school_bank_loader(post_trevor_director.install(ribbon_inbetweens.install(trevor_bank(),2)),index=2,progress=True))
             for index, frame in enumerate(mosaic_banks(),3):
-                output.extend(school_bank_loader(frame,index=index))
+                output.extend(school_bank_loader(frame,index=index,progress=True))
             for index, frame in enumerate(school_pan_banks(),19):
                 if index==trevor_ball_flight.BANK_INDEX:frame=trevor_ball_flight.install(frame)
-                output.extend(school_bank_loader(frame,index=index))
+                output.extend(school_bank_loader(frame,index=index,progress=True))
             for phase in range(16):
                 art=ribbon_dance.install_side_actor(polished_trevor_bank(phase,bank_wrapper=c.labels['banked_effects']),24+phase)
-                output.extend(school_bank_loader(ribbon_inbetweens.install(final_boy.install_bitmap(art,24+phase),24+phase),index=24+phase))
+                output.extend(school_bank_loader(ribbon_inbetweens.install(final_boy.install_bitmap(art,24+phase),24+phase),index=24+phase,progress=True))
             plasma_banks=plasma_artwork()
             masks=plasma_banks[4]
             # Both card layouts can coexist during the ordered dissolve.
@@ -883,9 +879,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             for index, bank in enumerate(plasma_banks, PLASMA_FIRST_BANK):
                 if index in (40,41):
                     bank=title_fireworks.install(bank,protected)
-                output.extend(school_bank_loader(banana_cache.install(bank,index,c.labels['banana_work_hook']), index=index))
+                output.extend(school_bank_loader(banana_cache.install(bank,index,c.labels['banana_work_hook']), index=index,progress=True))
             control=ribbon_dance.install_control(polished_trevor_bank(0, quiet=True,bank_wrapper=c.labels['banked_effects']),c.labels['ribbon_copy'],c.labels['ribbon_palette'])
-            output.extend(school_bank_loader(final_boy.install_control(control,c.labels['ribbon_copy']), index=49))
+            output.extend(school_bank_loader(final_boy.install_control(control,c.labels['ribbon_copy']), index=49,progress=True))
             output.extend(loader(rom))
             for address, data in inserts:
                 if address < 0xc000:

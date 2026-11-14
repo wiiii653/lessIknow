@@ -8,6 +8,8 @@ from trevor_polished import HITS, impact_anchor, IMPACT_HUES
 
 ENTRY=0x6800
 BANK_INDEX=19
+INCOMING_TICKS=48
+INCOMING_SCALE=0x7250  # 49 bytes after the school panorama helper ($7246)
 # One distinct vector per visible flight, including horizontal and vertical entries.
 IN_VECTORS=((-3,0),(3,0),(0,-1),(0,1),(-2,-1),(2,-1),(-2,1),(2,1),(-1,-1),(1,-1),(-1,1),(1,1),(-3,-1))
 OUT_VECTORS=((3,1),(-3,1),(3,-1),(-3,-1),(2,1),(-2,1),(2,-1),(-2,-1),(1,1),(-1,1),(1,-1),(-1,-1),(0,1))
@@ -28,7 +30,7 @@ def helper():
     c.emit(0xe0,len(HITS)-1);c.branch(0xb0,'outgoing_ready');c.emit(0xe8)
     c.jump(0xbd,'hit_lo');c.emit(0x38);a(0xed,0x83e2);c.jump(0x8d,'next_delta')
     c.jump(0xbd,'hit_hi');a(0xed,0x83e3);c.branch(0xd0,'no_overlap')
-    c.jump(0xad,'next_delta');c.emit(0xc9,33);c.branch(0xb0,'no_overlap')
+    c.jump(0xad,'next_delta');c.emit(0xc9,INCOMING_TICKS+1);c.branch(0xb0,'no_overlap')
     c.jump(0x4c,'scan')
     c.label('no_overlap');c.emit(0xca)
     c.label('outgoing_ready');a(0xad,0x83ea)
@@ -36,8 +38,10 @@ def helper():
     c.label('next');c.emit(0xe8,0xe0,len(HITS));c.branch(0xd0,'scan');c.jump(0x4c,'hide')
     c.label('future');c.jump(0xbd,'hit_lo');c.emit(0x38);a(0xed,0x83e2);a(0x8d,0x83ea)
     c.jump(0xbd,'hit_hi');a(0xed,0x83e3);c.branch(0xf0,'future_low');c.jump(0x4c,'hide')
-    c.label('future_low');a(0xad,0x83ea);c.emit(0xc9,33);c.branch(0x90,'is_in');c.jump(0x4c,'hide')
-    c.label('is_in');c.emit(0xa9,1);c.jump(0x8d,'incoming')
+    c.label('future_low');a(0xad,0x83ea);c.emit(0xc9,INCOMING_TICKS+1);c.branch(0x90,'is_in');c.jump(0x4c,'hide')
+    # Slow the same 32-step path to 48 music ticks without multiplying at runtime.
+    c.label('is_in');c.emit(0xa8);a(0xb9,INCOMING_SCALE);a(0x8d,0x83ea)
+    c.emit(0xa9,1);c.jump(0x8d,'incoming')
     c.label('position');c.jump(0x8e,'hit_index')
     # Shared displacement table gives distinct trajectories without runtime multiplication.
     for axis,workspace in (('x',0x83eb),('y',0x83ec)):
@@ -186,6 +190,7 @@ def install(bank):
     out[0x2800:0x2800+len(code)]=code
     large=large_masks();small=spin_masks()
     blobs=[]
+    blobs.append((INCOMING_SCALE,bytes((2*d+2)//3 for d in range(INCOMING_TICKS+1))))
     blobs.append((0x7300,bytes(v for p in range(4) for f in large for v in f[p])))
     blobs.append((0x7b00,bytes(v for p in range(4) for f in small for v in f[p])))
     paths=satellite_orbits()

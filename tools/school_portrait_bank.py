@@ -2,11 +2,13 @@
 from build_sequence import Code
 from build_visual_prototype import xex_segment
 BANK_VALUE=0x24b3
+DOTS=0x0641
+DOT_STATE=0x06ff
 
 def bank_value(index):
     return BANK_VALUE+index if index<3 else 0x08c0+index
 
-def loader(frame, index=0):
+def loader(frame, index=0, progress=False):
     assert len(frame) in (8192,16384)
     c=Code(0x1000)
     c.emit(0x08,0x78,0xad,1,0xd3,0x48)
@@ -44,5 +46,29 @@ def loader(frame, index=0):
     for label in ('read','write'):
         addr=c.labels[label]+2;c.emit(0xee,addr&255,addr>>8)
     c.emit(0xca);c.branch(0xd0,'copy')
+    if progress:
+        # Advance the loader ellipsis once after each bank has been copied.
+        # The label stays fixed; only these three screen cells change.
+        c.emit(0xee,DOT_STATE&255,DOT_STATE>>8,0xad,DOT_STATE&255,DOT_STATE>>8,
+               0x29,0x03,0x8d,DOT_STATE&255,DOT_STATE>>8,
+               0xc9,0x00);c.branch(0xf0,'dots_none')
+        c.emit(0xc9,0x01);c.branch(0xf0,'dots_one')
+        c.emit(0xc9,0x02);c.branch(0xf0,'dots_two')
+        c.emit(0xa9,14)
+        for address in range(DOTS,DOTS+3): c.emit(0x8d,address&255,address>>8)
+        c.jump(0x4c,'dots_done')
+        c.label('dots_none')
+        c.emit(0xa9,0)
+        for address in range(DOTS,DOTS+3): c.emit(0x8d,address&255,address>>8)
+        c.jump(0x4c,'dots_done')
+        c.label('dots_one')
+        c.emit(0xa9,14,0x8d,DOTS&255,DOTS>>8,0xa9,0)
+        for address in range(DOTS+1,DOTS+3): c.emit(0x8d,address&255,address>>8)
+        c.jump(0x4c,'dots_done')
+        c.label('dots_two')
+        c.emit(0xa9,14)
+        for address in range(DOTS,DOTS+2): c.emit(0x8d,address&255,address>>8)
+        c.emit(0xa9,0,0x8d,(DOTS+2)&255,(DOTS+2)>>8)
+        c.label('dots_done')
     c.emit(0x68,0x8d,1,0xd3,0x28,0x60)
     return xex_segment(0x8000,frame)+xex_segment(0x1000,c.finish())+xex_segment(0x2e2,b'\x00\x10')

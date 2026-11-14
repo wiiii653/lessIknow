@@ -13,7 +13,8 @@ ENTRY, LIMIT = 0x7c00, 0x8000
 TAIL_INDEX = 2  # ribbon compositions 12–17, original player bank table 10
 START = tick_at_beat(40*8+122,2)
 PHASE, DOUBLE = 0x0ddb, 0x0ddc
-COLORS = (0x4e,0x2e,0x0e,0x9e)
+# Saturated magenta-pink with a light glint and a deeper edge.
+COLORS = (0x56,0x58,0x5c,0x54)
 MOUTH = (82,67)
 
 
@@ -23,13 +24,17 @@ def phase_at(tick):
 
 def geometry(phase):
     # Gentle depth yaw and a travelling specular ridge accompany expansion.
+    # Keep the large sixth beat at double width; the old quadruple-width
+    # register stretched the heart sideways while its height stayed doubled.
     size=0 if phase<4 else 1
-    scale=1 if size==0 else 2
-    width=(4,7,10,13,17,21,26,30)[phase]
-    height=(8,14,20,26,34,42,52,60)[phase]
-    cx=MOUTH[0]+(0,2,5,9,15,22,30,37)[phase]
-    cy=MOUTH[1]-(0,1,3,6,10,15,21,27)[phase]
-    return cx-8*scale,(cy+17)//2-8*scale,size,width,height
+    scale_x=1 if size==0 else 2
+    scale_y=1 if size==0 else 2
+    # Two expansions and contractions give the flying heart a heartbeat.
+    width=(4,7,12,10,17,22,17,30)[phase]
+    height=(8,14,24,20,34,44,34,60)[phase]
+    cx=MOUTH[0]+(0,2,5,9,15,22,37,37)[phase]
+    cy=MOUTH[1]-(0,1,3,6,10,15,27,27)[phase]
+    return cx-8*scale_x,(cy+17)//2-8*scale_y,size,width,height
 
 
 def face(canvas,frame):
@@ -63,7 +68,7 @@ def face(canvas,frame):
 
 def masks(phase):
     """Shaded heart followed by two expanding, multicolour particle bursts."""
-    if phase >= 6:
+    if phase >= 7:
         planes = [bytearray(16) for _ in range(4)]
         # Each particle travels radially away from the centre between phases.
         rays = ((-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1),
@@ -158,7 +163,7 @@ def helper():
     c.label('commit');a(0xae,PHASE)
     for plane in range(4):
         c.jump(0xbd,'xs');c.emit(0x18,0x69,48+(8 if plane&1 else 0))
-        # Right-hand slices are separated by 8/16 logical pixels.
+        # A doubled player is 16 color clocks wide, instead of eight.
         if plane&1:
             a(0x2c,DOUBLE);c.branch(0x10,f'normal_x{plane}');c.emit(0x18,0x69,8)
             c.label(f'normal_x{plane}')

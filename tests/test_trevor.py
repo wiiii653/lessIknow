@@ -2,7 +2,7 @@
 from artifact import XEX, METADATA
 import unittest
 import test_sequence as sequence
-from trevor_awakens import START,MIDPOINT,HIT,END
+from trevor_awakens import START,MIDPOINT,HIT,END,FLIGHT_START
 from trevor_polished import frames, helper, tunnel_frames, POLYGONS, CUTOUTS, inside, HITS, HANDS, bank, entrance_mask
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
@@ -39,12 +39,12 @@ class TrevorTests(unittest.TestCase):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0x83e0],16)
             pose=cpu.memory[0x83ed];seen.add(pose)
-            source=art[pose] if pose<2 else tunnel_frames(0 if tick < HIT else (tick>>4)&15)[pose-2]
+            source=art[pose] if pose<2 else tunnel_frames((tick>>4)&15)[pose-2]
             expected=bytes(source[y//3*160+x] for y in range(192) for x in range(160))
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected)
             prior = max((t for t in HITS if t <= tick), default=None)
             age = tick-prior if prior is not None else None
-            incoming = tick>=HIT and any(0 < t-tick <= 32 for t in HITS)
+            incoming = tick>=FLIGHT_START and any(0 < t-tick <= 48 for t in HITS)
             active = incoming or (age is not None and age<106)
             self.assertEqual(cpu.memory[0xd01d],3 if active else 0)
             if age is not None and age<80:
@@ -133,11 +133,11 @@ class TrevorTests(unittest.TestCase):
 
     def test_entrance_never_raises_a_fist(self):
         cpu=None
-        for tick in (MIDPOINT, HIT-64, HIT-32, HIT-16, HIT-4, HIT-1):
+        for tick in (MIDPOINT, HIT-64, HIT-32, FLIGHT_START-1):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0x83ed],1,tick)
             self.assertEqual(cpu.memory[0xd01d],0,tick)
-        cpu=sequence.execute(HIT,cpu)
+        cpu=sequence.execute(FLIGHT_START,cpu)
         self.assertEqual(cpu.memory[0x83ed],3)
         self.assertEqual(cpu.memory[0xd01d],3)
         cpu=sequence.execute(HITS[0],cpu)

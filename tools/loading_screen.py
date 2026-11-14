@@ -5,6 +5,8 @@ from build_visual_prototype import xex_segment
 SCREEN=0x0600
 DLIST=0x0700
 ENTRY=0x0780
+DOTS=SCREEN+40+25  # right after the fixed-width "LOADING BANKS" label
+DOT_STATE=0x06ff   # unused part of the screen page
 LINES=('THE LESS I KNOW THE BETTER', 'LOADING BANKS   ',
        'A\\SLOP BY OGNJEN / SILLY VENTURE 2026 WE')
 
@@ -24,6 +26,8 @@ def segments():
                           (0xd018,0x88),(0xd019,0x9c),(0xd01a,0x82),
                           (0xd400,0x22)):
         store(address,value)
+    store(DOT_STATE,0)
+    for address in range(DOTS,DOTS+3): store(address,0)
     c.emit(0x60)
     return (xex_segment(SCREEN,text)+xex_segment(DLIST,display)+
             xex_segment(ENTRY,bytes(c.finish()))+xex_segment(0x02e2,ENTRY.to_bytes(2,'little')))

@@ -5,7 +5,7 @@ import math
 from engine_effects import cached_display_list, clear_pmg
 from build_sequence import Code
 from music_timing import tick_at_bar
-from trevor_awakens import HIT as TREVOR_HIT
+from trevor_awakens import FLIGHT_START as TREVOR_FLIGHT_START
 from rainbow_ball import spin_masks
 CUTAWAY_START,START,DUNK,END=(tick_at_bar(bar) for bar in (56,58,62,64))
 DUNK_PHASE_TICKS=8
@@ -148,8 +148,8 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     a(0xad,0x83e4);c.branch(0xd0,'trevor')
     a(0xad,0x83e3);c.emit(0xc9,END>>8);c.branch(0x90,'hero');c.branch(0xd0,'trevor')
     a(0xad,0x83e2);c.emit(0xc9,END&255);c.branch(0x90,'hero')
-    c.label('trevor');a(0xad,0x83e3);c.emit(0xc9,TREVOR_HIT>>8);c.branch(0x90,'trevor_quiet')
-    c.branch(0xd0,'trevor_tunnel');a(0xad,0x83e2);c.emit(0xc9,TREVOR_HIT&255);c.branch(0x90,'trevor_quiet')
+    c.label('trevor');a(0xad,0x83e3);c.emit(0xc9,TREVOR_FLIGHT_START>>8);c.branch(0x90,'trevor_quiet')
+    c.branch(0xd0,'trevor_tunnel');a(0xad,0x83e2);c.emit(0xc9,TREVOR_FLIGHT_START&255);c.branch(0x90,'trevor_quiet')
     c.label('trevor_tunnel');a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x18,0x69,0xd8);c.jump(0x4c,'trevor_bank_ready')
     c.label('trevor_quiet');c.emit(0xa9,0xf1)  # dedicated quiet bank, index 49
     c.label('trevor_bank_ready');a(0x8d,bank_operand)

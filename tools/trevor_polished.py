@@ -3,9 +3,18 @@ import math
 from pathlib import Path
 from engine_effects import COPY_PAGES, cached_display_list, clear_pmg
 from build_sequence import Code
-from trevor_awakens import COLORS, HIT as TREVOR_HIT, END as TREVOR_END, MIDPOINT as TREVOR_MIDPOINT
+from trevor_awakens import COLORS, HIT as TREVOR_HIT, END as TREVOR_END, MIDPOINT as TREVOR_MIDPOINT, FLIGHT_START
 from music_timing import tick_at_beat
 ENTRY=0x6000
+IMPACT_BRIDGE=0x5f80
+IMPACT_HIDE_BRIDGE=0x5fc0
+ROTATOR_X_TABLE=0x6900
+ROTATOR_Y_TABLE=0x6920
+ROTATOR_HIT_AGE=0x0dd0
+ROTATOR_HIT_INDEX=0x0dd1
+ROTATOR_PUFF_START=48
+# Runtime padding before $0DFE display-list keys; kept outside the PMG spans.
+ROTATOR_PUFF_DX,ROTATOR_PUFF_DY=0x0de2,0x0de3
 LETTER_END=80
 BUBBLE_END=104
 EFFECT_END=136
@@ -247,13 +256,13 @@ def impact_glyphs(index):
 IMPACT_HUES=(0x2e,0x3c,0x4e,0x5c,0x6e,0x7c,0x8e,0x9c,
              0xae,0xbc,0xce,0xdc,0xee,0xfc,0x1e,0x2c)
 
-def helper(bank_wrapper=0):
+def helper(bank_wrapper=0, impact_labels=None, rotator_puffs=True):
     c=Code(ENTRY)
     def a(op,address):c.emit(op,address&255,address>>8)
     # Impacts follow the music clock; the next hand is raised in recovery.
     c.emit(0xa9,16);a(0x8d,0x83e0)
-    a(0xad,0x83e3);c.emit(0xc9,TREVOR_HIT>>8);c.branch(0x90,'quiet')
-    c.branch(0xd0,'energetic');a(0xad,0x83e2);c.emit(0xc9,TREVOR_HIT&255);c.branch(0xb0,'energetic')
+    a(0xad,0x83e3);c.emit(0xc9,FLIGHT_START>>8);c.branch(0x90,'quiet')
+    c.branch(0xd0,'energetic');a(0xad,0x83e2);c.emit(0xc9,FLIGHT_START&255);c.branch(0xb0,'energetic')
     c.label('quiet')
     c.label('quiet_reveal');a(0xad,0x83e3);c.emit(0xc9,TREVOR_MIDPOINT>>8);c.branch(0x90,'stage0')
     c.branch(0xd0,'stage1');a(0xad,0x83e2);c.emit(0xc9,TREVOR_MIDPOINT&255);c.branch(0xb0,'stage1')
@@ -352,11 +361,28 @@ def helper(bank_wrapper=0):
     c.jump(0xbd,'bang_by');a(0x8d,0x83ef)
     c.label('bang_burst_start')
     c.emit(0xa9,68,0x18);a(0x6d,0x83ef);a(0x8d,0x83eb)
+    if rotator_puffs:
+        # The travelling bubble shrinks again at the end of each beat.
+        a(0xad,0x0dd2);c.branch(0xf0,'normal_burst_phase')
+        c.jump(0xad,'hit_age');c.emit(0xc9,86);c.branch(0x90,'burst_still_visible')
+        c.jump(0x4c,'burst_done')
+        c.label('burst_still_visible');c.emit(0xc9,72);c.branch(0x90,'burst_check_medium')
+        c.emit(0xa9,0);c.jump(0x4c,'burst_phase_ready')
+        c.label('burst_check_medium');c.emit(0xc9,64);c.branch(0x90,'normal_burst_phase')
+        c.emit(0xa9,1);c.jump(0x4c,'burst_phase_ready')
+        c.label('normal_burst_phase')
     c.jump(0xad,'hit_age');c.emit(0x4a,0x4a,0x4a,0xc9,2);c.branch(0x90,'burst_phase_ready');c.emit(0xa9,2)
     c.label('burst_phase_ready');c.emit(0x0a,0x0a,0x0a,0x0a,0x0a,0xaa)
     c.emit(0xa9,36,0x18);a(0x6d,0x83ef);c.emit(0xa8)
     c.label('burst_rows');c.jump(0xbd,'bang_burst');pmg(0x99,0x0980)
     c.emit(0xe8,0xc8);a(0xcc,0x83eb);c.branch(0xd0,'burst_rows')
+    c.label('burst_done')
+    if rotator_puffs:
+        # On banana rotators the word travels first, then clears for the
+        # outward satellites. Ordinary Trevor impacts keep their 80-tick word.
+        a(0xad,0x0dd2);c.branch(0xf0,'bang_word_age')
+        c.jump(0xad,'hit_age');c.emit(0xc9,ROTATOR_PUFF_START);c.branch(0xb0,'bang_positions')
+        c.label('bang_word_age')
     c.jump(0xad,'hit_age');c.emit(0xc9,8);c.branch(0x90,'bang_positions');c.emit(0xc9,LETTER_END);c.branch(0xb0,'bang_positions')
     c.emit(0xa2,0,0xa9,45,0x18);a(0x6d,0x83ef);c.emit(0xa8)
     c.label('glyph_rows')
@@ -382,7 +408,53 @@ def helper(bank_wrapper=0):
         c.emit(0xa9,152+i*8,0x18);a(0x6d,0x83ec);c.jump(0x8d,f'impact_mx{i}')
         # Both BUM and BAM occupy three 8-clock cells in a 32-clock bubble.
         c.emit(0x18,0x69,4);c.jump(0x8d,f'impact_px{i}')
+    if rotator_puffs:
+        a(0xad,0x0dd2);c.branch(0xd0,'rotator_overlay')
+        c.jump(0x4c,'bang_publish')
+        c.label('rotator_overlay');c.jump(0xad,'hit_age')
+        c.emit(0xc9,86);c.branch(0x90,'rotator_effect_visible');c.jump(0x4c,'bang_publish')
+        c.label('rotator_effect_visible')
+        c.emit(0xc9,ROTATOR_PUFF_START);c.branch(0x90,'rotator_word_publish')
+        c.jump(0x4c,'rotator_puffs')
+        c.label('rotator_word_publish');c.jump(0x4c,'bang_publish')
+        c.label('rotator_puffs')
+        # Four copies of the former v215 satellites fan away from the word corners.
+        c.jump(0xad,'hit_age');c.emit(0x38,0xe9,ROTATOR_PUFF_START);a(0x8d,ROTATOR_PUFF_DX)
+        a(0xad,ROTATOR_PUFF_DX);c.emit(0x4a);a(0x8d,ROTATOR_PUFF_DX)
+        a(0xad,ROTATOR_PUFF_DX);c.emit(0x4a);a(0x8d,ROTATOR_PUFF_DY)
+        c.emit(0xa9,1);c.jump(0x8d,'puff_size')
+        c.jump(0xad,'hit_age');c.emit(0xc9,79);c.branch(0x90,'puff_size_ready')
+        c.emit(0xa9,0);c.jump(0x8d,'puff_size')
+        c.label('puff_size_ready')
+        for i,(base,row) in enumerate(((157,47),(165,55),(167,47),(175,55))):
+            # The two left bubbles move left/up and left/down; the other pair
+            # moves right/up and right/down from the current figure-eight centre.
+            c.emit(0xa9,base)
+            if i<2:c.emit(0x38);a(0xed,ROTATOR_PUFF_DX)
+            else:c.emit(0x18);a(0x6d,ROTATOR_PUFF_DX)
+            c.emit(0x18);a(0x6d,0x83ec);c.jump(0x8d,f'impact_px{i}')
+            c.emit(0xa9,row)
+            if i%2==0:c.emit(0x38);a(0xed,ROTATOR_PUFF_DY)
+            else:c.emit(0x18);a(0x6d,ROTATOR_PUFF_DY)
+            c.emit(0x18);a(0x6d,0x83ef);c.emit(0xa8,0xa2,0)
+            c.label(f'rotator_puff_rows{i}');c.jump(0xbd,'puff_shape');pmg(0x99,0x0a00+i*128)
+            c.emit(0xe8,0xc8,0xe0,16);c.branch(0xd0,f'rotator_puff_rows{i}')
+        c.jump(0x4c,'bang_publish')
     c.label('bang_publish')
+    if rotator_puffs:
+        # Fade the bubble in and both bubble and satellites out; the scratch
+        # displacement is no longer needed after all positions are prepared.
+        c.emit(0xa9,14);a(0x8d,ROTATOR_PUFF_DX)
+        a(0xad,0x0dd2);c.branch(0xf0,'rotator_fade_ready')
+        c.jump(0xad,'hit_age');c.emit(0xc9,8);c.branch(0xb0,'rotator_fade_end')
+        c.emit(0x0a,0x29,14);a(0x8d,ROTATOR_PUFF_DX);c.jump(0x4c,'rotator_fade_ready')
+        c.label('rotator_fade_end');c.emit(0xc9,79);c.branch(0x90,'rotator_fade_ready')
+        c.emit(0xc9,86);c.branch(0x90,'rotator_fade_out')
+        c.emit(0xa9,0);c.jump(0x4c,'rotator_fade_store')
+        c.label('rotator_fade_out');a(0x8d,ROTATOR_PUFF_DX)
+        c.emit(0xa9,86,0x38);a(0xed,ROTATOR_PUFF_DX);c.emit(0x0a,0x29,14)
+        c.label('rotator_fade_store');a(0x8d,ROTATOR_PUFF_DX)
+        c.label('rotator_fade_ready')
     c.label('impact_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'impact_wait');c.emit(0xc9,128);c.branch(0xb0,'impact_wait')
     a(0xad,0x83e9);c.emit(0x09,8);a(0x8d,0xd407)
     for i in range(4):
@@ -392,12 +464,33 @@ def helper(bank_wrapper=0):
     c.jump(0xad,'missile_size');a(0x8d,0xd00c)
     c.jump(0xad,'impact_prior');a(0x8d,0xd01b)
     c.jump(0xad,'hit_age');c.emit(0x4a,0x4a,0x4a,0x29,15,0xaa)
-    c.jump(0xad,'hit_age');c.emit(0xc9,LETTER_END);c.branch(0x90,'black_letters')
+    if rotator_puffs:
+        a(0xad,0x0dd2);c.branch(0xd0,'rotator_color_age')
+        c.jump(0xad,'hit_age');c.emit(0xc9,LETTER_END);c.branch(0x90,'black_letters')
+        c.jump(0x4c,'impact_colours')
+        c.label('rotator_color_age');c.jump(0xad,'hit_age')
+        c.emit(0xc9,ROTATOR_PUFF_START);c.branch(0x90,'black_letters')
+        c.label('impact_colours')
+    else:
+        c.jump(0xad,'hit_age');c.emit(0xc9,LETTER_END);c.branch(0x90,'black_letters')
+    if rotator_puffs:
+        a(0xad,0x0dd2);c.branch(0xf0,'normal_impact_colours')
+        for i in range(4):
+            c.jump(0xbd,f'impact_hues{i}');c.emit(0x29,0xf0);a(0x0d,ROTATOR_PUFF_DX);a(0x8d,0xd012+i)
+        c.jump(0x4c,'missile_colour')
+        c.label('normal_impact_colours')
     for i in range(4):c.jump(0xbd,f'impact_hues{i}');a(0x8d,0xd012+i)
     c.jump(0x4c,'missile_colour')
     c.label('black_letters');c.emit(0xa9,0)
     for i in range(4):a(0x8d,0xd012+i)
-    c.label('missile_colour');c.jump(0xbd,'impact_spark_hues');c.emit(0x09,14);a(0x8d,0xd019)
+    c.label('missile_colour')
+    if rotator_puffs:
+        a(0xad,0x0dd2);c.branch(0xf0,'normal_missile_colour')
+        c.jump(0xbd,'impact_spark_hues');c.emit(0x29,0xf0);a(0x0d,ROTATOR_PUFF_DX);a(0x8d,0xd019)
+        c.jump(0x4c,'missile_colour_ready')
+        c.label('normal_missile_colour')
+    c.jump(0xbd,'impact_spark_hues');c.emit(0x09,14);a(0x8d,0xd019)
+    if rotator_puffs:c.label('missile_colour_ready')
     for addr,val in ((0xd01d,3),(0xd400,0x2e)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
@@ -412,7 +505,9 @@ def helper(bank_wrapper=0):
     for label in ('dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     c.label('pose_pf0');c.emit(0x48,0x48,0x48,0x48,0x48,0x48)
-    c.label('pose_pf1');c.emit(0x68,0x68,0x66,0x68,0x66,0x68)
+    # Keep all four attack/wind-up poses at the same luminance. Alternating
+    # $66/$68 made every wind-up flash brighter than its paired punch pose.
+    c.label('pose_pf1');c.emit(0x68,0x68,0x66,0x66,0x66,0x66)
     c.label('pose_skin');c.emit(0x2a,0x2a,0x2a,0x2a,0x2a,0x2a)
     c.label('source_hi');c.emit(0x40,0x4a,0x54,0x6a,0x74,0x40)
     c.label('row_lo');c.emit(*((y//3*40)&255 for y in range(192)))
@@ -440,12 +535,60 @@ def helper(bank_wrapper=0):
     for i,glyph in enumerate((glyphs[0],glyphs[1],bum[1],bum[2],bytes(14))):
         c.label(f'bang_glyph{i}');c.emit(*glyph)
     c.label('bang_exclamation');c.emit(*bytes(14))
+    if impact_labels is not None:
+        impact_labels.update(bang=c.labels['bang'],
+                             bang_bx=c.labels['bang_bx'],
+                             bang_by=c.labels['bang_by'],
+                             hit_index=c.labels['hit_index'],
+                             hit_age=c.labels['hit_age'])
     result=c.finish();assert len(result)<=2560,len(result)
     return result
 
 
+def impact_bridge(labels):
+    """Place rotator BUM/BAM on the former tunnel ball's figure-eight path."""
+    c=Code(IMPACT_BRIDGE)
+    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    a(0xad,ROTATOR_HIT_AGE);a(0x8d,labels['hit_age'])
+    a(0xad,ROTATOR_HIT_INDEX);a(0x8d,labels['hit_index'])
+    c.emit(0xa8)
+    # Independent 64-step figure eight: one step per eight music ticks.
+    a(0xad,0x0dd3);c.emit(0x4a,0x4a,0x4a,0xaa)
+    a(0xad,0x0dd4);c.emit(0x29,1);c.branch(0xf0,'x_positive')
+    a(0xbd,ROTATOR_X_TABLE);c.emit(0x49,255,0x18,0x69,1);c.jump(0x4c,'x_ready')
+    c.label('x_positive');a(0xbd,ROTATOR_X_TABLE)
+    c.label('x_ready');c.emit(0x38,0xe9,40);a(0x99,labels['bang_bx'])
+    a(0xbd,ROTATOR_Y_TABLE);c.emit(0x18,0x69,4);a(0x99,labels['bang_by'])
+    c.emit(0x4c,labels['bang']&255,labels['bang']>>8)
+    return bytes(c.finish())
+
+
+def impact_hide_bridge():
+    """Disable the prior PMG impact during the short gap between words."""
+    c=Code(IMPACT_HIDE_BRIDGE)
+    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait')
+    c.emit(0xc9,128);c.branch(0xb0,'wait')
+    c.emit(0xa9,0);a(0x8d,0xd407);a(0x8d,0xd01d);c.emit(0x60)
+    return bytes(c.finish())
+
+
 def bank(phase=0, quiet=False, bank_wrapper=0):
-    out=bytearray(16384);code=helper(bank_wrapper);out[0x2000:0x2000+len(code)]=code
+    out=bytearray(16384);labels={};code=helper(bank_wrapper,labels,rotator_puffs=not quiet);out[0x2000:0x2000+len(code)]=code
+    if not quiet:
+        path=bytes(v&255 for v in
+                   ([round(60*math.sin(math.tau*i/64)) for i in range(32)]+
+                    [round(30*math.sin(2*math.tau*i/64)) for i in range(32)]))
+        path_offset=ROTATOR_X_TABLE-0x4000
+        assert 0x6000+len(code)<=ROTATOR_X_TABLE
+        assert path_offset+len(path)<=0x2a00 and not any(out[path_offset:path_offset+len(path)])
+        out[path_offset:path_offset+len(path)]=path
+        bridge=impact_bridge(labels);bridge_offset=IMPACT_BRIDGE-0x4000
+        assert not any(out[bridge_offset:bridge_offset+len(bridge)])
+        out[bridge_offset:bridge_offset+len(bridge)]=bridge
+        hide=impact_hide_bridge();hide_offset=IMPACT_HIDE_BRIDGE-0x4000
+        assert not any(out[hide_offset:hide_offset+len(hide)])
+        out[hide_offset:hide_offset+len(hide)]=hide
     # Quiet poses are selected only in bank 49; action banks never read
     # $4A00. Keep these disjoint slots available for future banked assets.
     if quiet:

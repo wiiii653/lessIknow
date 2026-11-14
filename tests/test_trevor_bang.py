@@ -13,18 +13,18 @@ class TrevorBangTests(unittest.TestCase):
         from rainbow_ball import spin_masks
         from tunnel_ball import masks as large_masks
         from basketball_hero import satellite_orbits
-        from trevor_ball_flight import IN_VECTORS,OUT_VECTORS
+        from trevor_ball_flight import IN_VECTORS,OUT_VECTORS,INCOMING_TICKS
         import math
         frames = spin_masks(); large=large_masks(); orbits=satellite_orbits()
         self.assertEqual(len(set(IN_VECTORS)),len(HITS))
         self.assertEqual(len(set(OUT_VECTORS)),len(HITS))
         for index, hit in enumerate(HITS):
-            for age in (-32,-16,-1,80,92,105,120,135):
-                if index+1<len(HITS) and age>=HITS[index+1]-hit-32:continue
+            for age in (-48,-36,-24,-16,-1,80,92,105,120,135):
+                if index+1<len(HITS) and age>=HITS[index+1]-hit-INCOMING_TICKS:continue
                 m = sequence.execute(hit+age).memory
                 base = (m[0xd407]&0xfc)<<8
                 ax,ay=__import__('trevor_polished').impact_anchor(index)
-                incoming=age<0; distance=-age if incoming else (age-80)//2
+                incoming=age<0; distance=((-2*age+2)//3) if incoming else (age-80)//2
                 vx,vy=IN_VECTORS[index] if incoming else (0,0)
                 x=(160+ax+vx*distance)&255
                 y=max(0,min(111,45+ay+vy*distance))
@@ -77,19 +77,19 @@ class TrevorBangTests(unittest.TestCase):
                 self.assertEqual(m[0xd301],0xff)
 
     def test_flights_do_not_stick_to_vertical_clamps_and_fade_at_handoffs(self):
-        from trevor_ball_flight import IN_VECTORS, OUT_VECTORS
+        from trevor_ball_flight import IN_VECTORS, OUT_VECTORS, INCOMING_TICKS
         from trevor_polished import impact_anchor
         for index, hit in enumerate(HITS):
             base_y=45+impact_anchor(index)[1]
             self.assertTrue(all(8<=base_y+IN_VECTORS[index][1]*d<=104 for d in range(1,33)),index)
             self.assertTrue(all(0<=base_y+OUT_VECTORS[index][1]*d<=111 for d in range(28)),index)
-            for age in (-32,-28,-24,-1,80,98,120,128,135):
-                if age>=0 and index+1<len(HITS) and age>=HITS[index+1]-hit-32:continue
+            for age in (-48,-42,-36,-24,-1,80,98,120,128,135):
+                if age>=0 and index+1<len(HITS) and age>=HITS[index+1]-hit-INCOMING_TICKS:continue
                 m=sequence.execute(hit+age).memory
-                if age in (-32,135):
+                if age in (-48,135):
                     self.assertTrue(all((v&15)==0 for v in m[0xd012:0xd016]),(index,age))
                     self.assertEqual(m[0xd019]&15,0,(index,age))
-                elif age in (-24,-1,80,98,120):
+                elif age in (-36,-24,-1,80,98,120):
                     self.assertTrue(any(v&15 for v in m[0xd012:0xd016]),(index,age))
 
     @unittest.skipUnless((sequence.ROOT/'build/visual-prototype-v288.xex').exists(), 'v288 comparison XEX required')
@@ -115,7 +115,7 @@ class TrevorBangTests(unittest.TestCase):
                         self.assertEqual(current[y*160:(y+1)*160],previous[y*160:(y+1)*160],(index,age,y))
 
     def test_flight_registers_commit_in_early_blanking(self):
-        for age in (-32,-1,80,120,135,136):
+        for age in (-48,-36,-1,80,120,135,136):
             for start in (248,255,290,305,311):
                 m=BeamMemory(sequence.XEX.read_bytes()); cpu=sequence.MPU(memory=m)
                 sequence.execute(HITS[1]+age,cpu)
@@ -145,7 +145,7 @@ class TrevorBangTests(unittest.TestCase):
             self.assertEqual(memory.ram[0xd000:0xd008],reference[0xd000:0xd008])
 
     def test_both_ball_flights_survive_music_nmi(self):
-        for tick in (HITS[3]-16,HITS[3]+98):
+        for tick in (HITS[3]-40,HITS[3]-16,HITS[3]+98):
             m=sequence.RuntimeMemory(sequence.XEX.read_bytes());cpu=sequence.MPU(memory=m)
             m[0xd301]=m.values[3];m[0xd40b]=124
             for address in (0x232d,0x237d):
