@@ -103,7 +103,7 @@ def frame_for_step(step):
 
 def frame_at(tick):
     if SIDE_PREP_START<=tick<SIDE_END:
-        return 16+(((tick-SIDE_PREP_START)>>4)&15)
+        return 16+((tick>>4)&15)
     from ribbon_inbetweens import midpoint_at,quarter_at
     step=bisect_right(FRONT_PREP_STEPS,tick)-1
     quarter=quarter_at(tick,step)
@@ -494,7 +494,7 @@ def helper(copy_address, palette_address=0):
     c.label('previous');c.emit(0xca,0xe0,63);c.branch(0xd0,'find')
     c.label('found');c.jump(0xbd,'frames');c.jump(0x4c,'selected_frame')
     c.label('side_shot');c.emit(0xa2,0)
-    a(0xad,0x83e2);c.emit(0x38,0xe9,SIDE_PREP_START&255,0x4a,0x4a,0x4a,0x4a,0x09,16)
+    a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x09,16)
     c.label('selected_frame');a(0x8d,0x83ed)
     from ribbon_inbetweens import SELECT, STEP
     a(0x20,SELECT)

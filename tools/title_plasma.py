@@ -27,7 +27,8 @@ FADE_RANKS = 0x4000
 FADE_LOOKUP = 0x4a00
 FADE_ENTRY = 0x5000
 TRANSITION_BANK = 47
-TRANSITION_START = TITLE_TICK - 128
+TRANSITION_START = TITLE_TICK
+CITY_REVEAL_START = 1024
 BAYER_4 = (0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5)
 
 # Compact slab-serif capitals, hand-drawn for the 80x64 GTIA grid. These
@@ -210,18 +211,25 @@ def skyline_masks():
     return bytes(keep[start:]), bytes(ink[start:])
 
 
-def procedural_frame(phase):
+def city_reveal_level(tick):
+    return max(0, min(8, (tick - CITY_REVEAL_START) // 32 + 1))
+
+
+def procedural_frame(phase, tick=None):
     """Reference for the 6502's two-dimensional wave and skyline compositor."""
     tables, vertical = plasma_tables(), vertical_wave()
-    time = (phase & 31)*8
+    time = (phase & 127)*2
     image = bytearray()
     for row in range(64):
         shift = (vertical[(3*row + time)&255]//4 + row + time)&255
         table = tables[vertical[(4*row - time)&255]//32]
         image.extend(table[(shift+column)&255] for column in range(39,-1,-1))
     keep, ink = skyline_masks()
-    for i,(mask,hue) in enumerate(zip(keep,ink), SKYLINE_FIRST_PAGE*256):
-        image[i] = (image[i]&mask) | hue
+    ranks = fade_ranks()[SKYLINE_FIRST_PAGE*256:]
+    level = 8 if tick is None else city_reveal_level(tick)
+    for i,(mask,hue,rank) in enumerate(zip(keep,ink,ranks), SKYLINE_FIRST_PAGE*256):
+        if rank >> 4 < level:
+            image[i] = (image[i]&mask) | hue
     return bytes(image)
 
 
@@ -231,17 +239,20 @@ def plasma_renderer():
     def a(op, address):
         c.emit(op,address&255,address>>8)
 
-    # STATE+12 holds the wave phase in units of eight. STATE+13 is framebuffer high.
+    # STATE+12 holds the wave phase. STATE+13 is framebuffer high.
     a(0xad,STATE+13); c.jump(0x8d,'dest_hi')
     keep, ink = skyline_masks()
+    # Reveal packed GTIA byte pairs in the same island order as the plasma fade.
+    ranks = tuple(rank >> 4 for rank in fade_ranks()[SKYLINE_FIRST_PAGE*256:])
     skyline = bytearray()
     groups = []
     for page in range(SKYLINE_PAGES):
         start = page*256
         masks = keep[start:start+256]
         for partial in (False,True):
-            offsets = bytes(i for i,mask in enumerate(masks)
-                            if (0 < mask < 255 if partial else mask == 0))
+            offsets = bytes(sorted((i for i,mask in enumerate(masks)
+                            if (0 < mask < 255 if partial else mask == 0)),
+                            key=lambda i: ranks[start+i]))
             if not offsets:
                 continue
             width = len(offsets)
@@ -250,8 +261,12 @@ def plasma_renderer():
             skyline.extend(ink[start+i] for i in offsets)
             if partial:
                 skyline.extend(masks[i] for i in offsets)
-            groups.append((page,partial,width,base))
-    for index,(page,partial,_,_) in enumerate(groups):
+            counts = bytes(sum(ranks[start+i] < level for i in offsets)
+                           for level in range(9))
+            count_address = SKYLINE_DATA + len(skyline)
+            skyline.extend(counts)
+            groups.append((page,partial,width,base,count_address))
+    for index,(page,partial,_,_,_) in enumerate(groups):
         a(0xad,STATE+13); c.emit(0x18,0x69,SKYLINE_FIRST_PAGE+page)
         if partial:
             c.jump(0x8d,f'city_read_hi{index}')
@@ -288,8 +303,16 @@ def plasma_renderer():
     c.emit(0xc9,64); c.branch(0xf0,'skyline'); c.jump(0x4c,'next_row')
 
     c.label('skyline')
-    for index,(_,partial,width,base) in enumerate(groups):
-        c.emit(0xa0,width-1)
+    a(0xad,STATE+3); c.emit(0xc9,CITY_REVEAL_START>>8)
+    c.branch(0x90,'city_none'); c.branch(0xd0,'city_full')
+    a(0xad,STATE+2); c.emit(0x4a,0x4a,0x4a,0x4a,0x4a,0x18,0x69,1)
+    c.jump(0x4c,'city_level')
+    c.label('city_none'); c.emit(0xa9,0); c.jump(0x4c,'city_level')
+    c.label('city_full'); c.emit(0xa9,8)
+    c.label('city_level'); c.jump(0x8d,'city_rank')
+    for index,(_,partial,width,base,count_address) in enumerate(groups):
+        c.jump(0xae,'city_rank'); a(0xbd,count_address); c.branch(0xf0,f'city_done{index}')
+        c.emit(0xa8,0x88)
         c.label(f'city{index}'); a(0xbe,base)
         if partial:
             c.label(f'city_read{index}'); a(0xbd,0x9000)
@@ -300,6 +323,7 @@ def plasma_renderer():
         c.label(f'city_write{index}'); a(0x9d,0x9000)
         c.labels[f'city_write_hi{index}'] = c.labels[f'city_write{index}']+2
         c.emit(0x88,0xc0,255); c.branch(0xd0,f'city{index}')
+        c.label(f'city_done{index}')
     # Every plasma phase uses the same LMS addresses in a given buffer.
     # Rebuild only when a different renderer has used the inactive list.
     from engine_effects import cached_display_list
@@ -327,6 +351,8 @@ def plasma_renderer():
         c.emit(0x8a,0x18,0x69,9,0xaa,0xc8,0xc0,block*21+count)
         c.branch(0xd0,f'lms_loop{block}')
     c.label('swap'); c.emit(0x60)
+    # The music NMI uses STATE+14 to save PORTB. Keep the rank bank-local.
+    c.label('city_rank'); c.emit(0)
     c.label('lms_lo'); c.emit(*(row*40&255 for row in range(64)))
     c.label('lms_hi'); c.emit(*(row*40>>8 for row in range(64)))
     for name,label in (('row','row_load'),('dest_lo','dest_lo_load'),('dest_hi','dest_hi_load')):
@@ -549,7 +575,13 @@ def build(origin, blank):
     c.label('normal_stage')
     a(0xad, STATE+9); c.emit(0xc9, 4); c.branch(0x90, 'stage_ok'); c.emit(0xa9, 3)
     c.label('stage_ok'); a(0x8d, STATE+10)
-    a(0xad, STATE); c.branch(0xf0, 'maybe_reveal')
+    a(0xad, STATE); c.branch(0xd0, 'song_title')
+    # The artist lines begin at ticks 512 and 768.
+    a(0xad, STATE+10); c.emit(0xc9, 2); c.branch(0xb0, 'artist_stage')
+    c.emit(0xa9, 1)
+    c.label('artist_stage'); c.emit(0x38,0xe9,1); a(0x8d, STATE+10)
+    c.jump(0x4c, 'maybe_reveal')
+    c.label('song_title')
     a(0xad, STATE+10); c.branch(0xd0, 'title_nonzero'); c.emit(0xa9, 1)
     c.label('title_nonzero'); c.emit(0x18,0x69,3); a(0x8d, STATE+10)
     c.label('maybe_reveal'); a(0xad, STATE+8); c.emit(0xc9,64); c.branch(0xb0,'mask_key_ready')
@@ -585,8 +617,8 @@ def build(origin, blank):
     c.emit(0xe8); c.branch(0xd0,'clear_loop')
     c.label('mask_done')
     # Use the same music-clock phase and render directly into the back buffer.
-    a(0xad,STATE+2); c.emit(0x4a,0x29,0x78); a(0x8d,STATE+12)
-    a(0xad,STATE+3); c.emit(0x29,1,0x4a,0x6a); a(0x0d,STATE+12); a(0x8d,STATE+12)
+    a(0xad,STATE+2); c.emit(0x4a,0x4a,0x4a,0x29,0x1e); a(0x8d,STATE+12)
+    a(0xad,STATE+3); c.emit(0x29,7,0x0a,0x0a,0x0a,0x0a,0x0a); a(0x0d,STATE+12); a(0x8d,STATE+12)
     a(0xad,bank_value(FIRST_BANK)); a(0x8d,0xd301)
     # The inactive display list determines which framebuffer can be written.
     a(0xad,STATE+6); c.emit(0x29,4,0x4a,0x4a,0x49,1,0xaa,0x48)

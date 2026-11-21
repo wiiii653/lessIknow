@@ -110,11 +110,13 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     # This is lossless and adds no work to the Atari's playback routine.
     # Keep the low pools within the spans restored by the proven AVG bootstrap.
     from build_hardware_xex import LOW_ENDS
-    regions = ((0x0400, LOW_ENDS[0x0400] + 1), (0x0900, LOW_ENDS[0x0900] + 1), (RUNTIME_END, RUN), (POOL_LOW, 0x2000), (0x3300, 0x3c00), (0x824a, 0x8300),
+    regions = ((0x0400, LOW_ENDS[0x0400] + 1), (0x0900, LOW_ENDS[0x0900] + 1), (RUNTIME_END, RUN), (POOL_LOW, 0x2000), (0x3300, 0x3c00),
+               (outro_palette.CARD_FONT_ENTRY + len(outro_palette.card_font_copy()), outro_loader.PRELOAD),
+               (0x824a, 0x8300),
                (0x8340, 0x83e0), (0x864a, 0x8980), (0x8c00, 0x9000),
                (EFFECT_ORIGIN + len(effect_code), 0xb000),
                (COPY_ORIGIN + len(copy_code), 0xd000),
-               (table_end + PLASMA_SIZE, TITLE_MODE_ENTRY))
+               (table_end + PLASMA_SIZE, final_boy.ENTRY_BLANK))
     # Join rows with the strongest suffix/prefix overlaps first. Chains are
     # lossless and only affect asset placement, never playback or bank use.
     source_rows = sorted(set([bytes(40)] + [row for scene in rows for row in scene]))

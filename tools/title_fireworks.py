@@ -12,6 +12,7 @@ DATA=0x7400
 META=0x7280
 CENTRES=((22,44),(56,72),(106,56),(138,36))
 LAUNCH_Y=190
+FIREWORK_CUES = (768, 1216, 1408, 1856, 2048)
 LEFTS=tuple(x-14 for x,y in CENTRES)
 HUES=(0x2e,0x4e,0x6e,0x8e,0xae,0xce,0xee,0x1e,
       0x3e,0x5e,0x7e,0x9e,0xbe,0xde,0xfe,0x2e)
@@ -130,6 +131,12 @@ def helper():
             a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x29,15,0xaa)
             c.jump(0xbd,'missile_source_lo');c.jump(0x8d,'read_lo')
             c.jump(0xbd,'missile_source_hi');c.jump(0x8d,'read_hi')
+        cue = FIREWORK_CUES[plane]
+        a(0xad,0x83e3); c.emit(0xc9,cue>>8); c.branch(0x90,f'not_visible{plane}')
+        if cue & 255:
+            c.branch(0xd0,f'visible{plane}')
+            a(0xad,0x83e2); c.emit(0xc9,cue&255); c.branch(0x90,f'not_visible{plane}')
+            c.label(f'visible{plane}')
         c.emit(0xa9,(10 if plane<2 else 11 if plane<4 else 9));a(0x0d,0x83e8);c.jump(0x8d,f'write{plane}_hi')
         if plane<4:
             c.jump(0xae,'vertical_index');a(0xbc,META+plane*64)
@@ -138,6 +145,7 @@ def helper():
         c.label(f'copy{plane}');c.jump(0x20,'read');c.emit(0xc0,128);c.branch(0xb0,f'skip{plane}')
         c.label(f'write{plane}');a(0x99,0xa00+(plane%2)*128 if plane<4 else 0x980)
         c.label(f'skip{plane}');c.emit(0xc8,0xe8,0xe0,64 if plane==4 else 32);c.branch(0xd0,f'copy{plane}')
+        c.label(f'not_visible{plane}')
     c.emit(0x60)
     assert c.origin+len(c.data)<=PUBLISH
     c.emit(*bytes(PUBLISH-c.origin-len(c.data)))

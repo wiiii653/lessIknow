@@ -9,11 +9,89 @@ from title_fireworks import graphics, occupied, anchors, CENTRES, missile_positi
 
 
 class TitleFireworkTests(unittest.TestCase):
-    def test_live_fireworks_are_complete_in_front_of_both_cards(self):
+    def test_opening_introduces_fireworks_one_at_a_time(self):
+        cpu = None
+        for tick, expected in ((767, 0), (768, 1), (1215, 1), (1216, 2),
+                               (1407, 2), (1408, 3), (1855, 3), (1856, 4)):
+            cpu = sequence.execute(tick, cpu)
+            memory = cpu.memory
+            base = (memory[0xd407] & 0xfc) << 8
+            for plane in range(4):
+                shape = memory[base + 0x200 + plane * 128:base + 0x280 + plane * 128]
+                self.assertEqual(any(shape), plane < expected, (tick, plane))
+            if tick < 2048:
+                self.assertFalse(any(memory[base + 0x180:base + 0x200]))
+
+    def test_city_reveal_survives_music_interrupts(self):
+        import json
+        from title_plasma import FRAME_BYTES, PLASMA_ENTRY, SKYLINE_FIRST_PAGE
+
+        cpu = sequence.MPU(memory=sequence.RuntimeMemory(sequence.XEX.read_bytes()))
+        memory = cpu.memory
+        tick = 2400
+        memory[0xd40b] = 124
+        memory[0xd301] = memory.values[3]
+        for address in (0x232d, 0x237d):
+            cpu.pc = address
+            cpu.sp = 0xfd
+            memory[0x1fe:0x200] = [0xfe, 0x7f]
+            for _ in range(10000):
+                if cpu.pc == 0x7fff:
+                    break
+                cpu.step()
+            else:
+                self.fail('music init did not return')
+        memory[0xd301] = 0xff
+        memory[0x24a7:0x24aa] = tick.to_bytes(3, 'little')
+        cpu.pc = json.loads(sequence.METADATA.read_text())['callback']
+        cpu.sp = 0xfd
+        memory[0x1fe:0x200] = [0xfe, 0x7f]
+        interrupts = 0
+        for _ in range(100000):
+            if cpu.pc == 0x7fff:
+                break
+            # Interrupt while the city groups are being composited. The music
+            # NMI stores PORTB in $83EE, formerly shared with the reveal rank.
+            opcode = memory[cpu.pc]
+            if PLASMA_ENTRY <= cpu.pc < 0x4400 and opcode == 0xbe:
+                resume = cpu.pc
+                bank = memory[0xd301]
+                cpu.nmi()
+                for _ in range(10000):
+                    cpu.step()
+                    if cpu.pc == resume:
+                        break
+                else:
+                    self.fail('music NMI did not return')
+                self.assertEqual(memory[0xd301], bank)
+                interrupts += 1
+                # One interruption is enough to expose a shared rank.
+                cpu.step()
+                break
+            cpu.step()
+        self.assertEqual(interrupts, 1)
+        for _ in range(100000):
+            if cpu.pc == 0x7fff:
+                break
+            cpu.step()
+        else:
+            self.fail('title callback did not return')
+
+        reference = sequence.execute(tick)
+        actual, expected = memory, reference.memory
+        actual_dl = actual[0xd403] << 8
+        expected_dl = expected[0xd403] << 8
+        actual_base = actual[actual_dl+3] | actual[actual_dl+4] << 8
+        expected_base = expected[expected_dl+3] | expected[expected_dl+4] << 8
+        offset = SKYLINE_FIRST_PAGE * 256
+        self.assertEqual(bytes(actual[actual_base+offset:actual_base+FRAME_BYTES]),
+                         bytes(expected[expected_base+offset:expected_base+FRAME_BYTES]))
+
+    def test_live_fireworks_are_complete_at_full_intensity(self):
         from pmg_preview import player_masks
         from title_plasma import zuraw_hue
         data=graphics(bytes(FRAME_BYTES));cpu=None;overlaps=[0,0]
-        for tick in (768,800,832,864,896,928,2304,2336,2368,2400):
+        for tick in range(2048, 2560, 32):
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             phase=(m[0x83e2]>>4)&15;base=(m[0xd407]&0xfc)<<8
             for p in range(5):

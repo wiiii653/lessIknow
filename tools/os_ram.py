@@ -40,7 +40,11 @@ def loader(blob):
 
 
 def run_stub():
-    return bytes.fromhex('78 a9 00 8d 0e d4 ad 01 d3 29 fe 8d 01 d3 4c 46 21')
+    # Blank the loader's display as soon as the standalone player takes over.
+    return bytes.fromhex(
+        '78 a9 00 8d 0e d4 8d 00 d4 8d 1d d0 8d 1a d0 '
+        'ad 01 d3 29 fe 8d 01 d3 4c 46 21'
+    )
 
 
 def image(chunks):

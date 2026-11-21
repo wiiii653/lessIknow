@@ -150,6 +150,7 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(cpu.pc, 0x2146)
         self.assertEqual(cpu.memory[0xd301] & 1, 0)
         self.assertEqual(cpu.memory[0xd40e], 0)
+        self.assertEqual([cpu.memory[a] for a in (0xd400, 0xd01d, 0xd01a)], [0, 0, 0])
 
     def test_side_dancer_uses_all_sixteen_composed_frames(self):
         from ribbon_dance import scene_artwork
@@ -390,12 +391,10 @@ class SequenceTests(unittest.TestCase):
                 with self.subTest(start=start, elapsed=elapsed):
                     cpu = execute(start + elapsed)
                     phase = elapsed // 32
-                    frame = ((start + elapsed) // PLASMA_STEP_TICKS) & 31
-                    background = procedural_frame(frame)
+                    frame = ((start + elapsed) // PLASMA_STEP_TICKS) & 127
+                    background = procedural_frame(frame, start + elapsed)
                     tick = start + elapsed
-                    stage = min(elapsed // 256, 3)
-                    if card:
-                        stage = max(stage, 1)
+                    stage = max(1, min(elapsed // 256, 3)) if card else min(2, max(0, elapsed // 256 - 1))
                     if TRANSITION_START <= tick < TRANSITION_START + 256:
                         step = (tick - TRANSITION_START) // 32
                         mask = banks[7 + step // 4][step % 4 * FRAME_BYTES:(step % 4 + 1) * FRAME_BYTES]
@@ -423,8 +422,8 @@ class SequenceTests(unittest.TestCase):
         # outside either silhouette or alter the shared luminance.
         before, after = execute(1495), execute(1496)
         self.assertEqual(before.memory[0xd01a], after.memory[0xd01a])
-        old_mask = banks[7][3*FRAME_BYTES:4*FRAME_BYTES]
-        new_mask = banks[8][:FRAME_BYTES]
+        old_mask = banks[4][FRAME_BYTES:2*FRAME_BYTES]
+        new_mask = banks[7][:FRAME_BYTES]
         first,second=picture(before),picture(after)
         for index,(a,b) in enumerate(zip(old_mask,new_mask)):
             for shift in (4,0):
