@@ -1,5 +1,7 @@
 # Silly Venture 2026 WE — status paczki
 
+Archiwalny stan przygotowań do party. Bieżące wydanie po party opisuje [status projektu](PLAN_STATUS.md).
+
 Aktualizacja: 2026-11-12, po upływie terminu zgłoszeń (12:00 CET).
 
 - Najnowszy build: stereo release 058 / v330, `releases/less-i-know-demo-release-058-stereo.xex`, 936 240 B.

@@ -1,5 +1,7 @@
 # The Less I Know The Better - Atari XE 1MB: ograniczenia techniczne
 
+Historyczne założenia i audyty. Bieżące ograniczenia podają [wytyczne repozytorium](AGENTS.md) i [kontrakt loadera](docs/HARDWARE_LOADER_CONTRACT.md).
+
 Dokument dla agenta kodującego. Uzupełnia `TLIKTB_Atari_Timeline_v2.md` (co i kiedy) i `TLIKTB_Asset_List.md` (z czego). Tu jest: w jakich granicach i co jest sprawdzone.
 
 ## Stan wdrożenia — v196

@@ -17,9 +17,21 @@ SCHOOL_PHASES = ((tick_at_bar(8), 8), (SCHOOL_PORTRAIT_TICK, GIRL_PORTRAIT_SCENE
                  (tick_at_bar(13), 10), (tick_at_bar(14), 11),
                  (tick_at_bar(15), 12), (PRACTICE_TICK, PRACTICE_SCENE))
 # (left, top, width, height), in the 160x64 school artwork's coordinates.
-# The first placement is twice full height: the bottom crops at the waist.
+# The foreground uses one source cell per scene cell and crops at the waist.
 GIRL_PLACEMENTS = ((0, 0, 96, 128), (44, 11, 36, 48),
                    (62, 22, 24, 32), (76, 36, 12, 16))
+# Bright running stitches (#) and a few darker thread ends (+).
+JACKET_BADGE = (
+    "#....# .#.... ....#+ #....# ######",
+    ".#..#. .#+... ...#.. .#..#. ##....",
+    "..##.. .#.... ..#... ..##.. #####.",
+    "..##.. .#.... .##### ..##.. ##....",
+    ".#..#. .#+... ...#.. .#..#. ##....",
+    "#....# .####. ..#... #....# ######",
+    "+..... ..+.+. .+.... .....+ .....+",
+)
+JACKET_THREAD_INKS = {"#": 3, "+": 1}
+JACKET_BADGE_ORIGIN = (30, 33)
 # Compact lettering fits entirely on the teal back panel at source resolution.
 NORTH_ORIGIN = (14, 15)
 NORTH_ADVANCE = 4
@@ -73,27 +85,68 @@ def boy_poses():
     return tuple(poses)
 
 
+def load_girl(path, width, height):
+    rgba = Path(path).read_bytes()
+    if len(rgba) != width * height * 4:
+        raise ValueError(f'{path} must contain {width}x{height} RGBA')
+    girl = bytearray(color(rgba[i:i + 3]) for i in range(0, len(rgba), 4))
+    mask = bytes(rgba[i + 3] >= 128 for i in range(0, len(rgba), 4))
+    return girl, mask
+
+
+def party_girl():
+    """The untouched v330 back sprite, including the party jacket badge."""
+    from arena_art import FUJI_ORIGIN, logo
+
+    girl, mask = load_girl('build/north-girl.rgba', 48, 64)
+    for y in range(14, 24):
+        girl[y * 48 + 14:y * 48 + 33] = b'\x02' * 19
+    logo(girl, 48, *FUJI_ORIGIN)
+    return bytes(girl), mask
+
+
+def foreground_girl():
+    """Sample the original party drawing on the encounter's 160x64 grid."""
+    width, height = GIRL_PLACEMENTS[0][2:]
+    girl, mask = load_girl('build/north-girl-close.rgba', width, height)
+    # Clear the source lettering while retaining the folds and outline.
+    # Leave the jacket's folds and outline at their sampled resolution.
+    for y in range(32, 41):
+        for x in range(30, 64):
+            at = y * width + x
+            if mask[at] and girl[at] == 3:
+                girl[at] = 2
+    left, top = JACKET_BADGE_ORIGIN
+    for y, row in enumerate(JACKET_BADGE, top):
+        for x, ink in enumerate(row, left):
+            if ink in JACKET_THREAD_INKS:
+                girl[y * width + x] = JACKET_THREAD_INKS[ink]
+    return girl, mask
+
+
 def story_frames():
-    from arena_art import logo, FUJI_ORIGIN
-    neutral,turned,whistle=boy_poses()
-    rgba=Path('build/north-girl.rgba').read_bytes()
-    if len(rgba)!=48*64*4:
-        raise ValueError('girl sprite must be 48x64 RGBA')
-    girl=bytearray(color(rgba[i:i+3]) for i in range(0,len(rgba),4))
-    mask=bytearray(rgba[i+3]>=128 for i in range(0,len(rgba),4))
-    for y in range(14,24):
-        for x in range(14,33):girl[y*48+x]=2
-    logo(girl,48,*FUJI_ORIGIN)
+    neutral, turned, whistle = boy_poses()
+    close_art = foreground_girl()
+    distant_inks, distant_mask = party_girl()
+    distant_inks = bytearray(distant_inks)
+    # At this scale only the separator is legible.
+    for y in range(15, 24):
+        distant_inks[y * 48 + 17:y * 48 + 30] = b'\x02' * 13
+    for x, y in ((24, 16), (23, 17), (22, 18), (23, 18), (24, 18),
+                 (23, 19), (22, 20), (21, 21)):
+        distant_inks[y * 48 + x] = 3
+    distant_art = distant_inks, distant_mask
     # First two encounter views face forward. He turns as she passes in
     # the foreground, then whistles as she recedes toward the doorway.
     frames = [turned, neutral]
     for index, (left, top, width, height) in enumerate(GIRL_PLACEMENTS):
         canvas = bytearray(whistle if index in (1,2) else turned)
-        for y in range(height):
-            source_y = y * 64 // height
+        girl, mask = close_art if index == 0 else distant_art
+        source_width, source_height = (width, height) if index == 0 else (48, 64)
+        for y in range(min(height,64-top)):
+            source_row = (y * source_height // height) * source_width
             for x in range(width):
-                source_x = x * 48 // width
-                source = source_y * 48 + source_x
+                source = source_row + x * source_width // width
                 target_x, target_y = left + x, top + y
                 if 0 <= target_x < 104 and 0 <= target_y < 64 and mask[source]:
                     for dy in range(3):

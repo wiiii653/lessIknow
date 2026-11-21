@@ -1,7 +1,19 @@
 """Verify all precomposed two-layer frames and their clocked transitions."""
+from hashlib import sha256
 import unittest
 import test_sequence as sequence
-from school_parallax import frames
+from school_parallax import FACE_OFFSETS, PROFILE_POLISH, frames, party_frames
+
+class SchoolParallaxArtTests(unittest.TestCase):
+    def test_v330_walk_with_only_four_profile_pixels_changed(self):
+        original = party_frames()
+        self.assertEqual(sha256(b''.join(original)).hexdigest(),
+                         'ca87ddba2adaed2cf082f42c4c013b3db221ce48e43803a956a1954b36b02fa4')
+        for i, (before, after, offset) in enumerate(zip(original, frames(), FACE_OFFSETS)):
+            changed = {n: b for n, (a, b) in enumerate(zip(before, after)) if a != b}
+            expected = {y * 160 + x + offset: ink for x, y, ink in PROFILE_POLISH}
+            self.assertEqual(changed, expected, i)
+
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class SchoolParallaxTests(unittest.TestCase):
@@ -17,23 +29,6 @@ class SchoolParallaxTests(unittest.TestCase):
             self.assertEqual(cpu.memory[0x83e0],14)
         self.assertEqual(sequence.execute(4114,cpu).memory[0x83e0],8)
         self.assertEqual(sequence.execute(4488,cpu).memory[0x83e0],9)
-
-    def test_walk_matches_archived_v175_frames(self):
-        from pathlib import Path
-        from extract_music import segments
-        from school_parallax import FACE_OFFSETS, FACE_DETAILS
-        banks=[payload for lo,hi,payload in segments(
-            Path('build/visual-prototype-v175.xex').read_bytes())
-            if (lo,hi)==(0x8000,0xbfff)]
-        for i,pixels in enumerate(frames()):
-            packed=banks[14+19+i//4][(i%4)*2560:(i%4+1)*2560]
-            expected=bytes(v>>shift&3 for v in packed for shift in (6,4,2,0))
-            expected=bytearray(expected)
-            for x,y,ink in FACE_DETAILS:
-                pos=y*160+x+FACE_OFFSETS[i]
-                self.assertEqual(expected[pos],3,(i,x,y))
-                expected[pos]=ink
-            self.assertEqual(pixels,bytes(expected),i)
 
     def test_boy_hair_and_jacket_stay_opaque_in_both_portraits(self):
         from school_story import load_rgb
@@ -63,7 +58,8 @@ class SchoolParallaxTests(unittest.TestCase):
             for y in range(192):
                 self.assertEqual(pixels[y*160+104:(y+1)*160],
                                  expected[y*160+104:(y+1)*160],(tick,y))
-            # The notes above the entrance do not overlap any girl placement.
-            for y in range(27,39):
-                self.assertEqual(pixels[y*160+70:y*160+94],
-                                 expected[y*160+70:y*160+94],(tick,y))
+            # Leave the notes' space clear while the boy is whistling.
+            if expected is whistle:
+                for y in range(27,39):
+                    self.assertEqual(pixels[y*160+70:y*160+94],
+                                     expected[y*160+70:y*160+94],(tick,y))

@@ -145,8 +145,8 @@ def helper():
     c.jump(0xad,'back_bit');c.emit(0x09,8);a(0x8d,0xd407)
     # PMG fade follows the same per-card fade envelope as the plasma.
     a(0xad,0x83e0);c.branch(0xd0,'title_fade')
-    a(0xad,0x83fd);c.emit(0xc9,7);c.branch(0x90,'luminance');c.emit(0xa9,7);c.jump(0x4c,'luminance')
-    c.label('title_fade');a(0xad,0x83fd);c.emit(0xc9,39);c.branch(0x90,'full_light')
+    a(0xad,0x83fd);c.emit(0x4a,0xc9,7);c.branch(0x90,'luminance');c.emit(0xa9,7);c.jump(0x4c,'luminance')
+    c.label('title_fade');a(0xad,0x83fd);c.emit(0x4a,0xc9,39);c.branch(0x90,'full_light')
     c.emit(0x49,255,0x18,0x69,47);c.jump(0x4c,'luminance')
     c.label('full_light');c.emit(0xa9,7)
     c.label('luminance');c.emit(0x0a,0x29,14);a(0x8d,0x83e9)

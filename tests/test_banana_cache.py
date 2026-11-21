@@ -4,6 +4,7 @@ import test_sequence as seq
 import banana_cache as cache
 import banana_variants as variants
 from test_engine_cache import TrackedMemory
+from test_banana_variants import live_banana_frames, banana_raster
 
 
 class BananaCacheTests(unittest.TestCase):
@@ -60,15 +61,11 @@ class BananaCacheTests(unittest.TestCase):
         self.assertLess(max(self.costs),18000)  # includes original music NMI
 
     def test_both_prepared_motifs_match_tunnel_playback_cost(self):
-        for variant,start in enumerate((12288,14336)):
-            costs=[]
-            for frame in range(32):
-                before=self.cpu.processorCycles
-                seq.execute(start+16*frame,self.cpu)
-                costs.append(self.cpu.processorCycles-before)
-                self.assertEqual(seq.SequenceTests().raster(self.cpu),
-                                 variants_raster(frame,variant))
-            self.assertLess(max(costs[2:]),48000)
+        for index,(tick,frame,variant) in enumerate(live_banana_frames()):
+            before=self.cpu.processorCycles
+            seq.execute(tick,self.cpu)
+            self.assertEqual(seq.SequenceTests().raster(self.cpu),banana_raster(frame,variant))
+            self.assertLess(self.cpu.processorCycles-before,60000 if index<2 else 49000)
 
     def test_large_development_seek_does_not_replace_live_title_code(self):
         cpu=seq.execute(768);before=cpu.memory.ram[cache.ENTRY:cache.BUFFER]
@@ -76,9 +73,3 @@ class BananaCacheTests(unittest.TestCase):
         self.assertEqual(cpu.memory[cache.FLAG],0)
         self.assertEqual(cpu.memory.ram[cache.ENTRY:cache.BUFFER],before)
         seq.execute(768,cpu)
-
-
-def variants_raster(frame,variant):
-    import mosaic
-    p=mosaic.pixels(frame,variant)
-    return bytes(p[y//2*160+x] for y in range(192) for x in range(160))

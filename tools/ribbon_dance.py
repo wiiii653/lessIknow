@@ -6,6 +6,7 @@ Both bitmap and PMG are prepared in inactive unbanked buffers.
 import math
 from collections import deque
 from functools import lru_cache
+from bisect import bisect_right
 from pathlib import Path
 from build_sequence import Code
 from engine_effects import cached_display_list, clear_pmg, DL_KEYS
@@ -21,9 +22,13 @@ FRAMES_PER_BANK = 6
 SIDE_COMPOSITOR = 0x0e00
 SIDE_BANK = 24  # extra loader indices 24–31, $4A00–$51FF
 SIDE_START, SIDE_END = tick_at_bar(24),tick_at_bar(32)
+SIDE_PREP_LEAD = 20
+SIDE_PREP_START = SIDE_START - SIDE_PREP_LEAD
 START, END = tick_at_bar(40), tick_at_bar(56)
 CUTS = (START, tick_at_bar(44), tick_at_bar(48))
 STEPS = tuple(tick_at_beat(40*8+i, 2) for i in range(128))
+FRONT_PREP_LEAD = 16
+FRONT_PREP_STEPS = tuple(tick - FRONT_PREP_LEAD if tick in CUTS else tick for tick in STEPS)
 LAUNCH_PREP = STEPS[118]
 LAUNCH_START = STEPS[119]
 OVERHEAD_START = STEPS[120]
@@ -31,7 +36,6 @@ FIREWORK_START = LAUNCH_START
 FIREWORK_CENTRES = ((18,42),(18,132),(142,54),(142,147))
 FIREWORK_ROWS = tuple((y+17)//2-8 for x,y in FIREWORK_CENTRES)
 SIDE_STEPS = tuple(tick_at_beat(24*8+i,2) for i in range(64))
-ALL_STEPS = SIDE_STEPS + STEPS
 # Deep warm playfield inks keep faces readable against the dark gym.  Ribbon
 # hues use mid/high luminance rather than near-white highlights, retaining
 # saturated colour while remaining brighter than the dancers and backdrop.
@@ -98,9 +102,10 @@ def frame_for_step(step):
 
 
 def frame_at(tick):
-    if SIDE_START<=tick<SIDE_END:return 16+((tick>>4)&15)
+    if SIDE_PREP_START<=tick<SIDE_END:
+        return 16+(((tick-SIDE_PREP_START)>>4)&15)
     from ribbon_inbetweens import midpoint_at,quarter_at
-    step=max(i for i,t in enumerate(STEPS) if t <= tick)
+    step=bisect_right(FRONT_PREP_STEPS,tick)-1
     quarter=quarter_at(tick,step)
     if quarter is not None:return 45+quarter
     mid=midpoint_at(tick,step)
@@ -298,12 +303,12 @@ def packed_frame(frame):
 
 
 def side_step(tick):
-    return min(22,max(0,(tick-SIDE_START)//128))
+    return min(22,max(0,(tick-SIDE_PREP_START)//128))
 
 
 def scene_artwork(tick):
     frame=frame_at(tick)
-    if not SIDE_START<=tick<SIDE_END:return artwork(frame)
+    if not SIDE_PREP_START<=tick<SIDE_END:return artwork(frame)
     p=side_gym(frame-16)
     hands=actor(p,(frame-16)//2,40+4*side_step(tick),61,.125,side=True)
     left=hands[0]
@@ -478,21 +483,25 @@ def install_control(bank, copy_address, palette_address):
 def helper(copy_address, palette_address=0):
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
-    # Descending half-beat table preserves exact player-clock synchronization.
-    c.emit(0xa2,len(ALL_STEPS)-1)
+    # The side shot advances through every party pose on its own 16-tick
+    # grid. Only the frontal shots need the half-beat selector.
+    a(0xad,0x83e3);c.emit(0xc9,SIDE_END>>8)
+    c.branch(0x90,'side_shot');c.branch(0xd0,'front_steps')
+    a(0xad,0x83e2);c.emit(0xc9,SIDE_END&255);c.branch(0x90,'side_shot')
+    c.label('front_steps');c.emit(0xa2,64+len(FRONT_PREP_STEPS)-1)
     c.label('find');a(0xad,0x83e3);c.jump(0xdd,'step_hi');c.branch(0x90,'previous');c.branch(0xd0,'found')
     a(0xad,0x83e2);c.jump(0xdd,'step_lo');c.branch(0xb0,'found')
-    c.label('previous');c.emit(0xca,0xe0,0xff);c.branch(0xd0,'find')
-    c.label('found');c.emit(0xe0,64);c.branch(0xb0,'front_shot')
-    a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x29,15,0x18,0x69,16);c.jump(0x4c,'selected_frame')
-    c.label('front_shot');c.jump(0xbd,'frames')
+    c.label('previous');c.emit(0xca,0xe0,63);c.branch(0xd0,'find')
+    c.label('found');c.jump(0xbd,'frames');c.jump(0x4c,'selected_frame')
+    c.label('side_shot');c.emit(0xa2,0)
+    a(0xad,0x83e2);c.emit(0x38,0xe9,SIDE_PREP_START&255,0x4a,0x4a,0x4a,0x4a,0x09,16)
     c.label('selected_frame');a(0x8d,0x83ed)
-    from ribbon_inbetweens import SELECT
+    from ribbon_inbetweens import SELECT, STEP
     a(0x20,SELECT)
     c.emit(0xa9,0);a(0x8d,0x83fc);a(0x8d,0x83fd)
     a(0xad,0x83ed);c.emit(0xc9,16);c.branch(0x90,'position_ready');c.emit(0xc9,32);c.branch(0xb0,'position_ready')
-    a(0xad,0x83e2);c.emit(0x38,0xe9,SIDE_START&255);a(0x8d,0x83e9)
-    a(0xad,0x83e3);c.emit(0xe9,SIDE_START>>8,0x0a);a(0x8d,0x83fc)
+    a(0xad,0x83e2);c.emit(0x38,0xe9,SIDE_PREP_START&255);a(0x8d,0x83e9)
+    a(0xad,0x83e3);c.emit(0xe9,SIDE_PREP_START>>8,0x0a);a(0x8d,0x83fc)
     a(0xad,0x83e9);c.emit(0x0a);a(0xad,0x83fc);c.emit(0x69,0,0xc9,23);c.branch(0x90,'position_clamped');c.emit(0xa9,22)
     c.label('position_clamped');a(0x8d,0x83fc);c.emit(0x0a,0x0a,0x38,0xe9,59);a(0x8d,0x83fd)
     c.label('position_ready')
@@ -540,7 +549,6 @@ def helper(copy_address, palette_address=0):
     c.jump(0x20,'launch_fireworks');a(0x20,PREPARE);c.jump(0x4c,'wait')
     c.label('normal_ribbons')
     # Copy five separately positioned 64-byte streams into inactive PMG RAM.
-    from ribbon_inbetweens import STEP
     for plane in range(5):
         a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x29,15)
         if plane<4:
@@ -624,9 +632,12 @@ def helper(copy_address, palette_address=0):
     for i in range(4):
         c.label(f'spark_x{i}')
         c.emit(*((14+round((i-1.5)*((phase+i*4)&15)*.55))&255 for phase in range(16)))
-    c.label('step_lo');c.emit(*(t&255 for t in ALL_STEPS))
-    c.label('step_hi');c.emit(*(t>>8 for t in ALL_STEPS))
-    c.label('frames');c.emit(*(tuple([16]*64)+tuple(frame_for_step(i) for i in range(128))))
+    # Keep the 64 bias consumed by the existing frontal inbetween selector.
+    for name,values in (('step_lo',(t&255 for t in FRONT_PREP_STEPS)),
+                        ('step_hi',(t>>8 for t in FRONT_PREP_STEPS)),
+                        ('frames',(frame_for_step(i) for i in range(128)))):
+        c.labels[name]=c.origin+len(c.data)-64
+        c.emit(*values)
     c.label('row_lo');c.emit(*((y*40)&255 for y in range(64)))
     c.label('row_hi');c.emit(*((y*40)>>8 for y in range(64)))
     c.labels['position_cache_value']=c.labels['position_cache']+1

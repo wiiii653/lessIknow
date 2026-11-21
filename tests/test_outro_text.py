@@ -34,7 +34,7 @@ class OutroTests(unittest.TestCase):
     def test_live_overlay_keeps_one_framing_and_blanks_text_at_finale(self):
         cpu=seq.execute(text.START);m=cpu.memory
         self.assertEqual(bytes(m[0xc800:0xcf00]),loader.resources()[0][0x800:])
-        self.assertEqual(m[0xd409],0xc8)
+        self.assertEqual(m[0xd409],text.COLOR_FONT>>8)
         bitmap_mapping=None
         for tick in (text.START,text.START+1000,text.START+3000,
                      text.END-1000,text.END-1):
@@ -43,8 +43,8 @@ class OutroTests(unittest.TestCase):
             if bitmap_mapping is None:bitmap_mapping=bytes(m[display+text.BITMAP_DL:display+text.FOOTER_DL])
             self.assertEqual(bytes(m[display+text.BITMAP_DL:display+text.FOOTER_DL]),bitmap_mapping)
             for row in range(text.HISTORY_ROWS):
-                at=display+4+row*3
-                self.assertEqual(m[at],0xc4 if row==text.HISTORY_ROWS-1 else 0x44)
+                at=display+text.TEXT_DL+3+row*3
+                self.assertEqual(m[at],0xc4)
                 address=m[at+1]|m[at+2]<<8
                 self.assertTrue(0xbf00<=address<0xbf00+text.HISTORY_ROWS*40)
             self.assertEqual(m[0xd301],0xff)
@@ -53,7 +53,7 @@ class OutroTests(unittest.TestCase):
         self.assertEqual(display,0xbc00)
         self.assertEqual(bytes(m[display+text.BITMAP_DL:display+text.FOOTER_DL]),bitmap_mapping)
         for row in range(text.HISTORY_ROWS):
-            at=display+5+row*3
+            at=display+text.TEXT_DL+4+row*3
             address=m[at]|m[at+1]<<8
             self.assertEqual(bytes(m[address:address+40]),b' '*40)
         p=__import__('final_boy').artwork()
@@ -73,8 +73,8 @@ class OutroTests(unittest.TestCase):
             if mode==1:break
             line+=((op>>4)&7)+1 if mode==0 else 8 if mode in (2,4) else 1
             if op&128:events.append(line)
-            if op&64:pc+=2
-        self.assertEqual(events,[1,57,79,157,235])
+            if mode and op&64:pc+=2
+        self.assertEqual(events,[1,9,19,27,35,43,51,59,67,79,157,235])
         self.assertEqual(line,235)
         self.assertLessEqual((start&0x3ff)+(pc-start)+2,0x400)
 
@@ -82,15 +82,25 @@ class OutroTests(unittest.TestCase):
         class PublicationMemory(seq.RuntimeMemory):
             def __init__(self,data):
                 self.publications=[]
+                self.staging_colors=[]
+                self.published_colors=[]
                 super().__init__(data)
             def __setitem__(self,address,value):
-                if address==0xd403:self.publications.append(value)
+                if address==0xb000:
+                    self.staging_colors.append(tuple(self[0xd016:0xd01b]) + (self[0xd01d],))
+                if address==0xd403:
+                    self.publications.append(value)
+                    if value==0xbc:
+                        self.published_colors.append(tuple(self[0xd016:0xd019]))
                 super().__setitem__(address,value)
         memory=PublicationMemory(seq.XEX.read_bytes())
         cpu=seq.MPU(memory=memory)
         seq.execute(text.START-1,cpu);memory.publications.clear()
         seq.execute(text.START,cpu)
         self.assertEqual(memory.publications,[0xbc])
+        self.assertTrue(memory.staging_colors)
+        self.assertTrue(all(colors==(0,)*6 for colors in memory.staging_colors))
+        self.assertEqual(memory.published_colors,[(0x4c,0x9c,0x2c)])
         memory.publications.clear()
         seq.execute(text.END,cpu)
         self.assertFalse(memory.publications)

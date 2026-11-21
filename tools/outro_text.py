@@ -7,7 +7,9 @@ RESET_ENTRY = 0xC340
 START, END = tick_at_bar(112), tick_at_bar(137)
 TEXT_POINTERS = 0xC400
 FONT = 0xC800
-TEXT_LOW = 0xC48A
+COLOR_FONT = 0xB400
+COLOR_FONT_SOURCE = 0x5A00
+COLOR_FONT_LOAD = 0xFECE
 TEXT_HIGH = 0xCC00
 TEXT_END = 0xCF00
 STATE_FLAG = 0x0DD0
@@ -15,27 +17,51 @@ STATE_START = 0x0DD1
 STATE_PHASE = 0x0DD2
 TMP_LO = 0x0DD3
 TMP_HI = 0x0DD4
-TMP_INDENT = 0x0DD5
 TMP_ROW = 0x0DD6
 HISTORY_ROWS = 6
 TEXT_ROWS = HISTORY_ROWS + 1
-BITMAP_SKIP = (TEXT_ROWS-5)*8
+TEXT_RASTERS = TEXT_ROWS*8
+# Eight blank lines trigger the color DLI. Two more let it align before text.
+TEXT_LEAD = (0xf0, 0x10)
+TEXT_LEAD_RASTERS = 10
+TEXT_DLI_VCOUNT = 8
+BODY_DLI_VCOUNT = (8+TEXT_LEAD_RASTERS+TEXT_RASTERS)//2
+TEXT_DL = 1+len(TEXT_LEAD)
+BITMAP_SKIP = TEXT_LEAD_RASTERS+(TEXT_ROWS-5)*8
 BITMAP_ROWS = 192-BITMAP_SKIP
-BITMAP_DL = 1+TEXT_ROWS*3
+BITMAP_DL = TEXT_DL+TEXT_ROWS*3
 FOOTER_DL = BITMAP_DL+BITMAP_ROWS*3
-PALETTE_VCOUNT = (1+TEXT_ROWS*8+7)//2
 PROMPT = b'>'
 FINAL_CARD_ENTRY = 0x5F90
 FINAL_CARD_DL = 0xBE80
-FINAL_CARD_SOURCE = 0x5FDA
-FINAL_CARD_LINES = ('A\\SLOP BY OGNJEN 2026', 'SILLY VENTURE WE')
+FINAL_CARD_SOURCE = 0x5C60   # control bank, before the final-orbit data
+FINAL_MARK_GLYPHS = 0x6904   # control bank, before orbit state at $69B8
+FINAL_MARK_GLYPHS_TAIL = 0x5C88
+FINAL_MARK_TILES = 0x5CB0
+FINAL_MARK_DRAW = 0x6994
+FINAL_MARK_FONT_COPY = 0x5FE7
+FINAL_MARK_PHASES = 32
+FINAL_MARK_WIDTH = 7
+FINAL_MARK_ROWS = 3
+FINAL_MARK_FIRST_GLYPH = 96
+FINAL_MARK_SCREEN = 0xBF00   # retired finale framebuffer
+FINAL_CARD_PAGES = (
+    ('A\\SLOP BY OGNJEN 2026', 'SILLY VENTURE WE', ''),
+    ('MUSIC PLAYER / V035', '4 POKEY UPDATES PER PAL FRAME', 'COMPRESSED BANKED REGISTER STREAM'),
+    ('GRAPHICS MODES', 'ANTIC E BITMAPS / GTIA 11 TITLES', 'ANTIC 4 TERMINAL / ANTIC 5 STAR'),
+    ('HARDWARE EFFECTS', 'PMG BALLS / RIBBONS / FIREWORKS', 'DLI PALETTES / BANKED 1 MB RAM'),
+    ('SCENE DIRECTOR', 'MUSIC TICKS CUE EACH SCENE', 'ROTATORS REVERSE WITHOUT JUMPING'),
+)
+FINAL_CARD_TEXT = 0xBF80
+FINAL_CARD_TEXT_ROWS = 3
 CREDITS = (
-    ("SYS.OPEN CREDITS [OK]", "THE LESS I KNOW THE BETTER", "AN ATARI XE 1 MB DEMO", "A\\SLOP BY OGNJEN",
-     "MADE WITH OPENAI CODEX", "HUMAN VISION / LLM CODE"),
+    ("SYS.OPEN CREDITS [OK]", "THE LESS I KNOW THE BETTER",
+     "A\\SLOP BY OGNJEN / ATARI XE 1 MB", "I STARTED VIBECODING IN JULY 2026",
+     "THIS IS MY FIRST WORK FOR ATARI", "MADE WITH OPENAI CODEX"),
     ("SYS.OPEN AUDIO.LOG [OK]", "SONG / TAME IMPALA", "THE LESS I KNOW THE BETTER",
      "POKEY / OGNJEN / CODEX", "MIDI / MIDISHOW 200337"),
     ("UPLINK SV2026 [CONNECTED]", "MADE FOR", "SILLY VENTURE 2026",
-     "AI TOOLS / ATARI SOUL"),
+     "AI TOOLS / ATARI SOUL", "HUMAN VISION / LLM CODE"),
 )
 GREETZ = (
     "GREETINGS TO ALL MY CHOOMS!",
@@ -118,7 +144,7 @@ GLYPHS = {
 
 
 def all_lines():
-    lines = tuple(dict.fromkeys(tuple(line for page in CREDITS for line in page) + GREETZ + FINAL_CARD_LINES))
+    lines = tuple(dict.fromkeys(tuple(line for page in CREDITS for line in page) + GREETZ))
     if len(lines) > 38 or any(len(line) > 36 for line in lines):
         raise ValueError('outro text exceeds its compact line layout')
     if len(GREETZ) > 24:
@@ -129,6 +155,7 @@ def all_lines():
 # Three-pixel-wide glyphs: ANTIC 4 supplies independently coloured letters
 # over true COLBK black, unlike the shared-hue ANTIC 2 high-resolution mode.
 TERMINAL_FONT = {
+    "4": "101 101 101 111 001 001 001",
 '[':"111 100 100 100 100 100 111",
 ']':"111 001 001 001 001 001 111",
 '>':"100 010 001 001 001 010 100",
@@ -148,9 +175,74 @@ TERMINAL_FONT = {
 '7':"111 001 001 010 010 100 100",
 }
 
-def font_data():
+def final_mark(phase=0):
+    """Tile the faceted star and its two broken orbits into ANTIC 5 glyphs."""
+    import math
+    from arena_art import inside
+
+    width, height = FINAL_MARK_WIDTH*4, FINAL_MARK_ROWS*8
+    art = bytearray(width * height)
+
+    turn = math.tau * phase / FINAL_MARK_PHASES
+    width_scale = 1.00 + 0.14 * math.cos(turn)
+    ridge = 3.2 * math.sin(turn)
+
+    def facet(ink, *points):
+        points = tuple(((19 + (x-19)*width_scale + (y-16)*ridge/10)*.7, y*.75)
+                       for x, y in points)
+        for y in range(height):
+            for x in range(width):
+                if inside(x + .5, y + .5, points):
+                    art[y * width + x] = ink
+
+    glints = []
+    for angle in range(360):
+        theta = math.radians(angle)
+        for tilt, ink, gaps in ((-.36, 2, (32, 212)), (.36, 3, (150, 330))):
+            offset = math.degrees(turn) * (1 if tilt > 0 else -1)
+            if any(abs((angle - gap - offset + 180) % 360 - 180) < 18 for gap in gaps):
+                continue
+            u, v = 18.5 * math.cos(theta), 7.4 * math.sin(theta)
+            tilt += 0.16 * math.sin(turn + tilt)
+            x = round((19.5 + u * math.cos(tilt) - v * math.sin(tilt))*.7)
+            y = round((15.5 + u * math.sin(tilt) + v * math.cos(tilt))*.75)
+            art[y * width + x] = ink
+            if angle == round(gaps[0] + offset + 36) % 360:
+                glints.append((x,y))
+
+    # Split the light into a bright ridge, a blue plane and a gold plane.
+    facet(0, (20, 0), (25, 10), (32, 16), (25, 21), (20, 32),
+          (15, 21), (8, 16), (15, 10))
+    facet(1, (20, 2), (23, 12), (29, 16), (22, 17), (20, 30),
+          (17, 20), (11, 16), (17, 12))
+    facet(2, (20, 2), (23, 12), (29, 16), (21, 14))
+    facet(3, (29, 16), (22, 17), (20, 30), (20, 18))
+    facet(2, (11, 16), (17, 20), (20, 30), (18, 18))
+    for x, y in glints:
+        for dx,dy in ((0,0),(-1,0),(1,0),(0,-1),(0,1)):
+            if 0<=x+dx<width and 0<=y+dy<height:
+                art[(y+dy)*width+x+dx] = 1
+
+    used = set(map(ord, ''.join(all_lines()) + '>'))
+    assert used.isdisjoint(range(FINAL_MARK_FIRST_GLYPH, 128))
+    glyphs = bytearray()
+    screen = bytearray()
+    for top in range(0, height, 8):
+        row = bytearray()
+        for left in range(0, width, 4):
+            tile = bytes(sum(art[y * width + left + x] << (6 - x * 2)
+                             for x in range(4)) for y in range(top, top + 8))
+            screen.append(FINAL_MARK_FIRST_GLYPH + len(glyphs)//8)
+            glyphs.extend(tile)
+    assert len(glyphs) <= (128-FINAL_MARK_FIRST_GLYPH)*8
+    assert len(screen) == FINAL_MARK_WIDTH * FINAL_MARK_ROWS
+    return bytes(screen), bytes(glyphs)
+
+
+def font_data(card=False):
     font=bytearray(1024)
-    for char in set(''.join(all_lines())+'>'):
+    card_lines = ''.join(line for page in FINAL_CARD_PAGES for line in page)
+    for char in set(''.join(all_lines())+card_lines+'>'):
         rows=TERMINAL_FONT[char].split() if char in TERMINAL_FONT else tuple(''.join(row[i] for i in (0,2,4)) for row in GLYPHS[char])
         font[ord(char)*8:ord(char)*8+8]=bytes(sum((int(bit)<<(6-2*i)) for i,bit in enumerate(row)) for row in rows)+b'\0'
     font[:40]=b'[XE-OS] LINK:ONLINE // SV2026 [OK]'.ljust(40,b' ')
@@ -165,34 +257,60 @@ def font_data():
     font[TIMES-FONT:TIMES-FONT+len(timing)]=timing
     font[LENGTHS-FONT:LENGTHS-FONT+len(lengths)]=lengths
     font[95*8:96*8]=bytes([0]*6+[0x54,0])  # blinking baseline underscore
+    if card:
+        font[0x100:0x300] = bytes(value*3 for value in font[0x100:0x300])
     return bytes(font)
 
 
-def line_data():
-    lines = all_lines()
-    ptrs = bytearray()
-    records = bytearray()
-    addresses = []
-    pos = TEXT_POINTERS + 2 * len(lines)
-    high = False
-    for line in lines:
-        if not high and pos + 44 > 0xC800:
-            high = True
-            pos = TEXT_HIGH
-        addresses.append(pos)
+def color_font():
+    from outro_palette import GLYPH_INKS
+    assert all(32<=ord(char)<96 for char in ''.join(all_lines())+'>_')
+    source = font_data()
+    return bytes(source[glyph+max(0,row-1)]*pen
+                 for glyph in range(0x100,0x300,8)
+                 for row,pen in enumerate(GLYPH_INKS))
+
+
+def install_color_font(bank):
+    offset = COLOR_FONT_SOURCE - 0x4000
+    data = color_font()
+    assert not any(bank[offset:offset+len(data)])
+    return bank[:offset]+data+bank[offset+len(data):]
+
+
+def color_font_loader():
+    # The compressed payload has been decoded. Its staging pages now hold
+    # the terminal font while the final card keeps the original at $C800.
+    c = Code(COLOR_FONT_LOAD)
+    def a(op,address):
+        c.emit(op,address&255,address>>8)
+
+    from school_portrait_bank import BANK_VALUE
+    a(0xAD,0xD301);c.emit(0x48);a(0xAD,BANK_VALUE);a(0x8D,0xD301)
+    c.emit(0xA2,0);c.label('copy_font')
+    for page in range(2):
+        a(0xBD,COLOR_FONT_SOURCE+page*256);a(0x9D,COLOR_FONT+0x100+page*256)
+    c.emit(0xE8);c.branch(0xD0,'copy_font')
+    c.emit(0x68);a(0x8D,0xD301)
+    c.emit(0x60)
+    return bytes(c.finish())
+
+
+def line_records():
+    """Pack typed lines at their natural length and keep direct ANTIC rows padded."""
+    address = TEXT_POINTERS
+    for line in all_lines():
         encoded = line.upper().encode('ascii')
-        if line in FINAL_CARD_LINES:
-            records.extend(encoded.center(40,b' ') + b' '*4)
+        if line:
+            record = PROMPT + encoded
         else:
-            records.extend((PROMPT if line else b' ') + encoded.ljust(40-len(PROMPT), b' ') + b' ' * 4)
-        pos += 44
-    ptrs.extend(address & 255 for address in addresses)
-    ptrs.extend(address >> 8 for address in addresses)
-    # Two pointer tables are followed by 44-byte records.
-    first_count = sum(address < 0xC800 for address in addresses)
-    first = records[:first_count * 44]
-    second = records[first_count * 44:]
-    return bytes(ptrs), bytes(first), bytes(second)
+            record = b' ' * 40
+        if address < FONT and address + len(record) > FONT:
+            address = TEXT_HIGH
+        if address + len(record) > TEXT_END:
+            raise ValueError('outro text exceeds the reserved record space')
+        yield address, record
+        address += len(record)
 
 
 def helper():
@@ -203,32 +321,37 @@ def helper():
     a(0xAD, STATE_FLAG); c.branch(0xF0, 'init_text');c.jump(0x4C,'text_ready')
     c.label('init_text')
     c.emit(0xA9, 1); a(0x8D, STATE_FLAG)
-    for page, length in ((0,256),(1,256),(2,BITMAP_ROWS*3-512)):
-        c.emit(0xA2,0);c.label(f'copy{page}')
-        a(0xBD,0xB802+BITMAP_SKIP*3+page*256)
-        a(0x9D,0xBC00+BITMAP_DL+page*256)
-        c.emit(0xE8,0xE0,length&255);c.branch(0xD0,f'copy{page}')
-    for base in (0xBC00,):
-        c.emit(0xA9,0x80);a(0x8D,base)
-        for row in range(TEXT_ROWS):
-            c.emit(0xA9,0xC4 if row==TEXT_ROWS-1 else 0x44);a(0x8D,base+1+row*3)
-        for row,cmd in ((69-BITMAP_SKIP,0x4E),(147-BITMAP_SKIP,0x4E),
-                        (77-TEXT_ROWS*8,0xCE),(155-TEXT_ROWS*8,0xCE)):
-            c.emit(0xA9,cmd);a(0x8D,base+BITMAP_DL+row*3)
-        for offset,value in enumerate((0x90,0x41,base&255,base>>8)):
-            c.emit(0xA9,value);a(0x8D,base+FOOTER_DL+offset)
-    c.emit(0xA9,0xC8);a(0x8D,0xD409)
+    from terminal_typing import CACHE_ENTRY, CACHED_LINES, ENTRY as typing_entry, cache_helper
+    c.emit(0xa9,0xff,0xa2,HISTORY_ROWS-1)
+    c.label('invalidate_rows');a(0x9d,CACHED_LINES);c.emit(0xca);c.branch(0x10,'invalidate_rows')
+    for offset in range(0,BITMAP_ROWS*3,256):
+        length = min(256,BITMAP_ROWS*3-offset)
+        c.emit(0xA2,0);c.label(f'copy{offset}')
+        a(0xBD,0xB802+BITMAP_SKIP*3+offset)
+        a(0x9D,0xBC00+BITMAP_DL+offset)
+        c.emit(0xE8,0xE0,length&255);c.branch(0xD0,f'copy{offset}')
+    base = 0xBC00
+    for offset,value in enumerate((0x80,*TEXT_LEAD)):
+        c.emit(0xA9,value);a(0x8D,base+offset)
+    for row in range(TEXT_ROWS):
+        # Each row's last raster sets the next palette or restores the bitmap.
+        c.emit(0xA9,0xC4);a(0x8D,base+TEXT_DL+row*3)
+    for row,cmd in ((69-BITMAP_SKIP,0x4E),(147-BITMAP_SKIP,0x4E),
+                    (77-TEXT_LEAD_RASTERS-TEXT_RASTERS,0xCE),
+                    (155-TEXT_LEAD_RASTERS-TEXT_RASTERS,0xCE)):
+        c.emit(0xA9,cmd);a(0x8D,base+BITMAP_DL+row*3)
+    for offset,value in enumerate((0x90,0x41,base&255,base>>8)):
+        c.emit(0xA9,value);a(0x8D,base+FOOTER_DL+offset)
+    a(0x20,COLOR_FONT_LOAD)
     c.label('text_ready')
     c.label('choose')
-    c.emit(0xA9,0);a(0x8D,0xBC02);c.emit(0xA9,0xC8);a(0x8D,0xBC03)
-    c.emit(0xA9,32);a(0x8D,FONT+38);a(0xAD,0x83E2);c.emit(0x29,0xFC);c.branch(0xD0,'status_clean')
-    c.emit(0xA9,47);a(0x8D,FONT+38);c.label('status_clean')
+    c.emit(0xA9,0);a(0x8D,0xBC00+TEXT_DL+1);c.emit(0xA9,0xC8);a(0x8D,0xBC00+TEXT_DL+2)
     a(0xAD,0x83E4);c.branch(0xD0,'final_blank')
     a(0xAD,0x83E3);c.emit(0xC9,END>>8);c.branch(0x90,'cards');c.branch(0xD0,'final_blank')
     a(0xAD,0x83E2);c.emit(0xC9,END&255);c.branch(0x90,'cards')
     c.label('final_blank')
     blank=_line_addresses()[all_lines().index('')]
-    c.emit(0xA9,blank&255);a(0x8D,0xBC02);c.emit(0xA9,blank>>8);a(0x8D,0xBC03)
+    c.emit(0xA9,blank&255);a(0x8D,0xBC00+TEXT_DL+1);c.emit(0xA9,blank>>8);a(0x8D,0xBC00+TEXT_DL+2)
     c.emit(0xA9,len(pages())*HISTORY_ROWS);a(0x8D,STATE_START);c.jump(0x4C,'update')
     c.label('cards')
     # Write a whole page quickly, then hold it until the next page starts.
@@ -239,21 +362,23 @@ def helper():
     c.label('page_found');c.jump(0xBD,'page_offset');a(0x8D,STATE_START)
     c.label('update')
     # A real prompt stays in one column; only the cursor advances.
-    c.emit(0xA9,0);a(0x8D,TMP_INDENT)
     c.emit(0xA2, 0)
     c.label('row')
     c.emit(0x8A); a(0x8D,TMP_ROW)
     a(0xAD, TMP_ROW); c.emit(0x18); a(0x6D, STATE_START); c.emit(0xA8)
-    c.jump(0xB9, 'line_lo'); c.emit(0x18); a(0x6D, TMP_INDENT); a(0x8D, TMP_LO)
-    c.jump(0xB9, 'line_hi'); c.emit(0x69, 0); a(0x8D, TMP_HI)
-    a(0x20,0xEB44)
+    c.jump(0xB9, 'line_lo'); a(0x8D, TMP_LO)
+    c.jump(0xB9, 'line_hi'); a(0x8D, TMP_HI)
+    a(0x20,typing_entry)
     a(0xAD, TMP_ROW); c.emit(0x0A, 0x18); a(0x6D, TMP_ROW); c.emit(0xA8)
-    a(0xAD, TMP_LO); a(0x99, 0xBC05)
-    a(0xAD, TMP_HI); a(0x99, 0xBC06)
+    a(0xAD, TMP_LO); a(0x99, 0xBC00+TEXT_DL+4)
+    c.emit(0xa9,0xbf); a(0x99, 0xBC00+TEXT_DL+5)
     c.emit(0xE8, 0xE0, HISTORY_ROWS); c.branch(0xD0, 'row')
     c.label('done')
     a(0xAD,STATE_FLAG);c.emit(0xC9,1);c.branch(0xD0,'published')
     c.label('publish_wait');a(0xAD,0xD40B);c.emit(0xC9,124);c.branch(0x90,'publish_wait');c.emit(0xC9,128);c.branch(0xB0,'publish_wait')
+    from final_boy import ENTRY_VISIBLE
+    a(0x20,ENTRY_VISIBLE)
+    c.emit(0xA9,COLOR_FONT>>8);a(0x8D,0xD409)
     c.emit(0xA9,0);a(0x8D,0xD402);c.emit(0xA9,0xBC);a(0x8D,0xD403)
     c.emit(0xA9,2);a(0x8D,STATE_FLAG)
     c.label('published');c.emit(0x60)
@@ -264,6 +389,8 @@ def helper():
     c.label('page_lo');c.emit(*(t&255 for t in page_starts()))
     c.label('page_hi');c.emit(*(t>>8 for t in page_starts()))
     c.label('page_offset');c.emit(*(i*HISTORY_ROWS for i in range(len(pages()))))
+    assert c.origin+len(c.data)<=CACHE_ENTRY
+    c.emit(*bytes(CACHE_ENTRY-c.origin-len(c.data)),*cache_helper())
     if c.origin+len(c.data)>RESET_ENTRY:raise ValueError('text helper exceeds reset boundary')
     c.emit(*bytes(RESET_ENTRY-c.origin-len(c.data)))
     a(0xAD, STATE_FLAG); c.branch(0xF0, 'ended')
@@ -294,22 +421,18 @@ def helper():
 
 
 def _line_addresses():
-    count = len(all_lines())
-    result=[];pos=TEXT_POINTERS+count*2;high=False
-    for _ in all_lines():
-        if not high and pos+44>0xC800:
-            high=True;pos=TEXT_HIGH
-        result.append(pos);pos+=44
-    return result
+    return [address for address, _ in line_records()]
 
 
 def final_card_display_list():
-    addresses=dict(zip(all_lines(),_line_addresses()))
-    data=[0x80]+[0x70]*6+[0xf0]+[0x70,0x70,0xd0,0x70]
-    for line in FINAL_CARD_LINES:
-        address=addresses[line]
+    # The last row of the mark ends on line 78 and clocks music once.
+    data=[0x80]+[0x70]*3+[0x50,0x45,FINAL_MARK_SCREEN&255,FINAL_MARK_SCREEN>>8,
+                          0x05,0x85,0x70,0x70,0xf0]
+    for row in range(FINAL_CARD_TEXT_ROWS):
+        address=FINAL_CARD_TEXT+row*40
         data.extend((0x44,address&255,address>>8))
-    data.extend([0x70]*6+[0xd0]+[0x70]*9+[0xd0,0x41,FINAL_CARD_DL&255,FINAL_CARD_DL>>8])
+        data.append(0xf0)
+    data.extend([0xd0]+[0x70]*9+[0xd0,0x41,FINAL_CARD_DL&255,FINAL_CARD_DL>>8])
     return bytes(data)
 
 
@@ -341,10 +464,4 @@ def page_starts():
 
 
 def inserts():
-    ptrs, low_records, high_records = line_data()
-    # Two pointer tables and line records are packed into the existing
-    # retired second framebuffer, loaded only on finale entry.
-    table_and_low = bytes(len(ptrs)) + low_records
-    return [(ENTRY, helper()), 
-            (TEXT_POINTERS, table_and_low), (TEXT_HIGH, high_records),
-            (FONT, font_data())]
+    return [(ENTRY, helper()), (FONT, font_data(card=True)), *line_records()]

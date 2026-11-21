@@ -12,12 +12,11 @@ the original XEX and bank SHA-256 hashes. Banks 9–14 consist entirely of `$FF`
 bank 8 contains data followed by `$FF`. All banks are retained until playback
 access is verified (V3 in `TLIKTB_Technical_Constraints.md`).
 
-These files are raw player-specific data, not standalone audio or a playable
-demo. The original executable also contains the decoder, bank loader, interrupt
-handler, and player screen. Integrating music with demo visuals requires
-preserving the playback code and four DLI updates while replacing the display
-and checking v035's addresses and bank behavior. No screen or playback code has
-been removed yet; emulator verification and full-song listening remain necessary.
+The source banks preserve the original player data. The post-party stereo
+build uses the v035 player, four music updates per PAL frame, the stereo mix
+and the re-rendered ending in `v035-unfaded-ending.bin`. The release command
+and verification results are in the [project README](../../README.md) and
+[project status](../../docs/PLAN_STATUS.md).
 
 ## v035 display-list inspection
 

@@ -15,7 +15,8 @@ class LoadingScreenTests(unittest.TestCase):
         self.assertEqual(entries[i+4][2],ls.ENTRY.to_bytes(2,'little'))
         self.assertGreater(next(j for j,(a,b,p) in enumerate(entries) if a==0x8000),i+4)
         text=entries[i+1][2]
-        self.assertEqual([bytes(c+32 for c in text[j:j+40]).decode().strip() for j in (0,40,80)],list(ls.LINES))
+        self.assertEqual([bytes(c+32 for c in text[j:j+40]).decode() for j in (0,40,80)],
+                         [line.center(40) for line in ls.LINES])
         # The first 14 original bank INITs must not turn off DMA again.
         code=next(p for a,b,p in entries if (a,b)==(0x2000,0x24b2))
         self.assertEqual(code[0x20f1-0x2000:0x20f4-0x2000],b'\xea'*3)

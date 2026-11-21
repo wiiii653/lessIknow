@@ -1,8 +1,13 @@
 PYTHON ?= python3
 CONVERT ?= convert
 
-.PHONY: all clean check
-all: build/visual-prototype-dev.xex build/visual-prototype-dev.json
+.PHONY: all clean check hardware
+all: build/visual-prototype-dev.xex build/visual-prototype-dev.json build/hardware-dev.xex
+
+hardware: build/hardware-dev.xex
+
+build/hardware-dev.xex: build/visual-prototype-dev.xex tools/build_hardware_xex.py tools/build_audio_revision.py tools/build_compact_xex.py tools/build_avg_late_lowram.py releases/less-i-know-demo-release-058-stereo.xex releases/less-i-know-demo-release-133-stereo.xex
+	$(PYTHON) tools/build_hardware_xex.py $< $@ --replace-dev --approved-music --earlier-percussion
 
 check: build/visual-prototype-dev.xex build/visual-prototype-dev.json build/kaleidoscope.xex
 	$(PYTHON) -c "import py65"
@@ -26,7 +31,7 @@ build/gym-v056.rgb: assets/art/source/act1_gym_dance_v056.png
 VIDEO_INPUTS = assets/art/reference/v175/basketball.bin assets/art/reference/v175/arena-pan.bin build/kaleidoscope.gray build/gym-v056.rgb \
     build/ribbon-dancer-v136.rgb build/ribbon-side-v142.rgb build/ribbon-overhead-v145.rgb build/ribbon-inbetweens-v166.rgb build/ribbon-inbetweens-v171.rgb build/ribbon-inbetweens-v173.rgb build/arena-exterior-v151.rgb build/arena-interior-v151.rgb build/boy-floor-v145.rgb \
     $(addprefix build/dance-v056-,0.rgb 1.rgb 2.rgb 3.rgb) \
-    build/school.rgb build/school-neutral.rgb build/school-front.rgb build/north-girl.rgba build/school-girl-side-v033.rgb \
+    build/school.rgb build/school-neutral.rgb build/school-front.rgb build/north-girl.rgba build/north-girl-close.rgba build/school-girl-side-v033.rgb \
     build/practice-storyboard.rgb build/crush-portraits.rgb \
     build/girl-walk-cycle-v177.rgba build/boy-whistle-v177.rgba \
     $(addprefix build/trevor-panel-,0.rgb 1.rgb 2.rgb 3.rgb) \
@@ -56,6 +61,9 @@ build/school-front.rgb: assets/art/source/act1_boy_front_v170.png
 
 build/north-girl.rgba: assets/art/source/act1_north_girl.png
 	$(CONVERT) $< -filter point -resize 48x64\! -depth 8 rgba:$@
+
+build/north-girl-close.rgba: assets/art/source/act1_north_girl.png
+	$(CONVERT) $< -filter point -resize 96x128\! -depth 8 rgba:$@
 
 build/school-girl-side-v033.rgb: assets/art/source/act1_girl_side_walking_v033.png
 	$(CONVERT) $< -filter point -resize 160x64\! -depth 8 rgb:$@

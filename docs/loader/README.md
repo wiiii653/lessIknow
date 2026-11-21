@@ -1,3 +1,10 @@
+# Bieżący kontrakt sprzętowy
+Przed użyciem historycznych komend poniżej przeczytaj
+[HARDWARE_LOADER_CONTRACT.md](../HARDWARE_LOADER_CONTRACT.md).
+Roboczy XEX sprzętowy buduje `make hardware`. Polecenie odtwarzające wydanie
+po party z miksem stereo podaje [README](../../README.md).
+Stare przykłady mono i ręczne składanie etapów nie są procedurą wydawniczą.
+
 # Dokumentacja loadera — The Less I Know The Better (Atari XE)
 
 Katalog opisuje potok 64 banków, kompaktowanie XEX, ekran ładowania
@@ -5,7 +12,7 @@ w wysokiej pamięci i późny start z niskiej pamięci. Część szczegółowych
 tabel niżej pochodzi ze starszego release 018; sprawdzaj je względem aktualnego
 builda i instalatorów przed zmianami.
 
-Stan wydania: 2026-11-12, stereo release 048/v315,
+Historyczny stan opisany poniżej: 2026-11-12, stereo release 048/v315,
 `releases/less-i-know-demo-release-048-stereo.xex`.
 
 Legenda (zgodnie z `AGENTS.md`):

@@ -21,7 +21,8 @@ class MosaicTests(unittest.TestCase):
         cpu = sequence.execute(tick_at_bar(96)+16, cpu)
         frame = cpu.memory[0x83ed] & 15
         expected_hue = palette_pairs()[frame][0]
-        self.assertEqual(cpu.memory[0xd018], (expected_hue << 4) | 14)
+        # GTIA ignores bit zero of the color register.
+        self.assertEqual(cpu.memory[0xd018] & 0xfe, (expected_hue << 4) | 14)
 
     def test_all_frames_and_inactive_buffer_ownership(self):
         cpu=sequence.MPU(memory=TrackedMemory(XEX.read_bytes()))

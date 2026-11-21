@@ -10,12 +10,20 @@ ENTRY=0x6800
 BANK_INDEX=19
 INCOMING_TICKS=48
 INCOMING_SCALE=0x7250  # 49 bytes after the school panorama helper ($7246)
-# One distinct vector per visible flight, including horizontal and vertical entries.
-IN_VECTORS=((-3,0),(3,0),(0,-1),(0,1),(-2,-1),(2,-1),(-2,1),(2,1),(-1,-1),(1,-1),(-1,1),(1,1),(-3,-1))
-OUT_VECTORS=((3,1),(-3,1),(3,-1),(-3,-1),(2,1),(-2,1),(2,-1),(-2,-1),(1,1),(-1,1),(1,-1),(-1,-1),(0,1))
-IN_VECTORS=(IN_VECTORS+((-3,1),(3,1),(-2,0),(2,0),(1,0)))[:len(HITS)]
-OUT_VECTORS=(OUT_VECTORS+((-3,0),(3,0),(0,-1),(1,0),(-2,0)))[:len(HITS)]
-assert len(HITS)==len(IN_VECTORS)==len(OUT_VECTORS)
+# Indices into the shared displacement profiles. Both axes always move.
+IN_VECTORS=((-3,-1),(3,1),(-1,-2),(1,-2),(-2,-1),(2,-1),(-2,1),(2,1),
+            (-1,-1),(1,-1),(-1,1),(1,1),(-3,-2),(3,-2),(-3,2),(3,2),(-1,2),(1,2))
+assert len(HITS)==len(IN_VECTORS)
+
+
+def displacement(profile, distance):
+    if profile == 0:
+        return 0
+    speed, bend = ((.55,4), (1,-4), (2.6,5))[abs(profile)-1]
+    # The bend vanishes at both ends, so the contact stays at the fist.
+    progress = distance/32
+    offset = round(speed*distance + bend*4*progress*(1-progress))
+    return offset if profile>0 else -offset
 
 
 def helper():
@@ -43,7 +51,7 @@ def helper():
     c.label('is_in');c.emit(0xa8);a(0xb9,INCOMING_SCALE);a(0x8d,0x83ea)
     c.emit(0xa9,1);c.jump(0x8d,'incoming')
     c.label('position');c.jump(0x8e,'hit_index')
-    # Shared displacement table gives distinct trajectories without runtime multiplication.
+    # Shared curved profiles keep the same table footprint and runtime cost.
     for axis,workspace in (('x',0x83eb),('y',0x83ec)):
         c.jump(0xad,'incoming');c.branch(0xf0,f'{axis}_out')
         c.jump(0xbd,f'{axis}_in');c.jump(0x4c,f'{axis}_velocity')
@@ -201,7 +209,7 @@ def install(bank):
             big.extend(round((radius[0]*math.cos((step+phase)*math.tau/32)) if axis==0 else (radius[1]*math.sin((step+phase)*math.tau/32)))&255 for step in range(32))
     blobs.append((0x7e00,bytes(big)))
     blobs.append((0x7ec0,bytes((0x18,0x3c,0x6e,0xff,0xfb,0x76,0x3c,0x18))))
-    blobs.append((0x7f00,bytes((velocity*d)&255 for velocity in range(-3,4) for d in range(33))))
+    blobs.append((0x7f00,bytes(displacement(profile,d)&255 for profile in range(-3,4) for d in range(33))))
     for address,data in blobs:
         off=address-0x4000;assert address+len(data)<=0x8000 and not any(out[off:off+len(data)])
         out[off:off+len(data)]=data

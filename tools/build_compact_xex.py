@@ -16,6 +16,22 @@ def clear_code():
     c.emit(0x68,0xa8,0x68,0xaa,0x68,0x28,0x60)
     return bytes(c.finish())
 
+
+def fast_clear_code():
+    """Clear all 64 staging pages in one Y loop without self-modification."""
+    c = Code(0x3a00)
+    c.emit(0x08, 0x78, 0x48, 0x98, 0x48, 0xa9, 0, 0xa0, 0)
+    c.label('clear')
+    for page in range(0x80, 0xc0):
+        c.emit(0x99, 0, page)  # STA page,Y
+    c.emit(0xc8)
+    c.branch(0xf0, 'done')
+    c.jump(0x4c, 'clear')
+    c.label('done')
+    c.emit(0x68, 0xa8, 0x68, 0x28, 0x60)
+    return bytes(c.finish())
+
+
 def build(data):
     out=bytearray(b'\xff\xff');count=0
     for start,end,blob in segments(data):
@@ -24,6 +40,12 @@ def build(data):
         count+=1
         out.extend(xex_segment(0x3a00,clear_code()))
         out.extend(xex_segment(0x02e2,b'\x00\x3a'))
+        # Keep a data segment between the clear and copy INITs even for
+        # empty banks. The hardware-confirmed AVG build has this structure
+        # for every bank.
+        if not any(blob):
+            out.extend(xex_segment(start,blob))
+            continue
         # A segment header costs four bytes. Longer zero runs are omitted;
         # short ones remain inside the neighbouring data segment.
         pos=0

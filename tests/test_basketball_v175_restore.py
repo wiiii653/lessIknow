@@ -6,7 +6,7 @@ import test_sequence as s
 from extract_music import segments
 from scene_memory import RuntimeMemory
 from basketball_hero import START,DUNK,END,DATA,packed,ORBIT_DATA,helper,ENTRY,reference_art,unpack,scene_frame,DRIBBLE_PATCH_BYTES,DRIBBLE_WIDTH,DRIBBLE_X,DRIBBLE_Y
-from hero_mask_cleanup import NEGATIVE_SPACE, SHOULDER_SPACE, KNEE_SKIN
+from hero_mask_cleanup import NEGATIVE_SPACE, SHOULDER_SPACE, KNEE_SKIN, SURFACE_REPAIRS
 from arena_art import background
 
 @unittest.skipIf(s.MPU is None,'py65 required')
@@ -34,6 +34,9 @@ class BasketballV175RestoreTests(unittest.TestCase):
             for i,(before,after) in enumerate(zip(a,b)):
                 if before==after:continue
                 x,y=i%160,i//160
+                if (x,y) in SURFACE_REPAIRS.get(pose,{}).get(after,()):
+                    self.assertIn(before,(0,1))
+                    continue
                 if pose==0 and (x,y) in KNEE_SKIN:
                     self.assertEqual(after,3)
                     continue
@@ -56,6 +59,9 @@ class BasketballV175RestoreTests(unittest.TestCase):
             for i,(old_pixel,new_pixel) in enumerate(zip(before,after)):
                 if old_pixel==new_pixel:continue
                 x=DRIBBLE_X+i%DRIBBLE_WIDTH;y=DRIBBLE_Y+i//DRIBBLE_WIDTH
+                if (x,y) in SURFACE_REPAIRS[0].get(new_pixel,()):
+                    self.assertIn(old_pixel,(0,1))
+                    continue
                 if (x,y) in KNEE_SKIN:
                     self.assertEqual(new_pixel,3)
                     continue

@@ -4,12 +4,12 @@ import math
 from pmg_preview import atari_rgb
 import test_sequence as sequence
 from final_boy import START as FINAL_SHOT
-from banana_variants import variant_at
+from ribbon_dance import FRONT_PREP_STEPS
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class MosaicPaletteTests(unittest.TestCase):
     def test_palette_stays_saturated_from_first_cycle_to_last(self):
-        for tick in (11968,11969,12155,14958,32912,32913,FINAL_SHOT-1):
+        for tick in (11968,11969,12155,FRONT_PREP_STEPS[0]-1,32912,32913,FINAL_SHOT-1):
             with self.subTest(tick=tick):
                 memory=sequence.execute(tick).memory
                 self.assertEqual(memory[0x83e0],6)

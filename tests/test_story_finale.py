@@ -6,7 +6,7 @@ from test_engine_cache import TrackedMemory
 from test_tunnel_raster import BeamMemory
 from basketball_hero import DUNK,DUNK_PHASE_TICKS,END as HERO_END,scene_frame,frames,shatter_stage,SHATTER_X,SHATTER_WIDTH,SHATTER_HEIGHT
 from final_boy import START,END,FADE_START,artwork,fade_level,star_position
-from final_orbits import AMOUNT,position as orbit_position
+from final_orbits import AMOUNT, PHASE_SHIFT, animated_position as orbit_position
 
 
 def raster(cpu):return sequence.SequenceTests().raster(cpu)
@@ -63,7 +63,7 @@ class StoryFinaleTests(unittest.TestCase):
         p=artwork();self.assertEqual(raster(cpu),bytes(p[y//3*160+x] for y in range(192) for x in range(160)))
         display=m[0xd402]|m[0xd403]<<8
         from outro_text import BITMAP_ROWS,BITMAP_DL
-        self.assertEqual([y for y in range(BITMAP_ROWS) if m[display+BITMAP_DL+y*3]&128],[21,99])
+        self.assertEqual([y for y in range(BITMAP_ROWS) if m[display+BITMAP_DL+y*3]&128],[11,89])
         self.assertEqual(m[display],0x80)
         levels=[]
         for tick in range(FADE_START,END+1,16):
@@ -71,27 +71,77 @@ class StoryFinaleTests(unittest.TestCase):
             levels.append(cpu.memory[0x83ec])
             self.assertEqual(cpu.memory[0x83ec],fade_level(tick))
         self.assertEqual(levels,sorted(levels,reverse=True))
-        for tick in (END,END+1000,65536,0xffffff):
+        for tick in (*range(END,END+128,4),END+1000,65536,0xffffff):
+            clock=(m[0x24aa]+(m[0x24ab]<<8)+4)&0xffff
+            m[0x24aa]=clock&255
+            m[0x24ab]=clock>>8
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0x83e0],17)
-            from outro_text import FINAL_CARD_DL,FINAL_CARD_LINES,all_lines,_line_addresses
-            self.assertEqual(m[0xd016:0xd019],[0x0e,0,0])
+            from outro_text import (FINAL_CARD_DL, FINAL_CARD_PAGES, FINAL_CARD_TEXT, FINAL_MARK_SCREEN,
+                                    FINAL_MARK_WIDTH, FINAL_MARK_ROWS, FINAL_MARK_FIRST_GLYPH,
+                                    FONT, final_mark)
+            self.assertEqual(m[0xd016:0xd019],[0x0e,0x9a,0x2c])
             self.assertEqual(m[0xd402]|m[0xd403]<<8,FINAL_CARD_DL)
-            addresses=dict(zip(all_lines(),_line_addresses()))
-            for line in FINAL_CARD_LINES:
-                start=addresses[line]
-                self.assertEqual(bytes(m[start:start+40]).decode('ascii').strip(),line)
+            self.assertEqual(m[0xd409],FONT>>8)
+            for row,line in enumerate(FINAL_CARD_PAGES[0]):
+                start=FINAL_CARD_TEXT+row*40
+                self.assertEqual(bytes(value&127 for value in m[start:start+40]).decode('ascii').strip(),line)
+            tiles, glyphs = final_mark((m[0x24aa] >> 2) & 31)
+            self.assertEqual(bytes(m[FINAL_MARK_SCREEN:FINAL_MARK_SCREEN+40*FINAL_MARK_ROWS]),
+                             b''.join(tiles[row:row+FINAL_MARK_WIDTH].center(40,b' ')
+                                      for row in range(0,len(tiles),FINAL_MARK_WIDTH)))
+            glyph_start = FONT + FINAL_MARK_FIRST_GLYPH*8
+            self.assertEqual(bytes(m[glyph_start:glyph_start+len(glyphs)]),glyphs)
             self.assertEqual(m[0xd01d],0)
             self.assertEqual(m[0xd400],0x2e) # keep ANTIC + original music DLIs
 
+    def test_final_card_fades_all_pages_and_wraps(self):
+        from outro_text import FINAL_CARD_PAGES, FINAL_CARD_TEXT
+        from outro_palette import CARD_FADE
+        cpu=sequence.execute(START)
+        m=cpu.memory
+        origin=0xff40
+        m[0x24aa]=origin&255
+        m[0x24ab]=origin>>8
+        cpu=sequence.execute(END,cpu)
+        display=m[0xd402]|m[0xd403]<<8
+        line=0
+        interrupts=[]
+        while (op:=m[display])&15!=1:
+            mode=op&15
+            line+=((op>>4)&7)+1 if mode==0 else 16 if mode==5 else 8
+            if op&128:
+                interrupts.append(line)
+            display+=3 if mode and op&64 else 1
+        self.assertEqual(interrupts,[1,79,103,119,135,151,157,235])
+        for page in range(len(FINAL_CARD_PAGES)+1):
+            for elapsed,ink in ((0,0),(16,2),(112,14),(896,14),(992,2),(1008,0)):
+                clock=(origin+page*1024+elapsed)&0xffff
+                m[0x24aa]=clock&255
+                m[0x24ab]=clock>>8
+                cpu=sequence.execute(END+clock,cpu)
+                self.assertEqual(m[CARD_FADE],ink)
+                self.assertEqual(m[0xd016:0xd019],[0x0e,0x9a,0x2c])
+                for row,line in enumerate(FINAL_CARD_PAGES[page%len(FINAL_CARD_PAGES)]):
+                    start=FINAL_CARD_TEXT+row*40
+                    self.assertEqual(bytes(m[start:start+40]), line.center(40).encode('ascii'))
+                self.assertEqual(m[0xd301],0xff)
+        from outro_text import FONT, FINAL_MARK_FIRST_GLYPH, final_mark
+        font=FONT+FINAL_MARK_FIRST_GLYPH*8
+        for phase in range(32):
+            m[0x24aa]=phase*4
+            cpu=sequence.execute(END,cpu)
+            glyphs=final_mark(phase)[1]
+            self.assertEqual(bytes(m[font:font+len(glyphs)]),glyphs)
+
     def test_four_stars_orbit_on_a_held_bitmap(self):
         cpu=None;positions=set();masks=set();p=None
-        for phase in range(16):
-            tick=(START+15)//16*16+phase*16
+        for phase in range(32):
+            tick=(START+7)//8*8+phase*8
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             if p is None:p=bytes(raster(cpu))
             self.assertEqual(raster(cpu),p)
-            self.assertEqual(m[0xd000:0xd004],[orbit_position((tick>>4)&15,orbit_amount(m),i)[0] for i in range(4)])
+            self.assertEqual(m[0xd000:0xd004],[orbit_position((tick>>PHASE_SHIFT)&31,orbit_amount(m),i)[0] for i in range(4)])
             self.assertEqual(len(set(m[0xd012:0xd016])),4)
             positions.add(tuple(m[0xd000:0xd004]));masks.add(active_pmg(m))
         self.assertGreater(len(positions),12)
@@ -107,7 +157,7 @@ class StoryFinaleTests(unittest.TestCase):
             base=(m[0xd407]&0xfc)<<8
             for plane in range(4):
                 shape=NOTE_SHAPES[plane] if notes_active(tick) else STAR_SHAPE
-                y=orbit_position((tick>>4)&15,orbit_amount(m),plane)[1]-2
+                y=orbit_position((tick>>PHASE_SHIFT)&31,orbit_amount(m),plane)[1]-2
                 expected=bytearray(128);expected[y:y+12]=bytes(shape)
                 self.assertEqual(bytes(m[base+0x200+plane*128:base+0x280+plane*128]),bytes(expected))
 
@@ -129,8 +179,9 @@ class StoryFinaleTests(unittest.TestCase):
             bitmap=0x9000
             if tick==START:bitmap=0xb000  # transition fills the inactive picture first
             m.writes.clear();sequence.execute(tick,cpu)
-            if tick!=START:self.assertFalse(any(active+0x180<=a<active+0x400 for a in m.writes))
-            elif enabled:self.assertLess(m.writes.index(0xd01d),next(i for i,a in enumerate(m.writes) if active+0x180<=a<active+0x400))
+            visible_writes=[i for i,a in enumerate(m.writes) if active+0x180<=a<active+0x400]
+            if tick!=START:self.assertFalse(visible_writes)
+            elif enabled and visible_writes:self.assertLess(m.writes.index(0xd01d),visible_writes[0])
             if tick!=START:self.assertFalse(any(bitmap<=a<bitmap+2560 for a in m.writes))
             self.assertEqual(m[0xd301],0xff)
         for tick in (96,9163,20942,27000,START):
@@ -180,4 +231,18 @@ class StoryFinaleTests(unittest.TestCase):
         self.assertGreater(count,3)
         reference=sequence.execute(START)
         self.assertEqual(raster(cpu),raster(reference))
-        self.assertEqual(active_pmg(m),active_pmg(reference.memory))
+        from final_boy import NOTE_SHAPES, STAR_SHAPE, notes_active
+        coarse_phase = m[0x83ff]
+        phases = {((START+elapsed)>>PHASE_SHIFT)&31 for elapsed in range(count+1)}
+        candidates = []
+        for phase in phases:
+            if phase//2 != coarse_phase:
+                continue
+            expected = bytearray(0x280)
+            for plane in range(4):
+                shape = NOTE_SHAPES[plane] if notes_active(START) else STAR_SHAPE
+                y = orbit_position(phase, orbit_amount(m), plane)[1]-2
+                start = 128*(plane+1)+y
+                expected[start:start+len(shape)] = bytes(shape)
+            candidates.append(bytes(expected))
+        self.assertIn(active_pmg(m), candidates)

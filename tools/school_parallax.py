@@ -1,26 +1,39 @@
-"""Precomposed independent layers for school pan, 18 clocked frames."""
+"""The party arena parallax, with eighteen music-clocked walk frames."""
 from pathlib import Path
+
 from engine_effects import COPY_PAGES, cached_display_list
 from build_sequence import Code
 from music_timing import tick_at_bar
 ENTRY=0x7000
 START=tick_at_bar(19,2)
-# Face details in source pixels, translated with the existing walk frames.
-FACE_OFFSETS=(0,2,4,6,8,11,13,15,17,20,22,24,26,29,31,33,35,38)
-FACE_DETAILS=((53,12,0),(55,14,1),(54,16,1))
+# Horizontal displacement of the face in the precomposed walk.
+FACE_OFFSETS = (0, 2, 4, 6, 8, 11, 13, 15, 17, 20, 22, 24, 26, 29, 31, 33, 35, 38)
+PARTY_FACE = ((53, 12, 0), (55, 14, 1), (54, 16, 1))
+# A softer temple/ear break and a clean chin highlight.
+PROFILE_POLISH = ((50, 11, 1), (50, 12, 1), (49, 13, 1), (54, 16, 3))
+
+
+def party_frames():
+    """Exact v330 pan as used in release 058, including its three face pixels."""
+    packed = Path('assets/art/reference/v175/arena-pan.bin').read_bytes()
+    if len(packed) != len(FACE_OFFSETS) * 2560:
+        raise ValueError('party arena pan must contain eighteen 160x64 frames')
+    result = []
+    for i, offset in enumerate(FACE_OFFSETS):
+        frame = bytearray(value >> shift & 3 for value in packed[i * 2560:(i + 1) * 2560]
+                          for shift in (6, 4, 2, 0))
+        for x, y, ink in PARTY_FACE:
+            frame[y * 160 + x + offset] = ink
+        result.append(bytes(frame))
+    return result
+
 
 def frames():
-    # Exact precomposed v175 walk: framing, direction, pose and parallax.
-    packed=Path('assets/art/reference/v175/arena-pan.bin').read_bytes()
-    if len(packed)!=18*2560:
-        raise ValueError('v175 arena pan must contain eighteen 160x64 frames')
-    result=[]
-    for i,offset in enumerate(FACE_OFFSETS):
-        frame=bytearray(value>>shift&3 for value in packed[i*2560:(i+1)*2560]
-                        for shift in (6,4,2,0))
-        for x,y,ink in FACE_DETAILS:
-            assert frame[y*160+x+offset]==3
-            frame[y*160+x+offset]=ink
+    result = []
+    for original, offset in zip(party_frames(), FACE_OFFSETS):
+        frame = bytearray(original)
+        for x, y, ink in PROFILE_POLISH:
+            frame[y * 160 + x + offset] = ink
         result.append(bytes(frame))
     return result
 

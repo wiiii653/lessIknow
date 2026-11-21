@@ -63,12 +63,11 @@ class CacheTests(unittest.TestCase):
     def test_side_pose_copies_only_its_compact_frame(self):
         from ribbon_dance import scene_artwork
         cpu=self.cpu()
-        for tick in (9216,9232,9248,9264,9268,9280,9856,9872,9888):
+        for tick, copies in ((9216,3512),(9232,3512),(9248,3512),
+                             (9264,3512),(9268,0),(9280,3512),(9856,3512)):
             active=0x9000 if cpu.memory[0xd403]==0x84 else 0xb000
-            old=cpu.memory[0x83ed]
             self.step(cpu,tick)
-            if tick==9268:self.assertEqual(self.copied(cpu),0)
-            else:self.assertEqual(self.copied(cpu),2560+952)
+            self.assertEqual(self.copied(cpu),copies)
             self.assertFalse(any(active<=a<active+2560 for a in cpu.memory.writes))
             art,_=scene_artwork(tick)
             self.assertEqual(self.pixels(cpu),bytes(art[y//3*160+x] for y in range(192) for x in range(160)))

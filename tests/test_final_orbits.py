@@ -53,7 +53,7 @@ class FinalOrbitTests(unittest.TestCase):
                     self.assertNotEqual(target,old_target,tick)
                 amount+=int(target>amount)-int(target<amount)
             self.assertEqual(state(m,orbit.AMOUNT),amount,tick)
-            self.assertEqual(m[0xd000:0xd004],[orbit.position((tick>>4)&15,amount,p)[0] for p in range(4)],tick)
+            self.assertEqual(m[0xd000:0xd004],[orbit.animated_position((tick>>orbit.PHASE_SHIFT)&31,amount,p)[0] for p in range(4)],tick)
             shapes.add(amount)
             last_index=index
             if index and tick-events[index]<8:
@@ -69,4 +69,4 @@ class FinalOrbitTests(unittest.TestCase):
         seq.execute(outro_text.START,cpu)
         self.assertEqual(state(cpu.memory,orbit.AMOUNT),orbit.target_for(0))
         self.assertEqual(cpu.memory[0xd000:0xd004],
-                         [orbit.position((outro_text.START>>4)&15,orbit.target_for(0),p)[0] for p in range(4)])
+                         [orbit.animated_position((outro_text.START>>orbit.PHASE_SHIFT)&31,orbit.target_for(0),p)[0] for p in range(4)])

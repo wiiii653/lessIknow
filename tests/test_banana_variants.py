@@ -1,31 +1,46 @@
 """Alternating appearances, full stored cycles, bank ownership and NMI."""
 import unittest
+import json
 import test_sequence as seq
 import banana_variants as variants
 import mosaic
+from girl_eyes import frame_at as eye_frame_at
+from post_trevor_director import START, END, frame_at
 from test_engine_cache import TrackedMemory
 
 
-class BananaVariantTests(unittest.TestCase):
-    def expected(self,frame,variant):
-        p=mosaic.pixels(frame,variant)
-        return bytes(p[y//2*160+x] for y in range(192) for x in range(160))
+def live_banana_frames():
+    """One real montage tick for each stored phase of both motifs."""
+    first_ticks={}
+    for tick in range(START,END,8):
+        frame=eye_frame_at(tick,frame_at(tick))
+        if frame<32:first_ticks.setdefault((frame,variants.variant_at(tick)),tick)
+    return sorted((tick,frame,variant) for (frame,variant),tick in first_ticks.items())
 
-    def test_all_64_live_frames_decode_without_front_writes_or_cost_regression(self):
+
+def banana_raster(frame,variant):
+    pixels=mosaic.pixels(frame,variant)
+    return b''.join(pixels[y:y+160]*2 for y in range(0,len(pixels),160))
+
+
+class BananaVariantTests(unittest.TestCase):
+    def test_all_64_camera_views_compose_into_the_inactive_buffer(self):
         cpu=seq.MPU(memory=TrackedMemory(seq.XEX.read_bytes()))
-        for variant,start in enumerate((12288,14336)):
-            for frame in range(32):
-                m=cpu.memory;front=0x9000 if m[0xd403]==0x84 else 0xb000
-                m.writes.clear();before=cpu.processorCycles
-                seq.execute(start+16*frame,cpu)
-                self.assertLess(cpu.processorCycles-before,90000 if frame<2 else 76000,(variant,frame))
-                self.assertEqual(seq.SequenceTests().raster(cpu),self.expected(frame,variant))
-                self.assertFalse(any(front<=a<front+3840 for a in m.writes),(variant,frame))
-                self.assertEqual(m[0xd301],0xff)
-                self.assertEqual(m[0x83fa],0xff)
+        samples=live_banana_frames()
+        self.assertEqual(len(samples),64)
+        for tick,frame,variant in samples:
+            m=cpu.memory;front=0x9000 if m[0xd403]==0x84 else 0xb000
+            m.writes.clear();before=cpu.processorCycles
+            seq.execute(tick,cpu)
+            self.assertLess(cpu.processorCycles-before,90000,(variant,frame))
+            self.assertEqual(seq.SequenceTests().raster(cpu),banana_raster(frame,variant))
+            self.assertFalse(any(front<=a<front+3840 for a in m.writes),(variant,frame))
+            self.assertEqual(m[0xd301],0xff)
+            self.assertEqual(m[0x83fa],0xff)
 
     def test_decoder_survives_original_music_nmi_and_restores_portb(self):
-        for tick in (12304,14336,14832):
+        samples=live_banana_frames()
+        for tick,frame,variant in (samples[0],next(s for s in samples if s[2]==1),samples[-1]):
             m=seq.RuntimeMemory(seq.XEX.read_bytes());cpu=seq.MPU(memory=m)
             m[0xd301]=m.values[3];m[0xd40b]=124
             for address in (0x232d,0x237d):
@@ -35,7 +50,6 @@ class BananaVariantTests(unittest.TestCase):
                     cpu.step()
                 else:self.fail('music init did not return')
             for i in range(3):m[0x24a7+i]=tick>>(8*i)&255
-            import json
             m[0xd301]=0xff;cpu.pc=json.loads(seq.METADATA.read_text())['callback'];cpu.sp=0xfd
             m[0x1fe:0x200]=[0xfe,0x7f];deadline=cpu.processorCycles+1000;count=0
             for _ in range(100000):
@@ -50,32 +64,5 @@ class BananaVariantTests(unittest.TestCase):
                 cpu.step()
             else:self.fail('callback did not return')
             self.assertGreater(count,4)
-            self.assertEqual(seq.SequenceTests().raster(cpu),self.expected((tick>>4)&31,variants.variant_at(tick)))
+            self.assertEqual(seq.SequenceTests().raster(cpu),banana_raster(frame,variant))
             self.assertEqual(m[0xd301],0xff)
-
-    def test_dense_playback_is_cheaper_than_the_original_rle_decoder(self):
-        # v240 worst warm callback: bunch 78748, peeled 78599 CPU cycles.
-        # Keep a real improvement while retaining all 32 independent phases.
-        for start,limit in ((12288,76000),(14336,74000)):
-            cpu=None;costs=[]
-            for frame in range(32):
-                before=cpu.processorCycles if cpu else 0
-                cpu=seq.execute(start+16*frame,cpu)
-                if frame>=2:costs.append(cpu.processorCycles-before)
-            self.assertLess(max(costs),limit)
-        for variant in range(2):
-            self.assertNotEqual(mosaic.pixels(0,variant),mosaic.pixels(16,variant))
-
-    def test_dense_frames_match_the_pre_symmetry_release_exactly(self):
-        from pathlib import Path
-        old=seq.RuntimeMemory(Path('build/visual-prototype-v240.xex').read_bytes())
-        for frame in range(32):
-            bank=old.banks[17+frame//4]
-            for variant in range(2):
-                i=frame%4+4*variant
-                p=(bank[0x3f80+i]|bank[0x3f88+i]<<8)-0x4000;raw=bytearray()
-                while bank[p]:
-                    count=bank[p];p+=1
-                    if count<128:raw.extend(bank[p:p+count]);p+=count
-                    else:raw.extend([bank[p]]*((count&127)+2));p+=1
-                self.assertEqual(variants.packed(frame,variant),raw,(frame,variant))

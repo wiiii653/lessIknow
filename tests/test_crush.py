@@ -6,7 +6,7 @@ from crush_portraits import START, END
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class CrushTests(unittest.TestCase):
     def test_three_ribbon_shots_and_half_beat_frames(self):
-        from ribbon_dance import STEPS, frame_at, artwork, CUTS as RIBBON_CUTS
+        from ribbon_dance import STEPS, FRONT_PREP_STEPS, frame_at, artwork, CUTS as RIBBON_CUTS
         cpu=None
         self.assertEqual(len(RIBBON_CUTS),3)
         for tick in STEPS:
@@ -16,7 +16,7 @@ class CrushTests(unittest.TestCase):
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected,tick)
             self.assertEqual(cpu.memory[0xd301],0xff)
             self.assertEqual(cpu.memory[0xd01d],3)
-        self.assertEqual(sequence.execute(START-1).memory[0x83e0],6)
+        self.assertEqual(sequence.execute(FRONT_PREP_STEPS[0]-1).memory[0x83e0],6)
         self.assertEqual(sequence.execute(END-1,cpu).memory[0x83e0],14)
         self.assertEqual(sequence.execute(END,cpu).memory[0x83e0],6)  # tunnel cutaway after the unchanged throw
 

@@ -7,6 +7,49 @@ buildzie (`build/visual-prototype-v294.xex`, `releases/less-i-know-demo-release-
 
 Legenda: `[ODCZYT]`, `[WNIOSEK]`, `[ZAŁOŻENIE]`, `[OGRANICZENIE]`.
 
+## Szybkie czyszczenie w 100 i 101 · 2026-11-19
+
+Zbudowano opcjonalne wydania z A2, zachowując cały protokół ładowania
+058 poza kodem czyszczenia pod `$3A00`. Porównanie segmentów wykazało
+dokładnie 64 podmiany procedury. Każdy plik ma 960 077 B.
+
+Atari800 PAL, emulowane 1088 XE, Altirra OS. Od wejścia do ekranu
+ładowania `$38A0` do skoku do playera `$13E0` upłynęło 17,81 s
+w 098/099 i 14,53 s w 100/101, czyli o **3,28 s (18,4%)** mniej.
+Emulator uruchomił 64 czyszczenia w każdym pliku. Przeszło 6 testów
+loadera, a wszystkie 59 833 zapisy pakietów POKEY odpowiadały 098/099.
+Pomiar obejmuje bezpośredni start XEX w emulatorze. Próba i pomiar
+na fizycznym AVG pozostają niewykonane.
+
+- [100 stereo](../../releases/less-i-know-demo-release-100-stereo.xex)
+  · SHA-256 `4201e6a6c5faac3693a42faca8354a1ad3d9adfc8b6682ec99574a9d62379f24`
+- [101 mono na jeden POKEY](../../releases/less-i-know-demo-release-101-mono.xex)
+  · SHA-256 `cecc647a0bd38ae990203ad5ec7d9ad16e16611f38bfff1e15d0a9adeec4407c`
+
+Opcję udostępniają `tools/build_hardware_xex.py` i
+`tools/build_audio_revision.py` jako `--fast-clear`.
+[Kontrakt loadera i zakres podmiany](../HARDWARE_LOADER_CONTRACT.md).
+
+## Stan przed próbą, wydania 098 i 099
+
+Oba pliki mają po 948 877 B. Niezmienniki startu, łącznie z kodem
+pod `$3A00` i `$1000`, sprawdzono względem wydania 058. Przyspieszenia
+A1–A3 nadal są propozycjami. Obowiązuje
+[kontrakt sprzętowy AVG / Rambo](../HARDWARE_LOADER_CONTRACT.md).
+
+Próba A2 w pamięci py65 skróciła pełne czyszczenie `$8000–$BFFF`
+ze 164 535 do 83 747 cykli na bank. To 2,92 s mniej pracy CPU dla
+64 banków przy zegarze PAL. Procedura zachowała A, X, Y i flagi.
+Kod próbny wzrósł z 37 do 212 B, więc przy jego powtarzaniu w XEX
+dojdzie koszt przesłania 11 200 B. Próba nie obejmowała DMA, pracy AVG
+ani pomiaru całego startu.
+
+Symulacja B1 na 64 obrazach banków z wydania 098 daje XEX mniejszy
+o 20 537 B, ale zwiększa liczbę segmentów danych banków z 1 456
+do 4 745. Zysk czasowy zależy od obsługi segmentów przez AVG.
+Szacunki A1 i A2 dotyczą tego samego czyszczenia, więc nie należy ich
+sumować wprost. Żadnej z prób nie wprowadzono do plików wydaniowych.
+
 ---
 
 ## 1. Metryki wejściowe

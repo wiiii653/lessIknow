@@ -58,7 +58,8 @@ class HeroTests(unittest.TestCase):
         for elapsed in (0,40,92,94,140,184,187,188,280,373,374,1122):
             cpu=sequence.execute(START+elapsed,cpu)
             self.assertEqual(cpu.memory[0x83ff],dribble_phase(elapsed))
-            levels.add(bytes(cpu.memory[0xa00:0xc00]))
+            base = (cpu.memory[0xd407] & 0xfc) << 8
+            levels.add(bytes(cpu.memory[base+0x200:base+0x400]))
         self.assertGreater(len(levels),4)
         for elapsed in (0,128,256,384,512,624,747):
             cpu=sequence.execute(DUNK+elapsed,cpu)
@@ -147,10 +148,11 @@ class HeroTests(unittest.TestCase):
             tick=DUNK+age;cpu=sequence.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0xd00c],0x55)
             self.assertEqual(m[0xd301],0xff)
+            missile_base = ((m[0xd407]&0xfc)<<8) + 0x180
             for plane in range(4):
-                rows=[row for row in range(128) if m[0x980+row]&(3<<(2*plane))]
+                rows=[row for row in range(128) if m[missile_base+row]&(3<<(2*plane))]
                 self.assertEqual(rows,list(range(rows[0],rows[0]+3)))
-                self.assertEqual([(m[0x980+row]>>(2*plane))&3 for row in rows],[1,3,1])
+                self.assertEqual([(m[missile_base+row]>>(2*plane))&3 for row in rows],[1,3,1])
                 point=(m[0xd004+plane]-m[0x83e8]-46,rows[0]-m[0x83e9]-6)
                 self.assertEqual(point,paths[plane][(tick>>3)&31])
                 actual[plane].append(point)
@@ -167,10 +169,11 @@ class HeroTests(unittest.TestCase):
         for phase in (46,47,60,61,74):
             tick=DUNK+phase*DUNK_PHASE_TICKS
             cpu=sequence.execute(tick,cpu);m=cpu.memory
+            missile_base = ((m[0xd407]&0xfc)<<8) + 0x180
             for plane in range(4):
                 dx,dy=paths[plane][(tick>>3)&31]
                 self.assertEqual(m[0xd004+plane],m[0x83e8]+46+dx)
-                rows=[row for row in range(128) if m[0x980+row]&(3<<(2*plane))]
+                rows=[row for row in range(128) if m[missile_base+row]&(3<<(2*plane))]
                 self.assertEqual(rows[0],m[0x83e9]+6+dy)
                 self.assertGreaterEqual(rows[0],0);self.assertLess(rows[-1],128)
         for phase in (75,76,81,87,93):
@@ -179,13 +182,23 @@ class HeroTests(unittest.TestCase):
             for plane in range(4):
                 self.assertEqual(m[0xd004+plane],round(130+(plane-1.5)*(5+(phase-75)*.7))+48)
 
-    def test_late_dunk_updates_finish_before_the_next_frame_satellites(self):
+    def test_dunk_only_writes_inactive_pmg_and_publishes_during_blanking(self):
         import json
         from test_tunnel_raster import BeamMemory
-        for phase in (0,47,61,74):
+        class HeroBeamMemory(BeamMemory):
+            def __setitem__(self, address, value):
+                if address == 0xd403 and self.cpu is not None:
+                    self.events.append((self.start + self.cpu.processorCycles,address,value))
+                super().__setitem__(address,value)
+
+        for phase in (0,47,61,74,75,93):
             for line in (248,255,290,306,311):
-                m=BeamMemory(XEX.read_bytes());cpu=sequence.MPU(memory=m)
-                sequence.execute(DUNK+phase*DUNK_PHASE_TICKS,cpu)
+                m=HeroBeamMemory(XEX.read_bytes());cpu=sequence.MPU(memory=m)
+                previous = max(0,phase-1)
+                sequence.execute(DUNK+previous*DUNK_PHASE_TICKS,cpu)
+                old_base = (m[0xd407]&0xfc)<<8
+                tick = DUNK+phase*DUNK_PHASE_TICKS
+                m[0x24a7:0x24aa] = tick.to_bytes(3,'little')
                 cpu.processorCycles=0;m.start=line*114;m.cpu=cpu;m.events=[]
                 cpu.pc=json.loads(METADATA.read_text())['callback'];cpu.sp=0xfd
                 m[0x1fe:0x200]=[0xfe,0x7f]
@@ -193,10 +206,14 @@ class HeroTests(unittest.TestCase):
                     if cpu.pc==0x7fff:break
                     cpu.step()
                 else:self.fail('callback did not return')
-                writes=[t for t,a,v in m.events if 0x980<=a<0xc00]
-                first=writes[0]/114
-                self.assertGreaterEqual(first%312,248)
-                self.assertLess(first%312,257)
-                earliest=min(row*2 for row in range(128) if m[0x980+row])
-                deadline=(int(first)//312+1)*312+earliest
-                self.assertLess(m.events[-1][0]/114,deadline)
+                publish = [(t, a) for t, a, _ in m.events if a in (0xd403,0xd407)]
+                self.assertEqual(sum(a == 0xd407 for _, a in publish), 1)
+                publication = next(t for t, a in publish if a == 0xd407)
+                self.assertTrue(all(248 <= t//114%312 < 256 for t, _ in publish))
+                target = old_base ^ 0x8000
+                self.assertEqual((m[0xd407]&0xfc)<<8,target)
+                writes = [(t,a) for t,a,_ in m.events if
+                          0x980<=a<0xc00 or 0x8980<=a<0x8c00]
+                self.assertTrue(writes)
+                self.assertTrue(all(target+0x180<=a<target+0x400 and t<publication
+                                    for t,a in writes))

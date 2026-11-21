@@ -2,7 +2,7 @@
 from pathlib import Path
 from functools import lru_cache
 import math
-from engine_effects import cached_display_list, clear_pmg
+from engine_effects import cached_display_list
 from build_sequence import Code
 from music_timing import tick_at_bar
 from trevor_awakens import FLIGHT_START as TREVOR_FLIGHT_START
@@ -159,7 +159,7 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     # User-approved two-bar tunnel after the unchanged ribbon/throw shot.
     a(0xad,0x83e3);c.emit(0xc9,START>>8);c.branch(0x90,'cutaway');c.branch(0xd0,'hero_start')
     a(0xad,0x83e2);c.emit(0xc9,START&255);c.branch(0xb0,'hero_start')
-    c.label('cutaway');a(0x4c,cutaway_entry)
+    c.label('cutaway');c.emit(0xa9,0x80);c.jump(0x8d,'pmg_page');a(0x4c,cutaway_entry)
     c.label('hero_start')
     # Elapsed player ticks, coherent snapshot supplied by the main callback.
     a(0xad,0x83e2);c.emit(0x38,0xe9,START&255);a(0x8d,0x83ea)
@@ -192,7 +192,8 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     a(0xad,0x83ff);c.emit(0xc9,75);c.branch(0x90,'stage_ready')
     c.emit(0xa2,1,0xc9,81);c.branch(0x90,'save_stage');c.emit(0xe8,0xc9,87);c.branch(0x90,'save_stage');c.emit(0xe8)
     c.label('save_stage');a(0x8e,0x83e5)
-    c.label('stage_ready');a(0xad,0x83e5);c.emit(0x0a,0x0a,0x0a,0x18);a(0x6d,0x83ec);c.emit(0x69,0x50)
+    c.label('stage_ready');c.emit(0xa9,0);c.jump(0x8d,'pending_dl')
+    a(0xad,0x83e5);c.emit(0x0a,0x0a,0x0a,0x18);a(0x6d,0x83ec);c.emit(0x69,0x50)
     a(0xcd,0x83fa);c.branch(0xd0,'changed');c.jump(0x4c,'wait')
     c.label('changed');a(0x8d,0x83fa)
     a(0xad,0x83ed);c.branch(0xd0,'full_copy')
@@ -252,23 +253,31 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     for label in ('dl1','dl2'):
         c.emit(0x18);c.jump(0xad,label+'_lo');c.emit(0x69,3);c.jump(0x8d,label+'_lo');c.branch(0x90,label+'ok');c.jump(0xee,label+'_hi');c.label(label+'ok')
     c.emit(0xc8,0xc0,192);c.branch(0xd0,'rows')
-    c.label('swap');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'swap')
-    c.emit(0xa9,0);a(0x8d,0xd402);a(0xad,0x83e6);a(0x8d,0xd403);c.emit(0x49,4);a(0x8d,0x83e6)
+    c.label('swap');c.jump(0xee,'pending_dl')
     a(0xad,0x83ed);c.branch(0xf0,'wait')
     c.emit(0xa9,255);a(0x8d,0x83f8);a(0x8d,0x83f9)
-    c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait')
-    c.emit(0xc9,128);c.branch(0xb0,'wait')
-    # Four rainbow bands and missile droplets use the existing PMG buffer.
-    clear_pmg(c, 'clear')
+    c.label('wait')
+    # The tunnel before the hero uses $0800. Start with the upper PMG and
+    # alternate after publication, without reading the write-only PMBASE.
+    c.jump(0xad,'pmg_page');c.emit(0x09,9)
+    for label in ('clear0','missile_read','missile_write'):c.jump(0x8d,label+'_hi')
+    c.emit(0x49,3)
+    for label in ('clear1','clear2','put0','put1'):c.jump(0x8d,label+'_hi')
+    c.emit(0x09,1)
+    for label in ('clear3','clear4','put2','put3'):c.jump(0x8d,label+'_hi')
+    c.emit(0xa9,0,0xa2,127);c.label('clear')
+    for i,address in enumerate((0x0980,0x0a00,0x0a80,0x0b00,0x0b80)):
+        c.label(f'clear{i}');a(0x9d,address)
+    c.emit(0xca);c.branch(0x10,'clear')
+
     a(0xae,0x83ff);a(0xad,0x83ed);c.branch(0xd0,'dunk_ball')
     c.jump(0xbd,'dribble_x');a(0x8d,0x83e8);c.jump(0xbd,'dribble_y');c.jump(0x4c,'ball_position')
     c.label('dunk_ball');c.jump(0xbd,'dunk_x');a(0x8d,0x83e8);c.jump(0xbd,'dunk_y')
     c.label('ball_position');a(0x8d,0x83e9);c.emit(0xa8)
-    a(0xad,0x83e8);c.emit(0x18,0x69,40)
-    for i in range(4):a(0x8d,0xd000+i)
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x29,7,0x0a,0x0a,0x0a,0x0a,0xaa)
-    c.label('spin');
-    for i in range(4):c.jump(0xbd,f'spin{i}');a(0x99,0x0a00+i*128)
+    c.label('spin')
+    for i in range(4):
+        c.jump(0xbd,f'spin{i}');c.label(f'put{i}');a(0x99,0x0a00+i*128)
     c.emit(0xe8,0xc8,0x8a,0x29,15);c.branch(0xd0,'spin')
     a(0xad,0x83e5);c.branch(0xd0,'shattered_droplets')
     a(0xad,0x83ed);c.branch(0xd0,'choose_orbits');c.jump(0x4c,'ball_droplets')
@@ -276,36 +285,54 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     c.label('shattered_droplets')
     a(0xad,0x83ff);c.emit(0x38,0xe9,75,0xaa)
     for i in range(4):
-        c.jump(0xbd,f'shard_x{i}');a(0x8d,0xd004+i)
+        c.jump(0xbd,f'shard_x{i}');c.jump(0x8d,f'hpos{i}')
         c.jump(0xbd,f'shard_y{i}');c.emit(0xa8)
-        for dy,bits in ((0,3),(1,1),(3,2)):
-            a(0xb9,0x980+dy);c.emit(0x09,bits<<(2*i));a(0x99,0x980+dy)
+        c.emit(0xa9,3<<(2*i));c.jump(0x20,'put_missile')
+        c.emit(0xc8,0xa9,1<<(2*i));c.jump(0x20,'put_missile')
+        c.emit(0xc8,0xc8,0xa9,2<<(2*i));c.jump(0x20,'put_missile')
     c.jump(0x4c,'spray_ready')
     c.label('ball_droplets')
     for i,dx in enumerate((-14,-7,13,20)):
-        a(0xad,0x83e8);c.emit(0x18,0x69,48+dx);a(0x8d,0xd004+i)
-        a(0xad,0x83e9);c.emit(0x18,0x69,i*3);c.emit(0xa8)
-        for dy in (1,6):
-            a(0xb9,0x980+dy);c.emit(0x09,3<<(2*i));a(0x99,0x980+dy)
+        a(0xad,0x83e8);c.emit(0x18,0x69,48+dx);c.jump(0x8d,f'hpos{i}')
+        a(0xad,0x83e9);c.emit(0x18,0x69,i*3+1,0xa8,0xa9,3<<(2*i));c.jump(0x20,'put_missile')
+        c.emit(0x98,0x18,0x69,5,0xa8,0xa9,3<<(2*i));c.jump(0x20,'put_missile')
     c.jump(0x4c,'spray_ready')
     c.label('orbit_satellites')
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x29,31,0xaa)
     for i in range(4):
-        a(0xbd,ORBIT_DATA+i*64);c.emit(0x18);a(0x6d,0x83e8);a(0x8d,0xd004+i)
+        a(0xbd,ORBIT_DATA+i*64);c.emit(0x18);a(0x6d,0x83e8);c.jump(0x8d,f'hpos{i}')
         a(0xbd,ORBIT_DATA+i*64+32);c.emit(0x18);a(0x6d,0x83e9);c.emit(0xa8)
         for dy,bits in enumerate((1,3,1)):
-            a(0xb9,0x980+dy);c.emit(0x09,bits<<(2*i));a(0x99,0x980+dy)
-    c.label('spray_ready');a(0xad,0x83e2);c.emit(0x0a,0x0a,0x29,0xf0,0x09,6)
+            if dy:c.emit(0xc8)
+            c.emit(0xa9,bits<<(2*i));c.jump(0x20,'put_missile')
+    c.label('spray_ready')
+    # Only register writes happen during this early blanking window.
+    c.label('publish');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'publish')
+    c.emit(0xc9,128);c.branch(0xb0,'publish')
+    c.jump(0xad,'pending_dl');c.branch(0xf0,'publish_pmg')
+    c.emit(0xa9,0);a(0x8d,0xd402);a(0xad,0x83e6);a(0x8d,0xd403);c.emit(0x49,4);a(0x8d,0x83e6)
+    c.label('publish_pmg');c.jump(0xad,'pmg_page');c.emit(0x09,8);a(0x8d,0xd407)
+    c.emit(0x49,0x88);c.jump(0x8d,'pmg_page')
+    for i in range(4):c.jump(0xad,f'hpos{i}');a(0x8d,0xd004+i)
+    a(0xad,0x83e8);c.emit(0x18,0x69,40)
+    for i in range(4):a(0x8d,0xd000+i)
+    a(0xad,0x83e2);c.emit(0x0a,0x0a,0x29,0xf0,0x09,6)
     for i in range(4):a(0x8d,0xd012+i);c.emit(0x18,0x69,0x44 if i==0 else 0x42)
-    for addr,val in ((0xd01a,0),(0xd016,0x38),(0xd017,0x68),(0xd018,0x2a),(0xd407,8),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0)):
+    for addr,val in ((0xd01a,0),(0xd016,0x38),(0xd017,0x68),(0xd018,0x2a),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0)):
         c.emit(0xa9,val);a(0x8d,addr)
     a(0xad,0x83ed);c.branch(0xf0,'missile_size_ready')
     a(0xad,0x83e5);c.branch(0xd0,'missile_size_ready')
     c.emit(0xa9,0x55);a(0x8d,0xd00c)
-    c.label('missile_size_ready')
-    a(0xad,0x83ed);c.branch(0xf0,'no_flash');a(0xad,0x83ff);c.emit(0xc9,82);c.branch(0x90,'no_flash');c.emit(0xc9,85);c.branch(0xb0,'no_flash');c.emit(0xa9,14);a(0x8d,0xd017)
+    c.label('missile_size_ready');a(0xad,0x83ed);c.branch(0xf0,'no_flash');a(0xad,0x83ff);c.emit(0xc9,82);c.branch(0x90,'no_flash');c.emit(0xc9,85);c.branch(0xb0,'no_flash');c.emit(0xa9,14);a(0x8d,0xd017)
     c.label('no_flash');c.emit(0xa9,1,0xa2,3)
     c.label('sizes');a(0x9d,0xd008);c.emit(0xca);c.branch(0x10,'sizes');c.emit(0x60)
+    c.label('put_missile');c.label('missile_read');a(0x19,0x0980)
+    c.label('missile_write');a(0x99,0x0980);c.emit(0x60)
+    c.label('pmg_page');c.emit(0x80)
+    c.label('pending_dl');c.emit(0)
+    for i in range(4):c.label(f'hpos{i}');c.emit(0)
+    for label in ('missile_read','missile_write',*(f'clear{i}' for i in range(5)),
+                  *(f'put{i}' for i in range(4))):c.labels[label+'_hi']=c.labels[label]+2
     for label in ('read','write','dl1','dl2','tail_read','tail_write'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     for label in ('patch_read','patch_write'):

@@ -20,6 +20,7 @@ from school_story import (story_frames, SCHOOL_PHASES, girl_front_pixels,
                           SCHOOL_PORTRAIT_END)
 from school_portrait_bank import loader as school_bank_loader, BANK_VALUE, bank_value
 from mosaic import banks as mosaic_banks
+from outro_text import COLOR_FONT_LOAD, color_font_loader, install_color_font
 import ribbon_dance
 import ribbon_inbetweens
 import title_fireworks
@@ -104,17 +105,16 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     sample_rows[PRACTICE_SCENE] = []  # runtime resolves the framebuffer tables
     table_end = TABLE_BASE + sum(len(indices) * 2 for indices in sample_rows)
     rows = [packed_rows(scene) for scene in scenes]
-    unique = {}
     # Bitmap rows remain contiguous for ANTIC, but adjacent stored rows may
     # share identical suffix/prefix bytes (notably the dancer's black margins).
     # This is lossless and adds no work to the Atari's playback routine.
-    regions = ((0x0400, 0x0800), (0x0900, 0x0980), (RUNTIME_END, RUN), (POOL_LOW, 0x2000), (0x3300, 0x3c00), (0x824a, 0x8300),
+    # Keep the low pools within the spans restored by the proven AVG bootstrap.
+    from build_hardware_xex import LOW_ENDS
+    regions = ((0x0400, LOW_ENDS[0x0400] + 1), (0x0900, LOW_ENDS[0x0900] + 1), (RUNTIME_END, RUN), (POOL_LOW, 0x2000), (0x3300, 0x3c00), (0x824a, 0x8300),
                (0x8340, 0x83e0), (0x864a, 0x8980), (0x8c00, 0x9000),
                (EFFECT_ORIGIN + len(effect_code), 0xb000),
                (COPY_ORIGIN + len(copy_code), 0xd000),
                (table_end + PLASMA_SIZE, TITLE_MODE_ENTRY))
-    region = 0
-    blobs = [bytearray() for _ in regions]
     # Join rows with the strongest suffix/prefix overlaps first. Chains are
     # lossless and only affect asset placement, never playback or bank use.
     source_rows = sorted(set([bytes(40)] + [row for scene in rows for row in scene]))
@@ -141,41 +141,55 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                     previous_row[candidate] = index
                     parent[root(candidate)] = root(index)
                     break
-    ordered_rows = []
+    chains = []
     for index in range(len(source_rows)):
         if index in previous_row:
             continue
+        chain = []
         while True:
-            ordered_rows.append(source_rows[index])
+            chain.append(source_rows[index])
             if index not in next_row:
                 break
             index = next_row[index]
-    for row in ordered_rows:
-        while True:
-            start, end = regions[region]
-            blob = blobs[region]
-            cursor = start + len(blob)
-            overlap = None
-            for count in range(min(39, len(blob)), -1, -1):
-                address = cursor - count
-                if count and blob[-count:] != row[:count]:
+        chains.append(chain)
+
+    def place_chains(order):
+        unique = {}
+        region = 0
+        blobs = [bytearray() for _ in regions]
+        for row in (row for chain in order for row in chain):
+            while region < len(regions):
+                start, end = regions[region]
+                blob = blobs[region]
+                cursor = start + len(blob)
+                for count in range(min(39, len(blob)), -1, -1):
+                    address = cursor - count
+                    if count and blob[-count:] != row[:count]:
+                        continue
+                    if address + 40 <= end and address // 0x1000 == (address + 39) // 0x1000:
+                        unique[row] = address
+                        blob.extend(row[count:])
+                        break
+                else:
+                    next_page = ((cursor // 0x1000) + 1) * 0x1000
+                    if next_page + 40 <= end:
+                        blob.extend(bytes(next_page - cursor))
+                    else:
+                        region += 1
                     continue
-                if address + 40 <= end and address // 0x1000 == (address + 39) // 0x1000:
-                    overlap = count
-                    break
-            if overlap is not None:
-                unique[row] = address
-                blob.extend(row[overlap:])
                 break
-            next_page = (cursor + 0xfff) & ~0xfff
-            if next_page == cursor:
-                next_page += 0x1000
-            if next_page + 40 <= end:
-                blob.extend(bytes(next_page - cursor))
             else:
-                region += 1
-                if region == len(regions):
-                    raise ValueError(f'shared scanlines exceed unbanked RAM budget: {len(unique)} of {len(ordered_rows)} stored')
+                break
+        return unique, blobs
+
+    # Chain boundaries can strand unused bytes just before an ANTIC page or
+    # RAM span ends. Try alternate chain orders without changing any pixels.
+    for order in (chains, reversed(chains), sorted(chains, key=len, reverse=True)):
+        unique, blobs = place_chains(order)
+        if len(unique) == len(source_rows):
+            break
+    else:
+        raise ValueError(f'shared scanlines exceed unbanked RAM budget: {len(source_rows)} needed')
     chunks = [(regions[index][0], blob) for index, blob in enumerate(blobs) if blob]
     blank = unique[bytes(40)]
     plasma_code, plasma_labels = plasma_build(table_end, blank)
@@ -287,7 +301,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x8d,0xd301)
     c.emit(0x60)
     c.label('before_crush_end')
-    compare_tick(CRUSH_TICK, 'crush', 'before_crush')
+    compare_tick(ribbon_dance.FRONT_PREP_STEPS[0], 'crush', 'before_crush')
     c.label('crush')
     c.emit(0xa9, 14)
     absolute(0x8d, SCENE)
@@ -304,7 +318,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('before_crush')
     compare_tick(KALEIDO_TICK, 'kaleido', 'before_kaleido')
     c.label('before_kaleido')
-    compare_tick(DANCE_TICK, 'crush', 'before_dance')
+    compare_tick(ribbon_dance.SIDE_PREP_START, 'crush', 'before_dance')
     c.label('before_dance')
     compare_tick(SCHOOL_TICK, 'school', 'before_school')
     c.label('before_school')
@@ -511,7 +525,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.branch(0xf0, 'regular_static')
     check_cached('plasma_changed')
     absolute(0x20, plasma_labels['draw'])
-    c.jump(0x4c, 'resolve_lookup')
+    c.jump(0x4c, 'vblank')
     c.label('regular_static')
     absolute(0xad, SCENE)
     c.emit(0x09, 0x20)
@@ -793,7 +807,14 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                (0x8000, display(0x8000)),
                (0x8300, descriptors[:0x3f]), (STATE, descriptors[0xe0:]),
                (0x8400, display(0x8400)), (TITLE_MODE_ENTRY, title_mode_helper()),
-               (table_end, plasma_code)] + chunks + banana_variants.selector_inserts() + outro_loader.inserts() + terminal_typing.inserts() + [(outro_palette.ENTRY,outro_palette.helper()), (post_trevor_director.ENTRY,post_trevor_director.helper())]
+               (table_end, plasma_code)] + chunks + banana_variants.selector_inserts() + outro_loader.inserts() + terminal_typing.inserts() + [(outro_palette.ENTRY,outro_palette.helper()), (outro_palette.CARD_ENTRY,outro_palette.card_helper()), (post_trevor_director.ENTRY,post_trevor_director.helper()),
+               (final_boy.MARK_ANIMATE,final_boy.mark_animator()),
+               (final_boy.CARD_UPDATE,final_boy.card_update()),
+               (final_boy.ENTRY_BLANK,final_boy.entry_blank()),
+               (final_boy.ENTRY_VISIBLE,final_boy.entry_visible()),
+               (COLOR_FONT_LOAD,color_font_loader()),
+               (outro_palette.RASTER_ENTRY,outro_palette.raster_helper()),
+               (outro_palette.CARD_FONT_ENTRY,outro_palette.card_font_copy())]
     # Framebuffers own their complete runtime spans, including RAM under ROM.
     inserts += [(base, bytes(0x1f00)) for base in FRAME_BASES]
     # Reject every overlap, including accidental code/data growth.
@@ -861,14 +882,14 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             payload[0x23cd-start]=0x60  # retired UI entry; its body holds terminal timing data
             patched = True
         if (start, end) == (0x02e0, 0x02e1):
-            output.extend(school_bank_loader(girl_frame,progress=True))
+            output.extend(school_bank_loader(final_boy.install_card_pages(install_color_font(girl_frame)),progress=True))
             output.extend(school_bank_loader(hero_bank(c.labels['banked_effects'],c.labels['banked_effects']+5,c.labels['hero_cutaway']),index=1,progress=True))
             output.extend(school_bank_loader(post_trevor_director.install(ribbon_inbetweens.install(trevor_bank(),2)),index=2,progress=True))
             for index, frame in enumerate(mosaic_banks(),3):
                 output.extend(school_bank_loader(frame,index=index,progress=True))
             for index, frame in enumerate(school_pan_banks(),19):
                 if index==trevor_ball_flight.BANK_INDEX:frame=trevor_ball_flight.install(frame)
-                output.extend(school_bank_loader(frame,index=index,progress=True))
+                output.extend(school_bank_loader(final_boy.install_mark_frames(frame,index),index=index,progress=True))
             for phase in range(16):
                 art=ribbon_dance.install_side_actor(polished_trevor_bank(phase,bank_wrapper=c.labels['banked_effects']),24+phase)
                 output.extend(school_bank_loader(ribbon_inbetweens.install(final_boy.install_bitmap(art,24+phase),24+phase),index=24+phase,progress=True))

@@ -6,13 +6,24 @@ import terminal_typing as typing
 
 class TerminalTypingTests(unittest.TestCase):
     def row(self,cpu,row):return bytes(cpu.memory[0xbf00+row*40:0xbf00+(row+1)*40])
+    def test_status_header_stays_fixed_across_music_tick_wrap(self):
+        cpu=None
+        first_wrap=(text.START+255)&~255
+        for tick in (text.START,first_wrap-1,first_wrap,first_wrap+4,first_wrap+64):
+            cpu=seq.execute(tick,cpu)
+            memory=cpu.memory
+            lms=0xbc00+text.TEXT_DL+1
+            address=memory[lms]+256*memory[lms+1]
+            self.assertEqual(bytes(memory[address:address+40]),
+                             b'[XE-OS] LINK:ONLINE // SV2026 [OK]'.ljust(40))
+
     def test_prompt_waits_then_types_and_enters_the_next_line(self):
         cpu=seq.execute(text.START)
-        self.assertTrue(self.row(cpu,0).startswith(b'>_'))
+        self.assertEqual(self.row(cpu,0),b'>'.ljust(40))
         self.assertEqual(self.row(cpu,1),b' '*40)
         cpu=seq.execute(text.START+16,cpu)
         self.assertEqual(self.row(cpu,0)[:13],b'>'+text.CREDITS[0][0][:12].encode())
-        self.assertEqual(self.row(cpu,0)[13],0x5f if not (text.START+16)&typing.BLINK_MASK else 0x20)
+        self.assertEqual(self.row(cpu,0)[13],0x20)
         cpu=seq.execute(typing.schedule()[1],cpu)
         self.assertTrue(self.row(cpu,1).startswith(b'>'))
         self.assertNotIn(0x5f,self.row(cpu,0))
@@ -26,18 +37,14 @@ class TerminalTypingTests(unittest.TestCase):
             states.append(self.row(cpu,len(text.CREDITS[0])-1))
         self.assertNotEqual(0x5f in states[0],0x5f in states[1])
         self.assertEqual(states[0].replace(b'_',b' '),states[1].replace(b'_',b' '))
-        self.assertEqual(bytes(cpu.memory[text.FONT+95*8:text.FONT+96*8]),bytes([0]*6+[0x54,0]))
+        self.assertEqual(bytes(cpu.memory[text.COLOR_FONT+95*8:text.COLOR_FONT+96*8]),bytes([0]*7+[0x54]))
 
-    def test_cursor_also_blinks_while_the_line_is_being_written(self):
-        start=text.page_starts()[0]
-        cpu=seq.execute(start+1)
-        earlier=self.row(cpu,0)
-        self.assertIn(0x5f,earlier)
-        cpu=seq.execute(start+65,cpu)
-        later=self.row(cpu,0)
-        self.assertNotIn(0x5f,later)
-        self.assertEqual(earlier[0],later[0])
-        self.assertGreater(len(later.rstrip()),len(earlier.replace(b'_',b' ').rstrip()))
+    def test_top_row_has_no_cursor_in_either_blink_phase(self):
+        cpu=None
+        for start in text.page_starts():
+            for tick in (start+1,start+65):
+                cpu=seq.execute(tick,cpu)
+                self.assertNotIn(0x5f,self.row(cpu,0))
 
     def test_all_pages_write_quickly_then_hold_for_reading(self):
         cpu=None;starts=text.page_starts()
@@ -73,9 +80,12 @@ class TerminalTypingTests(unittest.TestCase):
 
     def test_ai_and_llm_creation_lines_are_typed_in_the_existing_pages(self):
         cpu=seq.execute(text.START+300)
-        self.assertIn(b'HUMAN VISION / LLM CODE',self.row(cpu,5))
+        self.assertIn(b'I STARTED VIBECODING IN JULY 2026',self.row(cpu,3))
+        self.assertIn(b'THIS IS MY FIRST WORK FOR ATARI',self.row(cpu,4))
+        self.assertIn(b'MADE WITH OPENAI CODEX',self.row(cpu,5))
         cpu=seq.execute(text.page_starts()[2]+300,cpu)
         self.assertIn(b'AI TOOLS / ATARI SOUL',self.row(cpu,3))
+        self.assertIn(b'HUMAN VISION / LLM CODE',self.row(cpu,4))
         self.assertEqual(cpu.memory[0xd403],0xbc)
 
     def test_terminal_keeps_read_time_and_finale_ends_on_bar_139(self):

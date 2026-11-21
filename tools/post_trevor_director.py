@@ -10,6 +10,8 @@ SHIFT=4000
 MONTAGE_START=tick_at_bar(88)-SHIFT
 START=TREVOR_END
 FIRST_ROTATOR=tick_at_bar(32)
+# Each tunnel update displays the next stored rotation in its direction.
+FIRST_TUNNELS=(0x00,0x10,0x80,0x90,0x00,0x10,0x80,0x90)
 BUM_START=tick_at_bar(104)
 CYCLE_START=tick_at_bar(80)
 from outro_text import START as END
@@ -19,15 +21,13 @@ QSTART,ELAPSED=0x0ddb,0x0ddc
 ACTLO,ACTHI=0x0dd5,0x0dd6
 MODE=0x0dd7
 
-# One-bar passes cover the banana rotator as well as both tunnel textures,
-# alternating forward/reverse travel at normal/double speed.
-PATTERN=(0x60,0xe0,0x20,0xa0,0x40,0xc0,0x00,0x80,
-         0x50,0xd0,0x10,0x90)
+# One-bar passes alternate direction. Only the banana rotator skips phases.
+PATTERN=(0x60,0xe0,0x20,0xa0,0x00,0x80,0x00,0x80,
+         0x10,0x90,0x10,0x90)
 
 def cuts():
-    # First rotators, the pre-basketball tunnel, then the post-fight montage.
-    result=[(tick_at_bar(bar), (0x20,0x60,0xa0,0xe0)[(bar-32)%4])
-            for bar in range(32,40)]
+    # Open with spiral and organic tunnels. The bananas enter after Trevor.
+    result=[(tick_at_bar(bar), mode) for bar,mode in enumerate(FIRST_TUNNELS,32)]
     result.extend(((tick_at_bar(56),0x00),(tick_at_bar(57),0x80),(START,0x20)))
     for index,bar in enumerate(range(80,112)):
         tick=tick_at_bar(bar)
@@ -44,7 +44,7 @@ def timeline():
         if index==0 or tick==START:
             clock=tick+SHIFT if MONTAGE_START<=tick<END else tick
             original=((clock>>4)&31)|((clock>>5)&32)
-            base=original&31
+            base=(original&31)%period
         elif (mode&0x30)!=(result[-1][1]&0x30):
             base=0
         else:
@@ -217,7 +217,7 @@ def variant_helper():
     a(0xad,VLO);c.emit(0xc9,0x3c);c.branch(0x90,'bunch')
     c.label('global');a(0xad,VHI);c.emit(0x29,8,0x0a,0x0a,0x0a,0x09,0x80,0x60)
     c.label('bunch');c.emit(0xa9,0x80,0x60)
-    data=bytes(c.finish());assert 0x7400+len(data)<=0x7800
+    data=bytes(c.finish());assert 0x7400+len(data)<=0x7480
     return data
 
 def ball_clock_helper():

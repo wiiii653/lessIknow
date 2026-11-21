@@ -25,6 +25,18 @@ SHOULDER_SPACE={11:(35,43),12:(35,44),13:(35,44),14:(35,43),
 # Repair the notch in the original bent knee. Coordinates are source pixels.
 KNEE_SKIN = ((63,35),(62,36),(63,36),(64,36),(67,36))
 
+# Traced pinholes inside fabric and broad skin surfaces. These are explicit
+# source coordinates, not a smoothing filter: eyes, fingers, seams, contour,
+# negative space and board artwork must retain their original pixels.
+SURFACE_REPAIRS = {
+    0: {2: ((50,26),(55,31)), 3: ((44,34),)},
+    1: {2: ((58,35),), 3: ((60,44),(61,44),(58,45))},
+    2: {2: ((76,24),(78,26),(74,29),(64,31)), 3: ((72,38),)},
+    3: {2: ((86,24),(90,24),(82,27),(87,29),(89,30),(77,32)),
+        3: ((83,38),(75,39),(82,42),(84,43))},
+    4: {2: ((99,28),(96,31),(100,31),(101,31))},
+}
+
 def clean(pixels,pose):
     result=bytearray(pixels);plate=background(interior=True)
     for x0,y0,x1,y1 in NEGATIVE_SPACE.get(pose,()):
@@ -43,4 +55,13 @@ def clean(pixels,pose):
                 if result[offset]==1:result[offset]=0
         for x,y in KNEE_SKIN:
             result[y*160+x]=3
+    for ink,points in SURFACE_REPAIRS.get(pose,{}).items():
+        for x,y in points:
+            # Dribbling arm patches can legitimately cover a repaired point.
+            # Repair only a pinhole still surrounded by the intended surface.
+            n=y*160+x
+            if result[n] in (0,1) and sum(
+                    pixels[(y+dy)*160+x+dx]==ink
+                    for dy in (-1,0,1) for dx in (-1,0,1) if dx or dy)>=7:
+                result[n]=ink
     return bytes(result)

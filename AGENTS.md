@@ -4,18 +4,27 @@
 
 Atari XE 1 MB stereo demo for “The Less I Know The Better”. `tools/` builds
 6502 code and assets, `tests/` contains py65 checks, `assets/` holds source art,
-and `releases/` preserves numbered stereo XEX files. The current release is
-v330 / `releases/less-i-know-demo-release-058-stereo.xex`; current status is in
+and `releases/` preserves numbered stereo XEX files. The post-party candidate is
+v388 / stereo 126. Release 058 is the hardware reference. Current status is in
 `docs/PLAN_STATUS.md`, current post-Trevor timeline in
 `docs/AKTUALNY_MONTAZ_V330.md`. Vxxx notes are historical change records.
 
 ## Current constraints
 
+- HARDWARE LOADER CONTRACT: read [docs/HARDWARE_LOADER_CONTRACT.md](docs/HARDWARE_LOADER_CONTRACT.md)
+  before touching bank loading or packaging. Hardware-confirmed reference is
+  stereo release 058 / v330 (AVG, Atari 1088 Rambo). Raw
+  `visual-prototype-*.xex` files omit its hardware loading protocol. Build with
+  `make hardware` or `tools/build_hardware_xex.py`; never distribute a raw
+  prototype as an Atari fix. Preserve the high-RAM screen, all 66 INIT wrappers,
+  64 staging clears/compact bank payloads, deferred low RAM and final `$4800`
+  bootstrap. Comparing INIT counts alone is insufficient. Release 059/060
+  failed on hardware; 061 and later candidates have no hardware confirmation.
 - Build stereo only. Mono releases are retired.
 - All 64 banks are allocated. Never assume historical recovered-space figures
   are still free; inspect the active allocator, overlap assertions and build JSON.
 - Main code fills `$1400–$1DFF`; do not overlap the shared scanline pool at
-  `$1E00`. Current v330 uses 298 shared rows. Check the generated JSON before
+  `$1E00`. The v388 build uses 298 shared rows. Check the generated JSON before
   changing code or row ownership.
 - Preserve PORTB across NMI and banked callbacks. Verify bank ownership before
   changing memory use. Music remains on the original v035 player; preserve four
@@ -34,10 +43,8 @@ v330 / `releases/less-i-know-demo-release-058-stereo.xex`; current status is in
 Install `requirements-dev.txt` in a virtual environment. `make all
 PYTHON=/path/to/venv/bin/python` builds the replaceable dev pair;
 `make check PYTHON=/path/to/venv/bin/python` runs all discovered tests.
-`tools/check_playback.py` compares stereo POKEY output in Atari800. Current
-v330 has 28 focused py65 checks recorded. The user confirmed flawless playback
-from an AVG card on Atari 1088 Rambo. Full `make check` and a new POKEY
-comparison were not run for this release. State precisely what was run.
+`tools/check_playback.py` compares stereo POKEY output in Atari800. See `docs/PLAN_STATUS.md` for current validation.
+Use the README release command to reproduce the distributed stereo mix.
 
 For hardware work, record PAL/NTSC, Atari model, memory expansion and stereo
 configuration. py65 does not model ANTIC DMA or physical raster deadlines.

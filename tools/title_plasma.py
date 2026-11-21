@@ -1,8 +1,8 @@
 """Full-screen animated GTIA 11 plasma with hue-only lettering.
 
-Sixteen 80x64 plasma frames, six cumulative text masks and spatial
-dissolve and lettering-transition masks occupy nine expansion banks. The CPU combines one frame with a mask into an inactive
-unbanked framebuffer; ANTIC repeats each line three times.
+The 6502 synthesizes an 80x64 wave field in the inactive framebuffer,
+adds the static skyline, then composites the lettering and dissolve masks.
+ANTIC repeats each source line three times.
 """
 import math
 from build_sequence import Code, TITLE_TICK
@@ -12,9 +12,20 @@ from music_timing import tick_at_beat
 SIZE = 2272
 STATE = 0x83e0
 FRAME_BYTES = 2560
+LETTER_PAGES = 5
+PLASMA_STEP_TICKS = 16
 FIRST_BANK = 40
+PLASMA_ENTRY = 0x4000
+WAVE_TABLES = 0x4400
+VERTICAL_WAVE = 0x4c00
+SKYLINE_DATA = 0x4d00
+SKYLINE_FIRST_PAGE = 5
+SKYLINE_PAGES = 5
 MASK_BANK = 44
 FADE_BANK = 45
+FADE_RANKS = 0x4000
+FADE_LOOKUP = 0x4a00
+FADE_ENTRY = 0x5000
 TRANSITION_BANK = 47
 TRANSITION_START = TITLE_TICK - 128
 BAYER_4 = (0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5)
@@ -164,39 +175,235 @@ def compose_byte(background, mask, phase=0):
     return result
 
 
+def plasma_tables():
+    """Packed horizontal waves for each quantized vertical intensity."""
+    return tuple(bytes(
+        (dither_hue(horizontal(x) + (band-3.5)*.20, x, 0) << 4) |
+        dither_hue(horizontal(x+1) + (band-3.5)*.20, x+1, 0)
+        for x in range(0,512,2))
+        for band in range(8))
+
+
+def horizontal(x):
+    return 1.05*math.sin(x*math.tau/256*3) + .72*math.cos(x*math.tau/256*5)
+
+
+def vertical_wave():
+    return bytes(round(127.5 + 127.5*math.sin(i*math.tau/256)) for i in range(256))
+
+
+def skyline_masks():
+    keep = bytearray(FRAME_BYTES)
+    ink = bytearray(FRAME_BYTES)
+    for y in range(64):
+        for x in range(80):
+            hue = skyline_hue(x,y)
+            i = y*40 + x//2
+            shift = 0 if x&1 else 4
+            if hue is None:
+                keep[i] |= 15 << shift
+            else:
+                ink[i] |= hue << shift
+    start = SKYLINE_FIRST_PAGE*256
+    assert all(byte == 255 for byte in keep[:start])
+    assert not any(ink[:start])
+    return bytes(keep[start:]), bytes(ink[start:])
+
+
+def procedural_frame(phase):
+    """Reference for the 6502's two-dimensional wave and skyline compositor."""
+    tables, vertical = plasma_tables(), vertical_wave()
+    time = (phase & 31)*8
+    image = bytearray()
+    for row in range(64):
+        shift = (vertical[(3*row + time)&255]//4 + row + time)&255
+        table = tables[vertical[(4*row - time)&255]//32]
+        image.extend(table[(shift+column)&255] for column in range(39,-1,-1))
+    keep, ink = skyline_masks()
+    for i,(mask,hue) in enumerate(zip(keep,ink), SKYLINE_FIRST_PAGE*256):
+        image[i] = (image[i]&mask) | hue
+    return bytes(image)
+
+
+def plasma_renderer():
+    """Draw into the selected inactive buffer while title bank 40 is mapped."""
+    c = Code(PLASMA_ENTRY)
+    def a(op, address):
+        c.emit(op,address&255,address>>8)
+
+    # STATE+12 holds the wave phase in units of eight. STATE+13 is framebuffer high.
+    a(0xad,STATE+13); c.jump(0x8d,'dest_hi')
+    keep, ink = skyline_masks()
+    skyline = bytearray()
+    groups = []
+    for page in range(SKYLINE_PAGES):
+        start = page*256
+        masks = keep[start:start+256]
+        for partial in (False,True):
+            offsets = bytes(i for i,mask in enumerate(masks)
+                            if (0 < mask < 255 if partial else mask == 0))
+            if not offsets:
+                continue
+            width = len(offsets)
+            base = SKYLINE_DATA+len(skyline)
+            skyline.extend(offsets)
+            skyline.extend(ink[start+i] for i in offsets)
+            if partial:
+                skyline.extend(masks[i] for i in offsets)
+            groups.append((page,partial,width,base))
+    for index,(page,partial,_,_) in enumerate(groups):
+        a(0xad,STATE+13); c.emit(0x18,0x69,SKYLINE_FIRST_PAGE+page)
+        if partial:
+            c.jump(0x8d,f'city_read_hi{index}')
+        c.jump(0x8d,f'city_write_hi{index}')
+    c.emit(0xa9,0); c.jump(0x8d,'dest_lo'); c.jump(0x8d,'row')
+    c.label('next_row')
+    c.label('row_load'); c.emit(0xa9,0,0x0a,0x18); c.jump(0x6d,'row')
+    c.emit(0x18); a(0x6d,STATE+12); c.emit(0xaa)
+    a(0xbd,VERTICAL_WAVE); c.emit(0x4a,0x4a,0x18); c.jump(0x6d,'row')
+    c.emit(0x18); a(0x6d,STATE+12); c.emit(0x48)
+    c.jump(0xad,'row'); c.emit(0x0a,0x0a,0x38); a(0xed,STATE+12); c.emit(0xaa)
+    a(0xbd,VERTICAL_WAVE); c.emit(0x4a,0x4a,0x4a,0x4a,0x4a,0x18,0x69,WAVE_TABLES>>8)
+    for column in range(8):
+        c.jump(0x8d,f'wave_hi{column}')
+    c.label('dest_hi_load'); c.emit(0xa9,0)
+    for column in range(8):
+        c.jump(0x8d,f'row_dest_hi{column}')
+    c.label('dest_lo_load'); c.emit(0xa9,0)
+    for column in range(8):
+        c.jump(0x8d,f'row_dest_lo{column}')
+    c.emit(0x68,0xaa,0xa0,39)
+    c.label('pixel')
+    for column in range(8):
+        c.label(f'wave{column}'); a(0xbd,WAVE_TABLES)
+        c.label(f'row_dest{column}'); a(0x99,0x9000)
+        c.emit(0xe8,0x88)
+        c.labels[f'wave_hi{column}'] = c.labels[f'wave{column}']+2
+        c.labels[f'row_dest_lo{column}'] = c.labels[f'row_dest{column}']+1
+        c.labels[f'row_dest_hi{column}'] = c.labels[f'row_dest{column}']+2
+    c.branch(0x10,'pixel')
+    c.jump(0xad,'dest_lo'); c.emit(0x18,0x69,40); c.jump(0x8d,'dest_lo')
+    c.branch(0x90,'row_advance'); c.jump(0xee,'dest_hi')
+    c.label('row_advance'); c.jump(0xee,'row'); c.jump(0xad,'row')
+    c.emit(0xc9,64); c.branch(0xf0,'skyline'); c.jump(0x4c,'next_row')
+
+    c.label('skyline')
+    for index,(_,partial,width,base) in enumerate(groups):
+        c.emit(0xa0,width-1)
+        c.label(f'city{index}'); a(0xbe,base)
+        if partial:
+            c.label(f'city_read{index}'); a(0xbd,0x9000)
+            a(0x39,base+2*width); a(0x19,base+width)
+            c.labels[f'city_read_hi{index}'] = c.labels[f'city_read{index}']+2
+        else:
+            a(0xb9,base+width)
+        c.label(f'city_write{index}'); a(0x9d,0x9000)
+        c.labels[f'city_write_hi{index}'] = c.labels[f'city_write{index}']+2
+        c.emit(0x88,0xc0,255); c.branch(0xd0,f'city{index}')
+    # Every plasma phase uses the same LMS addresses in a given buffer.
+    # Rebuild only when a different renderer has used the inactive list.
+    from engine_effects import cached_display_list
+    cached_display_list(c,8)
+    c.emit(0xa0,0)
+    for block,count in enumerate((21,21,22)):
+        offset = 3+block*21*9
+        for line in range(3):
+            for part in ('lo','hi'):
+                address = offset+3*line+(part=='hi')
+                label = f'lms_{block}_{part}{line}'
+                a(0xad,STATE+6); c.emit(0x18,0x69,address>>8)
+                c.jump(0x8d,label+'_hi')
+        c.emit(0xa2,0)
+        c.label(f'lms_loop{block}')
+        for part in ('lo','hi'):
+            c.jump(0xb9,'lms_'+part)
+            if part=='hi':
+                a(0x0d,STATE+13)
+            for line in range(3):
+                address = offset+3*line+(part=='hi')
+                label = f'lms_{block}_{part}{line}'
+                c.label(label); a(0x9d,0x8000|(address&255))
+                c.labels[label+'_hi'] = c.labels[label]+2
+        c.emit(0x8a,0x18,0x69,9,0xaa,0xc8,0xc0,block*21+count)
+        c.branch(0xd0,f'lms_loop{block}')
+    c.label('swap'); c.emit(0x60)
+    c.label('lms_lo'); c.emit(*(row*40&255 for row in range(64)))
+    c.label('lms_hi'); c.emit(*(row*40>>8 for row in range(64)))
+    for name,label in (('row','row_load'),('dest_lo','dest_lo_load'),('dest_hi','dest_hi_load')):
+        c.labels[name] = c.labels[label]+1
+    return bytes(c.finish()), bytes(skyline)
+
+
+def fade_ranks():
+    ranks = []
+    for y in range(64):
+        for x in range(80):
+            # Fixed, irregular islands keep the dissolve stable across phases.
+            field = (math.sin(x*.11 + y*.08) + math.cos(y*.19 - x*.045)
+                     + .5*math.sin(x*.23 - y*.13))
+            raster = BAYER_4[(y%4)*4 + x%4] / 16
+            ranks.append(max(0,min(7,int(((field+2.5)/5*.65 + raster*.35)*8))))
+    return bytes((hi << 4) | lo for hi,lo in zip(ranks[::2],ranks[1::2]))
+
+
+def fade_lookup(level):
+    return bytes((0xf0 if rank >> 4 < level else 0) |
+                 (0x0f if (rank & 15) < level else 0)
+                 for rank in range(256))
+
+
+def fade_mask(level):
+    return fade_ranks().translate(fade_lookup(level))
+
+
+def fade_bank():
+    c = Code(FADE_ENTRY)
+    def a(op,address):
+        c.emit(op,address&255,address>>8)
+
+    # A is the current dissolve level (1–6). Compute the lookup page once.
+    c.emit(0x18,0x69,(FADE_LOOKUP>>8)-1)
+    for page in range(10):
+        c.jump(0x8d,f'lookup_hi{page}')
+        a(0xad,STATE+13); c.emit(0x18,0x69,page)
+        c.jump(0x8d,f'read_hi{page}')
+        c.jump(0x8d,f'write_hi{page}')
+        c.jump(0xad,f'lookup_hi{page}')
+    c.emit(0xa2,0)
+    c.label('pixels')
+    for page in range(10):
+        a(0xbc,FADE_RANKS+page*256)
+        c.label(f'lookup{page}'); a(0xb9,FADE_LOOKUP)
+        c.label(f'read{page}'); a(0x3d,0x9000)
+        c.label(f'write{page}'); a(0x9d,0x9000)
+        for name in ('lookup','read','write'):
+            c.labels[f'{name}_hi{page}'] = c.labels[f'{name}{page}']+2
+    c.emit(0xe8); c.branch(0xd0,'pixels'); c.emit(0x60)
+    ranks = fade_ranks()
+    lookup = b''.join(fade_lookup(level) for level in range(1,7))
+    assert FADE_RANKS+len(ranks)==FADE_LOOKUP
+    assert FADE_LOOKUP+len(lookup)==FADE_ENTRY
+    return (ranks+lookup+bytes(c.finish())).ljust(16384,b'\0')
+
+
 def artwork():
-    frames = []
-    for phase in range(16):
-        t = phase * math.tau / 16
-        image = bytearray()
-        for y in range(64):
-            for x in range(0, 80, 2):
-                pixels = []
-                for xx in (x, x + 1):
-                    # Overlapping moving radial waves produce rounded islands
-                    # which merge and split, rather than scrolling stripes.
-                    x1 = 24 + 14 * math.sin(t)
-                    y1 = 26 + 11 * math.cos(t)
-                    x2 = 54 + 15 * math.cos(t)
-                    y2 = 35 + 10 * math.sin(t)
-                    d1 = math.hypot((xx-x1)*.72, y-y1)
-                    d2 = math.hypot((xx-x2)*.72, y-y2)
-                    value = math.sin(d1*.19 - t) + math.cos(d2*.18 + t) + .55*math.sin(xx*.09 + y*.11 + t)
-                    hue=dither_hue(value, xx, y)
-                    # Half-screen historic crane below the compact lettering.
-                    # Composited text always wins over these background pixels.
-                    city=skyline_hue(xx,y)
-                    if city is not None:hue=city
-                    pixels.append(hue)
-                image.append((pixels[0] << 4) | pixels[1])
-        frames.append(bytes(image))
-    # Every plasma bank has the same four colour lookup tables in its tail;
-    # composition can read them without switching away from the current frame.
-    color_tables = bytes((letter_ink(value >> 4, phase) << 4 if value >> 4 else 0) |
-                         (letter_ink(value & 15, phase) if value & 15 else 0)
-                         for phase in range(4) for value in range(256))
-    banks = [(b''.join(frames[n:n+4]) + color_tables).ljust(16384, b'\0')
-             for n in range(0, 16, 4)]
+    # Bank 40 holds the procedural renderer and the only skyline copy.
+    # Banks 41–43 retain their selectors and later banana-cache ownership.
+    colors = bytes((letter_ink(value >> 4, phase) << 4 if value >> 4 else 0) |
+                   (letter_ink(value & 15, phase) if value & 15 else 0)
+                   for phase in range(4) for value in range(256))
+    renderer, skyline = plasma_renderer()
+    bank = bytearray(16384)
+    end = 0
+    for address,data in ((PLASMA_ENTRY,renderer),(WAVE_TABLES,b''.join(plasma_tables())),
+                         (VERTICAL_WAVE,vertical_wave()),(SKYLINE_DATA,skyline),
+                         (0x6800,colors)):
+        offset = address-0x4000
+        assert offset>=end
+        end = offset+len(data)
+        bank[offset:end] = data
+    assert end == 0x2c00  # Firework code starts at $6C00.
+    banks = [bytes(bank)] + [bytes(16384)]*3
     masks = []
     # Large two-line artist card; taller, centred song-title lettering.
     for card,rows in enumerate(CARDS):
@@ -237,22 +444,7 @@ def artwork():
                     for x, y in pixels:
                         ink(x, y, face)
             masks.append(bytes(mask))
-    fade_frames = []
-    for level in range(1, 7):
-        frame = bytearray()
-        for y in range(64):
-            for x in range(0, 80, 2):
-                bits = []
-                for xx in (x, x+1):
-                    # Broad, irregular islands recede instead of a straight wipe.
-                    field = (math.sin(xx*.11 + y*.08) + math.cos(y*.19 - xx*.045)
-                             + .5*math.sin(xx*.23 - y*.13))
-                    raster = BAYER_4[(y % 4)*4 + xx % 4] / 16
-                    rank = max(0, min(7, int(((field + 2.5) / 5 * .65 + raster * .35) * 8)))
-                    bits.append(15 if rank < level else 0)
-                frame.append((bits[0] << 4) | bits[1])
-        fade_frames.append(bytes(frame))
-    fade_banks = [b''.join(fade_frames[n:n+4]).ljust(16384, b'\0') for n in (0, 4)]
+    fade_banks = [fade_bank(), bytes(16384)]
     # Pixel-ordered transition from the full artist to the first title line.
     transition_frames = []
     for step in range(8):
@@ -282,6 +474,9 @@ def artwork():
         (b''.join(transition_frames[n:n+4]) + b''.join(reveal_frames[n//2:n//2+2])).ljust(16384, b'\0')
         for n in (0, 4)
     ]
+    # Runtime only copies and composites the upper five pages.
+    for mask in masks + transition_frames + reveal_frames:
+        assert not any(mask[LETTER_PAGES*256:])
     return banks + [b''.join(masks).ljust(16384, b'\0')] + fade_banks + transition_banks
 
 
@@ -301,14 +496,14 @@ def build(origin, blank):
     a(0xad, STATE+2); a(0x8d, STATE+8); a(0xad, STATE+3); a(0x8d, STATE+9)
     c.label('elapsed')
     c.emit(0xa9, 0); a(0x8d, STATE+1)
-    # cache key: scene plus elapsed / 32 (47 phases per card).
-    a(0xad, STATE+9); c.emit(0x0a, 0x0a, 0x0a); a(0x8d, STATE+29)
-    a(0xad, STATE+8); c.emit(0x4a,0x4a,0x4a,0x4a,0x4a); a(0x0d, STATE+29); a(0x8d, STATE+29)
+    # Fade levels use 32 ticks. The plasma cache uses 16 ticks.
+    a(0xad, STATE+9); c.emit(0x0a, 0x0a, 0x0a, 0x0a); a(0x8d, STATE+29)
+    a(0xad, STATE+8); c.emit(0x4a,0x4a,0x4a,0x4a); a(0x0d, STATE+29); a(0x8d, STATE+29)
     # Fade only at the opening and after the final title, never at the cut.
-    a(0xad, STATE); c.branch(0xd0, 'second_fade')
-    a(0xad, STATE+29); c.emit(0xc9, 7); c.branch(0x90, 'save_fade')
+    c.emit(0x4a); a(0xac, STATE); c.branch(0xd0, 'second_fade')
+    c.emit(0xc9, 7); c.branch(0x90, 'save_fade')
     c.emit(0xa9, 7); c.jump(0x4c, 'save_fade')
-    c.label('second_fade'); a(0xad, STATE+29); c.emit(0xc9, 39)
+    c.label('second_fade'); c.emit(0xc9, 39)
     c.branch(0xb0, 'save_fade'); c.emit(0xa9, 7)
     c.label('save_fade'); c.jump(0x8d, 'fade_phase')
     # Find the current musical beat using the same integer timing map as
@@ -337,6 +532,8 @@ def build(origin, blank):
     a(0xad, STATE); c.emit(0xc9, 2); c.branch(0x90, 'invalidate_done')
     c.emit(0xa9, 0xff); c.jump(0x8d, 'mask_key')
     c.label('invalidate_done'); c.emit(0x60)
+    # Invalidation still runs after the intro draw code is reused by bananas.
+    c.label('mask_key'); c.emit(0xff)
 
     c.label('draw')
     # Invalidate the dance/practice buffer cache, since both buffers are reused.
@@ -376,7 +573,7 @@ def build(origin, blank):
     a(0xbd, bank_value(TRANSITION_BANK)); a(0x8d,0xd301)
     c.emit(0x68,0x29,1,0xaa); c.jump(0xbd,'reveal_high')
     c.label('mask_source_selected'); c.jump(0x8d, 'mask_source_high')
-    c.emit(0xa2, 0, 0xa0, 10)
+    c.emit(0xa2, 0, 0xa0, LETTER_PAGES)
     c.label('mask_copy')
     c.label('mask_source'); c.emit(0xbd,0,0x40)
     c.label('mask_dest'); c.emit(0x9d,0,0xa0,0xe8); c.branch(0xd0,'mask_copy')
@@ -384,33 +581,34 @@ def build(origin, blank):
     c.emit(0xa9, 0xa0); c.jump(0x8d,'mask_dest_high'); c.jump(0x4c,'mask_done')
     c.label('clear_mask'); c.emit(0xa9,0,0xa2,0)
     c.label('clear_loop')
-    for page in range(10): a(0x9d,0xa000+page*256)
+    for page in range(LETTER_PAGES): a(0x9d,0xa000+page*256)
     c.emit(0xe8); c.branch(0xd0,'clear_loop')
     c.label('mask_done')
-    # Select one of sixteen 2560-byte frames across four bank windows.
-    a(0xad,STATE+3); c.emit(0x29,1,0x0a,0x0a,0x0a); a(0x8d,STATE+12)
-    a(0xad,STATE+2); c.emit(0x4a,0x4a,0x4a,0x4a,0x4a); a(0x0d,STATE+12)
-    c.emit(0x29,15,0x48,0x4a,0x4a,0xaa)
-    a(0xbd,bank_value(FIRST_BANK)); a(0x8d,0xd301)
-    c.emit(0x68,0x29,3,0xaa); c.jump(0xbd,'frame_high'); a(0x8d,STATE+12)
+    # Use the same music-clock phase and render directly into the back buffer.
+    a(0xad,STATE+2); c.emit(0x4a,0x29,0x78); a(0x8d,STATE+12)
+    a(0xad,STATE+3); c.emit(0x29,1,0x4a,0x6a); a(0x0d,STATE+12); a(0x8d,STATE+12)
+    a(0xad,bank_value(FIRST_BANK)); a(0x8d,0xd301)
     # The inactive display list determines which framebuffer can be written.
     a(0xad,STATE+6); c.emit(0x29,4,0x4a,0x4a,0x49,1,0xaa,0x48)
     c.emit(0x0a,0x0a,0x0a,0x0a,0x0a,0x18,0x69,0x90); a(0x8d,STATE+13)
-    # Patch high bytes of the ten page operations, then composite 2560 bytes.
-    for page in range(10):
-        a(0xad,STATE+12); c.emit(0x18,0x69,page); c.jump(0x8d,f'src_hi{page}')
-        a(0xad,STATE+13); c.emit(0x18,0x69,page); c.jump(0x8d,f'dst_hi{page}')
+    a(0x20,PLASMA_ENTRY)
+    c.jump(0xad,'mask_key'); c.branch(0xd0,'letter_setup'); c.jump(0x4c,'composed')
+    c.label('letter_setup')
+    # Patch the ten page operations, then composite lettering in place.
+    for page in range(LETTER_PAGES):
+        a(0xad,STATE+13); c.emit(0x18,0x69,page); c.jump(0x8d,f'src_hi{page}'); c.jump(0x8d,f'dst_hi{page}')
     c.jump(0xad,'color_phase'); c.emit(0x18,0x69,0x68)
-    for page in range(10): c.jump(0x8d,f'color_hi{page}')
+    for page in range(LETTER_PAGES): c.jump(0x8d,f'color_hi{page}')
     c.emit(0xa2,0)
     c.label('compose')
-    for page in range(10):
-        a(0xbd,0xa000+page*256);c.emit(0xa8)
+    for page in range(LETTER_PAGES):
+        a(0xbd,0xa000+page*256);c.branch(0xf0,f'letter_done{page}');c.emit(0xa8)
         c.jump(0xb9,'letter_keep')
         c.label(f'src{page}'); c.emit(0x3d,0,0x40)
         c.label(f'color{page}'); c.emit(0x19,0,0x68)
         c.labels[f'color_hi{page}']=c.labels[f'color{page}']+2
         c.label(f'dst{page}'); c.emit(0x9d,0,0x90)
+        c.label(f'letter_done{page}')
         c.labels[f'src_hi{page}']=c.labels[f'src{page}']+2
         c.labels[f'dst_hi{page}']=c.labels[f'dst{page}']+2
     c.emit(0xe8);c.branch(0xf0,'composed');c.jump(0x4c,'compose')
@@ -424,22 +622,8 @@ def build(origin, blank):
     c.label('fade_level'); c.emit(0xc9, 1); c.branch(0xb0, 'fade_nonzero'); c.jump(0x4c, 'fade_done')
     c.label('fade_nonzero'); c.emit(0xc9, 7); c.branch(0x90, 'fade_start'); c.jump(0x4c, 'fade_done')
     c.label('fade_start')
-    c.emit(0x38,0xe9,1,0x48,0x4a,0x4a,0xaa)
-    a(0xbd,bank_value(FADE_BANK)); a(0x8d,0xd301)
-    c.emit(0x68,0x29,3,0xaa); c.jump(0xbd,'frame_high'); a(0x8d,STATE+12)
-    for page in range(10):
-        a(0xad,STATE+12); c.emit(0x18,0x69,page); c.jump(0x8d,f'fade_hi{page}')
-        a(0xad,STATE+13); c.emit(0x18,0x69,page); c.jump(0x8d,f'fade_read_hi{page}'); c.jump(0x8d,f'fade_dst_hi{page}')
-    c.emit(0xa2,0)
-    c.label('fade_loop')
-    for page in range(10):
-        c.label(f'fade_read{page}'); c.emit(0xbd,0,0x90)
-        c.label(f'fade{page}'); c.emit(0x3d,0,0x40)
-        c.label(f'fade_dst{page}'); c.emit(0x9d,0,0x90)
-        c.labels[f'fade_read_hi{page}']=c.labels[f'fade_read{page}']+2
-        c.labels[f'fade_hi{page}']=c.labels[f'fade{page}']+2
-        c.labels[f'fade_dst_hi{page}']=c.labels[f'fade_dst{page}']+2
-    c.emit(0xe8); c.branch(0xd0,'fade_loop')
+    c.emit(0x48); a(0xad,bank_value(FADE_BANK)); a(0x8d,0xd301)
+    c.emit(0x68); a(0x20,FADE_ENTRY)
     c.label('fade_done')
     c.emit(0x68,0x18,0x69,2,0xaa,0x68); a(0x8d,0xd301); c.emit(0x60)
     c.labels['mask_source_high']=c.labels['mask_source']+2
@@ -447,7 +631,6 @@ def build(origin, blank):
     c.label('color_phase'); c.emit(0)
     c.label('beat_lo'); c.emit(*(tick_at_beat(i) & 255 for i in range(32)))
     c.label('beat_hi'); c.emit(*(tick_at_beat(i) >> 8 for i in range(32)))
-    c.label('mask_key'); c.emit(0xff)
     c.label('fade_phase'); c.emit(0)
     c.label('reveal_key'); c.emit(0,15,16,0,0,17,18)
     c.label('reveal_high'); c.emit(0x68,0x72)

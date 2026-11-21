@@ -1,5 +1,7 @@
 # The Less I Know The Better - Atari XE 1MB Demo Timeline (v2)
 
+Historyczny projekt montażu. Bieżące ticki i ujęcia podaje [aktualny montaż](docs/AKTUALNY_MONTAZ_V330.md).
+
 Wersja poprawiona po analizie `less-i-know-release-v035-preview.mp3` i playera `less-i-know-hook-v024.xex`.
 
 ## Założenia

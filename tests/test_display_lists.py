@@ -47,6 +47,18 @@ class DisplayListTests(unittest.TestCase):
         self.assertEqual(lines, [0, 78, 156, 234])
         self.assertIn('Total display-list scanlines: 235', output)
 
+    def test_final_card_preserves_music_dlis(self):
+        from outro_text import FINAL_CARD_DL, final_card_display_list
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'final-card.xex'
+            path.write_bytes(b'\xff\xff' + xex_segment(FINAL_CARD_DL, final_card_display_list()))
+            output = self.inspect(path, FINAL_CARD_DL)
+        lines = [int(row.rsplit(' ', 1)[1]) for row in output.splitlines()
+                 if 'DLI on line' in row]
+        self.assertEqual(lines, [0, 78, 102, 118, 134, 150, 156, 234])
+        self.assertIn('Total display-list scanlines: 235', output)
+
     def test_visible_image_has_no_blank_dli_seams(self):
         for address in (0x8000, 0x8400):
             output = self.inspect(ROOT / XEX, address)

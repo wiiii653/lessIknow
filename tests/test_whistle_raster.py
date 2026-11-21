@@ -8,19 +8,13 @@ import test_sequence as s
 from test_tunnel_raster import BeamMemory
 from whistle_pmg import START,END
 
-class WhistleBeamMemory(BeamMemory):
-    def __setitem__(self,address,value):
-        if self.cpu is not None and address==0xd407:
-            self.events.append((self.start+self.cpu.processorCycles,address,value))
-        super().__setitem__(address,value)
-
 @unittest.skipIf(s.MPU is None,'py65 required')
 class WhistleRasterTests(unittest.TestCase):
     def test_continuous_dma_and_atomic_publish_even_if_preparation_runs_late(self):
         for tick in (5106,5236,5514):
             for line in (0,124,248,254,255,256,290,311):
                 for stall in (0,5000):
-                    m=WhistleBeamMemory(s.XEX.read_bytes());c=s.MPU(memory=m)
+                    m=BeamMemory(s.XEX.read_bytes());c=s.MPU(memory=m)
                     s.execute(tick-4,c)
                     front=(m[0xd407]&0xfc)<<8
                     old=m[front+0x180:front+0x400]
@@ -50,7 +44,7 @@ class WhistleRasterTests(unittest.TestCase):
                     self.assertEqual(bank,m[0xd301],case)
 
     def test_scene_exit_still_disables_melody(self):
-        m=WhistleBeamMemory(s.XEX.read_bytes());c=s.MPU(memory=m)
+        m=BeamMemory(s.XEX.read_bytes());c=s.MPU(memory=m)
         s.execute(END-16,c)
         c.processorCycles=0;m.start=248*114;m.cpu=c;m.events.clear()
         s.execute(END,c)

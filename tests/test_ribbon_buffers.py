@@ -4,14 +4,14 @@ import unittest
 import test_sequence as sequence
 from test_tunnel_raster import BeamMemory
 from test_engine_cache import TrackedMemory
-from ribbon_dance import START, SIDE_START, SIDE_END, STEPS, FIREWORK_START, LAUNCH_START, artwork, frame_at, scene_artwork
+from ribbon_dance import START, SIDE_START, SIDE_END, SIDE_PREP_START, STEPS, FIREWORK_START, LAUNCH_START, artwork, frame_at, scene_artwork
 
 
 class RibbonBufferTests(unittest.TestCase):
     def test_front_solo_ribbons_have_independent_phases_and_keep_their_grips(self):
         from ribbon_dance import CUTS, ribbon_streams
         streams=ribbon_streams()
-        for tick in (CUTS[1]+64,CUTS[1]+80,CUTS[1]+96,CUTS[2]-16):
+        for tick in (CUTS[1]+64,CUTS[1]+80,CUTS[1]+96,CUTS[2]-20):
             cpu=sequence.execute(tick);m=cpu.memory
             _,hands=scene_artwork(tick)
             phase=(tick>>3)&15
@@ -36,14 +36,20 @@ class RibbonBufferTests(unittest.TestCase):
             self.assertEqual(sequence.SequenceTests().raster(cpu),expected)
             self.assertEqual(cpu.memory[0xd000:0xd004],
                              [(x+34)&255 for x,y in anchors])
-        # Position changes before the next bitmap/PMG phase. A frame-only
-        # cache would leave the girl behind while moving her ribbons.
-        a=sequence.execute(SIDE_START+127)
-        before=tuple(a.memory[0xd000:0xd008])
-        previous=bytes(sequence.SequenceTests().raster(a))
-        a=sequence.execute(SIDE_START+128,a)
-        self.assertEqual(tuple(a.memory[0xd000:0xd008]),tuple((x+4)&255 for x in before))
-        self.assertNotEqual(sequence.SequenceTests().raster(a),previous)
+        # The first tracking move happens with the third half-beat pose.
+        from ribbon_dance import side_step
+        cue = SIDE_PREP_START+128
+        self.assertEqual((side_step(cue-1),side_step(cue)), (0,1))
+        for tick in (cue-1,cue):
+            cpu=sequence.execute(tick,cpu)
+            _,anchors=scene_artwork(tick)
+            self.assertEqual(cpu.memory[0xd000:0xd004], [(x+34)&255 for x,y in anchors])
+
+    def test_side_poses_match_approved_sixteen_tick_cycle(self):
+        cpu = None
+        for tick in range(SIDE_START+64, SIDE_START+448, 16):
+            cpu = sequence.execute(tick, cpu)
+            self.assertEqual(cpu.memory[0x83ed], frame_at(tick))
 
     def test_rainbow_raster_bands_cycle_without_touching_banks_or_framebuffers(self):
         from ribbon_dance import rainbow_palette

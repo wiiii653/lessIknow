@@ -5,6 +5,7 @@ import test_sequence as sequence
 from tunnel_ball import masks, tunnel_offsets
 from engine_effects import pmg_art
 from mosaic import KALEIDO_START
+from post_trevor_director import START, BUM_START, SHIFT, frame_at
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class TunnelBallTests(unittest.TestCase):
@@ -85,8 +86,12 @@ class TunnelBallTests(unittest.TestCase):
         self.assertEqual(vertical[32], 0)
         self.assertGreater(max(offsets),30);self.assertLess(min(offsets),-30)
         cpu=None
-        for i in range(64):
-            tick=12288+i*16
+        ticks={}
+        for tick in range(START,BUM_START,8):
+            frame=frame_at(tick)
+            if frame<32:ticks.setdefault(frame|(((tick+SHIFT)>>4)&32),tick)
+        self.assertEqual(set(ticks),set(range(64)))
+        for i,tick in sorted(ticks.items()):
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0xd01d],3)
             self.assertEqual(m[0xd000],112+offsets[i])
@@ -96,18 +101,23 @@ class TunnelBallTests(unittest.TestCase):
             for j in range(4):
                 self.assertLessEqual(abs(m[0xd004+j]-(128+offsets[i])),44)
         self.assertLessEqual(abs(offsets[-1]),4)
-        cpu=sequence.execute(13312,cpu)
+        centered=next(t for t in range(tick+1,BUM_START) if frame_at(t)==32)
+        cpu=sequence.execute(centered,cpu)
         self.assertEqual(cpu.memory[0xd000],112)
         self.assertEqual(cpu.memory[0xd001],128)
         self.assertEqual(cpu.memory[0xd01d],3)
 
     def test_tunnel_bob_covers_central_hole_at_every_phase(self):
+        from ribbon_dance import FRONT_PREP_STEPS
         cpu=None;positions=set()
-        for i in range(32):
-            tick=13312+i*16
+        ticks={}
+        for tick in range(KALEIDO_START,FRONT_PREP_STEPS[0],8):
+            ticks.setdefault(frame_at(tick),tick)
+        self.assertEqual(set(ticks),set(range(32,60)))
+        for i,tick in sorted(ticks.items()):
             cpu=sequence.execute(tick,cpu);m=cpu.memory
-            # The eye scene reuses four mosaic slots, so those phases repeat.
-            phase=(i-4 if i>=28 else i)
+            # The eye frames occupy slots 60–63.
+            phase=i-32
             dx,dy=tunnel_offsets()[phase];positions.add((dx,dy))
             self.assertEqual(m[0xd000],112+dx)
             self.assertEqual(m[0x83e9],dy&255)
@@ -142,8 +152,9 @@ class TunnelBallTests(unittest.TestCase):
 
     def test_reused_cycle_memory_and_original_tunnel_covering_are_separate(self):
         cpu=None
-        for i in range(32):
-            cpu=sequence.execute(34912+i*16,cpu);m=cpu.memory
+        for i in range(28):
+            tick=next(t for t in range(START,BUM_START,8) if frame_at(t)==32+i)
+            cpu=sequence.execute(tick,cpu);m=cpu.memory
             # Extra loader bank 2 is actual RuntimeMemory bank 16.
             from tunnel_ball import rebound_helper,helper
             from ribbon_inbetweens import BANK_ENTRY,selector

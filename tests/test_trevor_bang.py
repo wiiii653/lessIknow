@@ -13,11 +13,10 @@ class TrevorBangTests(unittest.TestCase):
         from rainbow_ball import spin_masks
         from tunnel_ball import masks as large_masks
         from basketball_hero import satellite_orbits
-        from trevor_ball_flight import IN_VECTORS,OUT_VECTORS,INCOMING_TICKS
+        from trevor_ball_flight import IN_VECTORS,INCOMING_TICKS,displacement
         import math
         frames = spin_masks(); large=large_masks(); orbits=satellite_orbits()
         self.assertEqual(len(set(IN_VECTORS)),len(HITS))
-        self.assertEqual(len(set(OUT_VECTORS)),len(HITS))
         for index, hit in enumerate(HITS):
             for age in (-48,-36,-24,-16,-1,80,92,105,120,135):
                 if index+1<len(HITS) and age>=HITS[index+1]-hit-INCOMING_TICKS:continue
@@ -26,8 +25,8 @@ class TrevorBangTests(unittest.TestCase):
                 ax,ay=__import__('trevor_polished').impact_anchor(index)
                 incoming=age<0; distance=((-2*age+2)//3) if incoming else (age-80)//2
                 vx,vy=IN_VECTORS[index] if incoming else (0,0)
-                x=(160+ax+vx*distance)&255
-                y=max(0,min(111,45+ay+vy*distance))
+                x=(160+ax+displacement(vx,distance))&255
+                y=max(0,min(111,45+ay+displacement(vy,distance)))
                 if incoming:x=(x-8)&255;y=max(0,min(96,y-8))
                 else:y=y+2-distance//2
                 puff=bytes((0x18,0x3c,0x6e,0xff,0xfb,0x76,0x3c,0x18))
@@ -77,12 +76,14 @@ class TrevorBangTests(unittest.TestCase):
                 self.assertEqual(m[0xd301],0xff)
 
     def test_flights_do_not_stick_to_vertical_clamps_and_fade_at_handoffs(self):
-        from trevor_ball_flight import IN_VECTORS, OUT_VECTORS, INCOMING_TICKS
+        from trevor_ball_flight import IN_VECTORS, INCOMING_TICKS, displacement
         from trevor_polished import impact_anchor
         for index, hit in enumerate(HITS):
             base_y=45+impact_anchor(index)[1]
-            self.assertTrue(all(8<=base_y+IN_VECTORS[index][1]*d<=104 for d in range(1,33)),index)
-            self.assertTrue(all(0<=base_y+OUT_VECTORS[index][1]*d<=111 for d in range(28)),index)
+            x_profile,y_profile=IN_VECTORS[index]
+            self.assertNotEqual(displacement(x_profile,24),0,index)
+            self.assertNotEqual(displacement(y_profile,24),0,index)
+            self.assertTrue(all(8<=base_y+displacement(y_profile,d)<=104 for d in range(1,33)),index)
             for age in (-48,-42,-36,-24,-1,80,98,120,128,135):
                 if age>=0 and index+1<len(HITS) and age>=HITS[index+1]-hit-INCOMING_TICKS:continue
                 m=sequence.execute(hit+age).memory

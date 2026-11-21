@@ -9,8 +9,9 @@ class PostTrevorDirectorTests(unittest.TestCase):
         from music_timing import tick_at_bar
         cuts=d.cuts()
         self.assertEqual(cuts[0][0],d.FIRST_ROTATOR)
-        self.assertEqual(cuts[0][1],0x20)
+        self.assertEqual(tuple(mode for _,mode in cuts[:4]),(0x00,0x10,0x80,0x90))
         self.assertEqual(cuts[10][0],d.START)
+        self.assertEqual(cuts[10][1],0x20)
         self.assertEqual(cuts[11][0],tick_at_bar(80))
         self.assertEqual(d.START,29656)
         self.assertEqual(d.END,tick_at_bar(112))
@@ -29,7 +30,8 @@ class PostTrevorDirectorTests(unittest.TestCase):
         self.assertEqual(dict(cuts)[tick_at_bar(109)],0xe0)
         for texture in (0,0x10,0x20):
             modes=[mode for _,mode in cuts if mode&0x30==texture]
-            self.assertEqual({bool(mode&0x40) for mode in modes},{False,True})
+            self.assertEqual({bool(mode&0x40) for mode in modes},
+                             {False,True} if texture==0x20 else {False})
             self.assertEqual({bool(mode&0x80) for mode in modes},{False,True})
         self.assertLessEqual(len(d.helper()),d.SIZE)
         self.assertLessEqual(d.BANK_ENTRY+len(d.bank_helper()),0x7250)
@@ -83,12 +85,33 @@ class PostTrevorDirectorTests(unittest.TestCase):
         self.assertTrue({0,32,48}<=seen,seen)
         self.assertEqual(seq.execute(d.END,cpu).memory[0x83e0],17)
 
-    def test_banana_windows_and_earlier_clock_are_preserved(self):
-        for tick in range(11967,d.END,17):
-            clock=tick+(4000 if tick>=d.MONTAGE_START else 0)
-            original=((clock>>4)&31)|((clock>>5)&32)
-            if tick<d.FIRST_ROTATOR:
-                self.assertEqual(d.frame_at(tick),original,tick)
+    def test_early_rotators_are_tunnels_and_bananas_enter_after_trevor(self):
+        from music_timing import tick_at_bar
+
+        self.assertTrue(all(32<=d.frame_at(tick)<60 for tick in range(d.FIRST_ROTATOR,d.START)))
+        cpu=None
+        for bar in range(32, 40):
+            aligned = (tick_at_bar(bar) // 16) * 16 + 32
+            period, base = (12,48) if bar % 2 else (16,32)
+            direction = -1 if d.FIRST_TUNNELS[bar-32]&0x80 else 1
+            cpu = seq.execute(aligned,cpu)
+            phase = cpu.memory[0x83ed] - base
+            cpu = seq.execute(aligned+15,cpu)
+            self.assertEqual(cpu.memory[0x83ed],base+phase)
+            cpu = seq.execute(aligned+16,cpu)
+            self.assertEqual(cpu.memory[0x83ed],base+(phase+direction)%period)
+        from ribbon_dance import FRONT_PREP_STEPS
+        for bar in (*range(32,40),56,57):
+            end = FRONT_PREP_STEPS[0] if bar == 39 else tick_at_bar(bar+1)
+            for tick in (tick_at_bar(bar),tick_at_bar(bar)+32,end-1):
+                cpu=seq.execute(tick,cpu)
+                m=cpu.memory
+                self.assertEqual(m[0x83e0],6,tick)
+                self.assertEqual(m[0x83ed],d.frame_at(tick),tick)
+                self.assertLess(m[0x83ed],60,tick)
+                self.assertGreaterEqual(m[0x83ed],32,tick)
+        cpu=seq.execute(d.START,cpu)
+        self.assertLess(cpu.memory[0x83ed],32)
 
     def test_overlay_on_late_bananas_and_not_in_eye_shot(self):
         from girl_eyes import START as eyes_start, END as eyes_end
