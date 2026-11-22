@@ -6,6 +6,14 @@ import outro_loader as loader
 from ribbon_inbetweens import decompress
 
 class OutroTests(unittest.TestCase):
+    def test_both_restored_display_lists_loop_to_their_own_page(self):
+        cpu=seq.execute(text.START)
+        memory=cpu.memory
+        seq.execute(0,cpu)
+        for base in (0x8000,0x8400):
+            jvb=base+text.BITMAP_JVB_HIGH-2
+            self.assertEqual(bytes(memory[jvb:jvb+3]),bytes((0x41,0,base>>8)))
+
     def test_early_outro_never_restores_the_old_frame_between_callbacks(self):
         from test_engine_cache import TrackedMemory
         memory=TrackedMemory(seq.XEX.read_bytes());cpu=seq.MPU(memory=memory)

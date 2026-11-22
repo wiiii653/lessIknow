@@ -9,6 +9,21 @@ import json
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class TrevorBangTests(unittest.TestCase):
+    def test_rotator_words_preserve_punch_positions_on_replay(self):
+        from music_timing import tick_at_bar
+        from post_trevor_director import FIRST_ROTATOR
+
+        punch = HITS[1]+20
+        cpu = sequence.execute(punch)
+        memory = cpu.memory
+        expected = memory[0xd000:0xd008]
+        sequence.execute(tick_at_bar(104)+16,cpu)
+        sequence.execute(tick_at_bar(105)+16,cpu)
+        sequence.execute(0,cpu)
+        sequence.execute(FIRST_ROTATOR,cpu)
+        sequence.execute(punch,cpu)
+        self.assertEqual(memory[0xd000:0xd008],expected)
+
     def test_every_punch_has_arrival_impact_and_departure(self):
         from rainbow_ball import spin_masks
         from tunnel_ball import masks as large_masks

@@ -250,7 +250,7 @@ def final_mark_inserts():
 
 def card_helper():
     import outro_text as t
-    from outro_palette import CARD_FADE, CARD_FONT_ENTRY
+    from outro_palette import CARD_CLOCK_PENDING, CARD_FADE, CARD_FONT_ENTRY
     c=Code(t.FINAL_CARD_ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     a(0xad,0x83e4);c.branch(0xd0,'card')
@@ -263,7 +263,7 @@ def card_helper():
     c.emit(0xa2,len(t.final_card_display_list())-1);c.label('copy')
     a(0xbd,t.FINAL_CARD_SOURCE);a(0x9d,t.FINAL_CARD_DL);c.emit(0xca);c.branch(0x10,'copy')
     c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait');c.emit(0xc9,128);c.branch(0xb0,'wait')
-    for address,value in ((CARD_FADE,0),(0xd409,t.FONT>>8),(0xd402,t.FINAL_CARD_DL&255),(0xd403,t.FINAL_CARD_DL>>8),(t.STATE_FLAG,3)):
+    for address,value in ((CARD_FADE,CARD_CLOCK_PENDING),(0xd409,t.FONT>>8),(0xd402,t.FINAL_CARD_DL&255),(0xd403,t.FINAL_CARD_DL>>8),(t.STATE_FLAG,3)):
         c.emit(0xa9,value);a(0x8d,address)
     c.label('color');a(0x4c,CARD_UPDATE)
     result=bytes(c.finish());assert t.FINAL_CARD_ENTRY+len(result)<=t.FINAL_MARK_FONT_COPY,len(result)
@@ -366,9 +366,9 @@ def install_card_pages(bank):
 
     c.label('clock');a(0xae,0x24ab);a(0xac,0x24aa);a(0xec,0x24ab)
     c.branch(0xd0,'clock')
-    c.jump(0xad,'started');c.branch(0xd0,'elapsed')
-    c.emit(0xa9,1);c.jump(0x8d,'started')
+    a(0xad,CARD_FADE);c.branch(0x10,'elapsed')
     c.jump(0x8e,'start_hi');c.jump(0x8c,'start_lo')
+    c.emit(0xa9,255);c.jump(0x8d,'previous');c.jump(0x8d,'page')
     c.label('elapsed');c.emit(0x98,0x38);c.jump(0xed,'start_lo')
     c.jump(0x8d,'low');c.emit(0x8a);c.jump(0xed,'start_hi')
     # A page takes four high-byte steps. Rebase at the end of the carousel,
@@ -398,7 +398,7 @@ def install_card_pages(bank):
     c.label('publish');c.emit(0x68);a(0x8d,CARD_FADE);c.emit(0x60)
 
     c.labels['read_lo']=c.labels['read']+1;c.labels['read_hi']=c.labels['read']+2
-    for label,value in (('started',0),('start_hi',0),('start_lo',0),('low',0),
+    for label,value in (('start_hi',0),('start_lo',0),('low',0),
                         ('previous',255),('page',255),('next_page',0)):
         c.label(label);c.emit(value)
     c.label('quarters');c.emit(*(i*16&255 for i in range(cycle_high)))

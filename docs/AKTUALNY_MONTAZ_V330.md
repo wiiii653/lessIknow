@@ -1,26 +1,28 @@
-# Aktualny montaż — v388
+# Current Post-Trevor Timeline
 
-Czas podany według licznika ticków playera. Wydanie 125 przywraca tekstury i 32 fazy całej mozaiki z wydania 119. Terminal wchodzi w takcie 112, jak w wydaniu 112.
+This page records the current post-Trevor scene cuts. Times use the v035
+player's integer update counter (ticks). The latest approved release is v390 /
+stereo 133; the timing below describes the current source montage and should be
+checked against a newly generated build JSON after timing edits.
 
-| Rzeczywiste ticki | Ujęcie |
-|---|---|
-| 11967–14958 | pierwsze rotatory: wyłącznie tunele spiralne i organiczne; zmiany kierunku i tempa co takt |
-| 20942–21689 | tunel przed wsadem, sterowany przez directora |
-| 23934–29655 | wejście i walka Trevora; 13 ciosów z piłkami |
-| 29656–41883 | montaż po Trevorze; pierwsze banany od pierwszego callbacku po walce, faza zachowana |
-| 29917–41883 | 32 krótkie przebiegi co takt: obrane/kiść, tunele spiralne i organiczne, zmienne kierunki i prędkości |
-| 38892–39378 | banany przed oczami z BUM/BAM i dymkami |
-| 39379–40126 | oczy dziewczyny, wewnątrz montażu |
-| 40127–41135 | banany po oczach z BUM/BAM i odlatującymi dymkami, co takt 108–109 zmiana ruchu |
-| 41884–51231 | terminal credits/greetz na stałym kadrze leżącego chłopca |
-| 51232–51979 | finał z orbitami i fade |
-| od 51980 | końcowa karta z gwiazdą i orbitami, muzyka gra do 5:00 |
+| Player ticks | Scene |
+|---:|---|
+| 11,967–14,958 | First rotators: spiral and organic tunnels; direction and speed change each bar |
+| 20,942–21,689 | Tunnel before the dunk, selected by the director |
+| 23,934–29,655 | Trevor enters and fights; 13 hits with balls |
+| 29,656–41,883 | Post-Trevor montage; bananas begin on the first callback after the fight, preserving phase |
+| 29,917–41,883 | 32 short bar-long passages: peeled/golden bananas, spiral and organic tunnels, changing directions and speeds |
+| 38,892–39,378 | Bananas before the eyes, with BUM/BAM and speech bubbles |
+| 39,379–40,126 | Girl's eyes within the montage |
+| 40,127–41,135 | Bananas after the eyes, with BUM/BAM and departing bubbles; motion changes on bars 108–109 |
+| 41,884–51,231 | Terminal credits and greetz over the still image of the boy lying down |
+| 51,232–51,979 | Final shot with orbiting sprites and fade |
+| 51,980 onward | Final card with star and orbits; music continues to five minutes |
 
-Po Trevorze pierwsza zmiana kierunku/tempa wypada na takcie 80 (tick 29917), kolejne
-cięcia następują co takt. Wewnętrzne przesunięcie zegara motywów o 4000 ticków
-pozostaje elementem wyboru tekstury. Karta końcowa wchodzi na takcie 139,
-około 4:20.7 od startu. Muzyka kończy się po 5:00.
+The first post-Trevor direction/speed change occurs on bar 80 (tick 29,917);
+subsequent cuts occur once per bar. A 4,000-tick internal motif-clock offset
+selects the texture. The final card starts on bar 139, about 4:20.7 after
+playback begins. The music ends after five minutes.
 
-Historia wcześniejszego montażu i decyzji jest opisana w `docs/V248_*`,
-`docs/V260_*` oraz `docs/V330_KROTSZY_MONTAZ_I_DIRECTOR.md`. Poprzednia tabela
-v256 została usunięta z tego dokumentu, żeby nie mylić jej z aktualnym układem.
+Earlier editorial decisions are recorded in the historical V248, V260 and V330
+notes. Those records are archival and may describe superseded edits.

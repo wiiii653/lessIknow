@@ -1,6 +1,6 @@
 """Banked rotozoom and polar mosaic. 64 runtime frame IDs, 160x96, ANTIC E.
 
-Banana banks store both dense 32-frame motifs using page-bounded RLE.
+Banana banks hold four raw frames from either of the two 32-phase motifs.
 Tunnel banks keep four raw frames and $7C00
 copy code. Only the inactive RAM framebuffer is written;
 ANTIC never fetches from a banked window.
@@ -215,7 +215,7 @@ def banks():
     code=helper()
     for bank in range(16):
         if bank<8:
-            from banana_variants import bank as banana_bank
+            from banana_variants import raw_bank as banana_bank
             yield banana_bank(bank)
             continue
         out=bytearray(16384)

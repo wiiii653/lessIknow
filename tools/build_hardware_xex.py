@@ -18,6 +18,8 @@ REFERENCE = ROOT / 'releases/less-i-know-demo-release-058-stereo.xex'
 REFERENCE_SHA256 = 'f3c14bc36b96220ead8fbe24df2e0dfc7ef5d30371d5cd83d11f808b62706b8f'
 APPROVED_STEREO = ROOT / 'releases/less-i-know-demo-release-133-stereo.xex'
 APPROVED_STEREO_SHA256 = 'e56ea5f05ba6af99a019612fbfd283b0ed948725c90fc56bab1459a16ef5c43f'
+RELEASE_122 = ROOT / 'releases/less-i-know-demo-release-122-stereo.xex'
+RELEASE_122_SHA256 = 'fb19ccf0c1cad0b5a9950fb44ee36e577ac6af84e774782629d6763d8e11c0d4'
 LOW_ENDS = {0x0400: 0x07df, 0x0800: 0x08bf, 0x0900: 0x0976,
             0x0980: 0x09ff, 0x0a00: 0x0bff}
 
@@ -27,11 +29,12 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def with_approved_music(data, *, earlier_percussion=False):
+def with_approved_music(data, *, earlier_percussion=False, release_122=False):
     """Copy the approved stereo stream and decoder tables into a raw prototype."""
-    approved = APPROVED_STEREO.read_bytes()
-    require(hashlib.sha256(approved).hexdigest() == APPROVED_STEREO_SHA256,
-            'Approved stereo release 133 changed')
+    approved = (RELEASE_122 if release_122 else APPROVED_STEREO).read_bytes()
+    expected_hash = RELEASE_122_SHA256 if release_122 else APPROVED_STEREO_SHA256
+    require(hashlib.sha256(approved).hexdigest() == expected_hash,
+            'Approved stereo music source changed')
     entries = list(segments(approved))
     bank_size = 0x4000
     music_end = 7 * bank_size + 0x0b10
@@ -47,7 +50,7 @@ def with_approved_music(data, *, earlier_percussion=False):
         music.extend(bank)
     require(len(music) == 8 * bank_size, 'Incomplete approved music banks')
 
-    if earlier_percussion:
+    if earlier_percussion or release_122:
         from build_audio_revision import decode, encode, music_packets, training_build_and_drop
 
         dictionary = [lo | mi << 8 | hi << 16
@@ -55,7 +58,23 @@ def with_approved_music(data, *, earlier_percussion=False):
         packets = decode(music[:music_end], dictionary)
         source = music_packets(data)
         require(len(packets) == len(source) == 59833, 'Unexpected music update count')
-        training_build_and_drop(packets, source)
+        if release_122:
+            from build_sequence import DANCE_TICK
+            from gym_practice import PRACTICE_TICK
+            for tick in range(DANCE_TICK):
+                packet = bytearray(packets[tick])
+                packet[5] &= 0xf0
+                if tick >= PRACTICE_TICK:
+                    # Ease both bass channels down through the training shots.
+                    # Return to the approved level before the dancer enters.
+                    fade_in = min(1.0, (tick - PRACTICE_TICK) / 64)
+                    fade_out = min(1.0, (DANCE_TICK - tick) / 64)
+                    gain = 1.0 - 0.2 * min(fade_in, fade_out)
+                    for control in (3, 12):
+                        packet[control] = (packet[control] & 0xf0) | round((packet[control] & 15) * gain)
+                packets[tick] = bytes(packet)
+        else:
+            training_build_and_drop(packets, source)
         stream, dictionary = encode(packets)
         require(len(stream) <= music_end, 'Music exceeds existing bank allocation')
         music = stream.ljust(music_end, b'\xff')
@@ -181,19 +200,29 @@ if __name__ == '__main__':
     parser.add_argument('output', type=Path)
     parser.add_argument('--replace-dev', action='store_true',
                         help='replace only build/hardware-dev.xex')
+    parser.add_argument('--animated-loading', action='store_true',
+                        help='show the finale star during bank loading')
+    parser.add_argument('--full-rate-loading', action='store_true',
+                        help='use the full finale star animation in a loader VBI')
     parser.add_argument('--fast-clear', action='store_true',
                         help='use the experimental unrolled staging clear')
     parser.add_argument('--approved-music', action='store_true',
                         help='use the exact stereo soundtrack from release 133')
     parser.add_argument('--earlier-percussion', action='store_true',
                         help='use the hall snare, training swell and bass drop in the release 133 mix')
+    parser.add_argument('--release-122-music', action='store_true',
+                        help='use release 122 music with the opening kick muted')
     args = parser.parse_args()
     if args.earlier_percussion and not args.approved_music:
         parser.error('--earlier-percussion requires --approved-music')
     source = args.source.read_bytes()
     if args.approved_music:
-        source = with_approved_music(source, earlier_percussion=args.earlier_percussion)
+        source = with_approved_music(source, earlier_percussion=args.earlier_percussion,
+                                     release_122=args.release_122_music)
     result = build(source, fast_clear=args.fast_clear)
+    if args.animated_loading or args.full_rate_loading:
+        from animated_loading import install
+        result = install(result, full_rate=args.full_rate_loading)
     if args.replace_dev:
         require(args.output.resolve() == ROOT / 'build/hardware-dev.xex',
                 '--replace-dev is restricted to build/hardware-dev.xex')

@@ -134,6 +134,24 @@ class StoryFinaleTests(unittest.TestCase):
             glyphs=final_mark(phase)[1]
             self.assertEqual(bytes(m[font:font+len(glyphs)]),glyphs)
 
+    def test_final_card_restarts_on_its_first_page_after_a_replay(self):
+        from outro_text import FINAL_CARD_PAGES, FINAL_CARD_TEXT
+
+        cpu=sequence.execute(START)
+        memory=cpu.memory
+        sequence.execute(END,cpu)
+        memory[0x24ab]=4
+        sequence.execute(END,cpu)
+        self.assertEqual(bytes(memory[FINAL_CARD_TEXT:FINAL_CARD_TEXT+40]).decode().strip(),
+                         FINAL_CARD_PAGES[1][0])
+
+        sequence.execute(0,cpu)
+        sequence.execute(START,cpu)
+        memory[0x24ab]=8
+        sequence.execute(END,cpu)
+        self.assertEqual(bytes(memory[FINAL_CARD_TEXT:FINAL_CARD_TEXT+40]).decode().strip(),
+                         FINAL_CARD_PAGES[0][0])
+
     def test_four_stars_orbit_on_a_held_bitmap(self):
         cpu=None;positions=set();masks=set();p=None
         for phase in range(32):

@@ -8,6 +8,7 @@ BODY_ENTRY = 0xffb8
 CARD_ENTRY = 0x3c00  # Late-loaded runtime, after the shared scanline pool.
 CARD_FONT_ENTRY = 0x3d20
 CARD_FADE = 0x0dd5
+CARD_CLOCK_PENDING = 0x80  # Also maps to the zero fade row in the DLI.
 CARD_DLI_VCOUNTS = (55,63,71)
 CARD_RESTORE_VCOUNT = 79
 CARD_RESTORE_COLORS = (0x0e,0x9a,0x2c)

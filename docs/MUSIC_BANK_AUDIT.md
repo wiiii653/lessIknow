@@ -1,45 +1,44 @@
-# Audyt banków muzyki v035
+# v035 Music Bank Audit
 
-Źródło: `less-i-know-release-v035.xex`. Banki numerowane od 1, po 16 384 B.
+Source: `less-i-know-release-v035.xex`. Banks are numbered from 1 and contain
+16,384 bytes each.
 
-| Banki | Odczytane przez dekoder | Niewykorzystane |
-| --- | ---: | ---: |
-| 1–7 | 114 688 B łącznie | 0 B |
-| 8 | 2 820 B | 13 564 B |
-| 9–14 | 0 B | 98 304 B |
-| Razem | **117 508 B** | **111 868 B** |
+| Banks | Bytes read by decoder | Unused bytes |
+|---|---:|---:|
+| 1–7 | 114,688 total | 0 |
+| 8 | 2,820 | 13,564 |
+| 9–14 | 0 | 98,304 |
+| Total | **117,508** | **111,868** |
 
-Loader rezerwuje 229 376 B (224 KiB). Dekoder wykorzystuje 114,754 KiB,
-a 109,246 KiB (48,77%) pozostaje nieodczytane. Sześć całych banków daje
-96 KiB do odzyskania; dodatkowe 13,246 KiB leży na końcu ósmego banku.
+The loader reserves 229,376 B (224 KiB). The decoder reads 114.754 KiB and
+does not read 109.246 KiB (48.77%). Six whole banks account for 96 KiB; another
+13.246 KiB is at the end of bank 8.
 
-## Istotny szczegół końca utworu
+## End-of-song marker
 
-Ostatni bajt różny od `$FF` jest pod offsetem 2818 w banku 8. Dekoder czyta
-jeszcze `$FF` pod offsetem 2819 jako znacznik końca. Dopiero offsety
-2820–16383 są nieużywane. Samo obcięcie wszystkich końcowych `$FF` usunęłoby
-również wymagany znacznik końca.
+The final byte other than `$FF` is at offset 2818 in bank 8. The decoder reads
+`$FF` at offset 2819 as its end marker. Only offsets 2820–16383 are unused.
+Trimming every trailing `$FF` would remove the required marker.
 
-## Jak sprawdzono
+## Method and limits
 
-`tools/audit_music_banks.py --trace` wykonuje oryginalne procedury restartu,
-dekodowania i DLI v035 w py65 z modelowanym oknem banków `$4000–$7FFF`.
-Rejestruje każdy odczyt z banków aż do ustawienia flagi końca `$24C8`.
-Wynik: 59 833 aktualizacje, ostatni odczyt w banku 8; banki 9–14 nieczytane.
-To badanie dekodera, nie profiler ANTIC-a ani pomiar na fizycznym Atari.
+`tools/audit_music_banks.py --trace` executes the v035 restart, decoder and DLI
+procedures in py65 with a modeled `$4000–$7FFF` bank window. It records bank
+reads until the end flag at `$24C8`. The trace covered 59,833 updates; the last
+read was in bank 8, and banks 9–14 were not read. This is a decoder audit, not
+an ANTIC profiler or physical Atari measurement.
 
-Dodatkowo w testowym `build/music-padding-probe.xex` zastąpiono końcówkę
-banku 8 od offsetu 2820 oraz całe banki 9–14 wartością `$55`. Porównanie
-z oryginałem w Atari800 PAL/1088XE wykazało 2 941 200 zgodnych bajtów
-rejestrów stereo POKEY (~819 s odtwarzania, cały utwór objęty testem).
-Początkową ciszę wyrównano raz; podczas utworu nie przesuwano próbek.
+A probe XEX replaced bank 8 from offset 2820 and banks 9–14 with `$55`.
+Atari800 PAL / emulated 1088 XE comparison found 2,941,200 identical stereo
+POKEY register bytes (about 819 seconds, covering the whole song). Initial
+silence was aligned once; samples were not shifted during playback.
 
-Oryginalny XEX i aktualny build produkcji nie zostały odchudzone ani
-zmodyfikowane przez ten audyt. Reprodukcja analizy (py65 z requirements-dev.txt):
+The audit did not trim or modify the original XEX or the current production
+build. Reproduce it with py65 from `requirements-dev.txt`:
 
 ```sh
 python tools/audit_music_banks.py --trace --json build/music-bank-audit.json
 ```
 
-Wniosek: v035 wymaga **ośmiu**, a nie siedmiu banków danych. Stare założenie
-o siedmiu bankach w analizie v024 nie nadaje się do zastosowania w v035.
+Conclusion: v035 requires **eight** banks of music data, not seven. The older
+seven-bank assumption from the v024 analysis does not apply to v035.

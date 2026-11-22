@@ -1,29 +1,19 @@
-# 4. Bankowanie pamięci
+# 4. Bank Switching and Detection
 
-## 4.1. PORTB — podstawy
+## 4.1. PORTB
 
-`[ODCZYT]` Rejestr `$D301` (PORTB) na Atari XL/XE ma 8 bitów:
+On Atari XL/XE, `$D301` is PORTB. On a standard 130XE, its bits control OS and
+BASIC ROM visibility, CPU banks and ANTIC banks. One-megabyte expansions
+repurpose different bits to address 64 banks of 16 KiB. Selector bytes are
+therefore hardware-specific.
 
-| Bit | Znaczenie w standardzie 130XE |
-| ---: | --- |
-| 0 | 1 = ROM OS widoczny, 0 = RAM pod ROM |
-| 1 | 1 = BASIC widoczny |
-| 2–3 | wybór banku CPU w oknie `$4000–$7FFF` |
-| 4–5 | wybór banku ANTIC |
-| 6–7 | nieużywane |
+The selector map documented here was checked on the user's 1 MB Rambo-style
+configuration. The test covered all 64 candidate selectors and reported
+`BANK MAP PASSED`. It is evidence for that machine only.
 
-`[ODCZYT]` Rozszerzenia 1 MB muszą zaadresować 64 banki po 16 KiB, czyli
-potrzebują **6 bitów** numeru banku. Klony (Rambo 1 MB, Newell, Compy-Shop,
-Ultimate 1 MB) robią to różnie — bit 1, 4 lub 7 mogą być przejęte na numer
-banku. Ta sama wartość `$D301` znaczy więc co innego na różnych maszynach.
+## 4.2. Selector candidates
 
-`[ODCZYT]` Na testowanym klonie działa zestaw bitów **1, 2, 3, 5, 6, 7**,
-z bitem 0 = 1 i bitem 4 = 0. Potwierdza to test sprzętowy
-`avg-bank-map-diagnostic-003.xex` (`BANK MAP PASSED`, 64 rozdzielone banki).
-
-## 4.2. 64 selektory używane przez loader
-
-`[ODCZYT]` `tools/school_portrait_bank.py`, etykieta `candidates`:
+`tools/school_portrait_bank.py` defines these 64 candidate PORTB values:
 
 ```
 81 83 85 87 89 8B 8D 8F   A1 A3 A5 A7 A9 AB AD AF
@@ -32,124 +22,51 @@ C1 C3 C5 C7 C9 CB CD CF   E1 E3 E5 E7 E9 EB ED EF
 41 43 45 47 49 4B 4D 4F   61 63 65 67 69 6B 6D 6F
 ```
 
-To 8 grup × 8 wariantów: bity 5–7 wybierają grupę, bity 1–3 numer w grupie.
+These are eight groups of eight: bits 5–7 select a group and bits 1–3 select
+within that group.
 
-## 4.3. Wykrywanie banków przez oryginalny player (v035)
+## 4.3. Startup detection by the original v035 player
 
-`[ODCZYT]` Pierwszy INIT playera (`$2000`) wykonuje:
-
-1. `PHP/SEI`, wyłącza DMA (`$D400=0`), zeruje `$249C/$249D`;
-2. `LDA #$FF / STA $D301` — ROM OS widoczny;
-3. zapamiętuje bajt spod `$4000` w `$249E`;
-4. z tabel `$2734/$2737` pobiera wskaźnik i kopiuje **14 selektorów**
-   do `$26FC–$2709`;
-5. dla każdego selektora: ustawia PORTB, zapisuje numer do `$4000`,
-   przełącza i sprawdza, czy odczyt się zgadza;
-6. przy niezgodności skacze do `$20BB` (w buildach AVG podmienionym na
-   ekran diagnostyczny).
-
-`[ODCZYT]` Tabele selektorów leżą w **RAM-ie** załadowanym z segmentu XEX
-`$24BD–$28BC`, a nie w ROM-ie. `$2734`/`$2737` to tablice wskaźników do
-właściwych list selektorów.
-
-`[ODCZYT]` 14 wykrytych wartości dla tej konfiguracji:
+The first player INIT at `$2000` selects a table based on the detected memory
+configuration, then probes 14 selectors. It records the results in
+`$26FC–$2709`. In the tested configuration the values are:
 
 ```
 81 83 85 87 89 8B 8D 8F A1 A3 A5 A7 A9 AB
 ```
 
-## 4.4. Dodatkowe banki wideo (`school_portrait_bank.loader`)
+The candidate tables are loaded into RAM from XEX segment `$24BD–$28BC`.
+Pointers at `$2734/$2737` select the appropriate list. Detection writes a
+marker through `$4000`, switches selectors, and checks that the marker reads
+back from the same bank.
 
-`[ODCZYT]` `tools/school_portrait_bank.py`, funkcja `loader(frame, index)`.
-Wywoływana jest 50 razy, z indeksami 0–49.
+## 4.4. Additional video banks
 
-### Indeksy 0 i 1 — wyliczane bez testu
+`tools/school_portrait_bank.py` allocates 50 extra video banks. It uses the
+player's detected selectors as its starting point, then probes the hardcoded
+candidate list to reject aliases. The first two additional selectors are
+derived arithmetically from the detected table rather than individually
+checked; later selectors are found by alias probing.
 
-```
-LDX $26FC          ; pierwszy wykryty selektor
-CPX #$81
-BEQ two            ; typowa konfiguracja 1088XE
-LDA #4*(index+1)
-JMP add
-two: LDA #2*(index+1)
-add: CLC
-     ADC $2709     ; ostatni wykryty selektor (baza)
-     STA $D301
-     AND #$FE
-     STA $24B3+index
-```
+The resulting selector values are stored at `$24B3–$24B5` and `$08C3–$08F1`.
+The helper maps a logical index through `bank_value(index)`; code should use
+that helper rather than assume a raw logical bank number is a PORTB value.
 
-`[WNIOSEK]` To jedyne dwa banki, których unikalność **nie jest sprawdzana**.
-Dla konfiguracji z pierwszym selektorem `$81` dają `$AD` i `$AF`.
+## 4.5. Known limits
 
-### Indeksy 2–49 — sondowanie
+- The first two derived selectors are not independently checked for aliasing.
+- The no-free-bank path loops after setting the background colour; it does not
+  print a diagnostic message.
+- Marker-based alias probing has a theoretical false positive if an existing
+  bank happens to contain the test marker at the probed location.
+- The tests detect selector aliasing; they do not prove that every possible
+  physical bank exists on arbitrary expansion hardware.
+- Some runtime helpers read and restore `$D301`. The tested expansion supports
+  that behavior; clones where PORTB reads differ need separate validation.
 
-Dla każdego kandydata z listy 64:
+## 4.6. Hardware evidence
 
-1. wybierz bank, zapisz do `$4000` znacznik `$55`;
-2. dla wszystkich już znanych banków sprawdź, czy któryś czyta `$55`;
-3. jeśli tak, wpisz `$AA` i sprawdź ponownie — zgodność oznacza alias;
-4. przy aliasie przejdź do następnego kandydata;
-5. po znalezieniu wolnego banku zapisz `selektor & $FE` do
-   `bank_value(index)`.
-
-`[ODCZYT]` `bank_value(index)`:
-
-```
-index < 3   → $24B3 + index
-index >= 3  → $08C0 + index
-```
-
-Czyli selektory trafiają do `$24B3–$24B5` oraz `$08C3–$08F1`.
-
-### Ścieżka błędu
-
-```
-no_bank:
-    LDA #$32
-    STA $D01A      ; COLBK = $32
-    JMP no_bank
-```
-
-`[ODCZYT]` Brak banku objawia się **wyłącznie zmianą koloru tła** i pętlą.
-Nie ma tekstu ani numeru indeksu. `[WNIOSEK]` To najgorszy możliwy objaw
-diagnostyczny — wygląda jak zawieszenie dema.
-
-### Kopiowanie zawartości
-
-`[ODCZYT]` Po wyborze banku loader kopiuje `len(frame)/256` stron:
-
-```
-LDA $8000,Y
-STA $4000,Y
-INY / BNE ...
-INC źródło+1 / INC cel+1 / DEX / BNE ...
-```
-
-Źródłem jest segment XEX w `$8000–$BFFF`, celem wybrany bank w
-`$4000–$7FFF`. Po kopiowaniu PORTB jest przywracany ze stosu.
-
-`[ODCZYT]` `LDA $D301 / PHA` na początku i `PLA / STA $D301` na końcu
-zakładają, że PORTB da się odczytać. Na testowanym sprzęcie działa;
-na klonach z nieczytelnym PORTB to miejsce wymaga zmiany.
-
-## 4.5. Weryfikacja na sprzęcie
-
-`[ODCZYT]` `releases/avg-bank-map-diagnostic-003.xex` (485 B) sprawdza
-wszystkie 64 selektory: każdemu przypisuje unikalny znacznik w jego banku
-i drugim przebiegiem sprawdza brak aliasów. Wynik na Atari:
-**`BANK MAP PASSED`**.
-
-`[WNIOSEK]` Mapa bitów jest poprawna dla tego klonu; problem nie leżał
-w liście selektorów.
-
-## 4.6. Znane ryzyka
-
-- `[ODCZYT]` Indeksy 0/1 nie są weryfikowane — przy innym klonie arytmetyka
-  może trafić w zajęty bank.
-- `[ODCZYT]` `no_bank` nie raportuje błędu na ekranie.
-- `[ZAŁOŻENIE]` Fałszywe trafienie testu `$55`/`$AA` jest możliwe, jeśli
-  znany bank ma taki bajt pod `$4000`; wpływa to tylko na wybór banku,
-  nie na poprawność danych.
-- `[ZAŁOŻENIE]` Test unikalności nie sprawdza, czy bank istnieje fizycznie —
-  wykrywa wyłącznie aliasy.
+`releases/avg-bank-map-diagnostic-003.xex` tested all 64 selectors by writing
+unique markers and checking that no two selectors alias. It displayed
+`BANK MAP PASSED` on the tested machine. Do not generalize this result to other
+memory-expansion designs without a corresponding hardware test.

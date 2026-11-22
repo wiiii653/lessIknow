@@ -89,9 +89,11 @@ class CacheTests(unittest.TestCase):
         self.assertNotEqual(self.pixels(cpu,True),decorated)
         self.assertEqual(cpu.memory[0xd01d],3)
 
-    def test_reclaimed_trevor_slots_hold_only_allocated_midpoint_data(self):
+    def test_reclaimed_trevor_slots_hold_only_allocated_scene_data(self):
         from school_portrait_bank import bank_value
         from ribbon_inbetweens import payloads
+        from title_plasma import mask_pages
+        title_pages, _ = mask_pages()
         cpu=self.cpu();m=cpu.memory
         for index in range(24,40):
             m[0xd301]=m[bank_value(index)]
@@ -104,7 +106,13 @@ class CacheTests(unittest.TestCase):
                     self.assertEqual(source,end)
                     self.assertEqual(bytes(m[source:source+len(data)]),data)
                     end=source+len(data)
-                self.assertFalse(any(m[end:0x5400]))
+                expected = bytearray(0x5400 - end)
+                for data, (bank, page) in title_pages.items():
+                    if bank == index:
+                        offset = (page << 8) - end
+                        self.assertGreaterEqual(offset, 0)
+                        expected[offset:offset+256] = data
+                self.assertEqual(bytes(m[end:0x5400]), expected)
             else:
                 from final_boy import packed
                 self.assertEqual(bytes(m[0x4a00:0x5400]),packed())

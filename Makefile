@@ -6,8 +6,8 @@ all: build/visual-prototype-dev.xex build/visual-prototype-dev.json build/hardwa
 
 hardware: build/hardware-dev.xex
 
-build/hardware-dev.xex: build/visual-prototype-dev.xex tools/build_hardware_xex.py tools/build_audio_revision.py tools/build_compact_xex.py tools/build_avg_late_lowram.py releases/less-i-know-demo-release-058-stereo.xex releases/less-i-know-demo-release-133-stereo.xex
-	$(PYTHON) tools/build_hardware_xex.py $< $@ --replace-dev --approved-music --earlier-percussion
+build/hardware-dev.xex: build/visual-prototype-dev.xex tools/build_hardware_xex.py tools/build_audio_revision.py tools/build_compact_xex.py tools/build_avg_late_lowram.py releases/less-i-know-demo-release-058-stereo.xex releases/less-i-know-demo-release-122-stereo.xex
+	$(PYTHON) tools/build_hardware_xex.py $< $@ --replace-dev --approved-music --release-122-music
 
 check: build/visual-prototype-dev.xex build/visual-prototype-dev.json build/kaleidoscope.xex
 	$(PYTHON) -c "import py65"
@@ -28,7 +28,7 @@ build/gym-v056.rgb: assets/art/source/act1_gym_dance_v056.png
 	mkdir -p build
 	$(CONVERT) $< -filter point -resize 160x192\! -depth 8 rgb:$@
 
-VIDEO_INPUTS = assets/art/reference/v175/basketball.bin assets/art/reference/v175/arena-pan.bin build/kaleidoscope.gray build/gym-v056.rgb \
+VIDEO_INPUTS = assets/art/source/title_city_reference.png assets/art/reference/v175/basketball.bin assets/art/reference/v175/arena-pan.bin build/kaleidoscope.gray build/gym-v056.rgb \
     build/ribbon-dancer-v136.rgb build/ribbon-side-v142.rgb build/ribbon-overhead-v145.rgb build/ribbon-inbetweens-v166.rgb build/ribbon-inbetweens-v171.rgb build/ribbon-inbetweens-v173.rgb build/arena-exterior-v151.rgb build/arena-interior-v151.rgb build/boy-floor-v145.rgb \
     $(addprefix build/dance-v056-,0.rgb 1.rgb 2.rgb 3.rgb) \
     build/school.rgb build/school-neutral.rgb build/school-front.rgb build/north-girl.rgba build/north-girl-close.rgba build/school-girl-side-v033.rgb \
@@ -38,7 +38,7 @@ VIDEO_INPUTS = assets/art/reference/v175/basketball.bin assets/art/reference/v17
     $(addprefix build/trevor-pmg-,0.rgb 1.rgb) \
     $(addprefix build/trevor-polished-,0.rgb 1.rgb 2.rgb 3.rgb)
 
-build/visual-prototype-dev.xex build/visual-prototype-dev.json &: $(wildcard tools/*.py) less-i-know-release-v035.xex $(VIDEO_INPUTS)
+build/visual-prototype-dev.xex build/visual-prototype-dev.json &: $(wildcard tools/*.py) less-i-know-release-v035.xex assets/music/v035-bass-attacks.txt $(VIDEO_INPUTS)
 	$(PYTHON) tools/build_bitmap_sequence.py --replace
 
 build/kaleidoscope.xex: less-i-know-release-v035.xex build/kaleidoscope.gray tools/build_visual_prototype.py tools/extract_music.py

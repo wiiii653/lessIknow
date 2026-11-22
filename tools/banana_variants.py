@@ -1,8 +1,4 @@
-"""Dense full-turn banana motifs with page-bounded RLE playback.
-
-Independent input/output cursors avoid per-packet 16-bit pointer updates.
-Only the inactive framebuffer is written; music NMI needs no shared scratch.
-"""
+"""Raw banana animation banks and RLE tools for inspecting older builds."""
 from functools import lru_cache
 from build_sequence import Code
 from music_timing import tick_at_bar
@@ -83,10 +79,7 @@ def selector_inserts():
     a(0xad,0x83fa);c.emit(0xc9,255);c.branch(0xf0,'layout');c.emit(0xa9,255);a(0x8d,CACHE)
     c.label('layout');a(0xad,0x83e6);c.emit(0x29,4,0x4a,0x4a,0x49,1,0xaa);a(0xbd,DL_KEYS);c.emit(0xc9,1);c.branch(0xf0,'index');c.emit(0xa9,255);a(0x8d,CACHE)
     c.label('index');a(0xad,0x83ed);c.emit(0x4a,0x4a,0xaa)
-    from banana_cache import FLAG, SELECT
-    a(0xad,FLAG);c.branch(0xf0,'selected');c.emit(0xc9,2);c.branch(0xf0,'raw')
-    a(0x20,SELECT);c.emit(0x60)
-    c.label('raw');c.emit(0x8a);a(0x2c,KEY);c.branch(0x50,'selected');c.emit(0x18,0x69,37,0xaa)
+    c.emit(0x8a);a(0x2c,KEY);c.branch(0x50,'selected');c.emit(0x18,0x69,38,0xaa)
     c.label('selected');c.emit(0x60)
     select=bytes(c.finish());assert SELECT_ENTRY+len(select)<=0xeda0
     return [(VARIANT_ENTRY,variant),(EYE_MAP_ENTRY,eye_map),(SELECT_ENTRY,select)]
@@ -224,12 +217,18 @@ def bank(index):
     code=decoder();out[DECODER-0x4000:DECODER-0x4000+len(code)]=code
     return bytes(out)
 
-def memory_report():
+def raw_bank(group, peeled=False):
     import mosaic
-    sizes=[sum(map(len,streams(i))) for i in range(8)]
-    code=len(mosaic.helper(HELPER,copy_entry=COPY,cache_key=KEY,banana_only=True,cache_address=CACHE))+sum(map(len,entry_helpers()))+len(decoder())+16
-    return dict(variants=2,frames_per_variant=32,banks=8,packed_bytes=sum(sizes),code_bytes_per_bank=code,free_bytes=8*(16384-code)-sum(sizes),payload_bytes_per_bank=sizes,raw_symmetry=False,
-                runtime_raw_banks=16,reused_title_banks=list(range(40,49)),
-                runtime_raw_bitmap_bytes=64*3840,runtime_raw_helper_bytes=16*981,
-                runtime_raw_bank_free_bytes=16*(16384-15360-981),
-                startup_packed_archive_only=True)
+
+    frames = b''.join(packed(group * 4 + i, peeled) for i in range(4))
+    code = mosaic.helper(ENTRY, cache_key=KEY, banana_only=True,
+                         cache_address=CACHE, raw=True, peeled=peeled)
+    assert len(frames) == ENTRY - 0x4000
+    assert len(frames) + len(code) <= 16384
+    return (frames + code).ljust(16384, b'\0')
+
+
+def memory_report():
+    return dict(variants=2, frames_per_variant=32, runtime_raw_banks=16,
+                bunch_banks=list(range(3, 11)), peeled_banks=list(range(41, 49)),
+                runtime_raw_bitmap_bytes=64 * 3840)

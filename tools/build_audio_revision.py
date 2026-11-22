@@ -269,17 +269,20 @@ def training_build_and_drop(packets, source):
                     if not packets[tick][5] & 15)
     lead = DANCE_TICK - attack_tick
     opening_kick = [packet[4:6] for packet in packets[DANCE_TICK:kick_end+lead]]
-    bass_tail = (15, 15, 15, 15, 15, 15, 15, 15, 14, 14, 13, 13,
-                 12, 12, 11, 11, 10, 10, 10, 10)
+    bass_tail = (11, 11, 11, 11, 11, 11, 10, 10, 10, 10,
+                 9, 9, 9, 9, 9, 9, 8, 8, 8, 8)
     for elapsed, tick in enumerate(range(attack_tick, kick_end)):
         packet = bytearray(packets[tick])
         packet[4:6] = opening_kick[elapsed]
         if elapsed < len(bass_tail):
+            # Both POKEYs must play the same note and envelope at the cut;
+            # matching levels alone leaves a split or missing bass pitch.
+            bass_pitch = first_bass[2] if tick < DANCE_TICK else packet[2]
+            volume = bass_tail[elapsed]
+            packet[13:15] = packet[4:6]
             for offset in (0, 9):
                 pitch, control = offset + 2, offset + 3
-                if tick < DANCE_TICK:
-                    packet[pitch] = first_bass[pitch]
-                volume = max(packet[control] & 15, bass_tail[elapsed])
+                packet[pitch] = bass_pitch
                 packet[control] = (first_bass[control] & 0xf0) | volume
                 room = VOLUME_BUDGET - volume
                 for voice in (5, 7):

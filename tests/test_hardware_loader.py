@@ -45,8 +45,67 @@ class HardwareLoaderTests(unittest.TestCase):
         self.assertEqual(revised[attack-1][5] & 15, 0)
         self.assertGreater(revised[attack][5] & 15, 0)
         for tick in (attack, DANCE_TICK):
-            self.assertEqual((revised[tick][3] & 15, revised[tick][12] & 15), (15, 15))
+            self.assertEqual((revised[tick][3] & 15, revised[tick][12] & 15), (11, 11))
         self.assertEqual(revised[DANCE_TICK+50:], baseline[DANCE_TICK+50:])
+
+    @unittest.skipIf(MPU is None, 'py65 required')
+    def test_animated_loading_advances_existing_refresh_and_preserves_bank_data(self):
+        from animated_loading import install, MARK
+
+        animated = install(self.result)
+        original = list(segments(self.result))
+        entries = list(segments(animated))
+        self.assertEqual(len(entries), len(original) + 3)
+        loading = entries[3][2][40:80]
+        for old, new in zip(original, entries[3:]):
+            if old[0] == 0x3900:
+                self.assertEqual(old[2][:60], new[2][:60])
+                for row in (new[2][60:100], new[2][100:140]):
+                    self.assertEqual(row[:22], loading[:22])
+                    self.assertEqual(row[25:], loading[25:])
+            elif old[0] not in (0x3800, 0x3880, 0x38a0):
+                self.assertEqual(old, new)
+
+        cpu = MPU()
+        for address, end, payload in entries[:6]:
+            cpu.memory[address:end+1] = payload
+        screens = set()
+        for _ in range(5):
+            cpu.sp = 0xfd
+            cpu.memory[0x1fe:0x200] = [0xff, 0x3f]
+            cpu.pc = 0x38a0
+            for _ in range(256):
+                if cpu.pc == 0x4000:
+                    break
+                cpu.step()
+            self.assertEqual(cpu.pc, 0x4000)
+            screens.add(bytes(cpu.memory[MARK:MARK+120]))
+        self.assertEqual(len(screens), 4)
+
+    @unittest.skipIf(MPU is None, 'py65 required')
+    def test_full_rate_loading_decodes_all_finale_poses_and_wraps(self):
+        from animated_loading import FONT, frame_callback, install
+        from outro_text import FINAL_MARK_PHASES, final_mark
+
+        entries = list(segments(install(self.result, full_rate=True)))
+        cpu = MPU()
+        for address, end, payload in entries[:4]:
+            cpu.memory[address:end+1] = payload
+        mark_row = entries[1][2][:40]
+        glyph_start = FONT + next(code for code in mark_row if code)*8
+        _, labels = frame_callback(glyph_start)
+        cpu.memory[labels['old_vbi_0']] = 0
+        cpu.memory[labels['old_vbi_1']] = 4
+        for phase in range(1, FINAL_MARK_PHASES+2):
+            cpu.pc = labels['vbi']
+            cpu.sp = 0xf4
+            for _ in range(3000):
+                if cpu.pc == 0x400:
+                    break
+                cpu.step()
+            self.assertEqual((cpu.pc, cpu.sp), (0x400, 0xf4))
+            _, glyphs = final_mark(phase % FINAL_MARK_PHASES)
+            self.assertEqual(bytes(cpu.memory[glyph_start:glyph_start+len(glyphs)]), glyphs)
 
     def staging_images(self, result):
         images = []

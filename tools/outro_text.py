@@ -31,6 +31,9 @@ BITMAP_SKIP = TEXT_LEAD_RASTERS+(TEXT_ROWS-5)*8
 BITMAP_ROWS = 192-BITMAP_SKIP
 BITMAP_DL = TEXT_DL+TEXT_ROWS*3
 FOOTER_DL = BITMAP_DL+BITMAP_ROWS*3
+# Ordinary bitmap lists have two leading bytes, 192 LMS entries and an
+# eight-byte footer ending in the JVB target's high byte.
+BITMAP_JVB_HIGH = 2 + 192 * 3 + 7
 PROMPT = b'>'
 FINAL_CARD_ENTRY = 0x5F90
 FINAL_CARD_DL = 0xBE80
@@ -48,9 +51,9 @@ FINAL_MARK_SCREEN = 0xBF00   # retired finale framebuffer
 FINAL_CARD_PAGES = (
     ('A\\SLOP BY OGNJEN 2026', 'SILLY VENTURE WE', ''),
     ('MUSIC PLAYER / V035', '4 POKEY UPDATES PER PAL FRAME', 'COMPRESSED BANKED REGISTER STREAM'),
-    ('GRAPHICS MODES', 'ANTIC E BITMAPS / GTIA 11 TITLES', 'ANTIC 4 TERMINAL / ANTIC 5 STAR'),
-    ('HARDWARE EFFECTS', 'PMG BALLS / RIBBONS / FIREWORKS', 'DLI PALETTES / BANKED 1 MB RAM'),
-    ('SCENE DIRECTOR', 'MUSIC TICKS CUE EACH SCENE', 'ROTATORS REVERSE WITHOUT JUMPING'),
+    ('OPENING EFFECTS', 'PROCEDURAL PLASMA / CITY REVEAL', 'TITLE REVEAL / PMG FIREWORKS'),
+    ('LOADER / TEXT EFFECTS', 'ANIMATED STAR / LOADING DOTS', 'RAINBOW DLI GLITCH / TEXT FADES'),
+    ('SCENE DIRECTOR', 'MUSIC TICKS CUE EACH SCENE', 'ANTIC MODES / BANKED 1 MB RAM'),
 )
 FINAL_CARD_TEXT = 0xBF80
 FINAL_CARD_TEXT_ROWS = 3
@@ -403,7 +406,9 @@ def helper():
     c.label('restore_next')
     c.emit(0xE8);c.branch(0xD0,'restore')
     c.label('restore_wait');a(0xAD,0xD40B);c.emit(0xC9,124);c.branch(0x90,'restore_wait');c.emit(0xC9,128);c.branch(0xB0,'restore_wait')
+    c.emit(0xA9,0);a(0x8D,0xD402)
     c.emit(0xA9,0x84);a(0x8D,0xD403)
+    c.emit(0xA9,0x80);a(0x8D,0x83E6)
     c.emit(0xA2,0);c.label('restore_other')
     for page in range(3):
         if page==2:c.emit(0xE0,74);c.branch(0xB0,'restore_other_next')

@@ -5,6 +5,8 @@ adds the static skyline, then composites the lettering and dissolve masks.
 ANTIC repeats each source line three times.
 """
 import math
+from pathlib import Path
+from PIL import Image
 from build_sequence import Code, TITLE_TICK
 from school_portrait_bank import bank_value
 from music_timing import tick_at_beat
@@ -16,17 +18,17 @@ LETTER_PAGES = 5
 PLASMA_STEP_TICKS = 16
 FIRST_BANK = 40
 PLASMA_ENTRY = 0x4000
-WAVE_TABLES = 0x4400
-VERTICAL_WAVE = 0x4c00
-SKYLINE_DATA = 0x4d00
+WAVE_TABLES = 0x4500
+VERTICAL_WAVE = 0x4d00
+SKYLINE_DATA = 0x4e00
 SKYLINE_FIRST_PAGE = 5
 SKYLINE_PAGES = 5
-MASK_BANK = 44
-FADE_BANK = 45
-FADE_RANKS = 0x4000
-FADE_LOOKUP = 0x4a00
-FADE_ENTRY = 0x5000
-TRANSITION_BANK = 47
+FADE_RANKS = 0x5500
+FADE_LOOKUP = 0x5f00
+FADE_ENTRY = 0x6500
+# Whole pages after the arena helpers and in two unused side-actor gaps.
+MASK_PAGE_SLOTS = (*((bank, 0x73, 0x80) for bank in range(20, 24)),
+                   (36, 0x50, 0x54), (37, 0x50, 0x54))
 TRANSITION_START = TITLE_TICK
 CITY_REVEAL_START = 1024
 BAYER_4 = (0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5)
@@ -152,15 +154,26 @@ def zuraw_hue(x,y):
     return None
 
 
+def city_picture():
+    """Convert the supplied Atari picture to the title's 80 by 64 grid."""
+    path = Path(__file__).resolve().parents[1] / 'assets/art/source/title_city_reference.png'
+    # The input is 160x103 display pixels. GTIA pixels are two display pixels
+    # wide and each source row is displayed three times: 34 rows preserve its
+    # height to within one display pixel, anchored to the bottom of the frame.
+    picture = Image.open(path).convert('RGB').crop((1, 0, 159, 103))
+    picture = picture.resize((80, 34), Image.Resampling.NEAREST)
+    colors = {(13,58,115): None, (134,178,234): 9, (155,84,70): 3,
+              (60,60,60): 1, (4,4,4): 0, (0,0,0): 0,
+              (8,5,5): 0, (255,255,0): None}
+    return tuple(colors[pixel] for pixel in picture.getdata())
+
+
+CITY_PICTURE = city_picture()
+
+
 def skyline_hue(x,y):
-    """Return the static night skyline hue, or None for unobstructed sky."""
-    crane=zuraw_hue(x,y)
-    if crane is not None:return crane
-    if y>=54:
-        roof=(57,55,58,56,58,57,55,57,54,58)[x//8]
-        if y>=roof:
-            return 10 if y>roof and x%8 in (2,5) and y%3==0 else 0
-    return None
+    """Return a city hue; the dark blue key exposes the animated plasma."""
+    return CITY_PICTURE[(y-30)*80+x] if y >= 30 else None
 
 
 def letter_ink(code, phase=0):
@@ -409,7 +422,7 @@ def fade_bank():
     lookup = b''.join(fade_lookup(level) for level in range(1,7))
     assert FADE_RANKS+len(ranks)==FADE_LOOKUP
     assert FADE_LOOKUP+len(lookup)==FADE_ENTRY
-    return (ranks+lookup+bytes(c.finish())).ljust(16384,b'\0')
+    return ranks + lookup + bytes(c.finish())
 
 
 def artwork():
@@ -423,6 +436,7 @@ def artwork():
     end = 0
     for address,data in ((PLASMA_ENTRY,renderer),(WAVE_TABLES,b''.join(plasma_tables())),
                          (VERTICAL_WAVE,vertical_wave()),(SKYLINE_DATA,skyline),
+                         (FADE_RANKS,fade_bank()),
                          (0x6800,colors)):
         offset = address-0x4000
         assert offset>=end
@@ -470,7 +484,7 @@ def artwork():
                     for x, y in pixels:
                         ink(x, y, face)
             masks.append(bytes(mask))
-    fade_banks = [fade_bank(), bytes(16384)]
+    fade_banks = [bytes(16384)] * 2
     # Pixel-ordered transition from the full artist to the first title line.
     transition_frames = []
     for step in range(8):
@@ -504,6 +518,40 @@ def artwork():
     for mask in masks + transition_frames + reveal_frames:
         assert not any(mask[LETTER_PAGES*256:])
     return banks + [b''.join(masks).ljust(16384, b'\0')] + fade_banks + transition_banks
+
+
+def mask_pages():
+    """Share identical title mask pages across permanent bank slots."""
+    banks = artwork()
+    frames = [bytes(FRAME_BYTES)]
+    frames += [banks[4][i*FRAME_BYTES:(i+1)*FRAME_BYTES] for i in range(6)]
+    for bank in banks[7:9]:
+        frames += [bank[i*FRAME_BYTES:(i+1)*FRAME_BYTES] for i in range(4)]
+    for bank in banks[7:9]:
+        frames += [bank[i*FRAME_BYTES:(i+1)*FRAME_BYTES] for i in (4, 5)]
+    slots = iter((bank, page) for bank, start, end in MASK_PAGE_SLOTS
+                 for page in range(start, end))
+    locations, descriptors = {}, []
+    for frame in frames:
+        for offset in range(0, LETTER_PAGES * 256, 256):
+            data = frame[offset:offset+256]
+            if data not in locations:
+                location = next(slots, None)
+                if location is None:
+                    raise ValueError('title mask pages exceed permanent bank slots')
+                locations[data] = location
+            descriptors.append(locations[data])
+    return locations, descriptors
+
+
+def install_mask_pages(bank, index, locations):
+    out = bytearray(bank)
+    for data, (owner, page) in locations.items():
+        if owner == index:
+            offset = (page - 0x40) * 256
+            assert not any(out[offset:offset+256]), (index, page)
+            out[offset:offset+256] = data
+    return bytes(out)
 
 
 def build(origin, blank):
@@ -550,15 +598,18 @@ def build(origin, blank):
     # before earlier scene builders reuse their LMS operands.
     a(0xad,STATE);c.emit(0xc9,17);c.branch(0xd0,'outro_seek_done')
     a(0xad,0x0dd0);c.branch(0xf0,'outro_seek_done')
-    from outro_text import START as OUTRO_START
+    from outro_text import BITMAP_JVB_HIGH, RESET_ENTRY, START as OUTRO_START
     a(0xad,STATE+3);c.emit(0xc9,OUTRO_START>>8);c.branch(0x90,'outro_seek_reset');c.branch(0xd0,'outro_seek_done')
     a(0xad,STATE+2);c.emit(0xc9,OUTRO_START&255);c.branch(0xb0,'outro_seek_done')
-    c.label('outro_seek_reset');a(0x20,0xc340)
+    c.label('outro_seek_reset');a(0x20,RESET_ENTRY)
+    # The credits restore copies one saved list into both bitmap pages.
+    # Each page needs its own JVB target to hold its picture until the swap.
+    for page in (0x80,0x84):
+        c.emit(0xa9,page);a(0x8d,(page<<8)+BITMAP_JVB_HIGH)
     c.label('outro_seek_done')
     a(0xad, STATE); c.emit(0xc9, 2); c.branch(0x90, 'invalidate_done')
     c.emit(0xa9, 0xff); c.jump(0x8d, 'mask_key')
     c.label('invalidate_done'); c.emit(0x60)
-    # Invalidation still runs after the intro draw code is reused by bananas.
     c.label('mask_key'); c.emit(0xff)
 
     c.label('draw')
@@ -589,32 +640,21 @@ def build(origin, blank):
     a(0x8d, STATE+10)
     c.label('mask_key_ready'); a(0xad, STATE+10); c.jump(0xcd, 'mask_key')
     c.branch(0xd0, 'mask_changed'); c.jump(0x4c, 'mask_done')
-    c.label('mask_changed'); c.jump(0x8d, 'mask_key'); a(0xad, STATE+10); c.branch(0xf0, 'clear_mask')
-    c.emit(0xc9, 15); c.branch(0xb0, 'reveal_mask')
-    c.emit(0xc9, 7); c.branch(0xb0, 'transition_mask')
-    a(0xad, bank_value(MASK_BANK)); a(0x8d, 0xd301)
-    a(0xad, STATE+10); c.emit(0x38,0xe9,1,0xaa)
-    c.jump(0xbd, 'mask_high'); c.jump(0x4c, 'mask_source_selected')
-    c.label('transition_mask')
-    a(0xad, STATE+10); c.emit(0x38,0xe9,7,0x48,0x4a,0x4a,0xaa)
-    a(0xbd, bank_value(TRANSITION_BANK)); a(0x8d,0xd301)
-    c.emit(0x68,0x29,3,0xaa); c.jump(0xbd,'frame_high')
-    c.jump(0x4c, 'mask_source_selected')
-    c.label('reveal_mask')
-    a(0xad, STATE+10); c.emit(0x38,0xe9,15,0x48,0x4a,0xaa)
-    a(0xbd, bank_value(TRANSITION_BANK)); a(0x8d,0xd301)
-    c.emit(0x68,0x29,1,0xaa); c.jump(0xbd,'reveal_high')
-    c.label('mask_source_selected'); c.jump(0x8d, 'mask_source_high')
-    c.emit(0xa2, 0, 0xa0, LETTER_PAGES)
+    c.label('mask_changed'); c.jump(0x8d, 'mask_key')
+    # Y points to the frame's first descriptor. X copies one whole page.
+    c.emit(0x0a, 0x0a, 0x18); a(0x6d, STATE+10); c.emit(0xa8)
+    c.emit(0xa9, 0xa0); c.jump(0x8d, 'mask_dest_high')
+    c.label('mask_page')
+    c.jump(0xb9, 'mask_bank_indices'); c.emit(0xaa)
+    a(0xbd, bank_value(3)); a(0x8d, 0xd301)
+    c.jump(0xb9, 'mask_pages'); c.jump(0x8d, 'mask_source_high')
+    c.emit(0xa2, 0)
     c.label('mask_copy')
-    c.label('mask_source'); c.emit(0xbd,0,0x40)
-    c.label('mask_dest'); c.emit(0x9d,0,0xa0,0xe8); c.branch(0xd0,'mask_copy')
-    c.jump(0xee,'mask_source_high'); c.jump(0xee,'mask_dest_high'); c.emit(0x88); c.branch(0xd0,'mask_copy')
-    c.emit(0xa9, 0xa0); c.jump(0x8d,'mask_dest_high'); c.jump(0x4c,'mask_done')
-    c.label('clear_mask'); c.emit(0xa9,0,0xa2,0)
-    c.label('clear_loop')
-    for page in range(LETTER_PAGES): a(0x9d,0xa000+page*256)
-    c.emit(0xe8); c.branch(0xd0,'clear_loop')
+    c.label('mask_source'); a(0xbd, 0x4000)
+    c.label('mask_dest'); a(0x9d, 0xa000)
+    c.emit(0xe8); c.branch(0xd0, 'mask_copy')
+    c.emit(0xc8); c.jump(0xee, 'mask_dest_high'); c.jump(0xad, 'mask_dest_high')
+    c.emit(0xc9, 0xa0+LETTER_PAGES); c.branch(0xd0, 'mask_page')
     c.label('mask_done')
     # Use the same music-clock phase and render directly into the back buffer.
     a(0xad,STATE+2); c.emit(0x4a,0x4a,0x4a,0x29,0x1e); a(0x8d,STATE+12)
@@ -654,8 +694,7 @@ def build(origin, blank):
     c.label('fade_level'); c.emit(0xc9, 1); c.branch(0xb0, 'fade_nonzero'); c.jump(0x4c, 'fade_done')
     c.label('fade_nonzero'); c.emit(0xc9, 7); c.branch(0x90, 'fade_start'); c.jump(0x4c, 'fade_done')
     c.label('fade_start')
-    c.emit(0x48); a(0xad,bank_value(FADE_BANK)); a(0x8d,0xd301)
-    c.emit(0x68); a(0x20,FADE_ENTRY)
+    a(0x20,FADE_ENTRY)
     c.label('fade_done')
     c.emit(0x68,0x18,0x69,2,0xaa,0x68); a(0x8d,0xd301); c.emit(0x60)
     c.labels['mask_source_high']=c.labels['mask_source']+2
@@ -665,9 +704,10 @@ def build(origin, blank):
     c.label('beat_hi'); c.emit(*(tick_at_beat(i) >> 8 for i in range(32)))
     c.label('fade_phase'); c.emit(0)
     c.label('reveal_key'); c.emit(0,15,16,0,0,17,18)
-    c.label('reveal_high'); c.emit(0x68,0x72)
-    c.label('mask_high'); c.emit(0x40,0x4a,0x54,0x5e,0x68,0x72)
-    c.label('frame_high'); c.emit(0x40,0x4a,0x54,0x5e)
+    _, descriptors = mask_pages()
+    c.label('mask_bank_indices')
+    c.emit(*(bank-3 for bank, _ in descriptors))
+    c.label('mask_pages'); c.emit(*(page for _, page in descriptors))
 
     c.label('color')
     # Entire picture rises from black and falls back before the scene cut.

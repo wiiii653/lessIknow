@@ -31,7 +31,8 @@ import outro_palette
 import post_trevor_director
 import launch_kiss
 import banana_variants
-import banana_cache
+import stereo_playback
+import title_plasma
 import trevor_ball_flight
 import loading_screen
 from school_parallax import banks as school_pan_banks
@@ -195,9 +196,10 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     chunks = [(regions[index][0], blob) for index, blob in enumerate(blobs) if blob]
     blank = unique[bytes(40)]
     plasma_code, plasma_labels = plasma_build(table_end, blank)
-    assert plasma_labels['draw']<=banana_cache.ENTRY
-    assert not banana_cache.ENTRY<=plasma_labels['mask_key']<banana_cache.ENTRY+len(banana_cache.worker())
-    assert banana_cache.STATE+32<=terminal_typing.ENTRY
+    stereo_start = table_end + len(plasma_code)
+    stereo_code, stereo_labels = stereo_playback.start_gate(stereo_start, ORIGIN)
+    assert stereo_start + len(stereo_code) <= table_end + PLASMA_SIZE
+    title_pages, _ = title_plasma.mask_pages()
     effect_code = effects_helper(intro_color=plasma_labels['color'])
     addresses = [[unique[row] for row in scene] for scene in rows]
     for frame in range(2, 6):
@@ -278,9 +280,6 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         absolute(0xcd, TICK + offset)
         c.branch(0xd0, 'snapshot')
     absolute(0x20, plasma_labels['invalidate'])
-    absolute(0xad,TICK+1);c.emit(0xc9,12);c.branch(0x90,'banana_work_done');c.emit(0xc9,46);c.branch(0xb0,'banana_work_done')
-    c.label('banana_work_hook');c.jump(0x20,'banana_bootstrap')
-    c.label('banana_work_done')
     compare_tick(final_boy.START,'final_boy','before_final_boy')
     c.label('final_boy')
     c.emit(0xa9,17);absolute(0x8d,SCENE)
@@ -519,7 +518,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x20, TITLE_MODE_ENTRY)
     absolute(0xad,SCENE);c.emit(0xc9,2);c.branch(0xb0,'skip_firework_prepare')
     absolute(0xad,0xd301);c.emit(0x48)
-    absolute(0xae,SCENE);absolute(0xbd,0x08e8);absolute(0x8d,0xd301)
+    absolute(0xad,bank_value(PLASMA_FIRST_BANK));absolute(0x8d,0xd301)
     absolute(0x20,title_fireworks.ENTRY)
     c.emit(0x68);absolute(0x8d,0xd301)
     c.label('skip_firework_prepare')
@@ -681,7 +680,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x20,plasma_labels['color'])
     c.emit(0xa9,0xc1);absolute(0x8d,0xd01b)
     absolute(0xad,0xd301);c.emit(0x48)
-    absolute(0xae,SCENE);absolute(0xbd,0x08e8);absolute(0x8d,0xd301)
+    absolute(0xad,bank_value(PLASMA_FIRST_BANK));absolute(0x8d,0xd301)
     absolute(0x20,title_fireworks.PUBLISH)
     c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
     c.label('ordinary_effects')
@@ -780,10 +779,6 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('ribbon_source_ready');c.emit(0xa2,2);absolute(0x20,ribbon_dance.SIDE_COMPOSITOR)
     c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
     ribbon_dance.emit_rainbow(c)
-    c.label('banana_bootstrap')
-    absolute(0xad,TICK+1);c.emit(0xc9,12);c.branch(0xd0,'banana_bootstrap_done')
-    absolute(0xad,0xd301);c.emit(0x48);absolute(0xad,bank_value(banana_cache.RESOURCE_BANK));absolute(0x8d,0xd301);absolute(0x20,banana_cache.BOOT)
-    c.emit(0x68);absolute(0x8d,0xd301);c.label('banana_bootstrap_done');c.emit(0x60)
     c.label('ribbon_banks');c.emit(*(8+i//6 for i in range(ribbon_dance.FRAME_COUNT)))
     c.label('ribbon_sources');c.emit(*(0x40+(i%6)*10 for i in range(ribbon_dance.FRAME_COUNT)))
     code = c.finish()
@@ -809,7 +804,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                (0x8000, display(0x8000)),
                (0x8300, descriptors[:0x3f]), (STATE, descriptors[0xe0:]),
                (0x8400, display(0x8400)), (TITLE_MODE_ENTRY, title_mode_helper()),
-               (table_end, plasma_code)] + chunks + banana_variants.selector_inserts() + outro_loader.inserts() + terminal_typing.inserts() + [(outro_palette.ENTRY,outro_palette.helper()), (outro_palette.CARD_ENTRY,outro_palette.card_helper()), (post_trevor_director.ENTRY,post_trevor_director.helper()),
+               (table_end, plasma_code), (stereo_start, stereo_code)] + chunks + banana_variants.selector_inserts() + outro_loader.inserts() + terminal_typing.inserts() + [(outro_palette.ENTRY,outro_palette.helper()), (outro_palette.CARD_ENTRY,outro_palette.card_helper()), (post_trevor_director.ENTRY,post_trevor_director.helper()),
                (final_boy.MARK_ANIMATE,final_boy.mark_animator()),
                (final_boy.CARD_UPDATE,final_boy.card_update()),
                (final_boy.ENTRY_BLANK,final_boy.entry_blank()),
@@ -868,10 +863,22 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             ui = 0x220a - start
             if payload[ui:ui + 3] != bytes.fromhex('20 cd 23'):
                 raise ValueError('unexpected v035 main-loop callback')
-            payload[ui:ui + 3] = bytes((0x20, ORIGIN & 255, ORIGIN >> 8))
+            payload[ui + 1:ui + 3] = stereo_labels['video_callback'].to_bytes(2, 'little')
+            restart = 0x2218 - start
+            if payload[restart:restart + 3] != bytes.fromhex('ad a2 24'):
+                raise ValueError('unexpected v035 restart request check')
+            payload[restart:restart + 3] = b'\x20' + stereo_labels['restart_request'].to_bytes(2, 'little')
+            playback = 0x224b - start
+            if payload[playback:playback + 3] != bytes.fromhex('ad c8 24'):
+                raise ValueError('unexpected v035 playback gate')
+            payload[playback:playback + 3] = b'\x20' + stereo_labels['play_gate'].to_bytes(2, 'little')
             if payload[0x218f - start:0x2192 - start] != bytes.fromhex('20 00 2d'):
                 raise ValueError('unexpected v035 font initialization')
             payload[0x218f - start:0x2192 - start] = bytes((0xea,)) * 3
+            writer = 0x2256 - start
+            if payload[writer:writer + 3] != bytes.fromhex('4c 00 2c'):
+                raise ValueError('unexpected v035 stereo writer entry')
+            payload[writer + 1:writer + 3] = stereo_start.to_bytes(2, 'little')
             exit_offset = 0x2312 - start
             if payload[exit_offset:exit_offset + 6] != bytes.fromhex('68 a8 68 aa 68 40'):
                 raise ValueError('unexpected v035 interrupt epilogue')
@@ -884,25 +891,29 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             payload[0x23cd-start]=0x60  # retired UI entry; its body holds terminal timing data
             patched = True
         if (start, end) == (0x02e0, 0x02e1):
-            output.extend(school_bank_loader(final_boy.install_card_pages(install_color_font(girl_frame)),progress=True))
+            girl_bank = final_boy.install_card_pages(install_color_font(girl_frame))
+            girl_bank = stereo_playback.install_attacks(girl_bank)
+            output.extend(school_bank_loader(girl_bank, progress=True))
             output.extend(school_bank_loader(hero_bank(c.labels['banked_effects'],c.labels['banked_effects']+5,c.labels['hero_cutaway']),index=1,progress=True))
             output.extend(school_bank_loader(post_trevor_director.install(ribbon_inbetweens.install(trevor_bank(),2)),index=2,progress=True))
             for index, frame in enumerate(mosaic_banks(),3):
                 output.extend(school_bank_loader(frame,index=index,progress=True))
             for index, frame in enumerate(school_pan_banks(),19):
                 if index==trevor_ball_flight.BANK_INDEX:frame=trevor_ball_flight.install(frame)
-                output.extend(school_bank_loader(final_boy.install_mark_frames(frame,index),index=index,progress=True))
+                frame = final_boy.install_mark_frames(frame, index)
+                frame = title_plasma.install_mask_pages(frame, index, title_pages)
+                output.extend(school_bank_loader(frame, index=index, progress=True))
             for phase in range(16):
                 art=ribbon_dance.install_side_actor(polished_trevor_bank(phase,bank_wrapper=c.labels['banked_effects']),24+phase)
-                output.extend(school_bank_loader(ribbon_inbetweens.install(final_boy.install_bitmap(art,24+phase),24+phase),index=24+phase,progress=True))
-            plasma_banks=plasma_artwork()
-            masks=plasma_banks[4]
-            # Both card layouts can coexist during the ordered dissolve.
-            protected=bytes(a|b for a,b in zip(masks[2560:5120],masks[5*2560:6*2560]))
-            for index, bank in enumerate(plasma_banks, PLASMA_FIRST_BANK):
-                if index in (40,41):
-                    bank=title_fireworks.install(bank,protected)
-                output.extend(school_bank_loader(banana_cache.install(bank,index,c.labels['banana_work_hook']), index=index,progress=True))
+                index = 24 + phase
+                art = ribbon_inbetweens.install(final_boy.install_bitmap(art, index), index)
+                art = title_plasma.install_mask_pages(art, index, title_pages)
+                output.extend(school_bank_loader(art, index=index, progress=True))
+            title = title_fireworks.install(plasma_artwork()[0], b'')
+            output.extend(school_bank_loader(title, index=PLASMA_FIRST_BANK, progress=True))
+            for group in range(8):
+                bank = banana_variants.raw_bank(group, peeled=True)
+                output.extend(school_bank_loader(bank, index=PLASMA_FIRST_BANK+1+group, progress=True))
             control=ribbon_dance.install_control(polished_trevor_bank(0, quiet=True,bank_wrapper=c.labels['banked_effects']),c.labels['ribbon_copy'],c.labels['ribbon_palette'])
             output.extend(school_bank_loader(final_boy.install_control(control,c.labels['ribbon_copy']), index=49,progress=True))
             output.extend(loader(rom))
@@ -959,8 +970,6 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         'post_trevor_director': post_trevor_director.ENTRY,
         'post_trevor_cuts': post_trevor_director.cuts(),
         'banana_variants': banana_variants.memory_report(),
-        'banana_cache_entry': banana_cache.ENTRY, 'banana_cache_flag': banana_cache.FLAG,
-        'banana_cache_hook': c.labels['banana_work_hook'], 'banana_bootstrap': c.labels['banana_bootstrap'],
         'final_boy_start': final_boy.START, 'final_boy_end': final_boy.END,
         'final_boy_entry': final_boy.ENTRY, 'final_boy_bytes': len(final_boy.helper(c.labels['ribbon_copy'])),
         'table_bytes': len(tables),

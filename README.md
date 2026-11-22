@@ -1,40 +1,47 @@
-# The Less I Know The Better — Atari XE demo
+# The Less I Know The Better — Atari XE Demo
 
-Projekt stereo dla Atari XE z 1 MB RAM, oparty na playerze v035 i oryginalnej aranżacji POKEY.
+A stereo Atari XL/XE demo for a 1 MB memory expansion. It uses the original
+v035 POKEY player and an original tracker arrangement based on Tame Impala's
+composition.
 
-## Stan projektu
+## Current release and working tree
 
-Zatwierdzona wersja po party to **v390 / stereo 133**.
-[Plik XEX](releases/less-i-know-demo-release-133-stereo.xex).
-Wzorzec sprawdzony z karty AVG na Atari 1088 Rambo to stereo 058 / v330.
+The latest approved stereo release is **release 133 / v390**:
+[`releases/less-i-know-demo-release-133-stereo.xex`](releases/less-i-know-demo-release-133-stereo.xex).
+The current source tree contains newer development edits and does not yet have
+a numbered release. A development build is not hardware-confirmed.
 
-Demo trwa około pięciu minut. Terminal wchodzi w ticku 41 884,
-a końcowa karta w ticku 51 980. Rotator używa oryginalnych tekstur z wydania 119.
-Obrót i zoom obejmują całą mozaikę. [Montaż](docs/AKTUALNY_MONTAZ_V330.md).
+Release 058 / v330 is the last full run confirmed on the user's Atari 1088
+Rambo from AVG. The later hardware packaging path preserves that loader
+contract; later candidates still require a real hardware run. See
+[`docs/PLAN_STATUS.md`](docs/PLAN_STATUS.md) and
+[`docs/HARDWARE_LOADER_CONTRACT.md`](docs/HARDWARE_LOADER_CONTRACT.md).
 
-## Budowanie i weryfikacja
+The source currently builds stereo only. All 64 expansion banks are allocated.
+The music clock advances four evenly spaced updates per PAL frame. Scene
+changes follow those player ticks.
 
-Po zainstalowaniu `requirements-dev.txt` w środowisku wirtualnym:
+## Build and checks
+
+Install `requirements-dev.txt` in a virtual environment, then run:
 
 ```sh
-make all PYTHON=/ścieżka/do/venv/bin/python
-make check PYTHON=/ścieżka/do/venv/bin/python
+make all PYTHON=/path/to/venv/bin/python
+make check PYTHON=/path/to/venv/bin/python
 ```
 
-Build roboczy tworzy prototyp oraz `build/hardware-dev.xex` z miksem stereo
-z wydania 133, werblem przed halą, narastaniem perkusji w treningu
-i akcentem basowym przed wejściem tancerki. Aby zapakować
-bieżący prototyp z tym miksem, użyj nowej ścieżki wyjściowej:
+This produces a replaceable development prototype and
+`build/hardware-dev.xex`. The hardware package uses the approved release 133
+music with the current earlier-percussion option. It does not create a numbered
+release. To package a reviewed prototype as a new, uniquely named hardware
+candidate, follow the release procedure in the hardware loader contract.
 
-```sh
-python3 tools/build_hardware_xex.py build/visual-prototype-dev.xex /tmp/less-i-know-stereo.xex --approved-music --earlier-percussion
-```
+## Project map
 
-Sumę SHA-256 i wyniki prób zawiera [status projektu](docs/PLAN_STATUS.md).
-Pakowanie sprzętowe opisuje [kontrakt loadera](docs/HARDWARE_LOADER_CONTRACT.md).
+- `tools/` — 6502 code generators, asset preparation and XEX packaging.
+- `tests/` — py65 checks for generated code and timing/data invariants.
+- `assets/` — source art, music and preserved reference assets.
+- `releases/` — numbered XEX releases and historical artifacts.
+- `docs/` — current technical references and the version history.
 
-## Zasady pracy
-
-Wydania numerowane są niezmienne. Buduj wyłącznie stereo; wariant mono jest
-wycofany. Nie zakładaj wolnych banków: wszystkie 64 banki są przydzielone.
-Zachowuj historię wydań i sprawdzaj aktualny allocator przed zmianami pamięci.
+Start with [`docs/README.md`](docs/README.md) for the documentation guide.

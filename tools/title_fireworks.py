@@ -1,4 +1,4 @@
-"""Double-buffered PMG fireworks in unused tails of plasma banks 40/41.
+"""Double-buffered PMG fireworks in the permanent title bank.
 
 Complete fireworks are drawn in front of plasma, letters and the crane.
 No silhouette/text clipping is applied to their radial burst and falling trails.

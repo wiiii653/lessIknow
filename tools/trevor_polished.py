@@ -351,14 +351,15 @@ def helper(bank_wrapper=0, impact_labels=None, rotator_puffs=True):
         c.label(label);a(op,address)
         pmg_fixups.append((label,address>>8))
     c.label('bang')
+    c.jump(0xae,'hit_index')
+    c.jump(0xbd,'bang_bx');a(0x8d,0x83ec)
+    c.jump(0xbd,'bang_by');a(0x8d,0x83ef)
+    c.label('bang_draw')
     c.jump(0x20,'bang_prepare')
     c.emit(0xa9,0,0xa2,127)
     c.label('bang_clear')
     for base in (0x980,0xa00,0xa80,0xb00,0xb80):pmg(0x9d,base)
     c.emit(0xca);c.branch(0x10,'bang_clear')
-    c.jump(0xae,'hit_index')
-    c.jump(0xbd,'bang_bx');a(0x8d,0x83ec)
-    c.jump(0xbd,'bang_by');a(0x8d,0x83ef)
     c.label('bang_burst_start')
     c.emit(0xa9,68,0x18);a(0x6d,0x83ef);a(0x8d,0x83eb)
     if rotator_puffs:
@@ -536,9 +537,7 @@ def helper(bank_wrapper=0, impact_labels=None, rotator_puffs=True):
         c.label(f'bang_glyph{i}');c.emit(*glyph)
     c.label('bang_exclamation');c.emit(*bytes(14))
     if impact_labels is not None:
-        impact_labels.update(bang=c.labels['bang'],
-                             bang_bx=c.labels['bang_bx'],
-                             bang_by=c.labels['bang_by'],
+        impact_labels.update(bang_draw=c.labels['bang_draw'],
                              hit_index=c.labels['hit_index'],
                              hit_age=c.labels['hit_age'])
     result=c.finish();assert len(result)<=2560,len(result)
@@ -551,15 +550,15 @@ def impact_bridge(labels):
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     a(0xad,ROTATOR_HIT_AGE);a(0x8d,labels['hit_age'])
     a(0xad,ROTATOR_HIT_INDEX);a(0x8d,labels['hit_index'])
-    c.emit(0xa8)
     # Independent 64-step figure eight: one step per eight music ticks.
     a(0xad,0x0dd3);c.emit(0x4a,0x4a,0x4a,0xaa)
     a(0xad,0x0dd4);c.emit(0x29,1);c.branch(0xf0,'x_positive')
     a(0xbd,ROTATOR_X_TABLE);c.emit(0x49,255,0x18,0x69,1);c.jump(0x4c,'x_ready')
     c.label('x_positive');a(0xbd,ROTATOR_X_TABLE)
-    c.label('x_ready');c.emit(0x38,0xe9,40);a(0x99,labels['bang_bx'])
-    a(0xbd,ROTATOR_Y_TABLE);c.emit(0x18,0x69,4);a(0x99,labels['bang_by'])
-    c.emit(0x4c,labels['bang']&255,labels['bang']>>8)
+    # Pass temporary coordinates directly so the punch anchors stay intact.
+    c.label('x_ready');c.emit(0x38,0xe9,40);a(0x8d,0x83ec)
+    a(0xbd,ROTATOR_Y_TABLE);c.emit(0x18,0x69,4);a(0x8d,0x83ef)
+    a(0x4c,labels['bang_draw'])
     return bytes(c.finish())
 
 
