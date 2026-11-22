@@ -1,11 +1,15 @@
 # Project Status
 
+The project is nearly finished. Further development is focused on graphics
+improvements only.
+
 Status reviewed on 2026-11-22. The numbered release and the source working
 tree are separate states; do not describe a development build as an approved
 release.
 
 ## Release state
 
+- Accepted final stereo prerelease: `releases/less-i-know-demo-prerelease-165-stereo.xex`.
 - Latest approved stereo release: **release 133 / v390**.
 - Approved file: `releases/less-i-know-demo-release-133-stereo.xex`.
 - Approved music is embedded in that release. The development hardware build
@@ -38,7 +42,7 @@ listening; it has not been confirmed on physical hardware.
 The demo is stereo-only. The v035 player remains the music engine and runs four
 evenly spaced updates per PAL frame. Scene timing is driven by its update
 counter. The active allocator uses all 64 banks; there is no assumed free bank.
-The shared scanline pool currently contains 298 rows, with its base at `$1E00`.
+The latest build uses 295 shared scanline rows, with the pool based at `$1E00`.
 
 ## Memory and loader constraints
 

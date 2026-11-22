@@ -4,6 +4,10 @@ A stereo Atari XL/XE demo for a 1 MB memory expansion. It uses the original
 v035 POKEY player and an original tracker arrangement based on Tame Impala's
 composition.
 
+The project is nearly finished. The remaining work is focused on graphics
+improvements only. The accepted final prerelease is
+[`releases/less-i-know-demo-prerelease-165-stereo.xex`](releases/less-i-know-demo-prerelease-165-stereo.xex).
+
 ## Current release and working tree
 
 The latest approved stereo release is **release 133 / v390**:
