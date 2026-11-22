@@ -7,10 +7,10 @@ VALUES_X=0x69b8
 VALUES_Y=0x69bc
 AMOUNT,LAST,VALID,TARGET=0x69c0,0x69c1,0x69c2,0x69c3
 PHASE_SHIFT=3  # Advance the visible angle every two PAL frames.
-# A clear morph between tall and wide ellipses. Adjacent shapes differ
-# by three source pixels, preserving smooth movement while making the
-# change visible over the boy's head.
-ORBIT_SHAPES=tuple((9+3*i, 30-3*i, 0) for i in range(8))
+# Sweep from a tall, left-leaning orbit to a wide, right-leaning orbit.
+# Adjacent entries are successive stages of the same morph, so the runtime
+# can move between them without changing the angular phase.
+ORBIT_SHAPES=tuple((10+3*i, 29-2*i, -22+6*i) for i in range(8))
 
 
 def events():
@@ -30,7 +30,11 @@ def position(phase,amount,plane=0):
     angle=((phase+plane*4)&15)*math.tau/16
     rx,ry,tilt=ORBIT_SHAPES[amount]
     tilt=math.radians(tilt)
-    ex=rx*math.cos(angle);ey=ry*math.sin(angle)
+    # A small second harmonic gives the paths a flowing, asymmetric sweep.
+    # It fades through the morph rather than abruptly changing direction.
+    wave=math.sin(math.pi*amount/7)
+    ex=rx*math.cos(angle)+2*wave*math.sin(2*angle)
+    ey=ry*math.sin(angle)+2*wave*math.cos(2*angle)
     xoff=ex*math.cos(tilt)-ey*math.sin(tilt)
     yoff=ex*math.sin(tilt)+ey*math.cos(tilt)
     x=HEAD_X+round(xoff)-4+48
