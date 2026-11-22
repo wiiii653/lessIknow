@@ -1,27 +1,27 @@
-# V094 — kombinacje ciosów Trevora
+# V094 — Trevor's punch combinations
 
-W części od taktu 72 do taktu 88 Trevor wykonuje kombinacje zsynchronizowane
-z tickiem odtwarzacza. Pierwsze pięć ciosów to prawa, lewa, lewa, prawa,
-lewa. Dwutaktowy motyw miesza ciosy na miarę i na pół miary, dzięki czemu
-odstępy wynoszą 46–47 albo 93–94 ticki. Zamach pokazuje rękę następnego ciosu,
-włącznie z następującymi po sobie ciosami tą samą ręką. Pierwszy zamach zaczyna
-się 32 ticki przed wejściem w serię. Granice aktów są zachowane.
+In the part from bar 72 to bar 88 Trevor performs combinations synchronised
+with the player tick. The first five punches are right, left, left, right,
+left. The two-bar motif mixes punches on the beat and on the off-beat, so that the
+intervals are 46–47 or 93–94 ticks. The wind-up shows the hand of the next punch,
+including consecutive punches with the same hand. The first wind-up starts
+32 ticks before entering the series. Act boundaries are preserved.
 
-BANG zajmuje pierwsze 16 ticków ciosu, a cząstki kolejne 16. Punkt początkowy
-cząstek jest wspólny z pozycją BANG. Faza tunelu jest odświeżana co 32 ticki,
-ale zmiana pozy wymusza odświeżenie niezależnie od fazy. Tablica 96 ciosów i
-procedura mieszczą się w istniejących bankach Trevora.
+BANG takes the first 16 ticks of the punch, and the particles the next 16. The particle
+starting point is shared with the BANG position. The tunnel phase is refreshed every 32 ticks,
+but a pose change forces a refresh regardless of phase. The table of 96 punches and the
+procedure fit in Trevor's existing banks.
 
-[ODCZYT] 69 testów py65 zakończyło się poprawnie, w tym testy rytmu, sekwencji
-rąk, zamachu przed uderzeniem, początku i kierunku cząstek oraz PORTB.
-[ODCZYT] Atari800 PAL, 1088XE, Altirra OS, stereo: po jednokrotnym wyrównaniu
-początku zapis rejestrów POKEY był identyczny z v035 dla 5 968 512 bajtów;
-porównanie obejmuje cały utwór. [ODCZYT] W izolowanym teście py65 przebudowa
-klatki ciosu kosztuje około 56 tys. cykli. [WNIOSEK] Płynność i czytelność
-najszybszych kombinacji wymagają oceny w emulatorze z obrazem lub na Atari;
-porównanie POKEY nie zastępuje odsłuchu.
+[READ] 69 py65 tests passed, including tests of rhythm, hand
+sequence, wind-up before the hit, particle start and direction, and PORTB.
+[READ] Atari800 PAL, 1088XE, Altirra OS, stereo: after a single start
+alignment the POKEY register log was identical to v035 for 5 968 512 bytes;
+the comparison covers the whole track. [READ] In an isolated py65 test, rebuilding
+a punch frame costs about 56k cycles. [CONCLUSION] The smoothness and readability
+of the fastest combinations require evaluation in an emulator with a display or on Atari;
+the POKEY comparison does not replace listening.
 
-`build/visual-prototype-v094-knockout.gif` jest programowym podglądem z
-przybliżonymi kolorami i tempem, nie nagraniem emulatora. XEX:
+`build/visual-prototype-v094-knockout.gif` is a programmatic preview with
+approximate colours and timing, not an emulator recording. XEX:
 `build/visual-prototype-v094.xex`, SHA-256
 `76faf0e3fd03749d6046856344339376a2c4a2e216e5369d4aaef8e05e110f72`.

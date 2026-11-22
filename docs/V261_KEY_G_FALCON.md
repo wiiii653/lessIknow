@@ -1,13 +1,13 @@
-# V261 — KEY-G i FALCON w greetz
+# V261 — KEY-G and FALCON in greetz
 
-Do dwóch istniejących wierszy z pozdrowieniami dodano KEY-G i FALCON.
-Zachowano pisownię FOORMAN. Liczba wierszy i plansz nie zmienia się,
-więc tempo pisania, czas czytania i ticki terminala pozostają bez zmian.
+KEY-G and FALCON were added to the two existing greeting lines.
+The spelling FOORMAN was preserved. The number of lines and screens does not change,
+so the typing pace, reading time and terminal ticks remain unchanged.
 
-Zbudowano `build/visual-prototype-v261.xex` oraz wydano release 008.
-XEX odpowiada `releases/less-i-know-demo-release-008.xex` bajt w bajt
+`build/visual-prototype-v261.xex` was built and release 008 was issued.
+The XEX matches `releases/less-i-know-demo-release-008.xex` byte for byte
 (SHA-256 `fff207ea35990a0d4694e1e510f4c785fa43a7c06d3d2010733c2165b8a6d836`).
 
-[ODCZYT] Pełne `make check PYTHON=/tmp/tliktb-fix-venv/bin/python`:
-199/199 testów, 152,147 s. Zmiana tekstu nie była odtwarzana w Atari800 ani
-na fizycznym Atari; ostatnie pełne porównanie stereo POKEY dotyczy v260.
+[READ] Full `make check PYTHON=/tmp/tliktb-fix-venv/bin/python`:
+199/199 tests, 152.147 s. The text change was not played back in Atari800 or
+on physical Atari; the last full stereo POKEY comparison concerns v260.

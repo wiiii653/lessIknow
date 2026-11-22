@@ -1,38 +1,40 @@
-# v020 — tęczowa piłka na PMG
+# v020 — rainbow ball on PMG
 
-[ODCZYT] Efekt aktywny tylko w ujęciu rzutu: ticki 6981–7977.
-Nieruchomą piłkę usunięto z konwertowanego tła. Cztery playery składają
-się na cztery pasy piłki; każdy ma osobny, cyklicznie zmieniany kolor GTIA.
-Cztery missiles tworzą po trzy kolorowe krople. Po łuku piłka wpada
-w okolice obręczy, opada i odbija się. Sekwencja trwa 256 ticków i powtarza
-się w czasie ujęcia. Zdarzenia scen pozostają bez zmian.
+[READ] The effect is active only in the throw shot: ticks 6981–7977.
+The stationary ball was removed from the converted background. Four players
+make up four bands of the ball; each has its own cyclically changed GTIA
+colour. Four missiles form three coloured droplets each. Along an arc the ball
+falls into the area of the hoop, drops and bounces. The sequence lasts 256 ticks
+and repeats during the shot. Scene events remain unchanged.
 
-## V1 / V2 / V3 — silnik
+## V1 / V2 / V3 — engine
 
-[ODCZYT] Efekt wykonuje się w vblank, również przy trafieniu cache tła.
-Przykładowe podtrzymanie ujęcia kosztuje około 6100 cykli instrukcji py65,
-bez DMA i NMI. Nie ma kolejnego kopiowania bitmapy ani budowania listy.
-Dodatkowy bank 15 ma teraz 16 KiB: portret szkolny w pierwszych 8 KiB,
-rutyna piłki pod `$6000`, przywracanie PMG pod `$6F00`.
-Wrapper zapisuje i odtwarza PORTB; NMI zachowuje bank przerwanego kodu.
-PMG używa `$0980–$0BFF`, podwójnej wysokości linii, czterech playerów
-oraz czterech missiles. Przy wyjściu z ujęcia wracają oryginalne dane
-błysków sceny tanecznej, także przy przeskoku zegara.
+[READ] The effect runs in vblank, also on a background cache hit.
+A sample shot hold costs about 6100 py65 instruction cycles,
+without DMA and NMI. There is no further bitmap copy or list building.
+The additional bank 15 now has 16 KiB: the school portrait in the first 8 KiB,
+the ball routine at `$6000`, PMG restore at `$6F00`.
+The wrapper saves and restores PORTB; the NMI preserves the bank of the
+interrupted code.
+PMG uses `$0980–$0BFF`, double line height, four players
+and four missiles. On leaving the shot the original dance-scene flash data
+returns, also on a clock jump.
 
-## V6 — sprawdzenie
+## V6 — verification
 
-[ODCZYT] 32 testy obejmują ruch, cztery jednoczesne barwy, zmianę palety,
-cztery strumienie kropli, podtrzymanie bitmapy i odtworzenie PMG tańca.
-W Atari800 PAL `-1088xe` sprawdzono zrzuty kilku faz rzutu, sąsiednie
-ujęcia, przebitkę szkolną i cztery późniejsze kadry występu.
+[READ] The 32 tests cover movement, four simultaneous colours, palette change,
+four droplet streams, bitmap hold and restoration of the dance PMG.
+In Atari800 PAL `-1088xe`, captures of several throw phases were checked, as
+were neighbouring shots, the school cut-in and four later frames of the
+performance.
 
-[ODCZYT] Pełny zapis stereo POKEY zgodny z oryginałem:
-9 143 784 identyczne bajty, około 2547,1 s emulacji.
+[READ] The full stereo POKEY recording matches the original:
+9 143 784 identical bytes, about 2547,1 s of emulation.
 
 ```sh
 make check PYTHON=/tmp/tliktb-girl-venv/bin/python
 APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo build/visual-prototype-v020.xex --seconds 12
 ```
 
-[ZAŁOŻENIE] Kolory GIF są przybliżeniem palety PAL. Fizyczny sprzęt
-pozostaje do sprawdzenia. Podgląd: `build/v020-rainbow-ball.gif`.
+[ASSUMPTION] The GIF colours are an approximation of the PAL palette. Physical
+hardware remains to be verified. Preview: `build/v020-rainbow-ball.gif`.

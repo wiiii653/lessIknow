@@ -24,7 +24,7 @@ HANDS=(((.23,.337),(.34,.103)),((.164,.384),(.205,.457)),
 
 def step_midpoint(step):
     import ribbon_dance as d
-    if step>=117 or step in (31,63):return None
+    if step>=117 or 31<=step<=63:return None
     pair=tuple(sorted((d.frame_for_step(step),d.frame_for_step(step+1))))
     return PAIRS.index(pair) if pair in PAIRS else None
 

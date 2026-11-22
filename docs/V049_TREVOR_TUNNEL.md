@@ -1,30 +1,30 @@
-# v049 — Trevor przed poruszającym się tunelem
+# v049 — Trevor in front of a moving tunnel
 
-Obie istniejące pozy Trevora z części energetycznej zostały wycięte z bitmapy
-maskami w `tools/trevor_polished.py`; ich piksele wewnątrz masek pozostały takie
-same. Dawne nieruchome tło zastąpił tunel o pierścieniach rozszerzających się
-od środka. Daje to wrażenie przemieszczania się widza w kierunku Trevora.
-Cztery ruchome iskry PMG pozostają. Dwa wcześniejsze kadry wejścia do sali,
-uderzenie w ticku 26928 i wyjście w ticku 32912 są zachowane.
+Both existing Trevor poses from the energy part were cut from the bitmap
+with masks in `tools/trevor_polished.py`; their pixels inside the masks remained the
+same. The former static background was replaced by a tunnel with rings expanding
+from the centre. This gives the impression of the viewer moving towards Trevor.
+Four moving PMG sparks remain. The two earlier frames of entering the hall,
+the hit at tick 26928 and the exit at tick 32912 are preserved.
 
-Tunel ma 16 faz zmieniających się co 16 ticków, dla każdej z dwóch póz.
-Obraz jest składany podczas budowania i kopiowany do nieaktywnego bufora;
-Atari nie składa osobnych bitmap w czasie rzeczywistym. Banki z kopiami kodu
-mają po 16 KiB, są wykrywane przez sprawdzanie aliasów i łącznie demo używa
-54 banków (864 KiB). Selektory nowych wariantów `$08D8–$08E7`. Oryginalny
-bank 17 nadal obsługuje piłkę w tunelu/rotatorze. Sekwencja kolorów pozostała.
+The tunnel has 16 phases changing every 16 ticks, for each of the two poses.
+The image is assembled at build time and copied to the inactive buffer;
+Atari does not assemble separate bitmaps in real time. The banks with code copies
+are 16 KiB each, are detected by alias checking, and in total the demo uses
+54 banks (864 KiB). Selectors of the new variants `$08D8–$08E7`. The original
+bank 17 still handles the ball in the tunnel/rotator. The colour sequence remained.
 
-[ODCZYT] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 55 testów PASS.
-Testy obejmują wszystkie fazy, zachowanie pikseli Trevora w maskach, zmianę
-samego tła, obie pozy, granice scen i PMG. Atari800 PAL 1088XE: 39 zrzutów
-obejmujących wszystkie fazy i obie pozy, wejście oraz restart; zawartość
-aktywnej bitmapy jest zgodna z wygenerowaną grafiką.
+[READ] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 55 tests PASS.
+The tests cover all phases, the behaviour of Trevor's pixels in the masks, the change
+of the background itself, both poses, scene boundaries and PMG. Atari800 PAL 1088XE: 39 dumps
+covering all phases and both poses, the entrance and the restart; the content of the
+active bitmap agrees with the generated graphics.
 
-[ODCZYT] `APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo
-build/visual-prototype-v049.xex --seconds 12`: 8 601 480 identycznych bajtów
-stereo POKEY (~2396,0 s emulacji, cały utwór). Nie wykonano osobnego odsłuchu
-na fizycznym Atari. Podgląd: `build/v049-trevor-tunnel.gif`; kolory przybliżają
-PAL, a prędkość odpowiada wybranym fazom zegara muzyki.
+[READ] `APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo
+build/visual-prototype-v049.xex --seconds 12`: 8 601 480 identical bytes
+of stereo POKEY (~2396.0 s of emulation, the whole piece). No separate listening
+on physical Atari was performed. Preview: `build/v049-trevor-tunnel.gif`; the colours approximate
+PAL, and the speed corresponds to the selected music clock phases.
 
-SHA256 XEX: `55405a1328e9fce22f1b574f39ad68f20767be0d701c443bb125585a32c101a7`.
-Poprzednie XEX-y zachowane.
+SHA256 of the XEX: `55405a1328e9fce22f1b574f39ad68f20767be0d701c443bb125585a32c101a7`.
+Previous XEX files preserved.

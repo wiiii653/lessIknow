@@ -1,22 +1,24 @@
-# v039 — kontrast szachownicy
+# v039 — checkerboard contrast
 
-Palety rotatora i tunelu wybierają barwy o odległości co najmniej 60° według
-przybliżonego koła barw PAL używanego w podglądzie. Jedno pole jest dodatkowo
-jaśniejsze. Filtr sprawdza obie fazy pulsowania, aby nie dobierać podobnych
-kolorów także w przyciemnionej fazie. Podgląd PAL jest przybliżeniem; rzeczywisty
-wygląd zależy od wyświetlacza i emulacji.
+The rotator and tunnel palettes select hues at least 60° apart according to the
+approximate PAL colour wheel used in the preview. One field is additionally
+brighter. The filter checks both pulsing phases so that it does not pick
+similar colours in the dimmed phase either. The PAL preview is an
+approximation; the actual appearance depends on the display and emulation.
 
-W całym utworze 161 różnych par wartości kolorów. Pierwsze 144 mają różne
-pary odcieni; po ich wykorzystaniu ostatnie 17 wraca do wcześniejszych odcieni
-z odwróconą różnicą jasności, zachowując kontrast. Pozostały rytm zmian,
-animacje, PMG, przejścia i czasy scen bez zmian.
+Throughout the track there are 161 different pairs of colour values. The first
+144 have different hue pairs; after they are used, the last 17 return to
+earlier hues with an inverted brightness difference, maintaining contrast. The
+remaining rhythm of changes, animations, PMG, transitions and scene timings are
+unchanged.
 
-[ODCZYT] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 50 testów PASS;
-sprawdzono 161 kombinacji w obu fazach jasności i brak identycznych zestawów.
+[READ] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 50 tests PASS;
+161 combinations were checked in both brightness phases and no identical sets
+were found.
 
-[ODCZYT] Atari800 PAL 1088XE stereo POKEY: `APPIMAGE_EXTRACT_AND_RUN=1 python3
+[READ] Atari800 PAL 1088XE stereo POKEY: `APPIMAGE_EXTRACT_AND_RUN=1 python3
 tools/check_playback.py --demo build/visual-prototype-v039.xex --seconds 12`:
-8 954 784 identycznych bajtów (~2494,4 s emulacji), pełny utwór. Bez osobnego
-odsłuchu na fizycznym Atari. Podgląd: `build/v039-palettes.png`.
+8 954 784 identical bytes (~2494.4 s of emulation), the full track. Without a
+separate listening test on physical Atari. Preview: `build/v039-palettes.png`.
 
 SHA256: `6e37272884e90d8125ae8204e04980c74ee8932a641cb9559c6663a007580b77`.

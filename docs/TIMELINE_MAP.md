@@ -38,7 +38,7 @@ have not yet been verified in a full hardware run.
 | 51,980 onward | 4:21–5:00 | Final card and orbit; music continues to five minutes |
 
 The post-Trevor cuts are listed in detail in
-[`AKTUALNY_MONTAZ_V330.md`](AKTUALNY_MONTAZ_V330.md). The table above is a
+[`CURRENT_MONTAGE_V330.md`](CURRENT_MONTAGE_V330.md). The table above is a
 rounded overview, not a substitute for the generated build JSON.
 
 ## Timing and validation

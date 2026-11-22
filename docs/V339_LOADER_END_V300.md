@@ -1,12 +1,13 @@
-# V339 — loader i końcówka z v300
+# V339 — loader and ending from v300
 
-Przywrócono treść ekranu ładowania z v300 oraz bazową obsługę końcowej sceny:
-reset klatki chłopca, ładowanie terminala przez bootstrap i fade do czerni.
-Przywrócono też znaczniki czasu końcówki z v300: scena chłopca zaczyna się na
-ticku 49850, tekst terminala kończy się na 59085, fade zaczyna się na 59705,
-a trwała czerń na 59833.
+The content of the loading screen from v300 was restored, along with the base
+handling of the ending scene: reset of the boy frame, loading of the terminal
+through bootstrap and the fade to black.
+The ending timestamps from v300 were also restored: the boy scene starts at
+tick 49850, the terminal text ends at 59085, the fade starts at 59705
+and the permanent black at 59833.
 
-Aktualne creditsy i greety, w tym `A\SLOP` i `ATARIMUZEUM.PL`, pozostały.
-Nie uruchamiano testów, emulatora ani próby na Atari. Stereo XEX zbudowano z
-298 współdzielonymi wierszami i 2560 B kodu głównego. v330 pozostaje ostatnią
-wersją potwierdzoną na fizycznym Atari.
+The current credits and greetz, including `A\SLOP` and `ATARIMUZEUM.PL`, remained.
+No tests, emulator run or Atari attempt was performed. The stereo XEX was built with
+298 shared rows and 2560 B of main code. v330 remains the last version
+confirmed on physical Atari.

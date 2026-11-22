@@ -34,6 +34,12 @@ def frames():
         frame = bytearray(original)
         for x, y, ink in PROFILE_POLISH:
             frame[y * 160 + x + offset] = ink
+        # Remove the light Fuji stitching from the moving near sleeve.
+        for y in range(31, 36):
+            for x in range(38, 44):
+                pixel = y*160+x+offset
+                if frame[pixel] == 3:
+                    frame[pixel] = 1
         result.append(bytes(frame))
     return result
 

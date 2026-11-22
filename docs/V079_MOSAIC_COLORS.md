@@ -1,5 +1,5 @@
-# v079 — kolory rotatora i tunelu
+# v079 — rotator and tunnel colours
 
-Palety są rozjaśnione względem v076 i przyciemnione względem v077. Gdy para odcieni traci kontrast w ciemniejszej fazie, jasność drugiego koloru jest podnoszona o cztery poziomy. W obu częściach sekwencji zachowano 161 różnych par. Nie zmieniono granic scen ani ruchu piłki.
+The palettes are brightened relative to v076 and darkened relative to v077. When a pair of shades loses contrast in the darker phase, the brightness of the second colour is raised by four levels. In both parts of the sequence 161 different pairs were retained. Scene boundaries and ball movement were not changed.
 
-[ODCZYT] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 63 testy OK; sprawdzono obie fazy jasności. Porównanie pełnego utworu `tools/check_playback.py --demo build/visual-prototype-v079.xex --seconds 12`: 8 719 056 zgodnych bajtów stereo POKEY. Nie wykonano odsłuchu na fizycznym Atari.
+[READ] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 63 tests OK; both brightness phases were checked. Full track comparison `tools/check_playback.py --demo build/visual-prototype-v079.xex --seconds 12`: 8,719,056 matching bytes of stereo POKEY. No listening session on a physical Atari was performed.

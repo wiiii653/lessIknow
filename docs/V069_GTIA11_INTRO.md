@@ -1,24 +1,24 @@
-# V069 — wielokolorowe litery na początku
+# V069 — multicolour letters at the beginning
 
-Dwie plansze otwierające używają ANTIC F i GTIA 11: obraz 80×192 pikseli
-z maksymalnie 16 odcieniami przy wspólnej jasności. Litery otrzymały tęczowe
-wypełnienie, przesunięty kolorowy cień i pulsowanie jasności. Pixel o wartości
-zero pozostaje czarny. Treść i granice plansz są takie jak w v064.
+The two opening screens use ANTIC F and GTIA 11: an 80×192 pixel image
+with up to 16 shades at a common brightness. The letters received a rainbow
+fill, an offset colour shadow and brightness pulsing. A pixel with value
+zero remains black. The content and boundaries of the screens are as in v064.
 
-Pomocnik `$FEF0–$FF92` przełącza wyłącznie nieaktywną display listę pomiędzy
-trybami F i E, zachowując bity muzycznych DLI. Pracuje podczas zwykłych
-plansz; przed scenami bankowanymi obie listy wracają do trybu E. Odtwarzacz
-muzyki nie został zmieniony.
+The helper `$FEF0–$FF92` switches only the inactive display list between
+modes F and E, preserving the music DLI bits. It works during the regular
+screens; before banked scenes both lists return to mode E. The music player
+was not changed.
 
-[ODCZYT] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 63 testy OK,
-w tym kolory GTIA 11, przełączanie trybów i DLI na liniach 0, 78, 156 i 234.
-Atari800 7.2.1, PAL, 1088XE, Altirra OS, stereo: 14 958 klatek do ticku
-59832 miało liczniki muzyki i cztery próbkowane rejestry POKEY zgodne z v064.
-Od ticku 3200 skróty ekranu były zgodne na wszystkich porównanych klatkach;
-na przejściu z tytułu do szkoły różniły się dwie klatki. Pełne porównanie
-stereo POKEY z oryginalnym v035 dało 7 489 080 identycznych bajtów po
-jednokrotnym wyrównaniu początku. To nie zastępuje odsłuchu na docelowym Atari.
+[READ] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 63 tests OK,
+including GTIA 11 colours, mode switching and DLI on lines 0, 78, 156 and 234.
+Atari800 7.2.1, PAL, 1088XE, Altirra OS, stereo: 14 958 frames up to tick
+59832 had music counters and four sampled POKEY registers consistent with v064.
+From tick 3200 the screen shortcuts were consistent on all compared frames;
+at the transition from title to school two frames differed. A full stereo POKEY
+comparison with the original v035 gave 7 489 080 identical bytes after
+a single alignment of the start. This does not replace listening on the target Atari.
 
-Podgląd jest zrzutem z Atari800 z przybliżoną paletą emulatora. Wydanie:
+The preview is a screenshot from Atari800 with the emulator's approximate palette. Release:
 `releases/visual-prototype-v069.xex`; SHA-256
 `a7e7599a2ab63df7d88b492bc284582abdbbaa66fb59fdd01b814eae1704916c`.

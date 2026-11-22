@@ -1,53 +1,56 @@
-# V216 — credits i greetz nad leżącym chłopcem
+# V216 — credits and greetz over the boy lying down
 
-## Obraz i timeline
+## Image and timeline
 
-- 53850–56841: trzy plansze credits, po około pięć sekund.
-- 56842–59084: greetz, pięć widocznych wierszy; tekst przesuwa się w górę,
-  a każdy wiersz faluje poziomo według sinusoidy z przesuniętą fazą.
-- Od 59085: powrót pełnego dotychczasowego kadru i istniejący fade.
-- Zachowano całą bitmapę chłopca. W PAL pięć wierszy ANTIC 2 zastępuje
-  wcześniejsze górne i dolne marginesy. Bitmapa oraz PMG przesuwają się o
-  32 linie w dół na czas napisów, bez skalowania ani obcinania postaci.
-- ANTIC 2 dostaje białe litery na czarnym tle; przed bitmapą wraca
-  dotychczasowa paleta postaci. Zmiana palety odbywa się przez VCOUNT/WSYNC
-  w foreground, bez dodatkowych muzycznych DLI.
-- DLI wypadają po liniach 1, 79, 157, 235; odstęp pozostaje równy 78 liniom.
-- Treść pochodzi z `GREETZ_I_CREDITS.md`, z krótszym łamaniem i zapisem ASCII.
-  Nie pokazano niewypełnionych `[NAME]` ani proponowanego disclaimera przed intro.
+- 53850–56841: three credits screens, about five seconds each.
+- 56842–59084: greetz, five visible lines; the text scrolls up and each
+  line waves horizontally along a sine with an offset phase.
+- From 59085: return of the full previous frame and the existing fade.
+- The whole boy bitmap is preserved. In PAL, five ANTIC 2 rows replace
+  the earlier top and bottom margins. The bitmap and PMG move down by
+  32 lines for the duration of the captions, without scaling or cropping
+  the character.
+- ANTIC 2 gets white letters on a black background; before the bitmap the
+  previous character palette returns. The palette change happens through
+  VCOUNT/WSYNC in the foreground, without additional musical DLIs.
+- The DLIs fall after lines 1, 79, 157, 235; the spacing stays equal at 78 lines.
+- The content comes from `GREETZ_AND_CREDITS.md`, with shorter line breaks and
+  ASCII spelling. Unfilled `[NAME]` placeholders and the proposed disclaimer
+  before the intro were not shown.
 
-## Własność pamięci
+## Memory ownership
 
-- Nie zajęto żadnej luki w bankach rozszerzenia.
-- 1738 B spakowanych zasobów w sprawdzonych lukach podstawowej pamięci
-  wskazanych przez `outro_loader.GAPS`; końcówka danych zaczyna się pod `$3FC4`.
-- Loader: 364 B, `$3E58–$3FC3`. Loader i dane nie nakładają się.
-- Kontroler finału w banku 49: 816 B, `$5CD0–$5FFF` — brak dalszego zapasu.
-- Zmienne napisów: `$0DD0–$0DD7`, poza scanline pool, selektorem i jego
-  przestrzenią `$0DC0–$0DCF` oraz kluczami DL `$0DFE–$0DFF`.
-- Dopiero po skopiowaniu leżącego chłopca do `$9000` drugi bufor zostaje
-  oddany napisom: `$B000` — sklejony strumień LZ, `$B800–$BAFF` — kopia
-  normalnego DL, `$BC00–$BE53` — osobny DL napisów, `$C000–$CEFF` — rozpakowany kod, tekst i charset `$C800`.
-  Wcześniejsze sceny nadal posiadają oba pełne bufory.
-- Rozpakowanie jest jednorazowym zadaniem wieloramkowym. Muzyka nadal działa
-  przez NMI. Próg 210000 cykli w teście dotyczy zimnego wejścia, a nie FPS.
-- Przy końcu greetz normalny DL jest przygotowywany w nieaktywnym `$8400`
-  i publikowany w oknie VCOUNT 124–127.
+- No gap in the expansion banks was occupied.
+- 1738 B of packed resources in verified base-memory gaps indicated by
+  `outro_loader.GAPS`; the tail of the data starts at `$3FC4`.
+- Loader: 364 B, `$3E58–$3FC3`. Loader and data do not overlap.
+- Finale controller in bank 49: 816 B, `$5CD0–$5FFF` — no further headroom.
+- Caption variables: `$0DD0–$0DD7`, outside the scanline pool, the selector
+  and its `$0DC0–$0DCF` space, and the DL keys `$0DFE–$0DFF`.
+- Only after the boy lying down has been copied to `$9000` is the second
+  buffer handed over to the captions: `$B000` — joined LZ stream, `$B800–$BAFF`
+  — copy of the normal DL, `$BC00–$BE53` — separate caption DL,
+  `$C000–$CEFF` — unpacked code, text and charset `$C800`.
+  Earlier scenes still own both full buffers.
+- Unpacking is a one-off multi-frame task. Music still runs through NMI. The
+  210000-cycle threshold in the test refers to a cold entry, not FPS.
+- At the end of greetz the normal DL is prepared in the inactive `$8400`
+  and published in the VCOUNT 124–127 window.
 
-## Weryfikacja
+## Verification
 
-Podgląd CPU/ANTIC: `build/outro-v216-preview.png` — credits, greetz i finał.
-To rekonstrukcja obrazu, nie zrzut z fizycznego Atari. Testy obejmują
-rozpakowanie, wskaźniki tekstu, pełną bitmapę, powrót do finału, PMG, restart
-oraz porównania wcześniejszych scen z v198. [ODCZYT] Pełny przebieg dla v216: **154 testy, wszystkie zaliczone,
-bez pominięć**, 114,3 s. Atari800 PAL/1088XE, Altirra OS, stereo POKEY:
-**9 791 424 identycznych bajtów** względem oryginalnej v035; cały utwór.
-Ponowny build z aktualnych źródeł jest bajt w bajt zgodny z v216 (`cmp`).
-Wszystkie 64 bloki bankowe zachowano; zmienił się wyłącznie blok 63,
-czyli loader index 49 z kontrolerem finału. Pozostałe 63 bloki bankowe
-są identyczne z v198.
+CPU/ANTIC preview: `build/outro-v216-preview.png` — credits, greetz and finale.
+This is an image reconstruction, not a capture from physical Atari. The tests cover
+unpacking, text pointers, the full bitmap, return to the finale, PMG, restart
+and comparisons of earlier scenes with v198. [READ] Full run for v216: **154 tests, all passed,
+no skips**, 114.3 s. Atari800 PAL/1088XE, Altirra OS, stereo POKEY:
+**9 791 424 identical bytes** against the original v035; the whole track.
+A rebuild from the current sources is byte-for-byte identical to v216 (`cmp`).
+All 64 bank blocks are preserved; only block 63 changed,
+that is loader index 49 with the finale controller. The remaining 63 bank blocks
+are identical to v198.
 
-Generator rekonstrukcji podglądu: `tools/preview_outro.py`. Testy CPU
-nie stanowią pomiaru ANTIC DMA ani potwierdzenia działania na fizycznym Atari.
+Preview reconstruction generator: `tools/preview_outro.py`. The CPU tests
+are not a measurement of ANTIC DMA nor confirmation of operation on physical Atari.
 
-Robocze v199–v215 nie są wersjami do prezentacji.
+Working versions v199–v215 are not presentation versions.

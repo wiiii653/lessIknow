@@ -1,11 +1,11 @@
-# V175 — BNG! w dymku Trevora
+# V175 — BNG! in Trevor's speech bubble
 
-W komiksowym dymku ciosów Trevora naprzemienny napis to teraz `BNG!` i `BAM`.
-Dodano pikselowy glif wykrzyknika; cztery warstwy tekstu mieszczą się w tej
-samej szerokości dymku. Pozycje, rytm ciosów, fazy eksplozji i animacja nie
-zmieniły się.
+In the comic speech bubble of Trevor's punches, the alternating text is now `BNG!` and `BAM`.
+A pixel exclamation-mark glyph was added; four layers of text fit within the
+same bubble width. The positions, punch rhythm, explosion phases and animation
+did not change.
 
 - XEX: `build/visual-prototype-v175.xex`.
-- 307 współdzielonych wierszy, 2552 B kodu.
+- 307 shared rows, 2552 B of code.
 - SHA-256: `acb1f03deea22c6c747b5438b4dd75ad214ad834ca67be3365acbfcea0157675`.
-- Testów i odtwarzania emulatorowego nie uruchomiono.
+- No tests or emulator playback were run.

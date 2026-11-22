@@ -4,7 +4,8 @@ from itertools import groupby
 from build_sequence import Code
 from build_visual_prototype import xex_segment
 from extract_music import segments
-from outro_text import FINAL_MARK_ROWS, FINAL_MARK_WIDTH, GLYPHS, final_mark
+from outro_text import FINAL_MARK_ROWS, FINAL_MARK_WIDTH, GLYPHS, final_mark, font_data
+from outro_palette import GLYPH_INKS
 
 FONT = 0x0c00  # Restored by the late runtime segment, after all INIT refreshes.
 MARK = 0x3b00
@@ -120,7 +121,8 @@ def install(data, *, full_rate=False):
     entries = list(segments(data))
     title = 'THE LESS I KNOW THE BETTER'
     credit = 'A\\SLOP BY OGNJEN / SILLY VENTURE 2026 WE'
-    alphabet = ' ' + ''.join(sorted(set(title + credit + 'LOADING. ') - {' '}))
+    source_credit = "BASED ON TAME IMPALA'S MUSIC VIDEO"
+    alphabet = ' ' + ''.join(sorted(set(title + credit + source_credit + 'LOADING. ') - {' '}))
     codes = {ch: i for i, ch in enumerate(alphabet)}
 
     def text(line):
@@ -130,14 +132,15 @@ def install(data, *, full_rate=False):
         return text(('LOADING' + '.'*dots).ljust(len('LOADING...')))
 
     font = bytearray(1024)
+    ending_font = font_data() if full_rate else None
     for ch, i in codes.items():
         if ch != ' ':
             rows = GLYPHS[ch]
             if full_rate:
-                # Mode 4 uses the same background register as the mark.
-                rows = ((int(row[0]) << 6) | (int(row[1:3] != '00') << 4) |
-                        (int(row[3]) << 2) | int(row[4]) for row in rows)
-                font[i*8+1:i*8+8] = bytes(rows)
+                # Use the same three-pixel glyphs as the ending cards.
+                glyph = ending_font[ord(ch)*8:ord(ch)*8+8]
+                font[i*8:i*8+8] = bytes(glyph[max(0,row-1)]*pen
+                                          for row,pen in enumerate(GLYPH_INKS))
             else:
                 font[i*8+1:i*8+8] = bytes(int(row, 2) << 2 for row in rows)
     tiles_per_frame = FINAL_MARK_WIDTH * FINAL_MARK_ROWS
@@ -147,7 +150,7 @@ def install(data, *, full_rate=False):
         assert len(glyphs) == tiles_per_frame*8 and start + len(glyphs) <= len(font)
         font[start:start+len(glyphs)] = glyphs
 
-    dlist = bytes.fromhex('70707045003b05057070420038425038422838418038')
+    dlist = bytes.fromhex('70707045003b05057070420038704250387042d03e70422838418038')
     mark = bytearray(121)
     x = (40 - FINAL_MARK_WIDTH)//2
     for row in range(FINAL_MARK_ROWS):
@@ -172,13 +175,13 @@ def install(data, *, full_rate=False):
     refresh = bytes(c.finish())
 
     last_wrapper = max(i for i, (addr, _, _) in enumerate(entries) if addr == 0x3900)
-    early_blocks = [(FONT,font),(MARK,mark),(REFRESH,refresh)]
+    early_blocks = [(FONT,font),(MARK,mark),(REFRESH,refresh),(0x3ed0,text(source_credit))]
     refresh_entry = REFRESH
     if full_rate:
         glyph_start = FONT + len(codes)*8
         animation = frame_deltas([final_mark(i)[1] for i in range(32)])
         vbi, labels = frame_callback(glyph_start)
-        early_blocks = [(FONT,font),(MARK,mark),(VBI_CODE,vbi),(DELTAS,animation)]
+        early_blocks = [(FONT,font),(MARK,mark),(VBI_CODE,vbi),(DELTAS,animation),(0x3ed0,text(source_credit))]
         for address, block in early_blocks:
             assert all(end < address or start >= address+len(block)
                        for start, end, _ in entries[:last_wrapper+2])

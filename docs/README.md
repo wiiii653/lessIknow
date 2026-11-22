@@ -8,7 +8,7 @@ maintained project documentation in English.
 - [Project status](PLAN_STATUS.md) — approved release, current development
   state, validation limits and memory/loader constraints.
 - [Current demo timeline](TIMELINE_MAP.md) — concise scene overview.
-- [Post-Trevor montage](AKTUALNY_MONTAZ_V330.md) — detailed current cuts.
+- [Post-Trevor montage](CURRENT_MONTAGE_V330.md) — detailed current cuts.
 - [Technical overview](TECHNICAL_OVERVIEW_EN.md) — rendering and runtime
   architecture.
 - [Hardware loader contract](HARDWARE_LOADER_CONTRACT.md) — mandatory rules
@@ -20,11 +20,10 @@ maintained project documentation in English.
 
 ## Historical records
 
-The `Vxxx_*.md` files are chronological change records. Many were written in
-Polish and describe historical builds; they may contain superseded values.
-Use the current references above and inspect the source/build JSON before
-making implementation decisions. Historical notes should be translated to
-English when they are next revised.
+The `Vxxx_*.md` files are chronological change records. They describe
+historical builds and may contain superseded values. Use the current
+references above and inspect the source/build JSON before making
+implementation decisions.
 
 The imported `docs/boruta-atari8/` technical-reference library is preserved as
 source material and is not project-authored documentation.

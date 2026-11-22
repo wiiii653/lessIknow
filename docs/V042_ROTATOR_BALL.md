@@ -1,27 +1,27 @@
-# v042 — piłka w rotatorze i tunelu
+# v042 — ball in the rotator and tunnel
 
-Piłka pozostaje widoczna zarówno w tunelu, jak i w rotatorze. W tunelu jest
-na środku. Podczas 1024-tickowej fazy rotatora wykonuje pełne poziome wahnięcie:
-środek → prawa strona → środek → lewa strona → środek; skrajne odchylenie to
-40 logicznych pikseli. Ruch i pozycje satelitów są liczone względem piłki.
-Na granicy z następnym tunelem jest ponownie na środku. Rotacja, tęczowa paleta,
-cztery duszki i cztery pociski zostają zachowane; czasy scen bez zmian.
+The ball remains visible both in the tunnel and in the rotator. In the tunnel it
+is in the centre. During the 1024-tick rotator phase it performs a full horizontal
+swing: centre → right side → centre → left side → centre; the extreme deviation is
+40 logical pixels. The movement and positions of the satellites are calculated relative to the ball.
+At the boundary with the next tunnel it is back in the centre. The rotation, rainbow palette,
+four players and four missiles are preserved; scene timings unchanged.
 
-Tablica 64 położeń jest indeksowana z zegara muzyki, bez zależności od liczby
-wywołań renderera. Klatki bitmapy rotatora oraz istniejąca sekwencja jego
-kolorów nie uległy zmianie. Procedura PMG w banku 17 ma 1817 bajtów i mieści
-się w przedziale `$7800–$7FFF`. Po opuszczeniu sceny odtwarzana jest grafika
-PMG dla tańca.
+The table of 64 positions is indexed from the music clock, independent of the number of
+renderer calls. The rotator bitmap frames and its existing colour sequence did not change.
+The PMG routine in bank 17 is 1817 bytes and fits
+within `$7800–$7FFF`. After leaving the scene, the dance
+PMG graphics are restored.
 
-[ODCZYT] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 53 testy PASS,
-w tym 64 fazy przelotu, obie skrajne strony, ruch wszystkich pocisków z piłką,
-powrót do środka, przejścia scen i odtworzenie duszków tańca.
+[READ] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 53 tests PASS,
+including 64 fly-through phases, both extreme sides, the movement of all missiles with the ball,
+the return to the centre, scene transitions and restoration of the dance sprites.
 
-[ODCZYT] Atari800 PAL, 1088XE: 11 zrzutów obejmujących fazy przejścia przez
-rotator i powrót do tunelu, położenie oraz dane graczy i pocisków. Porównanie
-stereo POKEY `APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo
-build/visual-prototype-v042.xex --seconds 12`: 8 250 336 identycznych bajtów,
-około 2298,2 s emulacji i cały utwór. Bez osobnego odsłuchu na fizycznym Atari.
+[READ] Atari800 PAL, 1088XE: 11 dumps covering the rotator
+passage phases and the return to the tunnel, the positions and data of players and missiles.
+Stereo POKEY comparison `APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo
+build/visual-prototype-v042.xex --seconds 12`: 8 250 336 identical bytes,
+about 2298.2 s of emulation and the whole track. Without a separate listening test on physical Atari.
 
-Podgląd: `build/v042-rotator-ball.gif` (kolory PAL przybliżone). SHA256 XEX:
+Preview: `build/v042-rotator-ball.gif` (PAL colours approximate). XEX SHA256:
 `70deb4337487574a6d40ce04535bf81e536abaa0cf3dd2550f2c3a0bab33581a`.

@@ -1,24 +1,25 @@
-# v041 — tempo wsadu i śledzenie dłoni
+# v041 — dunk pacing and hand tracking
 
-Ujęcie wsadu zachowuje ticki 22440–23935. Przygotowanie trwa 752 ticki,
-następne dwie pozy w locie po 224 ticki, a końcowa poza 296 ticków. Zmiany
-pozy są zsynchronizowane z istniejącym zegarem muzyki. To cztery ilustracje;
-przyspieszenie akcji uzyskano przez ich montaż, bez dodatkowych klatek rysunku.
+The dunk shot keeps ticks 22440–23935. The preparation lasts 752 ticks,
+the next two in-flight poses 224 ticks each, and the final pose 296 ticks. Pose
+changes are synchronised with the existing music clock. These are four
+illustrations; the acceleration of the action was achieved by cutting them together,
+without additional drawing frames.
 
-Środek piłki PMG jest przypięty do dłoni osobno w każdej z czterech póz:
-(85,102), (99,28), (115,18), (124,32), w logicznych współrzędnych 160×192.
-Po przytrzymaniu przy obręczy piłka spada; błysk następuje przy wypuszczeniu.
-Piłka zachowuje kolorowe duszki i pociski.
+The centre of the PMG ball is pinned to the hand separately in each of the four poses:
+(85,102), (99,28), (115,18), (124,32), in logical 160×192 coordinates.
+After the hold at the rim the ball falls; the flash occurs on release.
+The ball keeps the coloured sprites and missiles.
 
-[ODCZYT] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 52 testy PASS,
-w tym położenia piłki na granicach póz, moment wypuszczenia, pojedynczy spadek,
-przejście scen i odtwarzanie PMG po restarcie.
+[READ] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 52 tests PASS,
+including the ball positions at pose boundaries, the release moment, a single fall,
+scene transitions and PMG playback after a restart.
 
-[ODCZYT] Atari800 PAL 1088XE: 11 zrzutów faz wsadu, prawidłowe pozy, współrzędne
-piłki oraz dane PMG. `APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py
---demo build/visual-prototype-v041.xex --seconds 12`: 9 203 904 identycznych
-bajtów stereo POKEY, około 2563,8 s emulacji, pełny utwór. Nie wykonano
-osobnego odsłuchu na fizycznym Atari.
+[READ] Atari800 PAL 1088XE: 11 screenshots of the dunk phases, correct poses,
+ball coordinates and PMG data. `APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py
+--demo build/visual-prototype-v041.xex --seconds 12`: 9 203 904 identical
+stereo POKEY bytes, about 2563.8 s of emulation, the full track. No separate
+listening test on a physical Atari was performed.
 
-Podgląd: `build/v041-dunk.gif`. SHA256 XEX:
+Preview: `build/v041-dunk.gif`. XEX SHA256:
 `6728426166c4151323cb9ccd4def6a81cd00c2d15599eab12a1991d04bc541ee`.

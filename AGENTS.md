@@ -11,7 +11,7 @@ The latest approved release is v390 / stereo 133. The current source tree has
 unreleased development edits. Release 058 / v330 is the last full run confirmed
 on physical Atari 1088 Rambo hardware using AVG. See `docs/PLAN_STATUS.md` for
 the current evidence and limitations, and `docs/TIMELINE_MAP.md` plus
-`docs/AKTUALNY_MONTAZ_V330.md` for current timing.
+`docs/CURRENT_MONTAGE_V330.md` for current timing.
 
 ## Hardware loader contract
 

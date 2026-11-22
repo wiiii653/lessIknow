@@ -1,84 +1,87 @@
-# Przebudowa sali gimnastycznej — v009
+# Gym hall rebuild — v009
 
-Data: 2026-11-04. Wynik: `build/visual-prototype-v009.xex`.
+Date: 2026-11-04. Result: `build/visual-prototype-v009.xex`.
 
-## Obraz
+## Image
 
-- [ODCZYT] Sala wypełnia cały kadr: belki i ściany w perspektywie, wysokie
-  okna, proporce, boczne trybuny, drzwi, tablica z koszem oraz duży parkiet.
-  Postacie mają ciemny obrys i cienie kontaktowe. Geometria jest zapisana
-  w `tools/gym_background.py`, kompozycja w `tools/build_sequence.py`.
-- [ODCZYT] Pełne obrazy dla solo, duetu i trio zastępują prostokątne maski
-  PMG. Tło jest obecne także za tancerkami, a źródłowe kolorowe piksele
-  wszystkich czterech póz pozostają zachowane.
-- [ODCZYT] Podglądy `build/v009-gym-{solo,duo,trio}.png` odtworzono z RAM
-  rzeczywistego Atari800, po starcie loadera i wykonaniu callbacku z aktywnymi
-  przerwaniami. Kolory RGB są przybliżone. Obrazy mają proporcje szerokich
-  pikseli ANTIC E: 160×192 logicznie odpowiada 320×192.
+- [READ] The hall fills the entire frame: beams and walls in perspective, tall
+  windows, banners, side stands, doors, a basket backboard and a large floor.
+  The characters have dark outlines and contact shadows. The geometry is stored
+  in `tools/gym_background.py`, the composition in `tools/build_sequence.py`.
+- [READ] Full images for solo, duo and trio replace the rectangular PMG masks.
+  The background is also present behind the dancers, and the source colour
+  pixels of all four poses remain preserved.
+- [READ] The `build/v009-gym-{solo,duo,trio}.png` previews were reproduced from
+  the RAM of a real Atari800, after the loader started and the callback ran with
+  interrupts active. The RGB colours are approximate. The images have the
+  aspect ratio of wide ANTIC E pixels: 160×192 logically corresponds to 320×192.
 
-## V2 — własność PORTB
+## V2 — PORTB ownership
 
-- [ODCZYT] Wrapper NMI pod `$1963` zachowuje rejestry jak oryginalny player,
-  wykonuje WSYNC, zapisuje PORTB i wybiera bank dekodera z `$24A5` oraz tablicy
-  `$26FC`. Wchodzi do oryginalnej obsługi pod `$2218`.
-- [ODCZYT] Epilog pod `$2312` kieruje do wrappera przywracającego poprzedni
-  PORTB przed odtworzeniem rejestrów i RTI. Muzyka może przerwać kopiowanie
-  dowolnego z sześciu banków grafiki.
-- [ODCZYT] Test py65 wstrzykuje prawdziwe NMI podczas kopiowania w każdym
-  banku: poprawny powrót, zachowany PORTB i wynikowy obraz zgodny pikselowo.
+- [READ] The NMI wrapper at `$1963` preserves registers like the original
+  player, executes WSYNC, writes PORTB and selects the decoder bank from `$24A5`
+  and the `$26FC` table. It enters the original handler at `$2218`.
+- [READ] The epilogue at `$2312` jumps to a wrapper that restores the previous
+  PORTB before restoring registers and RTI. Music can interrupt the copying of
+  any of the six graphics banks.
+- [READ] A py65 test injects a real NMI during copying in every bank: correct
+  return, preserved PORTB and a pixel-identical resulting image.
 
-## V3 — banki oraz pamięć główna
+## V3 — banks and main memory
 
-- [ODCZYT] Wykorzystano sześć banków 9–14, wcześniej zbadanych jako nigdy
-  nieczytane przez dekoder v035. Każdy zawiera dwa kadry po 8 KiB: razem
-  cztery pozy × trzy liczby tancerek. Banki muzyczne 1–8 są bajtowo identyczne
-  z oryginałem. Nie usunięto znacznika końca muzyki w banku 8.
-- [ODCZYT] RAM `$9000–$AFFF` i `$B000–$CFFF` to dwa bufory obrazu. CPU kopiuje
-  do nieaktywnego bufora przy aktywnych NMI; ANTIC czyta dotychczasowy bufor.
-  Przełączenie listy następuje podczas pionowego wygaszania. Każdy wiersz
-  pozostaje wewnątrz strony DMA 4 KiB.
-- [ODCZYT] `$3300–$3BFF` mieści statyczne bitmapy. Wyłączono starą wizualizację
-  wskaźników i inicjalizację fontu. Pięć cyfr starego zegara przeniesiono
-  spod `$34DA–$34DE` do `$83F0–$83F4` w kodzie restartu i odliczania; instrukcje
-  zachowują typy i czas wykonania.
-- [ODCZYT] Pełny przebieg dekodera i restartu przez 59 833 aktualizacje z
-  ochroną `$3300–$3BFF` i `$9000–$CFFF` nie wykazał dostępu do tych regionów.
-  W tej izolowanej próbie odtworzono oryginalny epilog RTI, ponieważ tracer
-  wywołuje `$2210` bezpośrednio. Wrapper osobno obejmuje test przerwań.
-- [ODCZYT] 425 statycznych wierszy zajmuje 16 515 B po współdzieleniu;
-  callback z wrapperem: 1417 B; tablice wierszy: 3264 B.
+- [READ] Six banks 9–14 were used, previously examined as never read by the
+  v035 decoder. Each contains two 8 KiB frames: four poses × three dancer counts
+  in total. Music banks 1–8 are byte-identical to the original. The end-of-music
+  marker in bank 8 was not removed.
+- [READ] RAM `$9000–$AFFF` and `$B000–$CFFF` are two image buffers. The CPU
+  copies into the inactive buffer with NMIs active; ANTIC reads the existing
+  buffer. The list is switched during vertical blanking. Every row stays within
+  a 4 KiB DMA page.
+- [READ] `$3300–$3BFF` holds static bitmaps. The old indicator visualisation and
+  font initialisation were disabled. The five digits of the old clock were moved
+  from `$34DA–$34DE` to `$83F0–$83F4` in the restart and countdown code; the
+  instructions keep their types and execution time.
+- [READ] A full decoder and restart run over 59 833 updates with `$3300–$3BFF`
+  and `$9000–$CFFF` protection showed no access to those regions. In this
+  isolated test the original RTI epilogue was reproduced, because the tracer
+  calls `$2210` directly. The wrapper separately covers the interrupt test.
+- [READ] 425 static rows occupy 16 515 B after sharing; the callback with the
+  wrapper: 1417 B; row tables: 3264 B.
 
-## V6 — regresja muzyki i czasu
+## V6 — music and timing regression
 
-- [ODCZYT] Atari800, PAL, `-1088xe`, Altirra OS, stereo POKEY, headless.
-  DLI pozostają w liniach 0, 78, 156 i 234. Granice scen oraz progi solo,
-  duetu i trio zachowują poprzednie wartości licznika muzyki.
-- [ODCZYT] Porównanie v009 z v035: **6 620 400 identycznych bajtów stereo
-  POKEY**, około 1844,2 s emulacji, obejmujące cały utwór. Początkową ciszę
-  wyrównano tylko raz; nie przesuwano ani nie pomijano próbek w trakcie.
-- [ODCZYT] Rzeczywiste odstępy między callbackami tańca w Atari800: 16–20
-  ticków, około 10–12,5 klatki obrazu/s. W 16 kolejnych kadrach wystąpiły
-  wszystkie cztery pozy, z okazjonalnym przeskokiem pozy przy dłuższym
-  kopiowaniu. Tick muzyki działa niezależnie i nie gubi aktualizacji.
-- [ODCZYT] Nie wykonano odsłuchu ani testu na fizycznym Atari. Ten test nie
-  zmienia odstępów DLI w ramach eksperymentu V6.
+- [READ] Atari800, PAL, `-1088xe`, Altirra OS, stereo POKEY, headless.
+  DLI remain on lines 0, 78, 156 and 234. Scene boundaries and the solo, duo and
+  trio thresholds keep the previous music counter values.
+- [READ] Comparison of v009 with v035: **6 620 400 identical stereo POKEY
+  bytes**, about 1844.2 s of emulation, covering the entire track. The initial
+  silence was aligned only once; no samples were shifted or skipped in between.
+- [READ] Actual gaps between dance callbacks in Atari800: 16–20 ticks, about
+  10–12.5 frames/s. All four poses appeared within 16 consecutive frames, with
+  an occasional pose skip during longer copying. The music tick runs
+  independently and does not lose updates.
+- [READ] No listening test or test on physical Atari was performed. This test
+  does not change the DLI spacing within the V6 experiment.
 
-## Weryfikacja i odtworzenie
+## Verification and reproduction
 
-- [ODCZYT] 20 testów zakończonych powodzeniem.
-- [ODCZYT] Dodatkowo porównano cały raster z RAM rzeczywistego Atari800 dla
-  tytułu, pierwszego kadru dziewczyny, solo, duetu i trio: każdy obraz zgodny
-  piksel po pikselu z referencją, bez korupcji statycznych danych.
-- [ODCZYT] Monitor Atari800 zatrzymywano na `$220D`, po powrocie callbacku;
-  zrzuty `$0000–$CFFF` oraz `$D800–$FFFF` zawierały listy ANTIC i dane obrazu.
-  Zmieniano licznik `$24A7–$24A9` wyłącznie w teście obrazów, aby szybko
-  sprawdzić konkretne sceny. Porównanie muzyki przebiegało bez takiej zmiany.
+- [READ] 20 tests completed successfully.
+- [READ] In addition, the entire raster was compared with the RAM of a real
+  Atari800 for the title, the girl's first frame, solo, duo and trio: every
+  image matched pixel by pixel against the reference, without corruption of
+  static data.
+- [READ] The Atari800 monitor was stopped at `$220D`, after the callback
+  returned; dumps of `$0000–$CFFF` and `$D800–$FFFF` contained the ANTIC lists
+  and image data. The counter `$24A7–$24A9` was changed only in the image tests,
+  to check specific scenes quickly. The music comparison ran without such a
+  change.
 
 ```sh
 make check PYTHON=/tmp/tliktb-girl-venv/bin/python
 APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo build/visual-prototype-v009.xex --seconds 10
 ```
 
-[ODCZYT] Poprzednie XEX-y zachowano; v008 jest pośrednim buildem przebudowy.
+[READ] Previous XEX files were preserved; v008 is an intermediate build of the
+rebuild.
 SHA-256 v009: `258d94eb37b9efb080438c15276bea685dfd9ef3859a7bb9e5507e95361c2ed6`.
-SHA-256 v007 pozostało `60fe082a4fd87b1529ede5d0349adde5a48bb57861a32dd93e9512a12a1f022d`.
+SHA-256 v007 remains `60fe082a4fd87b1529ede5d0349adde5a48bb57861a32dd93e9512a12a1f022d`.

@@ -1,33 +1,33 @@
-# v021 — jeden powolny lot i obrót piłki
+# v021 — one slow ball flight and spin
 
-[ODCZYT] Ujęcie nadal trwa od ticka 6981 do 7978. Lot wykorzystuje
-cały 16-bitowy czas od początku ujęcia: faza = (tick − 6981) >> 3,
-0–124. Piłka leci raz, od dłoni do obręczy, przez około pięć sekund.
-Nie ma powtarzania, opadania ani kolejnego odbicia w tym ujęciu.
+[READ] The shot still runs from tick 6981 to 7978. The flight uses the
+full 16-bit time from the start of the shot: phase = (tick − 6981) >> 3,
+0–124. The ball flies once, from the hand to the hoop, over about five seconds.
+There is no repetition, no falling and no second bounce in this shot.
 
-[ODCZYT] Rozmiar wzrósł z 8×16 do 16×32 pikseli logicznych:
-playery mają podwójną szerokość, maska ma 16 podwójnych linii.
-Osiem klatek zmienia położenie zakrzywionego szwu, równikowego szwu
-oraz kolorowych paneli. Obraca się geometria maski, obok niezależnej
-zmiany czterech kolorów GTIA. Pociski nadal rysują kolorowe krople.
+[READ] The size grew from 8×16 to 16×32 logical pixels:
+the players are double width, and the mask has 16 double lines.
+Eight frames change the position of the curved seam, the equatorial seam
+and the coloured panels. The mask geometry rotates, alongside an independent
+change of the four GTIA colours. The missiles still draw coloured droplets.
 
-## V1 / V6 — sprawdzenie
+## V1 / V6 — verification
 
-[ODCZYT] 34 testy OK: ruch przez całe ujęcie, brak restartu po 256,
-512 i 768 tickach, nowy rozmiar i osiem różnych masek obrotu.
-Sprawdzono również zachowanie tła i odtworzenie PMG sceny tańca.
-W Atari800 PAL `-1088xe` zweryfikowano dziewięć faz od początku do
-ostatniego ticka ujęcia, następne ujęcie oraz powrót do tańca.
-Fazy na zrzutach zgadzają się z pełnym czasem od początku rzutu.
+[READ] 34 tests OK: movement throughout the shot, no restart after 256,
+512 and 768 ticks, the new size, and eight different rotation masks.
+Background behaviour and the recreation of the dance scene PMG were also
+checked. In Atari800 PAL `-1088xe`, nine phases were verified from the start
+to the last tick of the shot, plus the next shot and the return to the dance.
+The phases in the screenshots agree with the full time from the start of the throw.
 
-[ODCZYT] Pełne porównanie stereo POKEY z oryginałem:
-8 980 704 identyczne bajty, około 2501,6 s emulacji.
+[READ] Full stereo POKEY comparison with the original:
+8 980 704 identical bytes, about 2501.6 s of emulation.
 
 ```sh
 make check PYTHON=/tmp/tliktb-girl-venv/bin/python
 APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo build/visual-prototype-v021.xex --seconds 12
 ```
 
-[ZAŁOŻENIE] Pozostaje kontrola na fizycznym Atari. GIF przybliża kolory PAL
-oraz proporcje pikseli: `build/v021-slow-spinning-ball.gif`.
-Wcześniejsze XEX-y zachowano.
+[ASSUMPTION] Verification on physical Atari remains. The GIF approximates PAL
+colours and pixel proportions: `build/v021-slow-spinning-ball.gif`.
+Earlier XEX files were kept.

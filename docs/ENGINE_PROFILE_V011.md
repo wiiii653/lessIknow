@@ -1,39 +1,39 @@
-# Profil silnika v011
+# Engine profile v011
 
-## V1 — koszt instrukcji muzyki
+## V1 — music instruction cost
 
-[ODCZYT] Wykonano pełny utwór w py65 z RuntimeMemory, wrapperem NMI v011,
-oryginalnym restartem i dekoderem. 59 833 przerwania: min. 347, średnia
-680,81, maks. 1427 cykli instrukcji (tick indeksowany od zera: 23933).
-Maksymalna suma czterech kolejnych przerwań: 4881 cykli.
-Pomiar obejmuje wejście NMI modelowane przez py65, nie obejmuje oczekiwania
-WSYNC ani kradzieży cykli przez ANTIC. Nie zamyka sprzętowego profilowania V1.
+[READ] The full track was run in py65 with RuntimeMemory, the v011 NMI
+wrapper, the original restart and the decoder. 59,833 interrupts: min 347, mean
+680.81, max 1427 instruction cycles (tick indexed from zero: 23933).
+Maximum sum of four consecutive interrupts: 4881 cycles.
+The measurement covers the NMI entry modelled by py65, it does not cover the WSYNC
+wait or cycle stealing by ANTIC. It does not close the hardware profiling of V1.
 
 ## Renderer
 
-[ODCZYT] Koszt wywołania callbacku przy ustawionym VCOUNT=124 (bez czekania
-na vblank, bez DMA oraz bez wstrzykiwania NMI):
+[READ] Cost of a callback invocation with VCOUNT=124 set (without waiting
+for vblank, without DMA and without injecting NMI):
 
-- title: 16166 cykli.
-- school: 16340 cykli.
-- practice1: 93424 cykli.
-- practice2: 93620 cykli.
-- practice3: 93601 cykli.
-- solo: 93788 cykli.
-- duo: 93773 cykli.
-- trio: 93754 cykli.
-- kaleidoscope: 19394 cykli.
+- title: 16166 cycles.
+- school: 16340 cycles.
+- practice1: 93424 cycles.
+- practice2: 93620 cycles.
+- practice3: 93601 cycles.
+- solo: 93788 cycles.
+- duo: 93773 cycles.
+- trio: 93754 cycles.
+- kaleidoscope: 19394 cycles.
 
-[ODCZYT] Każde wywołanie w treningu i tańcu kopiuje 8192 B i buduje listę
-192 LMS. Trening kopiuje ten sam atlas nawet wtedy, gdy ujęcie się nie zmienia.
-PMG pozostaje wyłączone w v011.
+[READ] Each invocation in practice and dance copies 8192 B and builds a list
+of 192 LMS. Practice copies the same atlas even when the shot does not change.
+PMG remains disabled in v011.
 
-[WNIOSEK] Pierwsza optymalizacja: zachować atlas treningu w buforach,
-a statyczne listy przebudowywać przy zmianie ujęcia. W tańcu rozważyć różnice
-między pozami, z uwzględnieniem zawartości każdego z dwóch buforów.
-Drobne animacje przez PMG i rejestry palety wymagają mniej pracy CPU niż
-kolejne pełnoekranowe kopie, ale dodatkowe DMA nadal wymaga pomiaru.
+[CONCLUSION] First optimisation: keep the practice atlas in the buffers,
+and rebuild the static lists when the shot changes. In the dance, consider the differences
+between poses, taking into account the contents of each of the two buffers.
+Small animations via PMG and palette registers require less CPU work than
+further full-screen copies, but the additional DMA still requires measurement.
 
-[ZAŁOŻENIE] Nie wyznaczono jeszcze gwarantowanego wolnego budżetu cykli
-w każdej linii z włączonym PMG. Bez takiego pomiaru nie deklarujemy stałej
-liczby wolnych cykli na dodatkowe efekty.
+[ASSUMPTION] No guaranteed free cycle budget per line with PMG enabled
+has been determined yet. Without such a measurement we do not declare a fixed
+number of free cycles for additional effects.

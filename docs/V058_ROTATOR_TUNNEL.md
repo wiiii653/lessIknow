@@ -1,20 +1,20 @@
-# V058 — rotator, tunel i ruch piłki
+# V058 — rotator, tunnel and ball movement
 
-Rotator używa okresowych, czterokrotnie symetrycznych rozet; tunel używa
-zakrzywionych pasm i spiralnych fal. Wzory zamykają się w pętli klatek.
+The rotator uses periodic, four-fold symmetric rosettes; the tunnel uses
+curved bands and spiral waves. The patterns loop through frames.
 
-Piłka na playerach wykonuje w rotatorze pełny poziomy tor nieskończoności:
-pozycje X i Y są wyliczane niezależnie, bez rysowania śladu. Jej obracające
-się maski zmieniają powierzchnię z 156 do 352 pikseli PMG, sugerując
-oddalanie i przybliżanie. Pociski nadal orbitują wokół piłki. W tunelu
-zachowano osobny mały ruch obu osi; test sprawdza zakrycie jego środka.
+The ball on the players performs a full horizontal figure-eight path in the rotator:
+the X and Y positions are computed independently, without drawing a trail. Its rotating
+masks change the area from 156 to 352 PMG pixels, suggesting
+receding and approaching. The missiles still orbit around the ball. In the tunnel
+a separate small movement of both axes is retained; the test checks coverage of its centre.
 
-Granice scen i odtwarzacz pozostają jak w v057. `make check` przeszło 60
-testów, w tym tor obu osi, powrót do środka i zakrycie dziury tunelu; po
-dodaniu kontroli skali maski uruchomiono także ten test osobno. Pełne
-porównanie stereo POKEY z oryginałem dało 8 152 272 identyczne bajty po
-jednorazowym wyrównaniu początku. Podglądy są renderem procedur 6502 z
-przybliżoną paletą, nie nagraniem z fizycznego Atari.
+The scene boundaries and the player remain as in v057. `make check` passed 60
+tests, including the path of both axes, the return to the centre and coverage of the tunnel hole;
+after adding the mask scale check, that test was also run separately. A full
+stereo POKEY comparison with the original gave 8,152,272 identical bytes after
+a one-off alignment of the start. The previews are a render of the 6502 procedures with
+an approximate palette, not a recording from a physical Atari.
 
-Wydanie: `releases/visual-prototype-v058.xex`, SHA-256
+Release: `releases/visual-prototype-v058.xex`, SHA-256
 `549e4b2bc6c42c9331f4685709836fa31a8a98e84f991ef3e0b7a8dcbf276c24`.

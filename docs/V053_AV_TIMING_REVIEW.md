@@ -1,56 +1,61 @@
-# Porównanie synchronizacji obrazu v051 i v053
+# Comparison of video synchronisation in v051 and v053
 
-## Metoda
+## Method
 
-[ODCZYT] Uruchomiono oba wydania XEX w osobno skompilowanym Atari800 7.2.1:
-PAL, `-1088xe`, Altirra OS, stereo POKEY, bez BASIC, z rysowaniem każdej klatki.
-Instrumentowany emulator i ślady zapisano w `/tmp`; plików XEX nie zmieniano.
-Ślad klatkowy zawiera licznik muzyki `$24A7–$24A9`, stan sceny `$83E0`,
-wskaźnik display listy, kolory GTIA, cztery rejestry POKEY i skrót FNV-1a
-poprzednio wyrenderowanego bufora ekranu. Osobny ślad rejestruje rzeczywiste
-zapisy do GTIA, ANTIC i POKEY z licznikiem, linią rastra i pozycją cyklu.
+[READ] Both XEX releases were run in a separately compiled Atari800 7.2.1:
+PAL, `-1088xe`, Altirra OS, stereo POKEY, without BASIC, with every frame
+drawn. The instrumented emulator and traces were saved in `/tmp`; the XEX files
+were not modified. The frame trace contains the music counter `$24A7–$24A9`,
+the scene state `$83E0`, the display list pointer, the GTIA colours, four
+POKEY registers and an FNV-1a hash of the previously rendered screen buffer. A
+separate trace records the actual writes to GTIA, ANTIC and POKEY with a
+counter, raster line and cycle position.
 
-[ODCZYT] Porównano 14 958 klatek od pierwszego niezerowego licznika do ticku
-59832. Na odpowiadających sobie klatkach licznik muzyki, stan sceny i cztery
-próbkowane rejestry POKEY były zgodne. Skrót ekranu i stan sceny opisują różne
-chwile: skrót dotyczy poprzednio wyrenderowanej klatki. Zgodny stan `$83E0`
-nie dowodzi sam w sobie, że nowe ujęcie jest już widoczne.
+[READ] 14 958 frames were compared from the first non-zero counter to tick
+59832. On corresponding frames the music counter, scene state and the four
+sampled POKEY registers matched. The screen hash and the scene state describe
+different moments: the hash refers to the previously rendered frame. A matching
+`$83E0` state does not by itself prove that the new shot is already visible.
 
-## Zaobserwowane różnice
+## Observed differences
 
-[ODCZYT] W pierwszych scenach szkoły i treningu oraz w portretach dziewczyny
-i scenie Trevora skróty odpowiadających sobie klatek były zgodne w badanym
-przebiegu. Różnice wystąpiły w tańcu (46 z 748 klatek), pierwszej mozaice
-(333 z 748), koszykówce (190 z 748) i drugiej mozaice (3168 z 6731). Skrót
-FNV jest wskaźnikiem różnic, nie analizą ich treści ani dowodem braku kolizji.
+[READ] In the first school and training scenes as well as in the girl's
+portraits and the Trevor scene, the hashes of corresponding frames matched in
+the examined run. Differences occurred in the dance (46 of 748 frames), the
+first mosaic (333 of 748), the basketball (190 of 748) and the second mosaic
+(3168 of 6731). The FNV hash is an indicator of differences, not an analysis of
+their content nor proof of the absence of collisions.
 
-[ODCZYT] Pierwsza mozaika, zapis GTIA `$D016` wartości `$8A`: v053 przy ticku
-12552, linia 255; v051 przy ticku 12560, linia 255. Różnica wynosi dwie klatki
-PAL, około 40 ms. W obu wersjach zapis POKEY AUDF1 wartości `$03` nastąpił
-przy ticku 12528, linia 9. To punkt odniesienia w strumieniu rejestrów; sam
-zapis AUDF nie dowodzi, że jest słyszalnym początkiem beatu.
+[READ] First mosaic, GTIA write `$D016` of value `$8A`: v053 at tick 12552,
+line 255; v051 at tick 12560, line 255. The difference is two PAL frames, about
+40 ms. In both versions the POKEY AUDF1 write of value `$03` occurred at tick
+12528, line 9. This is a reference point in the register stream; the AUDF write
+alone does not prove that it is the audible start of the beat.
 
-[ODCZYT] Druga mozaika, zapis GTIA `$D016` wartości `$AA`: v053 przy ticku
-33112, linia 254; v051 przy ticku 33128, linia 310. Jest to około cztery
-klatki i 56 linii rastra różnicy, około 84 ms. W obu wersjach zapis AUDF1
-wartości `$FE` wystąpił przy ticku 33095, linia 243. W v053 zmiana GTIA
-następuje przed późniejszym zapisem AUDF1 `$43` przy ticku 33118, linia 166;
-w v051 po nim. Nie ustalono, który zapis POKEY odpowiada odbieranemu beatowi.
+[READ] Second mosaic, GTIA write `$D016` of value `$AA`: v053 at tick 33112,
+line 254; v051 at tick 33128, line 310. That is about four frames and 56 raster
+lines of difference, about 84 ms. In both versions the AUDF1 write of value
+`$FE` occurred at tick 33095, line 243. In v053 the GTIA change occurs before
+the later AUDF1 write of `$43` at tick 33118, line 166; in v051 after it. It was
+not determined which POKEY write corresponds to the perceived beat.
 
-[WNIOSEK] Zmiana w v053 przesuwa niektóre faktyczne akcenty obrazu bardziej,
-niż wynikałoby z samej różnicy 1–3 progowych ticków: callback może pracować
-przez kilka klatek i zakończyć aktualizację na innym wygaszaniu. To wyjaśnia
-możliwość odczuwalnej różnicy względem v051, ale samo w sobie nie wskazuje,
-która wersja jest lepiej dopasowana do słyszalnego ataku muzycznego.
+[CONCLUSION] The change in v053 shifts some actual visual accents more than
+would follow from the 1–3 threshold ticks alone: the callback can work over
+several frames and finish the update in a different blanking interval. This
+explains the possibility of a perceptible difference relative to v051, but by
+itself it does not indicate which version is better matched to the audible
+musical attack.
 
-## Ograniczenia
+## Limitations
 
-- Ślad rejestrów ma rozdzielczość instrukcji emulatora i raster, a ślad obrazu
-  jest próbkowany raz na klatkę. Nie wykonano analizy rzeczywistego przebiegu
-  audio ani odsłuchu A/B; wpis AUDF to zmiana rejestru, nie automatycznie beat.
-- Poprzednie porównanie stereo POKEY v053 z v035 wyrównywało nagrania przy
-  pierwszej niezerowej próbce; nie mierzyło absolutnej synchronizacji A/V.
-- Zbadano Atari800 i jedną konfigurację rozszerzenia, nie Altirrę ani sprzęt.
-- Ślady tymczasowe: `/tmp/tliktb-v051-trace.csv`, `/tmp/tliktb-v053-trace.csv`,
-  `/tmp/tliktb-v051-writes.csv`, `/tmp/tliktb-v053-writes.csv`. Instrumentowany
-  kod znajduje się w `/tmp/atari800-7.2.1/src/` i nie jest częścią wydania.
+- The register trace has the resolution of an emulator instruction and the
+  raster, while the video trace is sampled once per frame. No analysis of the
+  actual audio waveform and no A/B listening test were performed; the AUDF entry
+  is a register change, not automatically a beat.
+- The previous stereo POKEY comparison of v053 with v035 aligned the recordings
+  at the first non-zero sample; it did not measure absolute A/V synchronisation.
+- Atari800 and one memory expansion configuration were examined, not Altirra or
+  hardware.
+- Temporary traces: `/tmp/tliktb-v051-trace.csv`, `/tmp/tliktb-v053-trace.csv`,
+  `/tmp/tliktb-v051-writes.csv`, `/tmp/tliktb-v053-writes.csv`. The instrumented
+  code is located in `/tmp/atari800-7.2.1/src/` and is not part of the release.

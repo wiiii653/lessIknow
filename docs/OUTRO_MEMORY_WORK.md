@@ -1,28 +1,30 @@
-# Credits / greetz — rozpoznanie pamięci
+# Credits / greetz — memory reconnaissance
 
-Status historyczny: wstępne rozpoznanie. Implementacja jest podłączona od
-v216; aktualny opis: `V216_CREDITS_GREETZ.md`. Eksperymentalnej v199 nie
-używać jako wydania. v198 pozostaje punktem odniesienia.
+Historical status: preliminary reconnaissance. The implementation has been
+connected since v216; current description: `V216_CREDITS_GREETZ.md`. Do not use
+the experimental v199 as a release. v198 remains the reference point.
 
-## Odczyty
+## Readings
 
-- `$C000–$CEFF` należy do drugiego bufora bitmapy `$B000–$CEFF`.
-  Nie wolno instalować tam zasobów statycznie przed odtworzeniem wcześniejszych scen.
-- Zidentyfikowane luki poza bieżącym przydziałem scanline pool i segmentami v035:
-  `$28BD–$28FF`, `$2940–$29FF`, `$2A65–$2BFF`, `$2C81–$2CFF`,
+- `$C000–$CEFF` belongs to the second bitmap buffer `$B000–$CEFF`.
+  Static resources must not be installed there before the earlier scenes are
+  replayed.
+- Gaps identified outside the current scanline pool allocation and the v035
+  segments: `$28BD–$28FF`, `$2940–$29FF`, `$2A65–$2BFF`, `$2C81–$2CFF`,
   `$2D27–$2DFF`, `$2F7F–$2FFF`, `$307F–$30FF`, `$3135–$317F`,
   `$31A4–$31EF`, `$31F1–$32FF`, `$3E58–$3FFF`.
-  Łączna pojemność: 2118 B.
-- [ODCZYT] `audit_music_banks.trace` z powyższymi zakresami jako
-  `protected_ranges` wykonał inicjalizację dekodera i cały strumień do ticku
-  59833. Nie wystąpił odczyt ani zapis muzyki w chronionych zakresach.
-- To nie potwierdza jeszcze bezpieczeństwa wszystkich procedur startowych
-  playera ani wizualnego działania na Atari.
+  Total capacity: 2118 B.
+- [READ] `audit_music_banks.trace` with the above ranges as
+  `protected_ranges` performed decoder initialisation and the whole stream up
+  to tick 59833. There was no music read or write in the protected ranges.
+- This does not yet confirm the safety of all player start-up routines or
+  visual operation on Atari.
 
-## Dalsza realizacja
+## Further implementation
 
-Zweryfikować procedury startowe i spakować zasoby tekstowe wraz z małym
-loaderem w sprawdzonych lukach. Po wejściu sceny leżącego chłopca ustalić
-bitmapę w jednym buforze; drugi wykorzystać na rozpakowany font i napisy.
-Wcześniejsze sceny nadal muszą mieć oba pełne bufory. Zachować 53850 / 56842 /
-59085 i istniejące PMG. Żadnych rezerw w bankach rozszerzenia nie przydzielono.
+Verify the start-up routines and pack the text resources together with a small
+loader into the verified gaps. After the scene of the lying boy begins, settle
+the bitmap into one buffer; use the other for the unpacked font and the
+captions. Earlier scenes must still have both full buffers. Preserve 53850 /
+56842 / 59085 and the existing PMG. No reservations in extension banks have
+been allocated.

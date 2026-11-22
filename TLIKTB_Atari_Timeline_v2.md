@@ -2,7 +2,7 @@
 
 Historical planning document. Current scene timing is maintained in
 [`docs/TIMELINE_MAP.md`](docs/TIMELINE_MAP.md) and
-[`docs/AKTUALNY_MONTAZ_V330.md`](docs/AKTUALNY_MONTAZ_V330.md). Do not use this
+[`docs/CURRENT_MONTAGE_V330.md`](docs/CURRENT_MONTAGE_V330.md). Do not use this
 draft as the active cut list.
 
 ## Original timing assumptions

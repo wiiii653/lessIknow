@@ -1,13 +1,13 @@
-# V283 — dopisek WE w loaderze
+# V283 — WE suffix in the loader
 
-Trzeci wiersz ekranu ładowania kończy się teraz `2026 WE`. Skrócono
-`PRODUCED` do `PROD.`, aby cały tekst zmieścił się w 40 kolumnach. Komunikat
-o ładowaniu banków i paleta ekranu pozostają bez zmian.
+The third line of the loading screen now ends with `2026 WE`. `PRODUCED` was
+shortened to `PROD.` so that the whole text fits in 40 columns. The bank loading
+message and the screen palette remain unchanged.
 
-Stereo XEX dla AVG: `releases/less-i-know-demo-release-020-stereo.xex`
-(935 281 B). Metadane: `releases/less-i-know-demo-release-020-stereo.json`.
+Stereo XEX for AVG: `releases/less-i-know-demo-release-020-stereo.xex`
+(935 281 B). Metadata: `releases/less-i-know-demo-release-020-stereo.json`.
 
-[ODCZYT] Z XEX odczytano wiersz `PROD. BY OGNJEN / SILLY VENTURE 2026 WE`.
-Build używa tego samego kompaktowego late-start loadera co release 019.
+[READ] The line `PROD. BY OGNJEN / SILLY VENTURE 2026 WE` was read from the XEX.
+The build uses the same compact late-start loader as release 019.
 
-[OGRANICZENIE] Nie uruchamiano testów ani próby na fizycznym Atari.
+[LIMITATION] No tests or trial on physical Atari were run.

@@ -116,13 +116,13 @@ def helper():
     for i in range(4):
         c.jump(0xbd,f'spray_x{i}');a(0x8d,0xd004+i)
         c.jump(0xbd,f'spray_y{i}');c.emit(0xa8)
-        for dy in (0,4,9):
-            a(0xb9,0x0980+dy);c.emit(0x09,3<<(i*2));a(0x99,0x0980+dy)
+        for dy, bits in ((0,1),(2,3),(4,1)):
+            a(0xb9,0x0980+dy);c.emit(0x09,bits<<(i*2));a(0x99,0x0980+dy)
     # Rotate through the Atari hue wheel, offset between the four stripes.
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x29,15,0xaa)
     for i in range(4):
         c.jump(0xbd,f'hues{i}');a(0x8d,0xd012+i)
-    for addr,val in ((0xd407,8),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0)):
+    for addr,val in ((0xd407,8),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0x55)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0xa9,1,0xa2,3)
     c.label('sizes');a(0x9d,0xd008);c.emit(0xca);c.branch(0x10,'sizes');c.emit(0x60)
@@ -132,10 +132,14 @@ def helper():
     frames=spin_masks()
     for player in range(4):
         c.label(f'spin{player}');c.emit(*(value for frame in frames for value in frame[player]))
-    for i in range(4):
-        dx=(-20,-12,16,24)[i]
-        c.label(f'spray_x{i}');c.emit(*(max(50,min(202,x+48+dx+(j%4-2)*2)) for j,(x,y) in enumerate(positions)))
-        c.label(f'spray_y{i}');c.emit(*(max(9,min(103,(y+17)//2+((i*3+j)%9)-4)) for j,(x,y) in enumerate(positions)))
+    from basketball_hero import satellite_orbits
+
+    for i, orbit in enumerate(satellite_orbits(training=True)):
+        sparks = [(x+46+dx, (y+17)//2+6+dy)
+                  for j, (x, y) in enumerate(positions)
+                  for dx, dy in (orbit[(j*2) % len(orbit)],)]
+        c.label(f'spray_x{i}');c.emit(*(max(50,min(202,x)) for x,y in sparks))
+        c.label(f'spray_y{i}');c.emit(*(max(9,min(103,y)) for x,y in sparks))
         c.label(f'hues{i}');c.emit(*((((j+i*4)%15+1)<<4)|(6,10,12,14)[i] for j in range(16)))
     result=c.finish();assert ENTRY+len(result)<=WHISTLE_ENTRY
     return result

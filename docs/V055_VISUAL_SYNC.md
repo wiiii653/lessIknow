@@ -1,44 +1,44 @@
-# V055 — faza efektów obrazu
+# V055 — image effect phase
 
-[ODCZYT] V055 zachowuje mapowanie taktów PAL i progi scen z v053. Dla akcentów
-PMG w tańcu oraz zmian palety mozaiki przywraca fazowanie używane przez v051.
-Przy początku obu ujęć mozaiki wynik odejmowania jest ograniczony do zera,
-gdy scena zaczyna się przed dawnym punktem początkowym efektu.
+[READ] V055 retains the PAL bar mapping and scene thresholds from v053. For the
+PMG accents in the dance and the mosaic palette changes it restores the phasing
+used by v051. At the start of both mosaic shots the subtraction result is
+clamped to zero when the scene begins before the effect's former start point.
 
-[ODCZYT] Puls mozaiki celowo używa jak w v051 stałych odstępów 187 ticków
-na półtakt. Ma więc niewielki dryf względem dokładnej siatki PAL: około
-3,2 ticka przez 72 takty drugiej mozaiki, poza początkowym przesunięciem
-fazy. Nie zmienia to zegara playera ani progów głównych scen.
+[READ] As in v051, the mosaic pulse deliberately uses fixed 187-tick intervals
+per half-bar. It therefore has a slight drift relative to the exact PAL grid:
+about 3.2 ticks over 72 bars of the second mosaic, beyond the initial phase
+offset. This does not change the player clock or the main scene thresholds.
 
-[ODCZYT] W Atari800 7.2.1, PAL, 1088XE, Altirra OS, stereo, porównano
-14 958 klatek aż do ticku 59832. Dwa wcześniej zbadane pulsy palety, które w
-v053 wyprzedzały v051, w v055 ponownie przypadły na te same próbki klatkowe
-co w v051: ticki 12560 i 33128. Stan scen i próbkowane rejestry POKEY są
-zgodne między wersjami na wszystkich porównanych klatkach.
+[READ] In Atari800 7.2.1, PAL, 1088XE, Altirra OS, stereo, 14,958 frames were
+compared up to tick 59832. The two previously examined palette pulses that in
+v053 ran ahead of v051 again fell on the same frame samples as in v051 in v055:
+ticks 12560 and 33128. Scene state and sampled POKEY registers agree between
+versions on all compared frames.
 
-| Fragment | Różnice skrótu klatki v053 względem v051 | V055 względem v051 |
+| Fragment | v053 frame hash differences relative to v051 | V055 relative to v051 |
 |---|---:|---:|
-| Taniec, 748 klatek | 46 | 25 |
-| Pierwsza mozaika, 748 klatek | 333 | 44 |
-| Koszykówka, 748 klatek | 190 | 190 |
-| Druga mozaika, 6731 klatek | 3168 | 824 |
+| Dance, 748 frames | 46 | 25 |
+| First mosaic, 748 frames | 333 | 44 |
+| Basketball, 748 frames | 190 | 190 |
+| Second mosaic, 6731 frames | 3168 | 824 |
 
-Skróty FNV-1a identyfikują potencjalne różnice obrazu; nie zastępują oceny
-wizualnej. Próba zmiany fazy kozłowania w v054 zwiększyła liczbę różniących
-się klatek koszykówki do 325, więc została wycofana w v055. Animacja
-koszykówki pozostaje taka jak w v053.
+FNV-1a hashes identify potential image differences; they do not replace visual
+assessment. An attempt to change the dribble phase in v054 increased the number
+of differing basketball frames to 325, so it was reverted in v055. The
+basketball animation remains as in v053.
 
-[ODCZYT] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python` przeszedł 58
-testów, w tym porównanie palet z zachowanym v051.
-Wcześniejsze testy v053 miały sześć przestarzałych oczekiwań związanych z
-fazą klatek po korekcie ticków; poprawiono je, zachowując kontrolę obrazu i
-kosztu utrzymanej klatki.
+[READ] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python` passed 58 tests,
+including the palette comparison with the retained v051.
+Earlier v053 tests had six outdated expectations related to the frame phase
+after the tick correction; they were fixed while keeping the image and
+maintained-frame cost checks.
 
-[ODCZYT] Pełne porównanie stereo POKEY v055 z oryginalnym v035 w Atari800
-dało 7 762 320 identycznych bajtów po jednokrotnym wyrównaniu początku.
-Nadal potrzebny jest odsłuch i wizualne porównanie A/B: równość rejestrów
-audio ani zgodność dwóch wybranych pulsów nie dowodzi idealnego dopasowania
-do słyszalnego beatu.
+[READ] A full stereo POKEY comparison of v055 with the original v035 in Atari800
+gave 7,762,320 identical bytes after a single alignment of the start. Listening
+and a visual A/B comparison are still needed: equality of audio registers, or
+agreement of two selected pulses, does not prove an ideal match to the audible
+beat.
 
-Wydanie: `releases/visual-prototype-v055.xex`, SHA-256
+Release: `releases/visual-prototype-v055.xex`, SHA-256
 `a327afb8c96b7638764e3159b196ff32bedece44907db6cb8b7c7be90c780d08`.

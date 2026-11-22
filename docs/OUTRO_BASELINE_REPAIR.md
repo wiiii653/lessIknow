@@ -1,23 +1,25 @@
-# Zabezpieczenie bazy przed creditsami
+# Protecting the baseline before the credits
 
-- Kontrola przydziałów obejmuje teraz `$9000–$AEFF` i `$B000–$CEFF`.
-  Statyczny blok pod `$C000` jest odrzucany przed utworzeniem pliku.
-- Model `quarter_at` respektuje bramkę połowy kroku występującą w działającym
-  selektorze 6502. Nie zmieniono selektora ani momentów odtwarzania w XEX.
-  Raportowana wcześniej „ćwierć” jest w aktualnym odtwarzaniu wybierana od
-  połowy kroku; to opis stanu, a nie poprawka dynamiki animacji.
-- Testy uwzględniają wszystkie strumienie współdzielące banki 32–35 i faktyczne
-  położenie dodatkowych czterech strumieni za danymi tych samych banków.
-- Limit regresji CPU scen 10–11: 25000 cykli wobec pomiaru 23954.
-  To próg regresji CPU z zapasem poniżej 5%, nie gwarancja ramki z ANTIC DMA.
-- Porównania między wydaniami opierają się na dostępnej v198. Sprawdzają
-  bitmapy, oba bufory PMG, rejestry GTIA, powroty PORTB i koszt callbacków.
-- [ODCZYT] Build `/tmp/visual-prototype-memory-guard.xex` jest bajt w bajt
-  identyczny z archiwalną v198 (`cmp`).
-- [ODCZYT] Dwa testy kolizji pamięci oraz trzy porównania z v198 przechodzą.
+- The allocation check now covers `$9000–$AEFF` and `$B000–$CEFF`.
+  The static block below `$C000` is rejected before the file is created.
+- The `quarter_at` model respects the half-step gate present in the working
+  6502 selector. Neither the selector nor the playback timings in the XEX were
+  changed. The previously reported "quarter" is selected from the half-step in
+  the current playback; this describes the state, not a fix to the animation
+  dynamics.
+- The tests cover all streams sharing banks 32–35 and the actual placement of
+  the additional four streams behind the data of those same banks.
+- CPU regression limit for scenes 10–11: 25000 cycles against a measurement of
+  23954. This is a CPU regression threshold with less than 5% headroom, not a
+  guarantee of a frame with ANTIC DMA.
+- Comparisons between releases rely on the available v198. They check
+  bitmaps, both PMG buffers, GTIA registers, PORTB restores and callback cost.
+- [READ] The build `/tmp/visual-prototype-memory-guard.xex` is byte-for-byte
+  identical to the archived v198 (`cmp`).
+- [READ] Two memory collision tests and three comparisons with v198 pass.
 
-Credits/greetz nadal nie są podłączone; eksperymentalnej v199 nie wydawać.
-- [ODCZYT] Pełny przebieg: 149 testów, zero błędów, 3 historyczne pominięcia
-  porównań z v126 (106,5 s). Po zastąpieniu tych porównań trzema testami v198
-  ich osobny przebieg również zakończył się powodzeniem; nowe dwa testy
-  kontroli kolizji przeszły osobno.
+Credits/greetz are still not connected; do not release the experimental v199.
+- [READ] Full run: 149 tests, zero failures, 3 historical skips of
+  comparisons with v126 (106.5 s). After those comparisons were replaced with
+  three v198 tests, their separate run also succeeded; the two new collision
+  check tests passed separately.

@@ -1,61 +1,61 @@
-# v031 — piłka w głębi tunelu
+# v031 — ball deep inside the tunnel
 
-W punkcie zbiegu tunelu znajduje się pomarańczowo-złota piłka koszykowa.
-Osiem masek obraca zakrzywione szwy i lekko zmienia promień. Ciemny obrys
-odcina piłkę od mozaiki. Cztery pociski krążą wokół niej z krótkimi ogonkami;
-kolor iskier przechodzi przez paletę Atari. Piłka występuje tylko w motywie
-tunelu, nie w obrotowych kaflach. Granice scen i zegar muzyki bez zmian.
+At the tunnel's vanishing point sits an orange-gold basketball.
+Eight masks rotate the curved seams and slightly change the radius. A dark outline
+separates the ball from the mosaic. Four missiles orbit it with short tails;
+the spark colour passes through the Atari palette. The ball appears only in the
+tunnel motif, not in the rotating tiles. Scene boundaries and the music clock unchanged.
 
-## Sprzęt i pamięć
+## Hardware and memory
 
-- P0/P1: dwie połówki pomarańczowo-złotej piłki; P2/P3: szwy i obrys.
-- Rozdzielczość masek 16×32, podwójna szerokość graczy i podwójne linie DMA:
-  obszar 32×64 w logicznych współrzędnych ekranu (koło przy proporcji pikseli Atari).
-- M0–M3: niezależne pozycje czterech iskier; tryb piątego gracza, kolor `$D019`.
-- PRIOR `$11`, DMACTL `$2E`, GRACTL `$03`. Motyw kafli wyłącza PMG.
-- Kod i tablice 1595 B w wolnym ogonie banku 17, `$7800–$7E3A`.
-  Bez nowych banków: nadal 33 banki.
-- Wrapper z RAM niebankowanego przełącza po rendererze mozaiki bank 17,
-  wywołuje efekt i odtwarza PORTB. Wrapper NMI pozostaje bez zmian.
-- Główny callback 1783 B; usunięto nieużywane gałęzie starego kalejdoskopu.
-- Wyjście z mozaiki przywraca grafiki PMG tańca. Bez zmian bitmapy tunelu.
+- P0/P1: two halves of the orange-gold ball; P2/P3: seams and outline.
+- Mask resolution 16×32, double player width and double DMA lines:
+  a 32×64 area in logical screen coordinates (a circle at the Atari pixel aspect ratio).
+- M0–M3: independent positions of the four sparks; fifth player mode, colour `$D019`.
+- PRIOR `$11`, DMACTL `$2E`, GRACTL `$03`. The tiles motif disables PMG.
+- Code and tables 1595 B in the free tail of bank 17, `$7800–$7E3A`.
+  No new banks: still 33 banks.
+- The unbanked RAM wrapper switches bank 17 after the mosaic renderer,
+  calls the effect and restores PORTB. The NMI wrapper remains unchanged.
+- Main callback 1783 B; unused branches of the old kaleidoscope were removed.
+- Exiting the mosaic restores the dance PMG graphics. No change to the tunnel bitmap.
 
-## V5–V7: wyniki
+## V5–V7: results
 
-[ODCZYT] 47 testów PASS:
+[READ] 47 tests PASS:
 
 ```sh
 make check PYTHON=/tmp/tliktb-girl-venv/bin/python
 ```
 
-Testy obejmują osiem obrotów, rozłączne maski koloru i szwów, wszystkie cztery
-pociski, ruch przy nieruchomej bitmapie, wyłączenie przy przejściu do kafli,
-przywrócenie gwiazdek tańca i zachowanie banku podczas przerwań muzyki.
-Aktualizacja na trzymanej klatce tunelu kosztuje w teście poniżej 14000 cykli
-instrukcji (bez DMA, NMI i oczekiwania na raster).
+The tests cover eight rotations, disjoint colour and seam masks, all four
+missiles, motion with a static bitmap, disabling on transition to the tiles,
+restoring the dance stars and bank behaviour during music interrupts.
+Updating on a held tunnel frame costs fewer than 14000 instruction cycles
+in the test (without DMA, NMI and raster waiting).
 
-[ODCZYT] Atari800 PAL, `-1088xe`, Altirra OS: 89 zrzutów pamięci obejmujących
-wszystkie klatki mozaiki, wcześniejsze sceny i przejścia. Piksele bitmapy
-zgodne ze źródłem; cztery płaszczyzny PMG piłki zgodne z maskami obrotu,
-pociski obecne w motywie tunelu.
+[READ] Atari800 PAL, `-1088xe`, Altirra OS: 89 memory dumps covering
+all mosaic frames, earlier scenes and transitions. Bitmap pixels
+match the source; the four PMG planes of the ball match the rotation masks,
+the missiles are present in the tunnel motif.
 
-[ODCZYT] Pełne cyfrowe porównanie stereo POKEY, próbka co 78 linii:
+[READ] Full digital stereo POKEY comparison, sampled every 78 lines:
 
 ```sh
 APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py \
   --demo build/visual-prototype-v031.xex --seconds 12
 ```
 
-8 265 816 identycznych bajtów, około 2302,5 s emulacji; cały utwór pokryty.
-Nie wykonano osobnego odsłuchu na fizycznym Atari ani testu w Altirra.
+8 265 816 identical bytes, about 2302.5 s of emulation; the whole track covered.
+No separate listening test on physical Atari or test in Altirra was performed.
 
-## Pliki
+## Files
 
 - `build/visual-prototype-v031.xex`
-- `build/v031-tunnel-ball.gif` — próbki kodu 6502 co 8 ticków; kolory PAL przybliżone,
-  podgląd nie jest pomiarem liczby klatek osiąganej przez emulator.
+- `build/v031-tunnel-ball.gif` — 6502 code samples every 8 ticks; PAL colours approximated,
+  the preview is not a measurement of the frame count achieved by the emulator.
 - `build/v031-tunnel-ball-sheet.png`
 
 SHA256 v031: `db98f9398570e10238a6a411734d7cb1ac9b52fac9cfef3c4885954c7913ade8`.
-Zachowano v029 (`c8a509af600bafa2c16e198cf5c2f90ecf2afb9f1a33fee81dee8540107543f7`)
-i pośredni v030. Builder odmawia nadpisania istniejącego XEX.
+v029 was preserved (`c8a509af600bafa2c16e198cf5c2f90ecf2afb9f1a33fee81dee8540107543f7`)
+and the intermediate v030. The builder refuses to overwrite an existing XEX.

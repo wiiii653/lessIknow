@@ -1,31 +1,30 @@
-# V193 — pełny rotator i wcześniejsze tło outro
+# V193 — full rotator and earlier outro background
 
-## Zmiana timeline’u
+## Timeline change
 
-- Takty 88–92 (ticki 32909–34404): pierwsza połowa istniejącego rotatora
-  bananowego.
-- Takty 92–96 (34404–35900): druga połowa tego rotatora.
-- Takty 96–108 (35900–40388): tunel spiralny.
-- Takty 108–112 (40388–41884): istniejąca organiczna tekstura tunelu.
-- Granice dalszych ujęć Act 5 w taktach 112 i 116 pozostają bez zmian.
-- Od taktu 144 / ticku 53850 pojawia się leżący chłopiec z orbitującymi
-  gwiazdkami jako przewidziane tło okien credits i greetz. Samych napisów
-  credits/greetz jeszcze nie ma.
-- Takt 158 / tick 59085 nadal rozpoczyna końcowe dwutaktowe domknięcie do
-  czerni; koniec pozostaje w takcie 160 / ticku 59833.
+- Bars 88–92 (ticks 32909–34404): first half of the existing banana rotator.
+- Bars 92–96 (34404–35900): second half of that rotator.
+- Bars 96–108 (35900–40388): spiral tunnel.
+- Bars 108–112 (40388–41884): existing organic tunnel texture.
+- The boundaries of the further Act 5 shots at bars 112 and 116 remain unchanged.
+- From bar 144 / tick 53850 the lying boy with orbiting stars appears as the
+  intended background of the credits and greetz windows. The credits/greetz
+  text itself is not there yet.
+- Bar 158 / tick 59085 still starts the final two-bar close to
+  black; the end remains at bar 160 / tick 59833.
 
-## Zakres techniczny
+## Technical scope
 
-Zmieniono granicę przejścia z bananowego rotatora do tunelu z taktu 92 na 96
-w `tools/build_bitmap_sequence.py`. `tools/final_boy.py` uruchamia istniejący
-kadr od taktu 144, zachowując dotychczasowe dane, animację gwiazdek i koniec.
-Nie zmieniano grafiki, generatorów efektów ani przydziału pamięci.
+The transition boundary from the banana rotator to the tunnel was changed from bar 92 to 96
+in `tools/build_bitmap_sequence.py`. `tools/final_boy.py` starts the existing
+frame from bar 144, keeping the existing data, star animation and ending.
+No graphics, effect generators or memory allocation were changed.
 
-Build: `build/visual-prototype-v193.xex` i odpowiadający mu JSON.
-298 współdzielonych wierszy, 2560 B kodu głównego.
+Build: `build/visual-prototype-v193.xex` and its corresponding JSON.
+298 shared rows, 2560 B of main code.
 
-## Walidacja
+## Validation
 
-10 testów granic scen, motywów Act 5 i finału zaliczonych. Testy sprawdzają
-przejścia w tickach 34404, 35900, 40388 i 53850 oraz zachowanie pełnego kadru
-końcowego. Bez porównania pełnego audio i bez testu na fizycznym Atari.
+10 tests of scene boundaries, Act 5 motifs and the finale passed. The tests check the
+transitions at ticks 34404, 35900, 40388 and 53850 and the retention of the full
+final frame. No full audio comparison and no test on physical Atari.

@@ -94,6 +94,7 @@ def frame_for_step(step):
     if step < 32:
         return (0,32,1,33,3,2,32,0)[step & 7]
     if step < 64:
+        # The solo changes body pose on each half beat.
         return (4,5,34,6,7,6,34,5)[step & 7]
     if step < 118:
         # Dance fills the recovered time. The actual throw below runs once.

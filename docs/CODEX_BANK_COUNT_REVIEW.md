@@ -1,163 +1,167 @@
-# Zlecenie dla Codexa — niezależna weryfikacja banków muzyki v035
+# Assignment for Codex — independent verification of the v035 music banks
 
-## Pytanie
+## Question
 
-Czy player `less-i-know-release-v035.xex` potrzebuje **7 czy 8 banków danych muzycznych**? Proszę zweryfikować niezależnie tezę z obecnego audytu, że bank 8 jest potrzebny, bo zawiera czytany znacznik końca. Nie należy opierać odpowiedzi wyłącznie na założeniu zapisanym dla v024.
+Does the player `less-i-know-release-v035.xex` need **7 or 8 music data banks**? Please verify independently the claim from the current audit that bank 8 is needed because it contains a read end marker. Do not base the answer solely on the assumption recorded for v024.
 
-## Materiały do sprawdzenia
+## Materials to check
 
 - Player: `less-i-know-release-v035.xex`
-- Wyodrębnione segmenty: `assets/music/v035/bank_01.bin` … `bank_14.bin`
-- Manifest i hashe: `assets/music/v035/manifest.json`
-- Implementacja ekstrakcji: `tools/extract_music.py`
-- Śledzenie dekodera: `tools/audit_music_banks.py`
-- Dotychczasowy wynik: `docs/MUSIC_BANK_AUDIT.md`
-- Starsze założenia i zadania V1–V7: `TLIKTB_Technical_Constraints.md`
+- Extracted segments: `assets/music/v035/bank_01.bin` … `bank_14.bin`
+- Manifest and hashes: `assets/music/v035/manifest.json`
+- Extraction implementation: `tools/extract_music.py`
+- Decoder trace: `tools/audit_music_banks.py`
+- Previous result: `docs/MUSIC_BANK_AUDIT.md`
+- Older assumptions and tasks V1–V7: `TLIKTB_Technical_Constraints.md`
 
-SHA-256 badanego XEX: `6d5d9cf3004f9003ede8d91aa4891a100f672c5a0e9429a6ecf20d1f5fef0ff0`.
+SHA-256 of the XEX under study: `6d5d9cf3004f9003ede8d91aa4891a100f672c5a0e9429a6ecf20d1f5fef0ff0`.
 
-## Teza do niezależnego potwierdzenia lub obalenia
+## Claim to independently confirm or refute
 
-Obecny audyt twierdzi, że:
+The current audit claims that:
 
-- segmenty `$8000–$BFFF` zawierają 14 bloków po 16 384 B w kolejności ładowania;
-- dekoder czyta całe banki 1–7 oraz 2 820 B banku 8;
-- ostatni bajt danych różny od `$FF` znajduje się pod offsetem 2818 banku 8, a `$FF` pod offsetem 2819 jest czytanym znacznikiem końca;
-- banki 9–14 nie są czytane, a ich zawartość to `$FF`;
-- zatem **7 banków nie wystarcza; minimum dla obecnego strumienia v035 to 8**.
+- the segments `$8000–$BFFF` contain 14 blocks of 16,384 B in load order;
+- the decoder reads all of banks 1–7 and 2,820 B of bank 8;
+- the last data byte different from `$FF` is at offset 2818 of bank 8, and the `$FF` at offset 2819 is the read end marker;
+- banks 9–14 are not read, and their contents are `$FF`;
+- therefore **7 banks are not enough; the minimum for the current v035 stream is 8**.
 
-Proszę sprawdzić w kodzie XEX i w ścieżce dekodera, czy liczby te wynikają z rzeczywistych odczytów, a nie tylko z rozmiaru bloków lub liczby segmentów. Wyjaśnić też różnicę między liczbą banków ładowanych przez oryginalny XEX (14), liczbą banków odczytywanych przez dekoder (rzekomo 8) i liczbą banków, które można bezpiecznie usunąć lub ponownie wykorzystać po inicjalizacji playera.
+Please check in the XEX code and in the decoder path whether these numbers follow from actual reads, and not merely from block sizes or the number of segments. Also explain the difference between the number of banks loaded by the original XEX (14), the number of banks read by the decoder (allegedly 8) and the number of banks that can safely be removed or reused after player initialisation.
 
-## Dodatkowe punkty kontrolne
+## Additional checkpoints
 
-1. Potwierdzić indeksowanie banków i dokładny adres/offset każdego odczytu końcowego, w szczególności odczyt `$FF` pod offsetem 2819 w banku 8. Czy usunięcie banku 8 lub skrócenie jego zawartości powoduje brak znacznika końca albo zmianę zachowania playera?
-2. Sprawdzić, czy model PORTB w `tools/audit_music_banks.py` odpowiada ścieżce wykrywania pamięci w v035. Wskazać ewentualne ograniczenia symulacji względem prawdziwego Atari/Altirry.
-3. Zweryfikować liczbę aktualizacji do końca: raport podaje 59 833, podczas gdy timeline wylicza 59 840 (`160 × 374`). Ustalić, czy różnica wynika z inicjalizacji/znacznika końca/sposobu liczenia, czy jest nierozwiązaną rozbieżnością. Oddzielić tę kwestię od odpowiedzi 7-vs-8.
-4. W v035 używanym tutaj nie ma w katalogu pliku v024 do porównania. Jeśli nie da się potwierdzić, skąd wzięło się starsze założenie siedmiu banków, zaznaczyć to wprost — nie zgadywać.
+1. Confirm the bank indexing and the exact address/offset of each final read, in particular the `$FF` read at offset 2819 in bank 8. Does removing bank 8 or shortening its contents cause a missing end marker or a change in player behaviour?
+2. Check whether the PORTB model in `tools/audit_music_banks.py` matches the memory detection path in v035. Point out any limitations of the simulation compared with a real Atari/Altirra.
+3. Verify the number of updates until the end: the report gives 59,833, while the timeline calculates 59,840 (`160 × 374`). Determine whether the difference comes from initialisation/the end marker/the counting method, or is an unresolved discrepancy. Keep this question separate from the 7-vs-8 answer.
+4. In the v035 used here there is no v024 file in the directory for comparison. If it cannot be confirmed where the older seven-bank assumption came from, state that explicitly — do not guess.
 
-## Oczekiwany wynik
+## Expected result
 
-Dopisać do tego raportu krótką konkluzję: **7 czy 8 banków dla v035**, wraz z uzasadnieniem, dokładnym zakresem odczytów, ograniczeniami weryfikacji i bezpiecznym zaleceniem dotyczącym skracania/ponownego użycia bloków. Jeśli wynik audytu obecnego narzędzia jest błędny, wskazać konkretny błąd i sposób reprodukcji poprawionego wyniku.
+Add a short conclusion to this report: **7 or 8 banks for v035**, together with the justification, the exact range of reads, the verification limitations and a safe recommendation concerning shortening/reusing blocks. If the result of the current tool's audit is wrong, identify the specific error and how to reproduce the corrected result.
 
-## Ograniczenia pracy
+## Work constraints
 
-- Analiza tylko do odczytu. Nie modyfikować oryginalnego XEX, banków, narzędzi ani buildów demo.
-- Jeśli potrzebny jest zapis raportu maszyny lub logów, kierować go do `/tmp`, nie do `build/` w aktywnym projekcie.
-- Nie wykonywać przycinania ani przebudowy playera w ramach tej weryfikacji.
+- Read-only analysis. Do not modify the original XEX, banks, tools or demo builds.
+- If a machine report or logs need to be written, direct them to `/tmp`, not to `build/` in the active project.
+- Do not perform trimming or rebuild the player as part of this verification.
 
 ---
 
-## Niezależna weryfikacja — wynik
+## Independent verification — result
 
-**Dla obecnego strumienia v035 i jego obecnego dekodera potrzeba 8 banków
-po 16 KiB.** Siedem mieści tylko 114 688 B, natomiast odczytywany strumień ma
-117 508 B, w tym wymagany odczyt w ósmym banku. Nie jest to dowód, że nie da
-się zmieścić muzyki w siedmiu bankach po zmianie formatu lub dekodera.
+**For the current v035 stream and its current decoder, 8 banks
+of 16 KiB are needed.** Seven hold only 114,688 B, whereas the stream being read
+has 117,508 B, including the required read in the eighth bank. This is not proof
+that the music cannot fit in seven banks after a change of format or decoder.
 
-[ODCZYT] SHA-256 XEX zgadza się z podanym w zleceniu. Wszystkie 14 segmentów
-`$8000–$BFFF` jest bajt w bajt zgodnych z plikami `bank_01.bin`–`bank_14.bin`
-i z sumami w manifeście. Banki 9–14 zawierają wyłącznie `$FF`.
+[READ] The XEX SHA-256 matches the one given in the assignment. All 14 segments
+`$8000–$BFFF` are byte for byte identical with the files `bank_01.bin`–`bank_14.bin`
+and with the sums in the manifest. Banks 9–14 contain only `$FF`.
 
-[ODCZYT] Niezależny ślad py65 wykonał procedury inicjalizacji `$232D`, wstępne
-dekodowanie `$237D` i oryginalną ścieżkę NMI od `$2210` do ustawienia flagi
-`$24C8`. Odczyty były ciągłe, każdy z poniższych bajtów odczytano raz:
+[READ] An independent py65 trace executed the initialisation routines `$232D`,
+the preliminary decoding `$237D` and the original NMI path from `$2210` to setting
+the `$24C8` flag. The reads were continuous, each of the following bytes was read
+once:
 
-| Bank ładowania, numerowany od 1 | Odczyt w oknie CPU `$4000–$7FFF` | Offsety | Bajty |
+| Load bank, numbered from 1 | Read in the CPU window `$4000–$7FFF` | Offsets | Bytes |
 | --- | --- | --- | ---: |
-| 1–7, każdy | `$4000–$7FFF` | 0–16383 | 16384 każdy |
+| 1–7, each | `$4000–$7FFF` | 0–16383 | 16384 each |
 | 8 | `$4000–$4B03` | 0–2819 | 2820 |
-| 9–14 | brak | brak | 0 |
+| 9–14 | none | none | 0 |
 
-Ostatnie odczyty z banku 8: offsety 2813–2817 (`$4AFD–$4B01`) mają wartość
-`$00` przy aktualizacji 59825; offset 2818 (`$4B02`) to `$86` przy 59826;
-offset 2819 (`$4B03`) to `$FF` przy 59833. Pobranie wykonuje instrukcja
-`LDA ($A0),Y` pod `$2353`. Dekoder poleceń pod `$2A0C` porównuje wynik z
-`$FF` i skacze do `$2A5F`, gdzie ustawia flagę końca. Adres kursora po tym
-odczycie to `$4B04`. Znacznik jest więc potrzebny jako **bajt o wartości**
-`$FF`; nie musi być fizycznie tym samym bajtem pliku, jeśli w tym samym
-logicznym miejscu inny prawidłowy loader zapewni `$FF`.
+The last reads from bank 8: offsets 2813–2817 (`$4AFD–$4B01`) have the value
+`$00` at update 59825; offset 2818 (`$4B02`) is `$86` at 59826;
+offset 2819 (`$4B03`) is `$FF` at 59833. The fetch is performed by the
+`LDA ($A0),Y` instruction at `$2353`. The command decoder at `$2A0C` compares the
+result with `$FF` and jumps to `$2A5F`, where it sets the end flag. The cursor
+address after this read is `$4B04`. The marker is therefore needed as a **byte
+with the value** `$FF`; it does not have to be physically the same file byte, if
+at the same logical place another valid loader provides `$FF`.
 
-[ODCZYT] Niezależnie uruchomiono oryginalny XEX w Atari800, PAL, `-1088xe`,
-Altirra OS. Po INIT tablica `$26FC–$2709` wynosiła
-`81 83 85 87 89 8B 8D 8F A1 A3 A5 A7 A9 AB`. Przy zatrzymaniu na `$2A5F`
-akumulator zawierał `$FF`, indeks banku `$24A5` był równy 7 (liczenie od
-zera), kursor `$A0/$A1` wskazywał `$4B04`, a licznik `$24A7–$24A9` wynosił
-59833. Zatrzymanie nastąpiło przed wykonaniem instrukcji ustawiającej flagę.
-To potwierdza końcową ścieżkę na konkretnej konfiguracji emulatora; nie jest
-pełnym niezależnym śladem wszystkich odczytów na rzeczywistym sprzęcie.
+[READ] The original XEX was independently run in Atari800, PAL, `-1088xe`,
+Altirra OS. After INIT the table `$26FC–$2709` was
+`81 83 85 87 89 8B 8D 8F A1 A3 A5 A7 A9 AB`. When stopped at `$2A5F`
+the accumulator contained `$FF`, the bank index `$24A5` was equal to 7 (counting
+from zero), the cursor `$A0/$A1` pointed to `$4B04`, and the counter
+`$24A7–$24A9` was 59833. The stop occurred before execution of the instruction
+that sets the flag. This confirms the final path on a specific emulator
+configuration; it is not a complete independent trace of all reads on real
+hardware.
 
-### Próby zmiany danych w modelu — bez modyfikacji XEX
+### Attempts to change data in the model — without modifying the XEX
 
-[ODCZYT] Po podmianie w pamięci tylko banku 8 na same `$FF` flaga końca
-ustawiła się po 58221, zamiast 59833, aktualizacjach — 1612 ticków wcześniej
-(ok. 8,1 s przy 199,44 Hz). W tym wariancie pierwsze bajty `$FF` w banku 8
-zostały najpierw użyte jako dane pakietu, a znacznik końca rozpoznano przy
-offsecie 3. To nie jest równoważne dowolnemu fizycznemu usunięciu banku:
-rzeczywista zawartość nieprzydzielonej pamięci zależy od sprzętu i loadera.
+[READ] After replacing only bank 8 in memory with all `$FF`, the end flag was set
+after 58221 instead of 59833 updates — 1612 ticks earlier
+(about 8.1 s at 199.44 Hz). In this variant the first `$FF` bytes in bank 8
+were first used as packet data, and the end marker was recognised at
+offset 3. This is not equivalent to any physical removal of the bank:
+the actual contents of unallocated memory depend on the hardware and the loader.
 
-[ODCZYT] Po zmianie samego bajtu 2819 z `$FF` na `$00`, przy pozostawieniu
-reszty końcówki `$FF`, dekoder odczytał również offsety 2820–2822 i zakończył
-po 59834 aktualizacjach. Zatem usunięcie tego konkretnego znacznika zmienia
-ścieżkę; w tej próbie nie powoduje trwałego braku końca, bo późniejsze `$FF`
-pozostają dostępne. Nie wolno zakładać, że skrócenie danych i pozostawienie
-niezainicjalizowanej pamięci zapewni właściwy bajt na `$4B03`.
+[READ] After changing only byte 2819 from `$FF` to `$00`, while leaving the rest
+of the `$FF` tail, the decoder also read offsets 2820–2822 and finished
+after 59834 updates. So removing this specific marker changes the
+path; in this attempt it does not cause a permanent absence of the end, because
+later `$FF` bytes remain available. One must not assume that shortening the data
+and leaving uninitialised memory will provide the correct byte at `$4B03`.
 
-### Ograniczenia i zalecenie
+### Limitations and recommendation
 
-[ODCZYT] Model `audit_music_banks.py` podstawia pierwszą z tablic selektorów i
-mapuje każdą jej wartość na osobną tablicę bajtów. Nie wykonuje procedury
-wykrywania banków ani kopiującego INIT, nie modeluje aliasów PORTB, CPU/ANTIC,
-ROM, DMA, czasu linii ani rzeczywistych rejestrów POKEY. Zapis do `$4000–$7FFF`
-w modelu nie jest zapisem do modelowanego banku. Dlatego sam model dowodzi
-odczytów na ścieżce dekodera przy założonej poprawnej mapie, a nie poprawności
-wszystkich konfiguracji rozszerzeń. Atari800 potwierdził, że dla badanej
-konfiguracji player faktycznie wykrył tę pierwszą tablicę i doszedł do tego
-samego końca. Dotychczasowy eksperyment z `$55` na nieczytanych obszarach jest
-dodatkowym dowodem dla badanego emulatora, nie gwarancją dla każdego rozszerzenia.
+[READ] The `audit_music_banks.py` model substitutes the first of the selector
+tables and maps each of its values to a separate byte table. It does not execute
+the bank detection routine or the copying INIT, and does not model PORTB aliases,
+CPU/ANTIC, ROM, DMA, line timing or the actual POKEY registers. A write to
+`$4000–$7FFF` in the model is not a write to a modelled bank. Therefore the model
+alone proves the reads on the decoder path under an assumed correct map, not the
+correctness of all expansion configurations. Atari800 confirmed that for the
+configuration under study the player did in fact detect this first table and
+reached the same end. The earlier experiment with `$55` on unread areas is
+additional evidence for the emulator under study, not a guarantee for every
+expansion.
 
-[WNIOSEK] 14 to liczba oryginalnie ładowanych bloków; 8 to liczba banków,
-z których dekoder faktycznie czyta. Po zakończeniu INIT można przeznaczyć całe
-banki 9–14 oraz końcówkę banku 8 od offsetu 2820 na inne dane, pod warunkiem
-prawidłowego rozpoznania rzeczywistych banków i zabezpieczenia własności PORTB.
-Nie wolno nadpisywać banków 1–7 ani pierwszych 2820 bajtów banku 8 podczas
-odtwarzania. Usunięcie sześciu segmentów z **oryginalnego pliku** to osobna
-modyfikacja loadera/formatu i wymaga ponownej weryfikacji INIT, synchronizacji,
-restartu oraz kompletnego odtwarzania — sam brak późniejszych odczytów nie
-jest dowodem, że dowolne fizyczne obcięcie XEX zadziała. To rozróżnienie jest
-istotne także dla obecnego dema, które już wykorzystuje wskazane nieczytane
-obszary.
+[CONCLUSION] 14 is the number of originally loaded blocks; 8 is the number of
+banks from which the decoder actually reads. After INIT finishes, all of banks
+9–14 and the tail of bank 8 from offset 2820 can be devoted to other data,
+provided the real banks are correctly identified and PORTB ownership is
+protected. Banks 1–7 and the first 2820 bytes of bank 8 must not be overwritten
+during playback. Removing six segments from the **original file** is a separate
+loader/format modification and requires re-verification of INIT,
+synchronisation, restart and complete playback — the mere absence of later reads
+is not proof that any physical truncation of the XEX will work. This distinction
+is also important for the current demo, which already uses the indicated unread
+areas.
 
-### 59833 a 59840
+### 59833 vs 59840
 
-[ODCZYT] Wstępne wywołanie `$237D` następuje przed liczeniem NMI. Przyjęty
-model zliczył 59833 wywołania NMI do flagi końca i licznik playera również
-wynosił 59833; Atari800 na oryginalnym XEX potwierdził 59833 na wejściu w
-procedurę końca. Ostatnie polecenie `$86` odczytano przy 59826, a końcowy
-`$FF` przy 59833, siedem aktualizacji później. Ten odstęp opisuje końcówkę
-strumienia, ale sam nie wyjaśnia różnicy do 59840; wyjaśnia ją rachunek tempa
-i częstotliwości PAL poniżej.
+[READ] The preliminary `$237D` call occurs before NMI counting. The adopted
+model counted 59833 NMI calls up to the end flag and the player counter was also
+59833; Atari800 on the original XEX confirmed 59833 on entry to the
+end routine. The last `$86` command was read at 59826, and the final
+`$FF` at 59833, seven updates later. This gap describes the end of the
+stream, but by itself does not explain the difference from 59840; the rate and
+PAL frequency calculation below explains it.
 
-[ODCZYT] Timeline przyjmuje 128 BPM, 160 taktów po 4 uderzenia i czas 300 s.
-Dokument playera podaje 4 aktualizacje na klatkę PAL, czyli 199,443 Hz.
-Podręcznik referencyjny Altirry podaje idealny zegar PAL 49,86074 Hz; cztery
-aktualizacje dają 199,44296 Hz, co zaokrągla się do napisu playera.
+[READ] The timeline assumes 128 BPM, 160 bars of 4 beats and a duration of 300 s.
+The player documentation gives 4 updates per PAL frame, i.e. 199.443 Hz.
+The Altirra reference manual gives an ideal PAL clock of 49.86074 Hz; four
+updates give 199.44296 Hz, which rounds to the player's figure.
 
-[WNIOSEK] Jeden takt trwa 1,875 s, więc odpowiada `199,44296 × 1,875 =
-373,95555` aktualizacji, nie dokładnie 374. Dla 160 taktów wychodzi
-`373,95555 × 160 = 59832,888`, czyli 59833 całkowite ticki. Zmierzony licznik
-59833 odpowiada 300,00056 s — praktycznie dokładnie pięciu minutom. Wcześniejsza
-mapa silnika mnożyła numer taktu przez 374, np. 24 × 374 = 8976 i 160 × 374 =
-59840. To kumulowało nadmiar 0,04445 ticka na takt do 7,112 ticków (35,7 ms).
+[CONCLUSION] One bar lasts 1.875 s, so it corresponds to `199,44296 × 1,875 =
+373,95555` updates, not exactly 374. For 160 bars this gives
+`373,95555 × 160 = 59832,888`, i.e. 59833 whole ticks. The measured counter
+59833 corresponds to 300.00056 s — practically exactly five minutes. The earlier
+engine map multiplied the bar number by 374, e.g. 24 × 374 = 8976 and 160 × 374 =
+59840. This accumulated an excess of 0.04445 tick per bar up to 7.112 ticks (35.7 ms).
 
-[ODCZYT] Silnik v051 używał tych przybliżonych wartości w progach scen i ujęć.
-To błąd mapowania taktów na ticki w silniku obrazu, nie błąd licznika ani brak
-aktualizacji playera.
+[READ] The v051 engine used these approximate values in the scene and shot
+thresholds. It is a bar-to-tick mapping error in the image engine, not a counter
+error or a lack of player updates.
 
-[ODCZYT] W v052 wspólna funkcja `tools/music_timing.py` wyznacza próg taktu jako
-`ceil(n × 373,95555)` od początku utworu. Przykładowo takt 24 zaczyna się przy
-8975, takt 88 przy 32909, a takt 160 przy 59833. Rytm kolorów mozaiki używa
-naprzemiennych odstępów 186/187 ticków, a nie stałych 187. W v053 tą samą mapą
-objęto też wewnętrzny próg ujęcia Trevora przy takcie 68.
+[READ] In v052 the shared function `tools/music_timing.py` determines the bar
+threshold as `ceil(n × 373,95555)` from the start of the song. For example bar 24
+begins at 8975, bar 88 at 32909, and bar 160 at 59833. The mosaic colour rhythm
+uses alternating intervals of 186/187 ticks, not a constant 187. In v053 the same
+map was extended to the internal Trevor shot threshold at bar 68.
 
-[ODCZYT] W tym checkoutcie nie ma XEX v024. Genezy założenia o siedmiu bankach
-nie da się więc tu potwierdzić; nie należy przenosić go na v035.
+[READ] This checkout does not contain the v024 XEX. The origin of the seven-bank
+assumption therefore cannot be confirmed here; it should not be carried over to
+v035.

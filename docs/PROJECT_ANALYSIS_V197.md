@@ -2,8 +2,8 @@
 
 **Status:** read-only analysis of `build/visual-prototype-v197.xex` with its
 matching JSON. No repository file was changed by this analysis. Terminology:
-[ODCZYT] = direct observation/measurement, [WNIOSEK] = inference from
-observations, [ZAŁOŻENIE] = assumption. All line references point at the
+[READ] = direct observation/measurement, [CONCLUSION] = inference from
+observations, [ASSUMPTION] = assumption. All line references point at the
 checkout as of 2026-11-08.
 
 ```
@@ -26,10 +26,10 @@ finding below therefore applies to v197 directly.
 | Music NMI entry | `$1BD4` | wrapper with `$D301` save/restore |
 | Confirmed free bank gaps | **27 323 B** | incl. `$6E0F–$77FF` (2545 B) in index 2 |
 
-- [ODCZYT] **Main code has zero headroom:** exactly 2560/2560 B; the budget
+- [READ] **Main code has zero headroom:** exactly 2560/2560 B; the budget
   assert (`tools/build_bitmap_sequence.py:760`) raises on +1 byte. Any future
   unbanked code requires refactoring first.
-- [ODCZYT] **Documentation-vs-code drift in `AGENTS.md`
+- [READ] **Documentation-vs-code drift in `AGENTS.md`
   ("Current Memory Ownership"):** hero helper measures **2892 B**
   (ends ~`$4B4C`), doc says 2859 B / ends `$4B2A`; Trevor helper measures
   **2500 B**, doc cites the historical 2466 B; final-boy controller measures
@@ -43,7 +43,7 @@ finding below therefore applies to v197 directly.
 
 ## 2. Test suite executed against v197
 
-[ODCZYT] Full run with `ATARI_TEST_XEX=build/visual-prototype-v197.xex`:
+[READ] Full run with `ATARI_TEST_XEX=build/visual-prototype-v197.xex`:
 **149 tests — 141 passing, 5 failures, 3 skipped, 106.7 s.**
 
 | # | Failing test | Substance |
@@ -57,29 +57,29 @@ finding below therefore applies to v197 directly.
 - **3 skips:** all of `tests/test_optimization.py` — the archived
   `build/visual-prototype-v126.xex` required for cross-release comparison is
   missing; the only inter-release regression net is dead.
-- [WNIOSEK] The suite has not been green since V173/V187. These five failures
+- [CONCLUSION] The suite has not been green since V173/V187. These five failures
   also reproduce on the archived v196 XEX, so they are legacy red, **not** a
   v197 regression.
 
 ## 3. CPU cost and critical paths
 
-- [ODCZYT] Profiles (`docs/ENGINE_PROFILE_V013.md`,
-  `docs/V127_OPTYMALIZACJE.md`, py65 without ANTIC DMA): worst scenes —
+- [READ] Profiles (`docs/ENGINE_PROFILE_V013.md`,
+  `docs/V127_OPTIMISATIONS.md`, py65 without ANTIC DMA): worst scenes —
   portraits 129 065 cycles, mosaic 58 255, basketball 56 004, Trevor 44 046,
   parallax 43 511; latest ledger entry 91 282 (`build/v166-allocations.json`).
   PAL frame budget ≈ 35 568 cycles; one music tick ≈ a quarter frame.
-- [ODCZYT] Bounded publication windows are in place and tested:
+- [READ] Bounded publication windows are in place and tested:
   PMG commit inside VCOUNT 124–127, framebuffer/DL publish at `VCOUNT ≥ $7C`
   (`tools/build_bitmap_sequence.py:577-586`), v188 style "keep front DMA until
   the back buffer is complete" in scenes 10–11
   (`tools/build_bitmap_sequence.py:607-618`).
-- [WNIOSEK] Remaining CPU is dominated by full-span PMG clears and untracked
+- [CONCLUSION] Remaining CPU is dominated by full-span PMG clears and untracked
   republishing — both are candidates listed in §6; py65 numbers are CPU-only
   and never establish FPS or real raster deadlines.
 
 ## 4. Build pipeline
 
-[ODCZYT] Highest-leverage observations, each with a reference:
+[READ] Highest-leverage observations, each with a reference:
 
 - `tools/build_bitmap_sequence.py::build()` is **868 lines** (53–920): row
   chaining (94–163), scene dispatch (236–377), display list (515–575), v035
@@ -111,7 +111,7 @@ finding below therefore applies to v197 directly.
 1. **Bank 49 is triple-reserved and order-sensitive:** ribbon controller from
    `$5400`, final-boy controller `$5CD0–$5FFB`, Trevor engine from `$6000`;
    inter-controller gaps are 10 B and 4 B. Only install order (not local
-   checks) keeps them separated. [ODCZYT]
+   checks) keeps them separated. [READ]
 2. **`$0DC0–$0DCF` workspace is load-bearing** for the midpoint selector; any
    stray write silently corrupts stepping (`tools/ribbon_inbetweens.py`).
 3. **Scene numbers are bare literals** in behavior branches:
@@ -150,7 +150,7 @@ In order, cheapest first where applicable:
 
 ## 7. Summary verdict
 
-[WNIOSEK] v197 is a solid anchor for further production: the identified bank
+[CONCLUSION] v197 is a solid anchor for further production: the identified bank
 gaps and the engine's bounded-publication discipline support the remaining
 ambitions (credits/greetz windows at ticks 53850–56842 and 56842–59085, Acts
 5C/5D and 6–7). The real blockers are not on the hardware side: a red test

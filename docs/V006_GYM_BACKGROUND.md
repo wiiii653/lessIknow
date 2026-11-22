@@ -1,49 +1,49 @@
-# Sala gimnastyczna za cheerleaderkami — v006
+# Gym behind the cheerleaders — v006
 
-Data: 2026-11-04. Plik: `build/visual-prototype-v006.xex`.
+Date: 2026-11-04. File: `build/visual-prototype-v006.xex`.
 
-- [ODCZYT] Tło w czterech kolorach: wysokie okna, konstrukcja dachu,
-  tablica do koszykówki z obręczą i siatką, granatowe ściany oraz parkiet
-  z liniami boiska. Źródło geometrii: `tools/gym_background.py`.
-- [ODCZYT] Zachowane wszystkie niezerowe piksele czterech póz i pojawianie
-  się kolejnych tancerek przy oryginalnych tickach. Maski PMG mają kolor
-  ściany i obejmują wyłącznie obszar tancerek; nie zasłaniają okien i parkietu.
-- [ODCZYT] Podglądy z wykonania callbacku 6502 i odczytu list ANTIC:
+- [READ] Background in four colours: tall windows, roof structure,
+  a basketball backboard with hoop and net, navy walls and a court floor
+  with field lines. Geometry source: `tools/gym_background.py`.
+- [READ] All non-zero pixels of the four poses are retained, and successive
+  dancers appear at the original ticks. The PMG masks take the wall colour
+  and cover only the dancers' area; they do not obscure the windows or the floor.
+- [READ] Previews from executing the 6502 callback and reading the ANTIC lists:
   `build/v006-gym-solo.png`, `build/v006-gym-duo.png`, `build/v006-gym-trio.png`.
-  Kolory RGB są przybliżeniem sprzętowej palety.
-- [ODCZYT] 19 testów zaliczonych, w tym przejścia scen, pełne scanline'y,
-  granice DMA, brak nakładania segmentów, NORTH i pamięć pod ROM.
+  The RGB colours are an approximation of the hardware palette.
+- [READ] 19 tests passed, including scene transitions, full scanlines,
+  DMA boundaries, no segment overlap, NORTH and memory below ROM.
 
-## Pamięć i V2/V3 — kontrola dostępu playera
+## Memory and V2/V3 — player access control
 
-- [ODCZYT] 835 unikalnych wierszy, 31 173 B danych z wyrównaniem.
-  Łączenie wierszy według wspólnych końcówek/początków jest bezstratne.
-  Callback ma 1135 B; tablice wierszy mają 3264 B.
-- [ODCZYT] Dodatkowo wykorzystano `$0600–$07FF`, `$08C0–$09FF`
-  oraz `$1880–$18FF`. Tablicę dzielenia przez 2 zastępuje instrukcja LSR.
-  Banki muzyki i okno `$4000–$7FFF` pozostają poza danymi obrazu.
-- [ODCZYT] Oryginalny restart, dekoder i DLI wykonane w py65 przez
-  59 833 aktualizacje do końca utworu z zakazem odczytów i zapisów
-  w nowych regionach: brak dostępu do tych regionów.
-  Mechanizm: `audit_music_banks.trace(..., protected_ranges=...)`.
-  Nie jest to pełna weryfikacja wszystkich zachowań PORTB z V2.
+- [READ] 835 unique rows, 31 173 B of data with alignment. Merging rows by
+  shared endings/beginnings is lossless. The callback is 1135 B; the row tables
+  take 3264 B.
+- [READ] Additionally used: `$0600–$07FF`, `$08C0–$09FF`
+  and `$1880–$18FF`. The divide-by-2 table is replaced by an LSR instruction.
+  The music banks and the `$4000–$7FFF` window remain outside the image data.
+- [READ] The original restart, decoder and DLI were run in py65 through
+  59 833 updates to the end of the track, with reads and writes
+  to the new regions forbidden: no access to those regions.
+  Mechanism: `audit_music_banks.trace(..., protected_ranges=...)`.
+  This is not a full verification of all PORTB behaviours from V2.
 
-## V6 — regresja odtwarzania
+## V6 — playback regression
 
-- [ODCZYT] Atari800, PAL, rozszerzenie `-1088xe`, Altirra OS,
-  stereo POKEY, headless. DLI nadal w liniach 0, 78, 156, 234.
-- [ODCZYT] Porównanie v006 z v035: **7 183 296 identycznych bajtów**
-  rejestrów stereo POKEY, około 2001,0 s emulacji, cały utwór objęty testem.
-  Początkową ciszę wyrównano raz. Nie wykonano odsłuchu ani testu
-  na fizycznym Atari; nie zmieniano odstępów DLI w eksperymencie V6.
+- [READ] Atari800, PAL, `-1088xe` extension, Altirra OS,
+  stereo POKEY, headless. DLI still in lines 0, 78, 156, 234.
+- [READ] Comparison of v006 with v035: **7 183 296 identical bytes** of
+  stereo POKEY registers, about 2001.0 s of emulation, the whole track covered by the test.
+  The initial silence was aligned once. No listening test or test
+  on physical Atari was performed; DLI spacings were not changed in the V6 experiment.
 
 ```sh
 make check PYTHON=/tmp/tliktb-girl-venv/bin/python
 APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo build/visual-prototype-v006.xex --seconds 10
 ```
 
-## Zachowane wersje
+## Preserved versions
 
-- [ODCZYT] v035, pierwotny prototyp i v003 zachowały poprzednie SHA-256.
-- [ODCZYT] SHA-256 v006: `f261c0128dec5760c016c0fdd4553ebf3eb6701d11395fde3e03a224c9effbd5`.
-- [ODCZYT] v004 i v005 są zachowanymi pośrednimi buildami tej zmiany.
+- [READ] v035, the original prototype and v003 kept their previous SHA-256.
+- [READ] SHA-256 of v006: `f261c0128dec5760c016c0fdd4553ebf3eb6701d11395fde3e03a224c9effbd5`.
+- [READ] v004 and v005 are preserved intermediate builds of this change.

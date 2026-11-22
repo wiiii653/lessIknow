@@ -160,7 +160,7 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     c.emit(0x8a,0x18);c.jump(0x79,'quotient_bits');c.emit(0xaa)
     c.label('divide_next');c.emit(0x88);c.branch(0x10,'divide')
     a(0xad,0x83ea)
-    c.label('beat');c.emit(0xc9,24,0xa9,6);c.branch(0xb0,'luma');c.emit(0xa9,10)
+    c.label('beat');c.emit(0xc9,24,0xa9,4);c.branch(0xb0,'luma');c.emit(0xa9,8)
     c.label('luma');a(0x8d,0x83ea)
     c.label('color_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'color_wait')
     c.label('palette');c.emit(0xe0,161);c.branch(0x90,'palette_index_ok');c.emit(0xa2,160)
@@ -184,13 +184,13 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
         a(0xad,0x0dd3);c.emit(0xc9,38892&255);c.branch(0x90,'white_highlight')
         c.label('tunnel_hue')
         a(0xad,0x83ed);c.emit(0x29,15,0xaa)
-        c.jump(0xbd,'hue_pairs');c.emit(0x09,0x0e);a(0x8d,0xd018)
+        c.jump(0xbd,'hue_pairs');c.emit(0x29,0xf0,0x09,0x0a);a(0x8d,0xd018)
         c.jump(0x4c,'highlight_done')
-        c.label('white_highlight');c.emit(0xa9,0x0e);a(0x8d,0xd018)
+        c.label('white_highlight');c.emit(0xa9,0x0c);a(0x8d,0xd018)
         c.jump(0x4c,'highlight_done')
     c.label('banana_highlight');c.emit(0xa9,0xee);a(0x8d,0xd018)
-    # Strong golden body and saturated lemon highlights for both banana tiles.
-    c.emit(0xa9,0xea if not peeled else 0xd8);a(0x8d,0xd016)
+    # Bright yellow flesh with a lighter yellow highlight.
+    c.emit(0xa9,0xec if not peeled else 0xea);a(0x8d,0xd016)
     c.label('highlight_done')
     # Keep the previous ball and its DMA alive until the PMG helper can
     # safely update it. A second wait may cross an entire frame boundary.

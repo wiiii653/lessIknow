@@ -55,9 +55,9 @@ class HardwareLoaderTests(unittest.TestCase):
         animated = install(self.result)
         original = list(segments(self.result))
         entries = list(segments(animated))
-        self.assertEqual(len(entries), len(original) + 3)
-        loading = entries[3][2][40:80]
-        for old, new in zip(original, entries[3:]):
+        self.assertEqual(len(entries), len(original) + 4)
+        loading = entries[4][2][40:80]
+        for old, new in zip(original, entries[4:]):
             if old[0] == 0x3900:
                 self.assertEqual(old[2][:60], new[2][:60])
                 for row in (new[2][60:100], new[2][100:140]):
@@ -67,7 +67,7 @@ class HardwareLoaderTests(unittest.TestCase):
                 self.assertEqual(old, new)
 
         cpu = MPU()
-        for address, end, payload in entries[:6]:
+        for address, end, payload in entries[:7]:
             cpu.memory[address:end+1] = payload
         screens = set()
         for _ in range(5):

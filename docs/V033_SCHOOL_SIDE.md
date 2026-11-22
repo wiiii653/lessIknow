@@ -1,21 +1,22 @@
-# v033 — boczne ujęcie przed szkołą
+# v033 — side shot in front of the school
 
-Przebitka w tickach 3553–4113 pokazuje blond dziewczynę z profilu, w pół kroku,
-przed szkołą. To statyczny kadr przedstawiający ruch, nie animacja chodu.
-Oryginalna przebitka kończyła się w ticku 3927; wydłużenie o 187 ticków
-(~0,94 s) skraca ujęcie chłopca po niej. Dziewczyna wchodzi na pierwszy plan
-w dotychczasowym ticku 4488, pozostałe granice scen bez zmian.
+The cut in ticks 3553–4113 shows a blonde girl in profile, mid-step, in front of
+the school. It is a static frame depicting motion, not a walking animation.
+The original cut ended at tick 3927; extending it by 187 ticks (~0.94 s)
+shortens the boy's shot after it. The girl enters the foreground at the
+previous tick 4488, the remaining scene boundaries are unchanged.
 
-Źródło: `assets/art/source/act1_girl_side_walking_v033.png`. Wygenerowano
-na podstawie istniejących ilustracji szkoły i dziewczyny, z profilem w kroku,
-w europejskim stylu komiksowym i paletą czerni, cyjanu, różu i jasnej brzoskwini.
-Kadr przeliczany jest do 160×64 i wyświetlany przez istniejący renderer.
+Source: `assets/art/source/act1_girl_side_walking_v033.png`. Generated from the
+existing school and girl illustrations, with a mid-step profile, in a European
+comic style and a palette of black, cyan, pink and light peach. The frame is
+rescaled to 160×64 and displayed by the existing renderer.
 
-[ODCZYT] 48 testów PASS (`make check PYTHON=/tmp/tliktb-girl-venv/bin/python`),
-w tym granice przebitki i sąsiadujących ujęć. Atari800 PAL 1088XE, stereo
-POKEY: `tools/check_playback.py --demo build/visual-prototype-v033.xex --seconds 12`
-z `APPIMAGE_EXTRACT_AND_RUN=1`: 8 606 664 identycznych bajtów rejestrów,
-~2397,5 s emulacji, pełny utwór. Nie wykonano odsłuchu na fizycznym sprzęcie.
+[READ] 48 tests PASS (`make check PYTHON=/tmp/tliktb-girl-venv/bin/python`),
+including the cut boundaries and those of the adjacent shots. Atari800 PAL
+1088XE, stereo POKEY: `tools/check_playback.py --demo build/visual-prototype-v033.xex --seconds 12`
+with `APPIMAGE_EXTRACT_AND_RUN=1`: 8 606 664 identical register bytes,
+~2397.5 s of emulation, the full track. No listening test on physical hardware
+was performed.
 
-Podgląd: `build/v033-girl-side.png`. SHA256 XEX:
+Preview: `build/v033-girl-side.png`. XEX SHA256:
 `3b47be7910e46ba2537ac0cee18a0eb91e0eaf066ed9f3bd1161c72de5725fd9`.

@@ -1,44 +1,44 @@
-# v019 — przebitka na dziewczynę przed szkołą
+# v019 — cutaway to the girl before school
 
-[ODCZYT] Wstawiono portret blondynki przed szkołą, z odłożonego materiału
-`assets/art/source/act1_blonde_portraits_reserved_v014.png` (lewy górny kadr).
-Nie generowano nowej ilustracji. Konwersja 160×64, każdy wiersz powtórzony
-trzykrotnie, jak pozostałe obrazy przed szkołą.
+[READ] A blonde girl portrait was inserted before the school, from reserved
+material `assets/art/source/act1_blonde_portraits_reserved_v014.png` (top-left
+frame). No new illustration was generated. 160×64 conversion, each row repeated
+three times, like the other images before the school.
 
-| Ticki | Ujęcie |
+| Ticks | Shot |
 | --- | --- |
-| 2992–3552 | Chłopiec od przodu |
-| 3553–3926 | Dziewczyna od przodu, przed szkołą |
-| 3927–4487 | Powrót do chłopca od przodu |
-| 4488–4861 | Dziewczyna pojawia się na pierwszym planie, chłopiec jeszcze patrzy przed siebie |
-| 4862–5983 | Dziewczyna oddala się ku drzwiom, chłopiec ogląda się za nią |
-| 5984 | Początek sali i treningu, bez przesunięcia |
+| 2992–3552 | Boy from the front |
+| 3553–3926 | Girl from the front, before the school |
+| 3927–4487 | Back to the boy from the front |
+| 4488–4861 | Girl appears in the foreground, boy still looking straight ahead |
+| 4862–5983 | Girl walks away towards the doors, boy looks back at her |
+| 5984 | Start of the hall and training, without a shift |
 
-## V2 / V3 — dodatkowy bank
+## V2 / V3 — additional bank
 
-[ODCZYT] Dotychczasowe 14 banków nie miało miejsca na kolejny pełny obraz.
-Nowy INIT ładuje dodatkowe 8 KiB w kolejnym banku, zachowując PORTB.
-Wartość banku zapisana jest pod `$24B3`, w przerwie między istniejącymi
-segmentami playera. Dobór kontynuuje wykrytą tablicę PORTB: `$AA→$AC`,
-`$C6→$CA` lub `$E6→$EA` (wartości runtime z wyłączonym OS).
-Nie przesuwa ani nie nadpisuje banków 1–14. Dane trafiają do nieaktywnego
-bufora istniejącą kopią, a NMI przywraca bank foreground.
+[READ] The previous 14 banks had no room for another full image.
+A new INIT loads an additional 8 KiB in the next bank, preserving PORTB.
+The bank value is stored at `$24B3`, in the gap between the existing
+player segments. The selection continues the detected PORTB table: `$AA→$AC`,
+`$C6→$CA` or `$E6→$EA` (runtime values with the OS disabled).
+It does not shift or overwrite banks 1–14. The data goes into the inactive
+buffer through the existing copy, and the NMI restores the foreground bank.
 
-## V1 / V6 — walidacja
+## V1 / V6 — validation
 
-[ODCZYT] 30 testów OK, w tym cała kolejność ujęć oraz ich piksele,
-przejście do treningu i dotychczasowe testy sceny występu.
-W Atari800 PAL `-1088xe` porównano pełne zrzuty pamięci: chłopiec,
-przebitka na dziewczynę, podtrzymanie, powrót do chłopca, wejście i
-oddalanie dziewczyny oraz cztery późniejsze kadry występu. Wszystkie
-obrazy zgadzają się ze źródłami.
+[READ] 30 tests OK, including the full shot sequence and its pixels,
+the transition to training and the existing performance-scene tests.
+In Atari800 PAL `-1088xe` full memory dumps were compared: the boy,
+the cutaway to the girl, the hold, the return to the boy, the girl's entrance
+and walk-away, and four later performance frames. All images
+match the sources.
 
-[ZAŁOŻENIE] Dwie pozostałe tablice rozszerzeń i fizyczne Atari wymagają
-osobnego sprawdzenia; test emulatora dotyczy wskazanego `-1088xe`.
-Podgląd: `build/v019-school-cuts.png`.
+[ASSUMPTION] The two remaining memory-expansion tables and physical Atari
+require separate checking; the emulator test covers the specified `-1088xe`.
+Preview: `build/v019-school-cuts.png`.
 
-[ODCZYT] Porównanie pełnego utworu stereo POKEY w Atari800:
-8 648 064 identyczne bajty, około 2409,0 s emulacji.
+[READ] Full stereo POKEY track comparison in Atari800:
+8 648 064 identical bytes, about 2409.0 s of emulation.
 
 ```sh
 make check PYTHON=/tmp/tliktb-girl-venv/bin/python

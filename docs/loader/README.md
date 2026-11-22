@@ -16,17 +16,17 @@ before making changes.
 
 | File | Topic |
 |---|---|
-| `01_potok_budowania.md` | Build pipeline |
-| `02_xex_i_start.md` | XEX format, INIT/RUNAD and startup |
-| `03_ekran_ladowania.md` | Loading screen and display list |
-| `04_bankowanie.md` | PORTB, bank detection and copying |
-| `05_kompakt_i_pozny_start.md` | Compact packaging and late startup |
-| `06_mapa_pamieci_i_bankow.md` | Memory map and bank allocation |
-| `07_przelaczanie_runtime.md` | Runtime bank switching |
-| `08_diagnostyka.md` | Diagnostics and evidence |
-| `09_odtwarzanie_i_testy.md` | Reproduction and tests |
-| `10_analiza_optymalizacji.md` | Optimization analysis |
-| `11_mozaiki_szkola_i_banany.md` | Scene profiles and banked artwork |
+| `01_build_pipeline.md` | Build pipeline |
+| `02_xex_and_startup.md` | XEX format, INIT/RUNAD and startup |
+| `03_loading_screen.md` | Loading screen and display list |
+| `04_bank_switching.md` | PORTB, bank detection and copying |
+| `05_compact_and_late_start.md` | Compact packaging and late startup |
+| `06_memory_and_bank_map.md` | Memory map and bank allocation |
+| `07_runtime_switching.md` | Runtime bank switching |
+| `08_diagnostics.md` | Diagnostics and evidence |
+| `09_playback_and_tests.md` | Reproduction and tests |
+| `10_optimisation_analysis.md` | Optimization analysis |
+| `11_mosaics_school_and_bananas.md` | Scene profiles and banked artwork |
 
 ## Fixed hardware layout
 

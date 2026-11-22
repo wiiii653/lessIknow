@@ -1,33 +1,35 @@
-# v035 — dwa plany w przebitce przed szkołą
+# v035 — two planes in a cutaway before school
 
-Wykorzystana jest dokładnie postać z kadru v033: wycięta maską z oryginalnej
-ilustracji, z zachowaniem jej skali i kadrowania. Zrekonstruowano tło pod jej
-sylwetką, a płótno rozszerzono do 200 pikseli. W czasie przebitki tło przesuwa
-się o 18 pikseli w lewo, a dziewczyna o 38 pikseli w prawo. Niezależne drobne
-przesunięcia pasm włosów tworzą powiew wiatru. Ujęcie trwa od ticku 3553 do
-4113; następne cięcia pozostały na dotychczasowych pozycjach.
+The exact figure from the v033 frame is used: cut out with a mask from the
+original illustration, preserving its scale and framing. The background under
+her silhouette was reconstructed, and the canvas was extended to 200 pixels.
+During the cutaway the background moves 18 pixels to the left and the girl 38
+pixels to the right. Independent small shifts of the hair bands create a gust
+of wind. The shot lasts from tick 3553 to 4113; the following cuts remained at
+their existing positions.
 
-18 klatek powstaje podczas budowania przez złożenie wyciętej postaci i tła;
-Atari odtwarza gotowe klatki co 32 ticki i kopiuje je do nieaktywnego bufora.
-Do pięciu nowych banków trafia łącznie 20 miejsc na klatki (dwa ostatnie to
-powtórzenia), kod renderujący i tablice. Razem demo używa 38 banków. Efekt
-nie jest liczony jako dwie nakładane warstwy w każdej klatce na 6502.
+18 frames are created during the build by compositing the cut-out figure and
+the background; Atari replays the finished frames every 32 ticks and copies
+them into the inactive buffer. Five new banks hold a total of 20 frame slots
+(the last two are repeats), the rendering code and the tables. Altogether the
+demo uses 38 banks. The effect is not computed as two overlaid layers per frame
+on the 6502.
 
-Źródło postaci: `assets/art/source/act1_girl_side_walking_v033.png`.
-Uzupełnione tło `assets/art/source/act1_school_background_v034.png` powstało
-przez usunięcie dziewczyny z tego obrazu i odtworzenie zasłoniętych fragmentów
-w imagegen. Maska i przygotowanie pikseli: `tools/prepare_school_pan.py`
-(systemowy Python z Pillow). Generator klatek: `tools/school_parallax.py`.
+Figure source: `assets/art/source/act1_girl_side_walking_v033.png`.
+The completed background `assets/art/source/act1_school_background_v034.png`
+was created by removing the girl from that image and recreating the occluded
+fragments in imagegen. Mask and pixel preparation: `tools/prepare_school_pan.py`
+(system Python with Pillow). Frame generator: `tools/school_parallax.py`.
 
-[ODCZYT] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 49 testów PASS,
-w tym wszystkie 18 klatek i granice scen. Atari800 PAL 1088XE: zrzuty aktywnej
-listy ekranu wszystkich 18 klatek zgodne z grafiką źródłową.
+[READ] `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`: 49 tests PASS,
+including all 18 frames and the scene boundaries. Atari800 PAL 1088XE: captures
+of the active display list for all 18 frames match the source artwork.
 
-[ODCZYT] `APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo
-build/visual-prototype-v035.xex --seconds 12`: 7 637 040 identycznych bajtów
-stereo POKEY (~2127,4 s emulacji, cały utwór). Nie wykonano osobnego odsłuchu
-na fizycznym Atari. Podgląd GIF jest generowany z wykonania kodu 6502, kolory
-PAL przybliżone.
+[READ] `APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo
+build/visual-prototype-v035.xex --seconds 12`: 7 637 040 identical bytes of
+stereo POKEY (~2127.4 s of emulation, the whole track). No separate listening
+test was performed on physical Atari. The GIF preview is generated from the
+execution of the 6502 code, PAL colours approximated.
 
 SHA256 v035: `3bbea99f540375d923b531b6c8f0ac3a9b072c66e14647018826be17ad8a9726`.
-Zachowano v033 i pośredni v034.
+v033 and the intermediate v034 were preserved.

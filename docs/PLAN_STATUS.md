@@ -67,7 +67,7 @@ NTSC, Atari model, memory expansion and stereo configuration.
 ## Current scene timing
 
 See [`TIMELINE_MAP.md`](TIMELINE_MAP.md) for the concise current timeline and
-[`AKTUALNY_MONTAZ_V330.md`](AKTUALNY_MONTAZ_V330.md) for post-Trevor cuts.
+[`CURRENT_MONTAGE_V330.md`](CURRENT_MONTAGE_V330.md) for post-Trevor cuts.
 Both documents are maintained in English. Historical Vxxx records are
 archival change notes and may describe superseded states; use this status page
 and the current source as authority.

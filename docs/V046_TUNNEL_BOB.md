@@ -1,22 +1,25 @@
-# v046 — kołysanie piłki w tunelu
+# v046 — ball sway in the tunnel
 
-Piłka na końcu tunelu porusza się w poziomie o maksymalnie pięć logicznych
-pikseli oraz w pionie o maksymalnie cztery linie obrazu. Niezależne przebiegi
-sinusoidalne tworzą ruch w różnych kierunkach; cztery satelity poruszają się
-razem z nią. Sprzętowe playery i pociski, obrót oraz tęczowe kolory pozostają
-w użyciu. Ruch w rotatorze i momenty przejść pozostały bez zmian.
+The ball at the end of the tunnel moves horizontally by at most five logical
+pixels and vertically by at most four screen lines. Independent sine
+trajectories create motion in different directions; four satellites move
+together with it. Hardware players and missiles, rotation and rainbow colours
+remain in use. The motion in the rotator and the transition moments remain
+unchanged.
 
-[ODCZYT] Test 32 faz sprawdza każdy piksel geometrycznej dziury tunelu
-(`radius < 5` w układzie tekstury) pod kątem zasłonięcia przez maski czterech
-playerów. Obszar jest pokryty we wszystkich fazach. 54 testy PASS:
+[READ] A 32-phase test checks every pixel of the tunnel's geometric hole
+(`radius < 5` in texture space) for coverage by the masks of the four
+players. The area is covered in all phases. 54 tests PASS:
 `make check PYTHON=/tmp/tliktb-girl-venv/bin/python`.
 
-[ODCZYT] Atari800 PAL 1088XE: 32 zrzuty faz pokazują prawidłowe przesunięcia
-oraz obecność danych duszków i pocisków. Porównanie stereo POKEY poleceniem
+[READ] Atari800 PAL 1088XE: 32 phase captures show the correct offsets
+and the presence of the sprite and missile data. A stereo POKEY comparison
+with the command
 `APPIMAGE_EXTRACT_AND_RUN=1 python3 tools/check_playback.py --demo
-build/visual-prototype-v046.xex --seconds 12` dało 7 840 944 identyczne bajty
-(~2184,2 s emulacji, cały utwór). Nie wykonano osobnego odsłuchu na sprzęcie.
-Podgląd: `build/v046-tunnel-bob.gif`, barwy PAL przybliżone.
+build/visual-prototype-v046.xex --seconds 12` gave 7 840 944 identical bytes
+(~2184,2 s of emulation, the whole track). No separate listening test was
+performed on hardware.
+Preview: `build/v046-tunnel-bob.gif`, PAL colours approximated.
 
 SHA256 XEX: `174064fc5525a5097869e609955467807532d647928245ce55ab57203d146bad`.
-Poprzednie XEX-y zachowane.
+Previous XEX files preserved.

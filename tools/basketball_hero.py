@@ -19,18 +19,40 @@ SHATTER_X, SHATTER_Y, SHATTER_WIDTH, SHATTER_HEIGHT = 112,0,48,24
 SHATTER_PATCH_BYTES = SHATTER_WIDTH//4*SHATTER_HEIGHT
 SHATTER_DATA = DATA+5*2240+3*DRIBBLE_PATCH_BYTES
 ORBIT_DATA=0x7e40
+CROUCH_LIFT = 2  # Source rows: align sole row 55 with the dribble's row 53.
 
 
-def satellite_orbits():
+def align_crouch(frame):
+    from arena_art import background, inside
+
+    # Trace the actor so the scoreboard, stands and court stay fixed.
+    outline = ((64,16),(70,16),(76,20),(75,26),(81,28),(81,33),
+               (85,34),(85,39),(75,40),(75,46),(70,52),(69,56),
+               (45,56),(46,52),(51,50),(54,45),(46,45),(45,38),
+               (49,36),(50,31),(54,29),(57,26),(63,24))
+    mask = [y*160+x for y in range(16,56) for x in range(45,85)
+            if inside(x+.5,y+.5,outline)]
+    plate = background(interior=True)
+    result = bytearray(frame)
+    for pixel in mask:
+        result[pixel] = plate[pixel]
+    for pixel in mask:
+        result[pixel-CROUCH_LIFT*160] = frame[pixel]
+    return bytes(result)
+
+
+def satellite_orbits(*, training=False):
     """Four relative missile paths; Y units are double-line PMG rows."""
     paths=[]
     for plane,(rx,ry,direction,speed,phase,tilt) in enumerate((
-            (18,7,1,1,0,0), (11,11,-1,1,8,0),
-            (25,5,1,2,4,0), (17,8,-1,1,20,.6))):
+            (23,9,1,1,0,0), (15,13,-1,2,8,0),
+            (30,7,1,2,4,0), (21,10,-1,1,20,.6))):
         path=[]
         for step in range(32):
             theta=(direction*speed*step+phase)*math.tau/32
-            x,y=rx*math.cos(theta),ry*math.sin(theta)
+            reach = 1 + .24*math.sin(step*math.tau/16 + plane*math.pi/2) if training else 1
+            x = reach*rx*math.cos(theta)
+            y = reach*ry*math.sin(theta)
             # Rotate in display proportions: one Y row equals two scanlines.
             path.append((round(x*math.cos(tilt)-2*y*math.sin(tilt)),
                          round(x*.5*math.sin(tilt)+y*math.cos(tilt))))
@@ -39,7 +61,7 @@ def satellite_orbits():
 
 
 def orbit_data():
-    return bytes(v&255 for path in satellite_orbits()
+    return bytes(v&255 for path in satellite_orbits(training=True)
                  for axis,origin in ((0,46),(1,6)) for point in path
                  for v in (point[axis]+origin,))
 
@@ -63,6 +85,7 @@ def cleaned_art():
     raw=reference_art()
     original=[unpack(raw[i*2240:(i+1)*2240]) for i in range(5)]
     corrected=[clean(frame,index) for index,frame in enumerate(original)]
+    corrected[1] = align_crouch(corrected[1])
     def pack(pixels):
         return bytes(sum(pixels[i+j]<<(6-2*j) for j in range(4)) for i in range(0,len(pixels),4))
     patches=[];offset=5*2240
@@ -127,7 +150,7 @@ def ball_paths():
     # The first wind-up is held, then two quick airborne poses and the dunk.
     dunk=[]
     for i in range(94):
-        if i<47: x,cy=85,102
+        if i<47: x,cy=85,102-round(CROUCH_LIFT*192/HEIGHT)
         elif i<61: x,cy=99,28
         elif i<75: x,cy=115,18
         elif i<82: x,cy=124,32
@@ -280,8 +303,7 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
         c.jump(0xbd,f'spin{i}');c.label(f'put{i}');a(0x99,0x0a00+i*128)
     c.emit(0xe8,0xc8,0x8a,0x29,15);c.branch(0xd0,'spin')
     a(0xad,0x83e5);c.branch(0xd0,'shattered_droplets')
-    a(0xad,0x83ed);c.branch(0xd0,'choose_orbits');c.jump(0x4c,'ball_droplets')
-    c.label('choose_orbits');c.jump(0x4c,'orbit_satellites')
+    c.jump(0x4c,'orbit_satellites')
     c.label('shattered_droplets')
     a(0xad,0x83ff);c.emit(0x38,0xe9,75,0xaa)
     for i in range(4):
@@ -291,19 +313,13 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
         c.emit(0xc8,0xa9,1<<(2*i));c.jump(0x20,'put_missile')
         c.emit(0xc8,0xc8,0xa9,2<<(2*i));c.jump(0x20,'put_missile')
     c.jump(0x4c,'spray_ready')
-    c.label('ball_droplets')
-    for i,dx in enumerate((-14,-7,13,20)):
-        a(0xad,0x83e8);c.emit(0x18,0x69,48+dx);c.jump(0x8d,f'hpos{i}')
-        a(0xad,0x83e9);c.emit(0x18,0x69,i*3+1,0xa8,0xa9,3<<(2*i));c.jump(0x20,'put_missile')
-        c.emit(0x98,0x18,0x69,5,0xa8,0xa9,3<<(2*i));c.jump(0x20,'put_missile')
-    c.jump(0x4c,'spray_ready')
     c.label('orbit_satellites')
-    a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x29,31,0xaa)
+    a(0xad,0x83e2);c.emit(0x4a,0x4a,0x29,31,0xaa)
     for i in range(4):
         a(0xbd,ORBIT_DATA+i*64);c.emit(0x18);a(0x6d,0x83e8);c.jump(0x8d,f'hpos{i}')
         a(0xbd,ORBIT_DATA+i*64+32);c.emit(0x18);a(0x6d,0x83e9);c.emit(0xa8)
         for dy,bits in enumerate((1,3,1)):
-            if dy:c.emit(0xc8)
+            if dy:c.emit(0xc8,0xc8)
             c.emit(0xa9,bits<<(2*i));c.jump(0x20,'put_missile')
     c.label('spray_ready')
     # Only register writes happen during this early blanking window.
@@ -320,7 +336,6 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     for i in range(4):a(0x8d,0xd012+i);c.emit(0x18,0x69,0x44 if i==0 else 0x42)
     for addr,val in ((0xd01a,0),(0xd016,0x38),(0xd017,0x68),(0xd018,0x2a),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0)):
         c.emit(0xa9,val);a(0x8d,addr)
-    a(0xad,0x83ed);c.branch(0xf0,'missile_size_ready')
     a(0xad,0x83e5);c.branch(0xd0,'missile_size_ready')
     c.emit(0xa9,0x55);a(0x8d,0xd00c)
     c.label('missile_size_ready');a(0xad,0x83ed);c.branch(0xf0,'no_flash');a(0xad,0x83ff);c.emit(0xc9,82);c.branch(0x90,'no_flash');c.emit(0xc9,85);c.branch(0xb0,'no_flash');c.emit(0xa9,14);a(0x8d,0xd017)
@@ -342,8 +357,10 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     for part,shift in (('lo',0),('hi',8)):
         c.label('shatter_'+part);c.emit(*(((SHATTER_DATA+i*SHATTER_PATCH_BYTES)>>shift)&255 for i in range(3)))
     for i in range(4):
-        c.label(f'shard_x{i}');c.emit(*(round(130+(i-1.5)*(5+age*.7))+48 for age in range(19)))
-        c.label(f'shard_y{i}');c.emit(*(round(17+i*2-age*.7+age*age*.105) for age in range(19)))
+        c.label(f'shard_x{i}');c.emit(*(round(172+(i-1.5)*(3+age*1.05)
+                                              +4*math.sin(age/4+i)) for age in range(19)))
+        c.label(f'shard_y{i}');c.emit(*(round(22+i*2-age*(1.1+.24*i)+age*age*.115)
+                                      for age in range(19)))
     c.labels['patch_step']=c.labels['patch_add']+1
     sources=[DATA+DRIBBLE_Y*40+DRIBBLE_X//4,DATA+5*2240,0,0,0,0,
              DATA+5*2240+DRIBBLE_PATCH_BYTES,DATA+5*2240+2*DRIBBLE_PATCH_BYTES]
