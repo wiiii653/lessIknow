@@ -1,6 +1,6 @@
 # Project Status
 
-Status reviewed on 2026-11-21. The numbered release and the source working
+Status reviewed on 2026-11-22. The numbered release and the source working
 tree are separate states; do not describe a development build as an approved
 release.
 
@@ -28,6 +28,12 @@ derives the plasma/reveal frames procedurally. The boy's arena silhouette mask
 has been refined around the hair and arena edge. These latest edits have passed
 their targeted source-level checks where recorded, but this document does not
 claim a full current playback or a real-hardware visual check.
+
+The ribbon-dance front solo now follows the same half-beat pose cadence as the
+preceding three-dancer section. Its inbetween poses remain enabled for smooth
+transitions, while quarter-beat subdivisions are disabled in this solo passage
+to keep its speed aligned with the trio. A stereo prerelease was built for
+listening; it has not been confirmed on physical hardware.
 
 The demo is stereo-only. The v035 player remains the music engine and runs four
 evenly spaced updates per PAL frame. Scene timing is driven by its update

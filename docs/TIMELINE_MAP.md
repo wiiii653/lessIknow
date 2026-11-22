@@ -1,6 +1,6 @@
 # Current Demo Timeline
 
-This concise map reflects the current source tree as reviewed on 2026-11-21.
+This concise map reflects the current source tree as reviewed on 2026-11-22.
 Exact tick boundaries are generated from the music clock; after timing edits,
 use `build/visual-prototype-dev.json` as the build-specific source of truth.
 The clock runs at about 199.44 updates per second on PAL, with roughly 373.956
@@ -40,6 +40,12 @@ have not yet been verified in a full hardware run.
 The post-Trevor cuts are listed in detail in
 [`CURRENT_MONTAGE_V330.md`](CURRENT_MONTAGE_V330.md). The table above is a
 rounded overview, not a substitute for the generated build JSON.
+
+In the ribbon-dance section, the front solo uses the same half-beat pose-change
+cadence as the preceding trio. Smooth half-beat inbetweens are retained, but
+extra quarter-beat subdivisions are suppressed during the solo so it does not
+run faster than the three-dancer passage. The built stereo prerelease has not
+been confirmed on physical hardware.
 
 ## Timing and validation
 

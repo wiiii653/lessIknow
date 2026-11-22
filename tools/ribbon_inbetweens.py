@@ -24,8 +24,10 @@ HANDS=(((.23,.337),(.34,.103)),((.164,.384),(.205,.457)),
 
 def step_midpoint(step):
     import ribbon_dance as d
-    if step>=117 or 31<=step<=63:return None
+    if step>=117 or step in (31,63):return None
     pair=tuple(sorted((d.frame_for_step(step),d.frame_for_step(step+1))))
+    if 32<=step<64 and pair==(5,6):
+        return PAIRS.index((6,34))
     return PAIRS.index(pair) if pair in PAIRS else None
 
 
@@ -37,6 +39,8 @@ def midpoint_at(tick,step):
 
 def quarter_at(tick,step):
     import ribbon_dance as d
+    # Match the trio's single inbetween per half beat during the solo.
+    if 32<=step<64:return None
     mid=step_midpoint(step)
     if mid is None or not 6<=mid<10:return None
     quarter=(3*d.STEPS[step]+d.STEPS[step+1])//4
@@ -174,7 +178,8 @@ def selector():
     times=[(d.STEPS[step]+d.STEPS[step+1])//2 if step<127 else 65535 for step in range(128)]
     c.label('mid_lo');c.emit(*(t&255 for t in times))
     c.label('mid_hi');c.emit(*(t>>8 for t in times))
-    q3=[(3*d.STEPS[step]+d.STEPS[step+1])//4 if step<127 else 65535 for step in range(128)]
+    q3=[(3*d.STEPS[step]+d.STEPS[step+1])//4
+        if step<127 and not 32<=step<64 else 65535 for step in range(128)]
     c.label('q3_lo');c.emit(*(t&255 for t in q3))
     c.label('q3_hi');c.emit(*(t>>8 for t in q3))
     c.label('banks')
