@@ -17,9 +17,10 @@ SCHOOL_PHASES = ((tick_at_bar(8), 8), (SCHOOL_PORTRAIT_TICK, GIRL_PORTRAIT_SCENE
                  (tick_at_bar(13), 10), (tick_at_bar(14), 11),
                  (tick_at_bar(15), 12), (PRACTICE_TICK, PRACTICE_SCENE))
 # (left, top, width, height), in the 160x64 school artwork's coordinates.
-# The foreground uses one source cell per scene cell and crops at the waist.
-GIRL_PLACEMENTS = ((0, 0, 96, 128), (44, 11, 36, 48),
-                   (62, 22, 24, 32), (76, 36, 12, 16))
+# The foreground crops at the waist. The distant poses place the soles
+# along the sloping pavement and end at the doorway sill.
+GIRL_PLACEMENTS = ((0, 0, 96, 128), (43, 19, 33, 44),
+                   (60, 28, 21, 28), (75, 38, 12, 16))
 # Bright running stitches (#) and a few darker thread ends (+).
 JACKET_BADGE = (
     "#....# .#........#+ #....# ####..",
@@ -129,6 +130,15 @@ def story_frames():
     close_art = foreground_girl()
     distant_inks, distant_mask = party_girl()
     distant_inks = bytearray(distant_inks)
+    # Use the same blue ink as the earlier side view. Retain the black
+    # silhouette and leave dark folds at the waist and hem.
+    for y in range(31, 38):
+        middle = y * 48
+        for x in range(15, 34):
+            at = middle + x
+            if all(distant_mask[at+step] and distant_inks[at+step] in (0, 2)
+                   for step in (-1, 0, 1)) and x not in (19, 29):
+                distant_inks[at] = 2
     # At this scale only the separator is legible.
     for y in range(15, 24):
         distant_inks[y * 48 + 17:y * 48 + 30] = b'\x02' * 13
@@ -144,9 +154,9 @@ def story_frames():
         girl, mask = close_art if index == 0 else distant_art
         source_width, source_height = (width, height) if index == 0 else (48, 64)
         for y in range(min(height,64-top)):
-            source_row = (y * source_height // height) * source_width
+            source_row = ((2*y+1) * source_height // (2*height)) * source_width
             for x in range(width):
-                source = source_row + x * source_width // width
+                source = source_row + (2*x+1) * source_width // (2*width)
                 target_x, target_y = left + x, top + y
                 if 0 <= target_x < 104 and 0 <= target_y < 64 and mask[source]:
                     for dy in range(3):

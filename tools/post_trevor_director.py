@@ -13,6 +13,8 @@ FIRST_ROTATOR=tick_at_bar(32)
 # Each tunnel update displays the next stored rotation in its direction.
 FIRST_TUNNELS=(0x00,0x10,0x80,0x90,0x00,0x10,0x80,0x90)
 BUM_START=tick_at_bar(104)
+LATE_BANANA_START=tick_at_bar(207,2)
+FIRST_LATE_BANANA_CUT=11+104-80
 CYCLE_START=tick_at_bar(80)
 from outro_text import START as END
 DESC=0x0dda
@@ -21,8 +23,8 @@ QSTART,ELAPSED=0x0ddb,0x0ddc
 ACTLO,ACTHI=0x0dd5,0x0dd6
 MODE=0x0dd7
 
-# One-bar passes alternate direction. Only the banana rotator skips phases.
-PATTERN=(0x60,0xe0,0x20,0xa0,0x00,0x80,0x00,0x80,
+# Passes alternate direction while stepping through consecutive orientations.
+PATTERN=(0x20,0xa0,0x20,0xa0,0x00,0x80,0x00,0x80,
          0x10,0x90,0x10,0x90)
 
 def cuts():
@@ -30,8 +32,8 @@ def cuts():
     result=[(tick_at_bar(bar), mode) for bar,mode in enumerate(FIRST_TUNNELS,32)]
     result.extend(((tick_at_bar(56),0x00),(tick_at_bar(57),0x80),(START,0x20)))
     for index,bar in enumerate(range(80,112)):
-        tick=tick_at_bar(bar)
-        mode={108:0x60,109:0xe0}.get(bar,PATTERN[index%len(PATTERN)])
+        tick=LATE_BANANA_START if bar==104 else tick_at_bar(bar)
+        mode={108:0x20,109:0xa0}.get(bar,PATTERN[index%len(PATTERN)])
         result.append((tick,mode))
     return tuple((tick,mode) for tick,mode in result if tick<END)
 
@@ -142,6 +144,11 @@ def bank_helper():
     c.emit(0x8e,MODE&255,MODE>>8)
     c.jump(0xbd,'lo');a(0x8d,0x0dd8)
     c.jump(0xbd,'hi');a(0x8d,0x0dd9)
+    # The reveal starts early, but its first bubble still cues on bar 104.
+    c.emit(0xe0,FIRST_LATE_BANANA_CUT);c.branch(0xd0,'bubble_origin_ready')
+    c.emit(0xa9,BUM_START&255);a(0x8d,0x0dd8)
+    c.emit(0xa9,BUM_START>>8);a(0x8d,0x0dd9)
+    c.label('bubble_origin_ready')
     c.jump(0xbd,'qstart');a(0x8d,QSTART)
     # Quantize the live clock to the 16-tick image cadence and subtract the
     # selected pass origin. A pass is under 256 frames, so its low byte suffices.

@@ -53,18 +53,18 @@ def helper():
     a(0xad,0x83e2);c.emit(0x38,0xe9,START&255);a(0x8d,0x83ff)
     a(0xad,0x83e3);c.emit(0xe9,START>>8)
     # Two finite waves finish and fade before the doorway cut.
-    for _ in range(3):c.emit(0x4a);a(0x6e,0x83ff)
+    for _ in range(2):c.emit(0x4a);a(0x6e,0x83ff)
     for p in range(4):
         c.jump(0xad,'back');c.emit(0x09,10 if p<2 else 11);c.jump(0x8d,f'put{p}_hi')
         c.jump(0xad,'back');c.emit(0x09,9);c.jump(0x8d,f'miss{p}_hi');c.jump(0x8d,f'mread{p}_hi')
         c.emit(0xa9,0);c.jump(0x8d,f'pos{p}');c.jump(0x8d,f'pos{p+4}');c.jump(0x8d,f'color{p}')
-        a(0xad,0x83ff);c.emit(0x38,0xe9,p*6);c.branch(0x90,f'hidden{p}')
-        c.emit(0xc9,2*WAVE);c.branch(0xb0,f'hidden{p}')
-        c.emit(0xc9,WAVE);c.branch(0x90,f'age{p}');c.emit(0xe9,WAVE)
+        a(0xad,0x83ff);c.emit(0x38,0xe9,p*12);c.branch(0x90,f'hidden{p}')
+        c.emit(0xc9,4*WAVE);c.branch(0xb0,f'hidden{p}')
+        c.emit(0xc9,2*WAVE);c.branch(0x90,f'age{p}');c.emit(0xe9,2*WAVE)
         c.label(f'age{p}');c.emit(0xaa)
-        c.jump(0xbd,'luma');c.jump(0x8d,f'color{p}')
         c.jump(0xbd,f'xs{p}');c.jump(0x8d,f'pos{p}');c.emit(0x18,0x69,3);c.jump(0x8d,f'pos{p+4}')
-        c.jump(0xbd,f'ys{p}');c.emit(0xa8,0x18,0x69,GLYPH_ROWS);c.jump(0x8d,f'my{p}')
+        c.jump(0xbd,'ys');c.emit(0xa8,0x18,0x69,GLYPH_ROWS);c.jump(0x8d,f'my{p}')
+        c.emit(0x8a,0x4a,0xaa);c.jump(0xbd,'luma');c.jump(0x8d,f'color{p}')
         c.emit(0xa2,0)
         c.label(f'blit{p}');c.jump(0xbd,f'glyph{p}')
         c.label(f'put{p}');a(0x99,0xa00+p*128)
@@ -83,7 +83,7 @@ def helper():
     c.jump(0xad,'back');c.emit(0x09,8);a(0x8d,0xd407)
     for p in range(8):c.jump(0xad,f'pos{p}');a(0x8d,0xd000+p)
     for p in range(4):
-        a(0xad,0x83ff);c.emit(0x18,0x69,p*4,0x29,15,0xaa)
+        a(0xad,0x83ff);c.emit(0x4a,0x18,0x69,p*4,0x29,15,0xaa)
         c.jump(0xbd,'hues');c.jump(0x0d,f'color{p}');a(0x8d,0xd012+p)
         c.emit(0xa9,1);a(0x8d,0xd008+p)
     for addr,val in ((0xd00c,0x55),(0xd01b,1),(0xd01d,3),(0xd400,0x2e)):
@@ -94,8 +94,8 @@ def helper():
     for p in range(4):c.label(f'my{p}');c.emit(0)
     for p in range(4):
         c.label(f'color{p}');c.emit(0)
-        c.label(f'xs{p}');c.emit(*(path(i,p)[0]+48 for i in range(LIFE)))
-        c.label(f'ys{p}');c.emit(*(path(i,p)[1] for i in range(LIFE)))
+        c.label(f'xs{p}');c.emit(*(path(min(i/2,LIFE-1),p)[0]+48 for i in range(2*LIFE)))
+    c.label('ys');c.emit(*(path(min(i/2,LIFE-1))[1] for i in range(2*LIFE)))
     c.label('luma');c.emit(*(luminance(i) for i in range(LIFE)))
     c.label('hues');c.emit(0x00,0x10,0x40,0x00,0x80,0x00,0xc0,0x10,
                              0x00,0x50,0x90,0x00,0xd0,0x20,0x00,0x70)

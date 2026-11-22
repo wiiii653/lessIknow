@@ -18,20 +18,24 @@ class PostTrevorDirectorTests(unittest.TestCase):
         self.assertEqual(len(cuts),43)
         self.assertTrue(all(tick<d.END for tick,mode in cuts))
         self.assertEqual(cuts,tuple(sorted(cuts)))
-        self.assertEqual([t for t,m in cuts[11:]],[tick_at_bar(n) for n in range(80,112)])
+        self.assertEqual([t for t,m in cuts[11:]],[tick_at_bar(207,2) if n==104 else tick_at_bar(n) for n in range(80,112)])
         lengths=[b[0]-a[0] for a,b in zip(cuts,(*cuts[1:],(d.END,0)))]
         self.assertEqual(lengths[10],d.CYCLE_START-d.START)
-        self.assertGreaterEqual(min(lengths[11:-1]),373)
-        self.assertLessEqual(max(lengths[11:-1]),374)
+        shortened = 11+103-80
+        self.assertEqual(lengths[shortened], d.LATE_BANANA_START-tick_at_bar(103))
+        self.assertEqual(lengths[shortened+1], tick_at_bar(105)-d.LATE_BANANA_START)
+        for index, length in enumerate(lengths[11:-1], 11):
+            if index not in (shortened, shortened+1):
+                self.assertIn(length, (373,374))
         self.assertGreater(lengths[-1],0)
         self.assertEqual([mode for _,mode in cuts[11:23]],list(d.PATTERN))
         self.assertEqual([mode for _,mode in cuts[23:35]],list(d.PATTERN))
-        self.assertEqual(dict(cuts)[tick_at_bar(108)],0x60)
-        self.assertEqual(dict(cuts)[tick_at_bar(109)],0xe0)
+        self.assertEqual(dict(cuts)[tick_at_bar(108)],0x20)
+        self.assertEqual(dict(cuts)[tick_at_bar(109)],0xa0)
         for texture in (0,0x10,0x20):
             modes=[mode for _,mode in cuts if mode&0x30==texture]
             self.assertEqual({bool(mode&0x40) for mode in modes},
-                             {False,True} if texture==0x20 else {False})
+                             {False})
             self.assertEqual({bool(mode&0x80) for mode in modes},{False,True})
         self.assertLessEqual(len(d.helper()),d.SIZE)
         self.assertLessEqual(d.BANK_ENTRY+len(d.bank_helper()),0x7250)
@@ -112,6 +116,26 @@ class PostTrevorDirectorTests(unittest.TestCase):
                 self.assertGreaterEqual(m[0x83ed],32,tick)
         cpu=seq.execute(d.START,cpu)
         self.assertLess(cpu.memory[0x83ed],32)
+
+    def test_late_bananas_stay_yellow_with_a_cycling_backdrop(self):
+        from girl_eyes import START, END
+        from mosaic import palette_pairs
+        from banana_variants import variant_at
+
+        cpu = seq.execute(d.LATE_BANANA_START-1)
+        self.assertGreaterEqual(cpu.memory[0x83ed], 32)
+        for start, stop in ((d.LATE_BANANA_START, START), (END, END+500)):
+            backdrops = set()
+            for tick in range(start, min(start+500, stop), 16):
+                cpu = seq.execute(tick, cpu)
+                frame = cpu.memory[0x83ed]
+                self.assertLess(frame, 32)
+                expected = (palette_pairs()[(tick >> 6) & 15][0] << 4) | 10
+                self.assertEqual(cpu.memory[0xd016], 0xea if variant_at(tick) else 0xec)
+                self.assertEqual(cpu.memory[0xd017], expected)
+                self.assertEqual(cpu.memory[0xd018], 0xee)
+                backdrops.add(expected)
+            self.assertGreater(len(backdrops), 2)
 
     def test_overlay_on_late_bananas_and_not_in_eye_shot(self):
         from girl_eyes import START as eyes_start, END as eyes_end

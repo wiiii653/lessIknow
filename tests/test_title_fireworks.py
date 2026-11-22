@@ -5,7 +5,7 @@ import test_sequence as sequence
 from test_engine_cache import TrackedMemory
 from test_tunnel_raster import BeamMemory
 from title_plasma import artwork, FRAME_BYTES
-from title_fireworks import graphics, occupied, anchors, CENTRES, missile_position
+from title_fireworks import graphics, occupied, anchors, CENTRES, missile_fragments
 
 
 class TitleFireworkTests(unittest.TestCase):
@@ -179,11 +179,11 @@ class TitleFireworkTests(unittest.TestCase):
         for plane in range(4):
             start=2048+((-plane*64)&255)+64
             colours=set();positions=[]
-            for age in range(0,128,8):
+            for age in range(0,128,4):
                 tick=start+age;m=sequence.execute(tick).memory
                 colours.add(m[0xd012+plane]>>4)
                 self.assertEqual(m[0xd012+plane]&15,14)
-                self.assertEqual(m[0xd004+plane],missile_position((tick>>4)&15,plane)+48)
+                self.assertEqual(m[0xd004+plane],missile_fragments((tick>>2)&63,plane)[0])
                 positions.append(m[0xd004+plane])
             self.assertGreaterEqual(len(colours),12)
             self.assertGreaterEqual(max(positions)-min(positions),20)

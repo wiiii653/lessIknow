@@ -93,7 +93,7 @@ def helper(copy_address):
     c.label('bitmap_changed');a(0x20,ENTRY_BLANK);c.emit(0xa9,0x7e);a(0x8d,0x83fa)
     c.emit(0xa9,FRAME_KEY);a(0x8d,0x83ed)
     a(0x8d,0x0dfe);a(0x8d,0x0dff)
-    c.emit(0xa9,0);a(0x8d,OUTRO_FLAG);a(0x8d,0xd01d);a(0x8d,final_orbits.VALID)
+    c.emit(0xa9,0);a(0x8d,OUTRO_FLAG);a(0x8d,0xd01d)
     c.emit(0xa9,0x90);a(0x8d,0x83fe)
     a(0x20,copy_address)
     cached_display_list(c,7)
@@ -191,8 +191,7 @@ def install_control(bank,copy_address):
         offset=address-0x4000
         assert not any(out[offset:offset+len(payload)]), hex(address)
         out[offset:offset+len(payload)]=payload
-    orbit=bytes(star_position(phase,0)[0]+48 for phase in range(16))
-    orbit+=bytes(star_position(phase,0)[1] for phase in range(16))
+    orbit=bytes(32)  # Reserved for the orbit midpoint routine.
     for plane in range(4):
         for shift in (0,8):
             orbit+=bytes(((SHAPE_DATA>>shift)&255,((SHAPE_DATA+12+plane*12)>>shift)&255))

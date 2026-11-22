@@ -481,6 +481,14 @@ def install_control(bank, copy_address, palette_address):
     return bytes(out)
 
 
+def launch_spark_path(phase):
+    """A curved outward sweep, with a lifted crest and a curling return."""
+    angle = phase * math.tau / 32
+    x = round(23 + 12*math.cos(angle) + 4*math.sin(2*angle))
+    y = round(24 + 15*math.sin(angle) - 5*math.cos(2*angle))
+    return x, y
+
+
 def helper(copy_address, palette_address=0):
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
@@ -587,6 +595,7 @@ def helper(copy_address, palette_address=0):
     for addr,val in ((0xd01b,0x11),(0xd01d,3),(0xd400,0x2e),
                      (0xd01a,PALETTE[0]),(0xd016,PALETTE[1]),(0xd017,PALETTE[2]),(0xd018,PALETTE[3])):
         c.emit(0xa9,val);a(0x8d,addr)
+    c.jump(0x20,'launch_spark_commit')
     a(0x20,COMMIT)
     a(0x20,palette_address)
     c.emit(0x60)
@@ -597,32 +606,61 @@ def helper(copy_address, palette_address=0):
     a(0xad,0x83e3);c.emit(0xc9,FIREWORK_START>>8);c.branch(0xb0,'fw_high_ready');c.emit(0x60)
     c.label('fw_high_ready');c.branch(0xd0,'fw_active')
     a(0xad,0x83e2);c.emit(0xc9,FIREWORK_START&255);c.branch(0xb0,'fw_active');c.emit(0x60)
-    c.label('fw_active');a(0xad,0x83e8);c.emit(0x09,9)
-    c.jump(0x8d,'fw_spark_read_hi');c.jump(0x8d,'fw_spark_write_hi')
+    c.label('fw_active')
     a(0xad,0x83e2);c.emit(0x38,0xe9,FIREWORK_START&255,0x29,0x70,0xaa)
     for plane in range(4):
         c.emit(0xa0,FIREWORK_ROWS[plane])
         a(0xad,0x83e8);c.emit(0x09,10 if plane<2 else 11);c.jump(0x8d,f'fw_put{plane}_hi')
         c.label(f'fw_blit{plane}')
         if plane in (0,3):a(0xbd,WIND)
-        else:c.jump(0xbd,'fw_shapes')
+        else:
+            c.emit(0xe0,48);c.branch(0x90,f'fw_wind{plane}')
+            c.jump(0xbd,'fw_shapes');c.jump(0x4c,f'fw_put{plane}')
+            c.label(f'fw_wind{plane}');a(0xbd,WIND)
         c.label(f'fw_put{plane}');a(0x99,0xa00+plane*128)
         c.emit(0xc8,0xe8,0x8a,0x29,15);c.branch(0xd0,f'fw_blit{plane}')
-        c.emit(0xa9,3<<(2*plane));c.jump(0x20,'fw_spark')
         c.emit(0x8a,0x18,0x69,16,0x29,0x7f,0xaa)
+    # The player bursts hold separate silhouettes. Missiles follow two
+    # interlaced paths on each side, with a diamond head and broken tail.
+    a(0xad,0x83e8);c.emit(0x09,9)
+    c.jump(0x8d,'spark_read_hi');c.jump(0x8d,'spark_write_hi')
+    for plane in range(4):
+        c.emit(0xa9,(0,11,7,23)[plane]);c.jump(0x20,'launch_phase')
+        c.jump(0xbd,'launch_y')
+        if plane & 1:
+            c.emit(0x18,0x69,39)
+        c.emit(0xa8,0xa2,plane*8)
+        c.jump(0x20,'draw_spark')
     c.emit(0x60)
-    c.label('fw_spark');c.jump(0x8d,'fw_mask_value');c.emit(0x8a,0x48)
-    c.emit(0x98,0x38,0xe9,12);a(0x8d,0x83e9)
-    a(0xad,0x83e2);c.emit(0x29,12,0x18);a(0x6d,0x83e9);c.emit(0xa8,0xa2,4)
-    c.label('fw_trail');c.label('fw_spark_read');a(0xb9,0x980)
-    c.label('fw_mask');c.emit(0x09,0)
-    c.label('fw_spark_write');a(0x99,0x980);c.emit(0xc8,0xca);c.branch(0xd0,'fw_trail')
-    c.emit(0x68,0xaa,0x60)
+    c.label('draw_spark')
+    c.label('spark_read');a(0xb9,0x980)
+    c.jump(0x1d,'spark_profile')
+    c.label('spark_write');a(0x99,0x980)
+    c.emit(0xc8,0xe8,0x8a,0x29,7);c.branch(0xd0,'draw_spark')
+    c.emit(0x60)
+    c.label('spark_profile')
+    for plane in range(4):
+        c.emit(*(bits << (2*plane) for bits in (1,3,3,2,0,1,0,2)))
+    c.label('launch_spark_commit')
+    a(0xad,0x83e7);c.emit(0xc9,1);c.branch(0xd0,'launch_spark_done')
+    for plane in range(4):
+        c.emit(0xa9,(0,11,7,23)[plane]);c.jump(0x20,'launch_phase')
+        c.jump(0xbd,'launch_x')
+        if plane >= 2:
+            c.emit(0x49,255,0x18,0x69,161)
+        c.emit(0x18,0x69,48);a(0x8d,0xd004+plane)
+    c.label('launch_spark_done');c.emit(0x60)
+    c.label('launch_phase')
+    a(0x8d,0x83e9)
+    a(0xad,0x83e2);c.emit(0x4a,0x4a,0x18)
+    a(0x6d,0x83e9);c.emit(0x29,31,0xaa,0x60)
     for i in range(4):c.labels[f'fw_put{i}_hi']=c.labels[f'fw_put{i}']+2
-    c.labels['fw_spark_read_hi']=c.labels['fw_spark_read']+2
-    c.labels['fw_spark_write_hi']=c.labels['fw_spark_write']+2
-    c.labels['fw_mask_value']=c.labels['fw_mask']+1
-    c.label('fw_shapes');c.emit(*firework_shapes())
+    c.labels['spark_read_hi']=c.labels['spark_read']+2
+    c.labels['spark_write_hi']=c.labels['spark_write']+2
+    for axis, name in enumerate(('launch_x','launch_y')):
+        c.label(name);c.emit(*(launch_spark_path(step)[axis] for step in range(32)))
+    c.labels['fw_shapes']=c.origin+len(c.data)-48
+    c.emit(*firework_shapes()[48:])
     for label in ('dl1','dl2','get'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     for i in range(5):

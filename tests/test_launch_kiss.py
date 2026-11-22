@@ -50,6 +50,24 @@ class LaunchKissTests(unittest.TestCase):
         s.execute(d.START,cpu)
         self.assertEqual(cpu.memory[0xd008:0xd00c],[3]*4)
 
+    def test_side_sparks_trace_curved_paths_every_pal_frame(self):
+        cpu = None
+        positions = [set() for _ in range(4)]
+        for tick in range(k.START, k.START+128, 4):
+            cpu = s.execute(tick, cpu)
+            m = cpu.memory
+            base = (m[0xd407] & 0xfc) << 8
+            for plane, offset in enumerate((0, 11, 7, 23)):
+                x, y = d.launch_spark_path(((tick >> 2)+offset) & 31)
+                expected_x = x if plane < 2 else 160-x
+                self.assertEqual(m[0xd004+plane], expected_x+48)
+                expected_y = y + (39 if plane & 1 else 0)
+                mask = 3 << (plane*2)
+                rows = m[base+0x180:base+0x200]
+                self.assertEqual(next(i for i, bits in enumerate(rows) if bits & mask), expected_y)
+                positions[plane].add((expected_x, expected_y))
+        self.assertTrue(all(len(path) > 24 for path in positions))
+
     def test_shading_has_a_white_specular_and_two_distinct_lobes(self):
         planes=k.masks(5)
         self.assertTrue(any(planes[2]))

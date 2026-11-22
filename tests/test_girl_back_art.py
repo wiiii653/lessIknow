@@ -34,9 +34,9 @@ class GirlBackArtTests(unittest.TestCase):
                             for y in range(0, 22, 2)
                             for i in range(y * width, (y + 1) * width)))
 
-    def test_three_distant_views_show_the_small_bolt(self):
+    def test_three_distant_views_show_the_blue_skirt_and_small_bolt(self):
         self.assertEqual([sha256(frame).hexdigest() for frame in story_frames()[3:]], [
-            '98acbc77f5123ade51a53df9c5059d8ca78b185e96891e28c34c24fc5f4ddaf9',
-            '568c86f86cd900564b46c044b331445befae7fb7c0f6f665a0714d542132c428',
-            '902ffb8de6e3daff1a25f569831388c42957668e442a174e7bbdb36720b8d46b',
+            '324745d54a9c135ee93ab82ade1980abae3af78ddb09b80362be022f695e0654',
+            '125afce7b31cc22ef2af679ad0f11e2282879f47dbf5fa696b4d94838f437926',
+            '7b9432eae267cb9b89614cd553a30c3d6ee77e75043ce8b507439f4344f3e18a',
         ])

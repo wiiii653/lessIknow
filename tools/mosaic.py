@@ -12,6 +12,7 @@ from engine_effects import COPY_PAGES, cached_display_list
 from build_sequence import Code
 from music_timing import tick_at_bar
 ENTRY=0x7c00
+HIGHLIGHT_SHIFT=6  # Hold each hue for 16 PAL frames.
 KALEIDO_START=tick_at_bar(32)
 TREVOR_START=tick_at_bar(88)-4000
 
@@ -118,6 +119,10 @@ def palette_pairs():
 def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,cache_address=0x83fa,raw=False,peeled=False):
     c=Code(origin)
     def a(op,address):c.emit(op,address&255,address>>8)
+    def highlight_index():
+        a(0xad,0x83e3);c.emit(0x0a,0x0a);a(0x8d,0x83ea)
+        a(0xad,0x83e2);c.emit(*([0x4a]*HIGHLIGHT_SHIFT))
+        a(0x0d,0x83ea);c.emit(0x29,15,0xaa)
     # Frame number is computed from the coherent music clock by the main callback.
     a(0xad,0x83ed)
     if cache_key is None:c.emit(0x09,0x80)
@@ -159,9 +164,8 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     a(0xad,0x83eb);c.jump(0xf9,'divisor_hi');a(0x8d,0x83eb)
     c.emit(0x8a,0x18);c.jump(0x79,'quotient_bits');c.emit(0xaa)
     c.label('divide_next');c.emit(0x88);c.branch(0x10,'divide')
-    a(0xad,0x83ea)
-    c.label('beat');c.emit(0xc9,24,0xa9,4);c.branch(0xb0,'luma');c.emit(0xa9,8)
-    c.label('luma');a(0x8d,0x83ea)
+    # Change the hue pair on the music cue with steady brightness.
+    c.emit(0xa9,6);a(0x8d,0x83ea)
     c.label('color_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'color_wait')
     c.label('palette');c.emit(0xe0,161);c.branch(0x90,'palette_index_ok');c.emit(0xa2,160)
     c.label('palette_index_ok');c.emit(0xe0,144);c.branch(0x90,'brightness_ready')
@@ -169,21 +173,30 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     c.label('brightness_ready');c.jump(0xbd,'hue_pairs');a(0x8d,0x83eb)
     c.emit(0x29,0xf0);a(0x0d,0x83ea);a(0x8d,0xd016)
     # Keep the second ink brighter while the darker first ink keeps the PAL
-    # hues strong. Every pair retains contrast in both pulse states.
+    # hues strong.
     a(0xad,0x83ea);c.emit(0xc9,10);c.branch(0xb0,'bright_second')
     c.emit(0x18,0x69,4);c.jump(0x4c,'save_second')
     c.label('bright_second');c.emit(0x18,0x69,2)
     c.label('save_second');a(0x8d,0x83ea)
     c.label('second_luma_ready')
     a(0xad,0x83eb);c.emit(0x29,0x0f,0x0a,0x0a,0x0a,0x0a);a(0x0d,0x83ea);a(0x8d,0xd017)
-    # Banana tiles stay yellow. The short Act 3 cutaway keeps its original
-    # white. After Trevor, cycle Act 5 tunnel highlights once per frame.
+    # On the late banana passes, cycle only the backdrop (PF1).
+    if banana_only and raw:
+        from post_trevor_director import LATE_BANANA_START
+        a(0xad,0x83e3);c.emit(0xc9,LATE_BANANA_START>>8)
+        c.branch(0x90,'banana_highlight');c.branch(0xd0,'late_banana_hue')
+        a(0xad,0x83e2);c.emit(0xc9,LATE_BANANA_START&255)
+        c.branch(0x90,'banana_highlight')
+        c.label('late_banana_hue')
+        highlight_index()
+        c.jump(0xbd,'hue_pairs');c.emit(0x29,0xf0,0x09,0x0a);a(0x8d,0xd017)
     if not banana_only:
         a(0xad,0x83ed);c.emit(0xc9,32);c.branch(0x90,'banana_highlight')
         a(0xad,0x0dd4);c.emit(0xc9,38892>>8);c.branch(0x90,'white_highlight');c.branch(0xd0,'tunnel_hue')
         a(0xad,0x0dd3);c.emit(0xc9,38892&255);c.branch(0x90,'white_highlight')
+    if not banana_only:
         c.label('tunnel_hue')
-        a(0xad,0x83ed);c.emit(0x29,15,0xaa)
+        highlight_index()
         c.jump(0xbd,'hue_pairs');c.emit(0x29,0xf0,0x09,0x0a);a(0x8d,0xd018)
         c.jump(0x4c,'highlight_done')
         c.label('white_highlight');c.emit(0xa9,0x0c);a(0x8d,0xd018)

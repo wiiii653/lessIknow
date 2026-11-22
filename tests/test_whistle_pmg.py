@@ -28,8 +28,8 @@ class WhistleTests(unittest.TestCase):
 
     def test_two_staggered_waves_follow_distinct_upward_arcs(self):
         cpu=None
-        for phase in (0,12,24,36,60,86,93):
-            cpu=s.execute(START+phase*8,cpu)
+        for phase in (0,12,12.5,24,36,60,86,93):
+            cpu=s.execute(START+int(phase*8),cpu)
             base=(cpu.memory[0xd407]&0xfc)<<8
             for p in range(4):
                 age=age_at(phase,p)
@@ -38,7 +38,7 @@ class WhistleTests(unittest.TestCase):
                 self.assertEqual(cpu.memory[0xd000+p],48+path(age,p)[0])
                 rows=cpu.memory[base+0x200+p*128:base+0x280+p*128]
                 self.assertEqual(next(i for i,v in enumerate(rows) if v),path(age,p)[1])
-                self.assertEqual(cpu.memory[0xd012+p]&15,luminance(age))
+                self.assertEqual(cpu.memory[0xd012+p]&15,luminance(int(age)))
                 self.assertTrue(any(cpu.memory[base+0x180:base+0x200]))
         self.assertNotEqual(path(24,0),path(24,3))
         for p in range(4):

@@ -10,6 +10,7 @@ ENTRY=0x6c00
 PUBLISH=0x7000
 DATA=0x7400
 META=0x7280
+MISSILE_DRAW = DATA + 2048
 CENTRES=((22,44),(56,72),(106,56),(138,36))
 LAUNCH_Y=190
 FIREWORK_CUES = (768, 1216, 1408, 1856, 2048)
@@ -46,11 +47,51 @@ def anchor_data():
     return bytes(anchors(step)[plane] for plane in range(4) for step in range(64))+b'\0'
 
 
-def missile_position(phase,plane):
-    age=(phase+plane*4)&15
-    if age<4:return CENTRES[plane][0]
-    radius=min(27,(age-4)*3)
-    return CENTRES[plane][0]+(-1 if plane%2==0 else 1)*radius
+def missile_fragments(step, plane):
+    age = (step + plane*16) & 63
+    if age < 16:
+        return 0, 255
+    radius = min(27, (age-16)*.75)
+    fall = (max(0, age-36)/4)**2*.24
+    x = CENTRES[plane][0] + (-1 if plane % 2 == 0 else 1)*round(radius)
+    y = round((CENTRES[plane][1]+8)/2 - radius*.3 + fall)
+    return x+48, y
+
+
+def missile_draw():
+    c = Code(MISSILE_DRAW)
+
+    def a(op, addr):
+        c.emit(op, addr & 255, addr >> 8)
+
+    # A selects the inactive PMG page, X is the PAL frame phase.
+    c.emit(0x09, 9)
+    for plane in range(4):
+        for row in range(4):
+            c.jump(0x8d, f'read_hi{plane}_{row}')
+            c.jump(0x8d, f'write_hi{plane}_{row}')
+    for plane in range(4):
+        c.jump(0xbd, f'ys{plane}')
+        c.emit(0xc9, 255)
+        c.branch(0xf0, f'done{plane}')
+        c.emit(0xa8)
+        for row, (dy, bits) in enumerate(((0,3),(2,1),(5,2),(8,1))):
+            c.labels[f'read_hi{plane}_{row}'] = c.origin + len(c.data) + 2
+            a(0xb9, 0x0980+dy)
+            c.emit(0x09, bits << (2*plane))
+            c.labels[f'write_hi{plane}_{row}'] = c.origin + len(c.data) + 2
+            a(0x99, 0x0980+dy)
+        c.label(f'done{plane}')
+    c.emit(0x60)
+    for plane in range(4):
+        c.label(f'ys{plane}')
+        c.emit(*(missile_fragments(step, plane)[1] for step in range(64)))
+    for plane in range(4):
+        c.label(f'xs{plane}')
+        c.emit(*(missile_fragments(step, plane)[0] for step in range(64)))
+    code = bytes(c.finish())
+    assert MISSILE_DRAW+len(code) <= 0x8000
+    return code, c.labels
 
 
 def graphics(mask):
@@ -86,11 +127,7 @@ def graphics(mask):
                 # Detached fragments extend the bursts sideways beyond the
                 # player bodies. Their 64-row plane spans the upper sky.
                 for i in range(4):
-                    age=(phase+i*4)&15
-                    if age<4:continue
-                    radius=min(27,(age-4)*3)
-                    fall=max(0,age-9)**2*.24
-                    y=round((CENTRES[i][1]+8)/2-radius*.3+fall)
+                    _, y = missile_fragments(phase*4, i)
                     for dy,bits in ((0,3),(2,1),(5,2),(8,1)):
                         if 0<=y+dy<64:out[y+dy]|=bits<<(2*i)
             result.extend(out)
@@ -103,7 +140,7 @@ def install(bank,mask):
     assert ENTRY+len(code)<=META
     meta=anchor_data()
     assert META+len(meta)<=DATA
-    for offset,payload in ((ENTRY-0x4000,code),(DATA-0x4000,graphics(mask)),(META-0x4000,meta)):
+    for offset,payload in ((ENTRY-0x4000,code),(DATA-0x4000,graphics(mask)[:2048]),(MISSILE_DRAW-0x4000,missile_draw()[0]),(META-0x4000,meta)):
         assert out[offset:offset+len(payload)]==bytes(len(payload)),hex(offset)
         out[offset:offset+len(payload)]=payload
     return bytes(out)
@@ -124,13 +161,9 @@ def helper():
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x29,63);c.jump(0x8d,'vertical_index')
     c.emit(0x4a,0x4a,0xaa);c.jump(0x8d,'frame_index')
     c.jump(0xbd,'source_lo');c.jump(0x8d,'read_lo');c.jump(0xbd,'source_hi');c.jump(0x8d,'read_hi')
-    for plane in range(5):
+    for plane in range(4):
         if plane:
             c.jump(0xad,'read_hi');c.emit(0x18,0x69,2);c.jump(0x8d,'read_hi')
-        if plane==4:
-            a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x29,15,0xaa)
-            c.jump(0xbd,'missile_source_lo');c.jump(0x8d,'read_lo')
-            c.jump(0xbd,'missile_source_hi');c.jump(0x8d,'read_hi')
         cue = FIREWORK_CUES[plane]
         a(0xad,0x83e3); c.emit(0xc9,cue>>8); c.branch(0x90,f'not_visible{plane}')
         if cue & 255:
@@ -138,15 +171,20 @@ def helper():
             a(0xad,0x83e2); c.emit(0xc9,cue&255); c.branch(0x90,f'not_visible{plane}')
             c.label(f'visible{plane}')
         c.emit(0xa9,(10 if plane<2 else 11 if plane<4 else 9));a(0x0d,0x83e8);c.jump(0x8d,f'write{plane}_hi')
-        if plane<4:
-            c.jump(0xae,'vertical_index');a(0xbc,META+plane*64)
-        else:a(0xac,META+256)
+        c.jump(0xae,'vertical_index');a(0xbc,META+plane*64)
         c.emit(0xa2,0)
         c.label(f'copy{plane}');c.jump(0x20,'read');c.emit(0xc0,128);c.branch(0xb0,f'skip{plane}')
-        c.label(f'write{plane}');a(0x99,0xa00+(plane%2)*128 if plane<4 else 0x980)
-        c.label(f'skip{plane}');c.emit(0xc8,0xe8,0xe0,64 if plane==4 else 32);c.branch(0xd0,f'copy{plane}')
+        c.label(f'write{plane}');a(0x99,0xa00+(plane%2)*128)
+        c.label(f'skip{plane}');c.emit(0xc8,0xe8,0xe0,32);c.branch(0xd0,f'copy{plane}')
         c.label(f'not_visible{plane}')
-    c.emit(0x60)
+    cue = FIREWORK_CUES[4]
+    a(0xad, 0x83e3)
+    c.emit(0xc9, cue >> 8)
+    c.branch(0x90, 'no_fragments')
+    c.jump(0xae, 'vertical_index')
+    c.jump(0xad, 'back_bit')
+    a(0x20, MISSILE_DRAW)
+    c.label('no_fragments');c.emit(0x60)
     assert c.origin+len(c.data)<=PUBLISH
     c.emit(*bytes(PUBLISH-c.origin-len(c.data)))
     c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait');c.emit(0xc9,128);c.branch(0xb0,'wait')
@@ -163,10 +201,11 @@ def helper():
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x29,15,0xaa)
     for i in range(4):
         c.jump(0xbd,f'hues{i}');c.emit(0x29,0xf0);a(0x0d,0x83e9);a(0x8d,0xd012+i)
-    c.jump(0xae,'frame_index')
+    c.jump(0xae,'vertical_index')
+    _, missile_labels = missile_draw()
     for i in range(4):
         c.emit(0xa9,LEFTS[i]+48);a(0x8d,0xd000+i)
-        c.jump(0xbd,f'missile_x{i}');a(0x8d,0xd004+i)
+        a(0xbd,missile_labels[f'xs{i}']);a(0x8d,0xd004+i)
         c.emit(0xa9,3);a(0x8d,0xd008+i)
     for addr,val in ((0xd00c,0x55),(0xd01b,0xc1),(0xd400,0x2e)):
         c.emit(0xa9,val);a(0x8d,addr)
@@ -179,13 +218,10 @@ def helper():
     c.labels['read_lo']=c.labels['read']+1;c.labels['read_hi']=c.labels['read']+2
     for i in range(5):
         c.labels[f'clear{i}_hi']=c.labels[f'clear{i}']+2
+    for i in range(4):
         c.labels[f'write{i}_hi']=c.labels[f'write{i}']+2
     c.label('source_lo');c.emit(*((DATA+i*32)&255 for i in range(16)))
     c.label('source_hi');c.emit(*((DATA+i*32)>>8 for i in range(16)))
-    c.label('missile_source_lo');c.emit(*((DATA+2048+i*64)&255 for i in range(16)))
-    c.label('missile_source_hi');c.emit(*((DATA+2048+i*64)>>8 for i in range(16)))
     for i in range(4):
         c.label(f'hues{i}');c.emit(*(HUES[(phase+i*4)&15] for phase in range(16)))
-    for i in range(4):
-        c.label(f'missile_x{i}');c.emit(*((missile_position(phase,i)+48)&255 for phase in range(16)))
     return c.finish()
