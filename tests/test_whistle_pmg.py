@@ -60,7 +60,7 @@ class WhistleTests(unittest.TestCase):
         self.assertLessEqual(cpu.memory[0xd015]&15,6)
         cpu=s.execute(END-1,cpu)
         self.assertEqual(list(cpu.memory[0xd000:0xd008]),[0]*8)
-        for tick in (END,END+80,5983,5984):
+        for tick in (END,END+80,5983):
             cpu=s.execute(tick,cpu)
             self.assertEqual(cpu.memory[0xd01d],0,tick)
 

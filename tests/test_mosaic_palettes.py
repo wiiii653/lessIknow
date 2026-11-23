@@ -6,6 +6,13 @@ import test_sequence as sequence
 from final_boy import START as FINAL_SHOT
 from banana_variants import variant_at
 from ribbon_dance import FRONT_PREP_STEPS
+from post_trevor_director import LATE_BANANA_START
+
+def banana_shadow(tick):
+    if tick < LATE_BANANA_START:
+        return 0xca if variant_at(tick) else 0xea
+    return 0xea if variant_at(tick) else 0xec
+
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class MosaicPaletteTests(unittest.TestCase):
@@ -16,10 +23,10 @@ class MosaicPaletteTests(unittest.TestCase):
                 self.assertEqual(memory[0x83e0],6)
                 first,second=memory[0xd016],memory[0xd017]
                 if memory[0x83ed] < 32:
-                    self.assertEqual(memory[0xd018],0xee)
-                    self.assertEqual(first, 0xea if variant_at(tick) else 0xec)
+                    self.assertEqual(memory[0xd018], 0xee)
+                    self.assertEqual(first, banana_shadow(tick))
                     continue
-                self.assertIn(first&15,(6,8,10,12))
+                self.assertIn(first&15, (6,8))
                 self.assertIn((second&15)-(first&15),(2,4))
                 self.assertNotEqual(first>>4,second>>4)
 
@@ -37,8 +44,8 @@ class MosaicPaletteTests(unittest.TestCase):
             if m[0x83ed] < 32:
                 # Fruit inks are deliberately stable yellow; only the
                 # background cycles. Unique pairs apply to the tunnel.
-                self.assertEqual(m[0xd018],0xee)
-                self.assertEqual(m[0xd016], 0xea if variant_at(tick) else 0xec)
+                self.assertEqual(m[0xd018], 0xee)
+                self.assertEqual(m[0xd016], banana_shadow(tick))
                 continue
             pair=(m[0xd016],m[0xd017])
             self.assertNotIn(pair,pairs,(tick,pair))

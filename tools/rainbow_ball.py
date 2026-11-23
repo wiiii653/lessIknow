@@ -45,7 +45,7 @@ def spin_masks():
     return frames
 
 
-def helper():
+def helper(practice_entry):
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     from whistle_pmg import ENTRY as WHISTLE_ENTRY
@@ -82,8 +82,7 @@ def helper():
     a(0xad,0x83e0);c.emit(0xc9,14);c.branch(0xd0,'not_portrait')
     a(0xad,0x83e3);c.emit(0xc9,CRUSH_START>>8);c.branch(0x90,'not_portrait');a(0x4c,0x6900)
     c.label('not_portrait');a(0xad,0x83e0);c.emit(0xc9,13);c.branch(0xd0,'inactive')
-    # This interval is entirely within high-byte $1B..$1F.
-    for threshold,low,high in ((SHOT_START,'inactive','after_start'),(SHOT_END,'active','inactive')):
+    for threshold,low,high in ((SHOT_START,'closeup','after_start'),(SHOT_END,'active','stretch')):
         a(0xad,0x83e3);c.emit(0xc9,threshold>>8);c.branch(0x90,low);c.branch(0xd0,high)
         a(0xad,0x83e2);c.emit(0xc9,threshold&255);c.branch(0x90,low);c.jump(0x4c,high)
         if high=='after_start':c.label(high)
@@ -91,7 +90,13 @@ def helper():
     a(0xad,0x83fe);c.emit(0xc9,1);c.branch(0xd0,'ordinary')
     c.emit(0xa9,0);a(0x8d,0x83fe);a(0x20,RESTORE)
     c.label('ordinary');a(0x4c,EFFECT_ORIGIN)
+    c.label('closeup');c.emit(0xa2,0);a(0x4c,practice_entry)
+    c.label('stretch')
+    a(0xad,0x83fe);c.emit(0xc9,1);c.branch(0xd0,'notes')
+    c.emit(0xa9,0);a(0x8d,0xd01d);a(0x8d,0x83fe);a(0x20,RESTORE)
+    c.label('notes');c.emit(0xa2,1);a(0x4c,practice_entry)
     c.label('active')
+    c.emit(0xa9,0);a(0x8d,0xd01d)
     c.emit(0xa9,1);a(0x8d,0x83fe)
     # Use the complete 16-bit elapsed time; low-byte wrap never restarts flight.
     a(0xad,0x83e2);c.emit(0x38,0xe9,SHOT_START&255);a(0x8d,0x83fd)

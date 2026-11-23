@@ -247,8 +247,8 @@ class SequenceTests(unittest.TestCase):
             cpu = execute(tick)
             self.assertEqual(cpu.memory[0x83e0], PRACTICE_SCENE)
             self.assertEqual(cpu.memory[0x83e1], 0)
-            self.assertEqual(cpu.memory[0xd01d], 3 if 6981<=tick<7978 else 0)
-            self.assertEqual(cpu.memory[0xd400], 0x2e if 6981<=tick<7978 else 0x22)
+            self.assertEqual(cpu.memory[0xd01d], 3)
+            self.assertEqual(cpu.memory[0xd400], 0x2e)
             # The underlying bitmap contains both boys and both girls by bars.
             memory = cpu.memory
             display = memory[0xd402] | memory[0xd403] << 8

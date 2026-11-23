@@ -47,7 +47,8 @@ class CacheTests(unittest.TestCase):
             # A mode change initializes both alternating display lists once.
             self.step(cpu, tick + 4)
             cycles = self.step(cpu, tick + 8)
-            self.assertLess(cycles, 2000)
+            # The practice overlay prepares PMG even when the bitmap holds.
+            self.assertLess(cycles, 8000 if tick>=6000 else 2000)
             self.assertEqual(self.copied(cpu), 0)
             self.assertFalse(any(0x8000 <= a < 0x824a or 0x8400 <= a < 0x864a for a in cpu.memory.writes))
             self.assertEqual(self.pixels(cpu), pixels)

@@ -29,11 +29,13 @@ class RainbowBallTests(unittest.TestCase):
 
     def test_effect_is_confined_to_shot_and_restores_dance_masks(self):
         cpu=sequence.execute(6980)
-        self.assertEqual(cpu.memory[0xd01d],0)
+        self.assertEqual(cpu.memory[0xd008:0xd00c],[0]*4)
         cpu=sequence.execute(6981,cpu)
         self.assertEqual(cpu.memory[0xd01d],3)
+        self.assertEqual(cpu.memory[0xd008:0xd00c],[1]*4)
         cpu=sequence.execute(7978,cpu)
-        self.assertEqual(cpu.memory[0xd01d],0)
+        self.assertEqual(cpu.memory[0xd004:0xd008],[0]*4)
+        self.assertEqual(cpu.memory[0xd008:0xd00c],[0]*4)
         missiles,players=pmg_art()
         self.assertEqual(bytes(cpu.memory[0x980:0xa00]),missiles)
         self.assertEqual(bytes(cpu.memory[0xa00:0xc00]),players)

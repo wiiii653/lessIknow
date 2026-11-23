@@ -13,6 +13,7 @@ from title_plasma import build as plasma_build, artwork as plasma_artwork, SIZE 
 from engine_effects import copy_helper, effects_helper, pmg_art, COPY_ORIGIN, EFFECT_ORIGIN, RUNTIME_ORIGIN, RUNTIME_END, DL_KEYS, runtime_helper
 from dance_banks import FRAME_BASES, frame_address, frame_blob
 from gym_practice import practice_pixels, PRACTICE_TICK, PRACTICE_SCENE, BALL_PATH, PRACTICE_CUTS
+import practice_pmg
 from build_visual_prototype import xex_segment
 from extract_music import segments
 from school_story import (story_frames, SCHOOL_PHASES, girl_front_pixels,
@@ -86,8 +87,6 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     pom_code,pom_data=pom_helper()
     girl_frame[POM_ENTRY-0x4000:POM_ENTRY-0x4000+len(pom_code)]=pom_code
     girl_frame[POM_DATA-0x4000:POM_DATA-0x4000+len(pom_data)]=pom_data
-    ball_code=ball_helper()
-    girl_frame[BALL_ENTRY-0x4000:BALL_ENTRY-0x4000+len(ball_code)]=ball_code
     from whistle_pmg import ENTRY as WHISTLE_ENTRY, helper as whistle_helper
     whistle_code=whistle_helper()
     girl_frame[WHISTLE_ENTRY-0x4000:WHISTLE_ENTRY-0x4000+len(whistle_code)]=whistle_code
@@ -649,6 +648,8 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.emit(0xc9,10);c.branch(0x90,'reset_ordinary_pmg')
     c.emit(0xc9,12);c.branch(0x90,'scene_done')
     c.label('reset_ordinary_pmg')
+    c.emit(0xc9,PRACTICE_SCENE)
+    c.branch(0xf0,'practice_players')
     c.emit(0xa9, 0)
     absolute(0x8d, 0xd01d)
     c.emit(0xa9, 0x22)
@@ -686,9 +687,23 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('ordinary_effects')
     c.jump(0x4c, 'banked_effects')
     c.label('effect_vblank')
+    # Held practice artwork already has its palette. Prepare the new sprite
+    # buffer before waiting for the next publication window.
+    absolute(0xad, SCENE)
+    c.emit(0xc9, PRACTICE_SCENE)
+    c.branch(0xd0, 'effect_wait')
+    c.emit(0xa2, 0)
+    absolute(0xad, STATE+22)
+    c.branch(0xf0, 'held_practice')
+    c.emit(0xc9, 128)
+    c.branch(0xd0, 'effect_wait')
+    c.emit(0xe8)
+    c.label('held_practice')
+    c.jump(0x4c, 'practice_pmg')
+    c.label('effect_wait')
     absolute(0xad, 0xd40b)
     c.emit(0xc9, 0x7c)
-    c.branch(0x90, 'effect_vblank')
+    c.branch(0x90, 'effect_wait')
     c.jump(0x4c, 'colors')
     c.label('cache_check')
     for new, old in ((NEWKEY, LASTKEY), (SHIFT, LASTSHIFT), (NEWAMP, LASTAMP)):
@@ -749,6 +764,11 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x8d,0xd301)
     c.emit(0x60)
     c.labels['effect_bank_operand']=c.labels['banked_effects']+5
+    c.label('practice_pmg')
+    absolute(0xad,0xd301);c.emit(0x48)
+    absolute(0xad,0x26fc+7);absolute(0x8d,0xd301)
+    absolute(0x20,practice_pmg.ENTRY)
+    c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
     c.label('music_entry')
     c.emit(0x48, 0x8a, 0x48, 0x98, 0x48)
     absolute(0x20, outro_palette.ENTRY)
@@ -782,6 +802,8 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('ribbon_banks');c.emit(*(8+i//6 for i in range(ribbon_dance.FRAME_COUNT)))
     c.label('ribbon_sources');c.emit(*(0x40+(i%6)*10 for i in range(ribbon_dance.FRAME_COUNT)))
     code = c.finish()
+    ball_code=ball_helper(c.labels['practice_pmg'])
+    girl_frame[BALL_ENTRY-0x4000:BALL_ENTRY-0x4000+len(ball_code)]=ball_code
     portrait_code = crush_helper(effects_address=c.labels['banked_effects'])
     for pos, offset in ((source_patch + 1, 2), (target_patch + 1, 5)):
         code[pos:pos + 2] = (copy_labels['pixels'] + offset).to_bytes(2, 'little')
@@ -850,6 +872,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                 # is no longer executed; preserve the practice frame above it.
                 payload[CRUSH_ENTRY-0x4000:0x2000] = bytes(0x2000-(CRUSH_ENTRY-0x4000))
                 payload[0x0f00:0x0f00+len(crush_cleanup())] = crush_cleanup()
+                practice_pmg.install(payload)
             if bank_number >= 9:
                 if any(byte != 255 for byte in payload):
                     raise ValueError('video bank is not unused v035 padding')

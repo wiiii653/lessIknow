@@ -2,7 +2,7 @@
 from artifact import XEX, METADATA
 import unittest
 import test_sequence as sequence
-from mosaic import pixels, KALEIDO_START, palette_pairs
+from mosaic import pixels, KALEIDO_START, palette_pairs, HIGHLIGHT_SHIFT
 from crush_portraits import START as CRUSH_START
 from test_engine_cache import TrackedMemory
 from school_portrait_bank import loader, bank_value
@@ -18,11 +18,10 @@ class MosaicTests(unittest.TestCase):
         from music_timing import tick_at_bar
         cpu = sequence.execute(TREVOR_END)
         self.assertEqual(cpu.memory[0xd018], 0xee)
-        cpu = sequence.execute(tick_at_bar(96)+16, cpu)
-        frame = cpu.memory[0x83ed] & 15
-        expected_hue = palette_pairs()[frame][0]
-        # GTIA ignores bit zero of the color register.
-        self.assertEqual(cpu.memory[0xd018] & 0xfe, (expected_hue << 4) | 14)
+        for tick, luma in ((tick_at_bar(96)+16, 8), (tick_at_bar(110)+16, 10)):
+            cpu = sequence.execute(tick, cpu)
+            expected_hue = palette_pairs()[(tick >> HIGHLIGHT_SHIFT) & 15][0]
+            self.assertEqual(cpu.memory[0xd018] & 0xfe, (expected_hue << 4) | luma)
 
     def test_all_frames_and_inactive_buffer_ownership(self):
         cpu=sequence.MPU(memory=TrackedMemory(XEX.read_bytes()))
