@@ -79,7 +79,7 @@ def unpack(raw):
     return bytes(value>>shift&3 for value in raw for shift in (6,4,2,0))
 
 @lru_cache(maxsize=1)
-def cleaned_art():
+def legacy_art():
     """Retain release 001 poses while replacing small leaked background areas."""
     from hero_mask_cleanup import clean
     raw=reference_art()
@@ -100,6 +100,73 @@ def cleaned_art():
                      for y in range(DRIBBLE_HEIGHT) for x in range(DRIBBLE_X,DRIBBLE_X+DRIBBLE_WIDTH))
         patches.append(pack(pixels))
     return b''.join(map(pack,corrected))+b''.join(patches)+raw[offset:]
+
+
+@lru_cache(maxsize=1)
+def cleaned_art():
+    """Composite the approved sprites into the existing bank layout."""
+    from PIL import Image
+    from arena_art import background
+    from scene_palettes import SCHOOL_PALETTE
+
+    source = Path(__file__).resolve().parents[1] / 'assets/art/basketball-hero'
+    legacy = legacy_art()
+    old_dribble = unpack(legacy[:2240])
+    old_dunk = unpack(legacy[4*2240:5*2240])
+    arena = bytearray(background(interior=True))
+    for y in range(SHATTER_HEIGHT):
+        start = y*160+SHATTER_X
+        arena[start:start+SHATTER_WIDTH] = old_dribble[start:start+SHATTER_WIDTH]
+
+    inks = {rgb: index for index, rgb in enumerate(SCHOOL_PALETTE)}
+    poses = []
+    for i in range(8):
+        with Image.open(source / f'pose-{i}.png') as sprite, Image.open(
+                source / f'pose-{i}-mask.png') as mask:
+            if sprite.size != (160, HEIGHT) or mask.size != sprite.size:
+                raise ValueError(f'invalid basketball sprite dimensions for pose {i}')
+            pixels = list(sprite.convert('RGBA').getdata())
+            coverage = list(mask.convert('L').getdata())
+        if any(alpha != covered for (*_, alpha), covered in zip(pixels, coverage)):
+            raise ValueError(f'basketball sprite and mask disagree for pose {i}')
+        poses.append(bytes(inks[pixel[:3]] if covered else bg
+                           for pixel, covered, bg in zip(pixels, coverage, arena)))
+        if i == 5:
+            dunk_mask = coverage
+
+    def pack(pixels):
+        return bytes(sum(pixels[i+j] << (6-2*j) for j in range(4))
+                     for i in range(0, len(pixels), 4))
+
+    result = bytearray(b''.join(pack(poses[i]) for i in (0, 2, 3, 4, 5)))
+    # Articulate the base forearm around its elbow. Each patch uses the
+    # same silhouette and reach, so the torso and shoes cannot shift.
+    base_pose = poses[0]
+    forearm_x, forearm_top, forearm_bottom = 67, 27, 32
+    for drop in (5, 10, 4):
+        pose = bytearray(base_pose)
+        for x in range(forearm_x, DRIBBLE_X+DRIBBLE_WIDTH):
+            shift = round(drop * min(x-forearm_x, 20) / 20)
+            for y in range(forearm_top, forearm_bottom):
+                pose[y*160+x] = arena[y*160+x]
+            for y in range(forearm_top, forearm_bottom):
+                pos = y*160+x
+                if base_pose[pos] != arena[pos]:
+                    pose[(y+shift)*160+x] = base_pose[pos]
+        result.extend(pack(bytes(pose[y*160+x]
+                                 for y in range(DRIBBLE_Y, DRIBBLE_Y+DRIBBLE_HEIGHT)
+                                 for x in range(DRIBBLE_X, DRIBBLE_X+DRIBBLE_WIDTH))))
+    offset = 5*2240 + 3*DRIBBLE_PATCH_BYTES
+    for stage in range(3):
+        old_patch = unpack(legacy[offset:offset+SHATTER_PATCH_BYTES])
+        offset += SHATTER_PATCH_BYTES
+        positions = (y*160+x for y in range(SHATTER_HEIGHT)
+                     for x in range(SHATTER_X, SHATTER_X+SHATTER_WIDTH))
+        result.extend(pack(bytes(old if old != old_dunk[pos] and not dunk_mask[pos]
+                                 else poses[5][pos]
+                                 for pos, old in zip(positions, old_patch))))
+    assert len(result) == len(legacy)
+    return bytes(result)
 
 
 @lru_cache(maxsize=1)

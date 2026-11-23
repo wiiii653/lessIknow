@@ -38,8 +38,8 @@ def patch_frames(art):
                            art[y*160+x] == 1 for y in ys):
                     continue
                 # A curved moving highlight travels across the underlying seams.
-                q = (x + phase*2 + (row-12)**2//18) & 15
-                if 2 <= q < 13:
+                q = (x + phase + (row-12)**2//18) & 7
+                if 1 <= q < 6:
                     plane, bit = divmod(x-BALL_LEFT, 8)
                     planes[plane][row] |= 0x80 >> bit
         yield planes
@@ -101,9 +101,17 @@ def helper():
         state(0x8d, label+'_hi')
 
     # X is 0 for the close-up and 1 for the stretching shot.
+    # PMBASE is write-only. A new shot starts on the upper buffer, and
+    # subsequent callbacks use the page recorded at publication.
+    state(0xec, 'mode')
+    c.branch(0xf0, 'same_mode')
     state(0x8e, 'mode')
-    a(0xad, 0xd407)
-    c.emit(0x29, 0x80, 0x49, 0x80)
+    c.emit(0xa9, 0x80)
+    c.branch(0xd0, 'prepare_page')
+    c.label('same_mode')
+    state(0xad, 'visible_page')
+    c.emit(0x49, 0x80)
+    c.label('prepare_page')
     state(0x8d, 'page')
     for i, high in enumerate((9, 10, 10, 11, 11)):
         patch_high(f'clear{i}', high)
@@ -123,7 +131,7 @@ def helper():
     for p in range(4):
         patch_high(f'patch{p}', 10 + p//2)
         state(0xad, 'phase')
-        c.emit(0x4a, 0x4a, 0x4a, 0xaa)
+        c.emit(0x29, 7, 0xaa)
         state(0xbd, 'mask_lo')
         state(0x8d, f'load{p}_lo')
         c.emit(0x18)
@@ -148,7 +156,7 @@ def helper():
         for row in range(5):
             key = f'spark{p}_{row}'
             patch_high(key+'read', 9)
-            patch_high(key+'write', 9)
+            state(0x8d, key+'write_hi')
             c.label(key+'read')
             a(0xb9, 0x0980+row)
             state(0x1d, f'spark_bits{p}_{row}')
@@ -200,6 +208,7 @@ def helper():
     c.emit(0xc9, 128)
     c.branch(0xb0, 'wait')
     state(0xad, 'page')
+    state(0x8d, 'visible_page')
     c.emit(0x09, 8)
     a(0x8d, 0xd407)
     for p in range(4):
@@ -225,9 +234,9 @@ def helper():
         c.labels[f'load{p}_lo'] = c.labels[f'load{p}']+1
     for label in patched:
         c.labels[label+'_hi'] = c.labels[label]+2
-    for name in ('page', 'mode', 'phase', 'whistler', *(f'{axis}{p}' for axis in ('px','mx') for p in range(4))):
+    for name in ('page', 'visible_page', 'mode', 'phase', 'whistler', *(f'{axis}{p}' for axis in ('px','mx') for p in range(4))):
         c.label(name)
-        c.emit(0)
+        c.emit(0xff if name == 'mode' else 0)
     art = practice_pixels()[:160*64]
     note_data = bytearray()
     for p in range(4):

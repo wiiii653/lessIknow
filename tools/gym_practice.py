@@ -28,6 +28,10 @@ def practice_pixels():
         raise ValueError('expected 160x192 RGB storyboard')
     pixels=bytearray(min(range(4), key=lambda j: sum((rgb[i+c]-palette[j][c])**2 for c in range(3)))
                  for i in range(0, len(rgb), 3))
+    # Fill the close-up's one-column black matte from the adjacent artwork.
+    # Keep its interior coordinates so the ball and finger masks still align.
+    for left in range(0, 64*160, 160):
+        pixels[left] = pixels[left+1]
     # The illustrated ball is replaced by the moving hardware ball in shot 2.
     for y in range(65,75):
         for x in range(103,118):
