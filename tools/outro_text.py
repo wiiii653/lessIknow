@@ -18,19 +18,15 @@ STATE_PHASE = 0x0DD2
 TMP_LO = 0x0DD3
 TMP_HI = 0x0DD4
 TMP_ROW = 0x0DD6
-HISTORY_ROWS = 6
-TEXT_ROWS = HISTORY_ROWS + 1
-TEXT_RASTERS = TEXT_ROWS*8
-# Eight blank lines trigger the color DLI. Two more let it align before text.
-TEXT_LEAD = (0xf0, 0x10)
-TEXT_LEAD_RASTERS = 10
-TEXT_DLI_VCOUNT = 8
-BODY_DLI_VCOUNT = (8+TEXT_LEAD_RASTERS+TEXT_RASTERS)//2
-TEXT_DL = 1+len(TEXT_LEAD)
-BITMAP_SKIP = TEXT_LEAD_RASTERS+(TEXT_ROWS-5)*8
-BITMAP_ROWS = 192-BITMAP_SKIP
-BITMAP_DL = TEXT_DL+TEXT_ROWS*3
-FOOTER_DL = BITMAP_DL+BITMAP_ROWS*3
+HISTORY_ROWS = 4
+TEXT_ROWS = HISTORY_ROWS
+BITMAP_ROWS = 192
+BITMAP_DL = 2
+GAP_DL = BITMAP_DL + BITMAP_ROWS*3
+TEXT_DL = GAP_DL + 1
+FOOTER_DL = TEXT_DL + TEXT_ROWS*3
+TEXT_DLI_VCOUNT = 105
+BODY_DLI_VCOUNT = 123
 # Ordinary bitmap lists have two leading bytes, 192 LMS entries and an
 # eight-byte footer ending in the JVB target's high byte.
 BITMAP_JVB_HIGH = 2 + 192 * 3 + 7
@@ -75,14 +71,16 @@ GREETZ = (
     "",
     'I TOLD MUM: "IT\'S AN ATARI DEMO."',
     'SHE SAID: "I CAN HEAR THAT!"',
-    "SHE'D HEARD AN ATARI XE",
-    "ABOUT 30 YEARS AGO.",
+    "SHE'D HEARD AN ATARI XE 30 YEARS AGO.",
     "",
     "TO MY FRIENDS AND NEIGHBOURS -",
     "SPECIAL THANKS TO D3CKER,",
     "WHO INTRODUCED ME TO AI AGENTS,",
     "AND BLASPH, WHO GAVE ME THE IDEA:",
     "TAME IMPALA ON THE ATARI!",
+    "",
+    "SPECIAL GREETS TO KEVIN PARKER,",
+    "THE CAUSE OF THIS DEMO.",
     "",
     "VIRUS / FOORMAN / MAQ / KEY-G",
     "FALCON / ATARIONLINE.PL / PTODT",
@@ -149,9 +147,9 @@ GLYPHS = {
 
 def all_lines():
     lines = tuple(dict.fromkeys(tuple(line for page in CREDITS for line in page) + GREETZ))
-    if len(lines) > 38 or any(len(line) > 36 for line in lines):
+    if len(lines) > 40 or any(len(line) > 37 for line in lines):
         raise ValueError('outro text exceeds its compact line layout')
-    if len(GREETZ) > 24:
+    if len(GREETZ) > 27:
         raise ValueError('greetz needs more than the reserved scroll window')
     return lines
 
@@ -321,7 +319,7 @@ def helper():
     c = Code(ENTRY)
     def a(op, address): c.emit(op, address & 255, address >> 8)
     c.label('active')
-    # Text replaces only black upper bitmap rows; artwork stays at the same Y.
+    # Put the animated terminal block under the boy's picture.
     a(0xAD, STATE_FLAG); c.branch(0xF0, 'init_text');c.jump(0x4C,'text_ready')
     c.label('init_text')
     c.emit(0xA9, 1); a(0x8D, STATE_FLAG)
@@ -331,32 +329,33 @@ def helper():
     for offset in range(0,BITMAP_ROWS*3,256):
         length = min(256,BITMAP_ROWS*3-offset)
         c.emit(0xA2,0);c.label(f'copy{offset}')
-        a(0xBD,0xB802+BITMAP_SKIP*3+offset)
+        a(0xBD,0xB802+offset)
         a(0x9D,0xBC00+BITMAP_DL+offset)
         c.emit(0xE8,0xE0,length&255);c.branch(0xD0,f'copy{offset}')
     base = 0xBC00
-    for offset,value in enumerate((0x80,*TEXT_LEAD)):
+    for offset,value in enumerate((0x80,0x70)):
         c.emit(0xA9,value);a(0x8D,base+offset)
+    c.emit(0xA9,0xC4)
     for row in range(TEXT_ROWS):
-        # Each row's last raster sets the next palette or restores the bitmap.
-        c.emit(0xA9,0xC4);a(0x8D,base+TEXT_DL+row*3)
-    for row,cmd in ((69-BITMAP_SKIP,0x4E),(147-BITMAP_SKIP,0x4E),
-                    (77-TEXT_LEAD_RASTERS-TEXT_RASTERS,0xCE),
-                    (155-TEXT_LEAD_RASTERS-TEXT_RASTERS,0xCE)):
-        c.emit(0xA9,cmd);a(0x8D,base+BITMAP_DL+row*3)
-    for offset,value in enumerate((0x90,0x41,base&255,base>>8)):
+        a(0x8D,base+TEXT_DL+row*3)
+    c.emit(0xA9,0x90);a(0x8D,base+GAP_DL)
+    # The last text row supplies the fourth music interrupt.
+    for offset,value in enumerate((0x41,base&255,base>>8)):
         c.emit(0xA9,value);a(0x8D,base+FOOTER_DL+offset)
     a(0x20,COLOR_FONT_LOAD)
     c.label('text_ready')
-    c.label('choose')
-    c.emit(0xA9,0);a(0x8D,0xBC00+TEXT_DL+1);c.emit(0xA9,0xC8);a(0x8D,0xBC00+TEXT_DL+2)
     a(0xAD,0x83E4);c.branch(0xD0,'final_blank')
     a(0xAD,0x83E3);c.emit(0xC9,END>>8);c.branch(0x90,'cards');c.branch(0xD0,'final_blank')
     a(0xAD,0x83E2);c.emit(0xC9,END&255);c.branch(0x90,'cards')
     c.label('final_blank')
-    blank=_line_addresses()[all_lines().index('')]
-    c.emit(0xA9,blank&255);a(0x8D,0xBC00+TEXT_DL+1);c.emit(0xA9,blank>>8);a(0x8D,0xBC00+TEXT_DL+2)
-    c.emit(0xA9,len(pages())*HISTORY_ROWS);a(0x8D,STATE_START);c.jump(0x4C,'update')
+    # The final card reuses the live terminal buffers at $BF00 and $BF80.
+    # Point every text row at immutable spaces before preparing that card.
+    blank = _line_addresses()[all_lines().index('')]
+    for offset, value in ((1, blank&255), (2, blank>>8)):
+        c.emit(0xA9,value)
+        for row in range(TEXT_ROWS):
+            a(0x8D,base+TEXT_DL+row*3+offset)
+    c.jump(0x4C,'done')
     c.label('cards')
     # Write a whole page quickly, then hold it until the next page starts.
     c.emit(0xA2,len(pages())-1)
@@ -374,9 +373,11 @@ def helper():
     c.jump(0xB9, 'line_hi'); a(0x8D, TMP_HI)
     a(0x20,typing_entry)
     a(0xAD, TMP_ROW); c.emit(0x0A, 0x18); a(0x6D, TMP_ROW); c.emit(0xA8)
-    a(0xAD, TMP_LO); a(0x99, 0xBC00+TEXT_DL+4)
-    c.emit(0xa9,0xbf); a(0x99, 0xBC00+TEXT_DL+5)
+    a(0xAD, TMP_LO); a(0x99, 0xBC00+TEXT_DL+1)
+    c.emit(0xa9,0xbf); a(0x99, 0xBC00+TEXT_DL+2)
     c.emit(0xE8, 0xE0, HISTORY_ROWS); c.branch(0xD0, 'row')
+    a(0xAD,STATE_START);c.branch(0xD0,'done')
+    a(0x8D,base+TEXT_DL+1);c.emit(0xA9,FONT>>8);a(0x8D,base+TEXT_DL+2)
     c.label('done')
     a(0xAD,STATE_FLAG);c.emit(0xC9,1);c.branch(0xD0,'published')
     c.label('publish_wait');a(0xAD,0xD40B);c.emit(0xC9,124);c.branch(0x90,'publish_wait');c.emit(0xC9,128);c.branch(0xB0,'publish_wait')
@@ -386,10 +387,8 @@ def helper():
     c.emit(0xA9,0);a(0x8D,0xD402);c.emit(0xA9,0xBC);a(0x8D,0xD403)
     c.emit(0xA9,2);a(0x8D,STATE_FLAG)
     c.label('published');c.emit(0x60)
-    c.label('wave'); c.emit(2,3,3,4,4,4,3,3,2,1,1,0,0,0,1,1)
     c.label('line_lo'); c.emit(*(a & 255 for a in display_addresses()))
     c.label('line_hi'); c.emit(*(a >> 8 for a in display_addresses()))
-    c.label('flag'); c.emit(0)
     c.label('page_lo');c.emit(*(t&255 for t in page_starts()))
     c.label('page_hi');c.emit(*(t>>8 for t in page_starts()))
     c.label('page_offset');c.emit(*(i*HISTORY_ROWS for i in range(len(pages()))))
@@ -452,20 +451,19 @@ def display_lines():
 
 
 def pages():
-    result=list(CREDITS);paragraph=[]
-    for line in (*GREETZ,''):
-        if line:paragraph.append(line)
-        elif paragraph:
-            result.append(tuple(paragraph));paragraph=[]
-    assert all(0<len(page)<=HISTORY_ROWS for page in result)
-    return tuple(result)
+    first = ("", *CREDITS[0][:HISTORY_ROWS-1])
+    greetings = tuple(line for line in GREETZ if line)
+    result = [CREDITS[0][HISTORY_ROWS-1:], *CREDITS[1:], greetings]
+    return (first, *(page[i:i+HISTORY_ROWS] for page in result
+                     for i in range(0,len(page),HISTORY_ROWS)))
 
 
 def page_starts():
+    credit_pages=sum((len(page)+HISTORY_ROWS-1)//HISTORY_ROWS for page in (("", *CREDITS[0]), *CREDITS[1:]))
     credits_end=START+len(CREDITS)*1000
-    greetings=len(pages())-len(CREDITS)
+    greetings=len(pages())-credit_pages
     assert credits_end<END and greetings>0
-    return tuple(START+i*1000 for i in range(len(CREDITS)))+tuple(
+    return tuple(START+(credits_end-START)*i//credit_pages for i in range(credit_pages))+tuple(
         credits_end+(END-credits_end)*i//greetings for i in range(greetings))
 
 

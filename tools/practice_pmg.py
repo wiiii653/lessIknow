@@ -22,7 +22,7 @@ BALL_TRACE = (
 BALL_COLORS = (0x3c, 0x5a, 0x8c, 0xac)
 NOTE_COLORS = (0x2e, 0x9e, 0x5e, 0xce)
 NOTE_MOUTH = (110, 84)
-SECOND_NOTE_MOUTH = (46, 76)
+SECOND_NOTE_MOUTH = (36, 64)
 
 
 def patch_frames(art):

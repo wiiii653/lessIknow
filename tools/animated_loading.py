@@ -129,7 +129,9 @@ def install(data, *, full_rate=False):
         return bytes(codes[ch] for ch in line.center(40))
 
     def loading(dots=0):
-        return text(('LOADING' + '.'*dots).ljust(len('LOADING...')))
+        word = 'LOADING'.center(40)
+        end = word.rindex('G') + 1
+        return text(word[:end] + '.'*dots + word[end+dots:])
 
     font = bytearray(1024)
     ending_font = font_data() if full_rate else None

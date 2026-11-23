@@ -38,16 +38,15 @@ def helper():
     a(0xad,0x83e0);c.emit(0xc9,17);c.branch(0xd0,'music')
     a(0xad,0x0dd0);c.emit(0xc9,2);c.branch(0xd0,'card')
     from outro_text import TEXT_DLI_VCOUNT, BODY_DLI_VCOUNT
-    a(0xad,0xd40b);c.emit(0xc9,TEXT_DLI_VCOUNT);c.branch(0x90,'top_music')
-    c.emit(0xc9,BODY_DLI_VCOUNT);c.branch(0x90,'text')
-    c.emit(0xc9,BODY_DLI_VCOUNT+3);c.branch(0xb0,'music')
-    a(0x4c,BODY_ENTRY)
+    a(0xad,0xd40b);c.emit(0xc9,8);c.branch(0x90,'top_music')
+    c.emit(0xc9,TEXT_DLI_VCOUNT);c.branch(0x90,'music')
+    c.emit(0xc9,BODY_DLI_VCOUNT-2);c.branch(0x90,'text')
+    c.jump(0x4c,'music')
     # The foreground snapshot can hold while a new page is being typed.
     # Read the live clock, which stays constant across the text DLIs.
     c.label('text');a(0xad,LIVE_TICK);a(0x4c,RASTER_ENTRY)
-    # Preserve the opening music DLI's WSYNC timing.
-    c.label('top_music');c.emit(0xa0,4)
-    c.label('top_delay');c.emit(0x88);c.branch(0xd0,'top_delay')
+    # Restore the portrait colors before the first bitmap line.
+    c.label('top_music');a(0x20,BODY_ENTRY)
     c.label('music');a(0x8d,0xd40a);c.emit(0x60)
     assert c.origin+len(c.data)<=EXIT
     c.emit(*bytes(EXIT-c.origin-len(c.data)))
@@ -125,17 +124,17 @@ def raster_helper():
     c.emit(*bytes(BODY_ENTRY-c.origin-len(c.data)))
 
     from final_boy import PORTRAIT_LUMA
-    a(0xad,PORTRAIT_LUMA);c.emit(0xea,0xaa);a(0x8d,0xd40a);c.branch(0xf0,'dark')
+    a(0xad,PORTRAIT_LUMA);c.emit(0xaa);c.branch(0xf0,'dark')
     c.emit(0x09,0x40);a(0x8d,0xd016)
     c.emit(0x8a,0x09,0x90);a(0x8d,0xd017)
-    c.emit(0x8a,0x09,0x20);a(0x8d,0xd018);a(0x4c,EXIT)
+    c.emit(0x8a,0x09,0x20);a(0x8d,0xd018);c.emit(0x60)
     c.label('dark')
     for pen in range(3):
         a(0x8d,0xd016+pen)
-    a(0x4c,EXIT)
+    c.emit(0x60)
     from outro_text import TEXT_DLI_VCOUNT
     # Rotate the lookup so the leading blank DLI selects the music phase.
-    lead_offset = TEXT_DLI_VCOUNT // ROW_DLI_STEP
+    lead_offset = (TEXT_DLI_VCOUNT // ROW_DLI_STEP) % len(INK_PHASES)
     indexed_phases = INK_PHASES[-lead_offset:] + INK_PHASES[:-lead_offset]
     for pen, phases in enumerate(zip(*indexed_phases)):
         c.label(f'ink{pen}')

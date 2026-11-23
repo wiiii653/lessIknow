@@ -126,7 +126,7 @@ def helper(copy_address):
         c.label(f'clear{i}');a(0x9d,addr)
     c.emit(0xca);c.branch(0x10,'clear')
     for plane in range(4):
-        a(0xad,final_orbits.VALUES_Y+plane);c.emit(0x38,0xe9,2,0xa8)
+        a(0xad,final_orbits.VALUES_Y+plane);c.emit(0x38,0xe9,21,0xa8)
         a(0xad,0x83e3);c.emit(0x29,1,0xaa)
         c.jump(0xbd,f'select_lo{plane}');c.jump(0x8d,f'shape{plane}_lo')
         c.jump(0xbd,f'select_hi{plane}');c.jump(0x8d,f'shape{plane}_hi')
