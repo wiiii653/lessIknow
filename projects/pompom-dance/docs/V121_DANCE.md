@@ -1,5 +1,5 @@
-# V121 — taniec cheerleaderek
+# V121 — cheerleader dance
 
-[ODCZYT] Pojedyncza poza jest wybierana przez 16 zamiast 32 ticków muzyki; granice sceny oraz wejścia kolejnych tancerek pozostają bez zmian. Maskę wokół nóg ograniczono do bezpośrednich sąsiadów zamiast rozszerzać ją o dwa piksele. Źródłowe kolorowe piksele postaci pozostają zachowane.
+[READ] A single pose is selected every 16 instead of 32 music ticks; the scene boundaries and the entries of the successive dancers remain unchanged. The mask around the legs was limited to the immediate neighbours instead of extending it by two pixels. The source colour pixels of the characters remain preserved.
 
-[ZAŁOŻENIE] Podgląd programowy przybliża paletę i tempo, lecz nie zastępuje oceny na docelowym sprzęcie.
+[ASSUMPTION] The software preview approximates the palette and tempo, but does not replace an evaluation on the target hardware.

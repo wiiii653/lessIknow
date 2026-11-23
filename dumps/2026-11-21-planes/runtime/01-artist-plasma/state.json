@@ -1,0 +1,108 @@
+{
+ "tick": 96,
+ "note": "plazma artysty; PMG fajerwerki",
+ "scene": 0,
+ "frame": 144,
+ "playfield": {
+  "width": 160,
+  "height": 235,
+  "bits_per_pixel": 4,
+  "display_list": "$8400"
+ },
+ "pmg": {
+  "base": "$8800",
+  "single_line": false,
+  "page_bytes": 128,
+  "prior": "$C1",
+  "d400": "$2E",
+  "players_enabled": true,
+  "missiles_enabled": true,
+  "players": [
+   {
+    "plane": 0,
+    "address": "$8A00",
+    "bytes": 128,
+    "position": 56,
+    "size_bits": 3,
+    "scale": 4,
+    "color": "$B6",
+    "visible": true
+   },
+   {
+    "plane": 1,
+    "address": "$8A80",
+    "bytes": 128,
+    "position": 90,
+    "size_bits": 3,
+    "scale": 4,
+    "color": "$26",
+    "visible": true
+   },
+   {
+    "plane": 2,
+    "address": "$8B00",
+    "bytes": 128,
+    "position": 140,
+    "size_bits": 3,
+    "scale": 4,
+    "color": "$A6",
+    "visible": true
+   },
+   {
+    "plane": 3,
+    "address": "$8B80",
+    "bytes": 128,
+    "position": 172,
+    "size_bits": 3,
+    "scale": 4,
+    "color": "$36",
+    "visible": true
+   }
+  ],
+  "missiles": [
+   {
+    "plane": 0,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 64,
+    "size_bits": 1,
+    "color": "$B6",
+    "visible": true
+   },
+   {
+    "plane": 1,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 122,
+    "size_bits": 1,
+    "color": "$26",
+    "visible": true
+   },
+   {
+    "plane": 2,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 127,
+    "size_bits": 1,
+    "color": "$A6",
+    "visible": true
+   },
+   {
+    "plane": 3,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 186,
+    "size_bits": 1,
+    "color": "$36",
+    "visible": true
+   }
+  ]
+ },
+ "baked_into_playfield": [],
+ "overlay": {
+  "kind": "title-letter-masks",
+  "bank": 44,
+  "count": 6,
+  "storage": "6 x 2560 B 4bpp masks"
+ }
+}

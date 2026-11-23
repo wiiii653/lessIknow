@@ -1,0 +1,388 @@
+{
+ "generated": "2026-11-21",
+ "kind": "source layers used by the build, not runtime planes",
+ "sources": {
+  "assets/art/source/act1_school_background_v034.png": "90399a57f7b56a2014baa074b3e706131078e46fd0181a4788cd5ab1f4d7c803",
+  "build/school-wide-v034.rgb": "1fc34add52109f51281620d4ae2ac4a2cc7d14f7a3fd2aae7c0a3ca3cae94c1d",
+  "build/school-girl-cutout-v176.rgba": "b276d6a941bc1c78039fc4b0f876f216d3152e2d55c1f3891dbf1dd0e74243d6",
+  "build/north-girl.rgba": "9a9f43a993e79c94b66d79865d229840f850e6b7507c22e05ca8a6b880bc1d97",
+  "build/north-girl-close.rgba": "819ff13761fc739d6d1e964574507c2cc0973805a35ee0e07a404482faa412cf",
+  "build/girl-walk-cycle-v177.rgba": "bf3d748a87faed43ea90a63e86c2550ca4d2b60eb68440bf5e180001c2c074dd",
+  "build/boy-whistle-v177.rgba": "02efd8f13fc36720e908ccb0423c6d04e8eb5523c8a9aa99d0dd68a60bdc4559",
+  "build/school.rgb": "6aff467966e4d61fe76d627d6aeda34377b9f3cb38d2445c883e5725fdff1f01",
+  "build/school-neutral.rgb": "5c37c2e26a5eb5ddcc80ac3fc75b31996f14c9b4081197fcd55949178ff63daf",
+  "build/school-front.rgb": "47128a238f9a17dc91a201047b266cbadc9b0df7defd20e071477d6332a6a346",
+  "build/gym-v056.rgb": "d454b966e4889ced9ed60b65762b2eb2e6969e8ee1bf9ffe85f7c0c0eead1608",
+  "assets/art/source/act1_cheer_dance_v056.png": "b9f64bf80a2e67b85c1b07e46014d2e5696c589f9e7b7d3b04fe8bbc5bf974e9",
+  "assets/art/source/act2_ribbon_dancer_v136.png": "1f863673fae33508194ff1f8b3900108e186be1633d35f407cda5d8a07758c20",
+  "assets/art/source/act2_ribbon_side_v142.png": "aaf0bee2bd495ec016f9ea097ac83e8a001fa160fa8361ce51dc9c68000866db",
+  "assets/art/source/act2_ribbon_overhead_v145.png": "7c923fcb2fb0f597b760e83b0100d833bac702473c113f6d4f53e755e702a34a",
+  "assets/art/source/act2_ribbon_inbetweens_v166.png": "89e324f526eeb86fd5cea7fd675196b11b5c888b45703487903acd2f42fd9c83",
+  "assets/art/source/act2_ribbon_inbetweens_v171.png": "6be9b2e7cf13bb057220d46a8ac8a68e5b4d689b638763d8337e867c876f12b0",
+  "assets/art/source/act2_ribbon_inbetweens_v173.png": "7c0208bc46ba4de0782ecef2c3b22d9f090475a2ad3a35d9860d76c23b35c290",
+  "build/basketball-hero-v177.rgba": "2e45105596bb1349249d2f56d040a14d71a88dad5df1bda87b92f9791d7a3824",
+  "build/arena-interior-v151.rgb": "a98fa9db2917ff2ef31c94f26b3ec33b7ec2bbd161e01e211c77caba84b17d9d",
+  "build/arena-exterior-v151.rgb": "0f7d146fde4d9aef1ec8f059a6bd29f5f9e93730ead4da07599a47ad22e91c58"
+ },
+ "layers": [
+  {
+   "name": "background-clean",
+   "path": "school/school/background-clean-160x64.png",
+   "kind": "school",
+   "size": [
+    160,
+    64
+   ],
+   "source": "assets/art/source/act1_school_background_v034.png",
+   "note": "czyste t\u0142o bez postaci; kadr 160x64 jak w prepare_school_pan"
+  },
+  {
+   "name": "background-wide",
+   "path": "school/school/background-wide-200x64.png",
+   "kind": "school",
+   "size": [
+    200,
+    64
+   ],
+   "source": "build/school-wide-v034.rgb",
+   "note": "szeroki pas t\u0142a 200x64 u\u017cywany przez pan"
+  },
+  {
+   "name": "girl-cutout",
+   "path": "school/school/girl-cutout-160x64.png",
+   "kind": "school",
+   "size": [
+    160,
+    64
+   ],
+   "source": "build/school-girl-cutout-v176.rgba",
+   "note": "dziewczyna na przezroczystym tle; alfa = maska"
+  },
+  {
+   "name": "north-girl",
+   "path": "school/school/north-girl-48x64.png",
+   "kind": "school",
+   "size": [
+    48,
+    64
+   ],
+   "source": "build/north-girl.rgba",
+   "note": "dalsza dziewczyna z alfa (story)"
+  },
+  {
+   "name": "north-girl-close",
+   "path": "school/school/north-girl-close-96x128.png",
+   "kind": "school",
+   "size": [
+    96,
+    128
+   ],
+   "source": "build/north-girl-close.rgba",
+   "note": "bliska dziewczyna z alfa"
+  },
+  {
+   "name": "girl-walk-0",
+   "path": "school/school/girl-walk-0-48x64.png",
+   "kind": "school",
+   "size": [
+    48,
+    64
+   ],
+   "source": "build/girl-walk-cycle-v177.rgba",
+   "note": "arkusz cyklu chodu; nieu\u017cywany przez bie\u017c\u0105cy monta\u017c"
+  },
+  {
+   "name": "girl-walk-1",
+   "path": "school/school/girl-walk-1-48x64.png",
+   "kind": "school",
+   "size": [
+    48,
+    64
+   ],
+   "source": "build/girl-walk-cycle-v177.rgba",
+   "note": "arkusz cyklu chodu; nieu\u017cywany przez bie\u017c\u0105cy monta\u017c"
+  },
+  {
+   "name": "girl-walk-2",
+   "path": "school/school/girl-walk-2-48x64.png",
+   "kind": "school",
+   "size": [
+    48,
+    64
+   ],
+   "source": "build/girl-walk-cycle-v177.rgba",
+   "note": "arkusz cyklu chodu; nieu\u017cywany przez bie\u017c\u0105cy monta\u017c"
+  },
+  {
+   "name": "girl-walk-3",
+   "path": "school/school/girl-walk-3-48x64.png",
+   "kind": "school",
+   "size": [
+    48,
+    64
+   ],
+   "source": "build/girl-walk-cycle-v177.rgba",
+   "note": "arkusz cyklu chodu; nieu\u017cywany przez bie\u017c\u0105cy monta\u017c"
+  },
+  {
+   "name": "boy-whistle",
+   "path": "school/school/boy-whistle-160x64.png",
+   "kind": "school",
+   "size": [
+    160,
+    64
+   ],
+   "source": "build/boy-whistle-v177.rgba",
+   "note": "ch\u0142opiec z alfa; nieu\u017cywany przez monta\u017c"
+  },
+  {
+   "name": "school",
+   "path": "school/school/school-160x64.png",
+   "kind": "school",
+   "size": [
+    160,
+    64
+   ],
+   "source": "build/school.rgb",
+   "note": "ch\u0142opiec wpieczony w t\u0142o; brak osobnej maski"
+  },
+  {
+   "name": "school-neutral",
+   "path": "school/school/school-neutral-160x64.png",
+   "kind": "school",
+   "size": [
+    160,
+    64
+   ],
+   "source": "build/school-neutral.rgb",
+   "note": "ch\u0142opiec wpieczony w t\u0142o; brak osobnej maski"
+  },
+  {
+   "name": "school-front",
+   "path": "school/school/school-front-160x64.png",
+   "kind": "school",
+   "size": [
+    160,
+    64
+   ],
+   "source": "build/school-front.rgb",
+   "note": "ch\u0142opiec wpieczony w t\u0142o; brak osobnej maski"
+  },
+  {
+   "name": "gym",
+   "path": "dance/dance/gym-160x192.png",
+   "kind": "dance",
+   "size": [
+    160,
+    192
+   ],
+   "source": "build/gym-v056.rgb",
+   "note": "czyste t\u0142o sali; tancerka jest osobno"
+  },
+  {
+   "name": "cheer-0",
+   "path": "dance/dance/cheer-0-48x128.png",
+   "kind": "dance",
+   "size": [
+    48,
+    128
+   ],
+   "source": "assets/art/source/act1_cheer_dance_v056.png",
+   "note": "poza tancerki; czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "cheer-1",
+   "path": "dance/dance/cheer-1-48x128.png",
+   "kind": "dance",
+   "size": [
+    48,
+    128
+   ],
+   "source": "assets/art/source/act1_cheer_dance_v056.png",
+   "note": "poza tancerki; czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "cheer-2",
+   "path": "dance/dance/cheer-2-48x128.png",
+   "kind": "dance",
+   "size": [
+    48,
+    128
+   ],
+   "source": "assets/art/source/act1_cheer_dance_v056.png",
+   "note": "poza tancerki; czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "cheer-3",
+   "path": "dance/dance/cheer-3-48x128.png",
+   "kind": "dance",
+   "size": [
+    48,
+    128
+   ],
+   "source": "assets/art/source/act1_cheer_dance_v056.png",
+   "note": "poza tancerki; czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "ribbon-dancer",
+   "path": "dance/dance/ribbon-dancer-sheet.png",
+   "kind": "dance",
+   "size": [
+    1774,
+    887
+   ],
+   "source": "assets/art/source/act2_ribbon_dancer_v136.png",
+   "note": "arkusz szarf; zewn\u0119trzne czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "ribbon-side",
+   "path": "dance/dance/ribbon-side-sheet.png",
+   "kind": "dance",
+   "size": [
+    1774,
+    887
+   ],
+   "source": "assets/art/source/act2_ribbon_side_v142.png",
+   "note": "arkusz szarf; zewn\u0119trzne czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "ribbon-overhead",
+   "path": "dance/dance/ribbon-overhead-sheet.png",
+   "kind": "dance",
+   "size": [
+    1774,
+    887
+   ],
+   "source": "assets/art/source/act2_ribbon_overhead_v145.png",
+   "note": "arkusz szarf; zewn\u0119trzne czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "ribbon-mid-v166",
+   "path": "dance/dance/ribbon-mid-v166-sheet.png",
+   "kind": "dance",
+   "size": [
+    1254,
+    1254
+   ],
+   "source": "assets/art/source/act2_ribbon_inbetweens_v166.png",
+   "note": "arkusz szarf; zewn\u0119trzne czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "ribbon-mid-v171",
+   "path": "dance/dance/ribbon-mid-v171-sheet.png",
+   "kind": "dance",
+   "size": [
+    1254,
+    1254
+   ],
+   "source": "assets/art/source/act2_ribbon_inbetweens_v171.png",
+   "note": "arkusz szarf; zewn\u0119trzne czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "ribbon-mid-v173",
+   "path": "dance/dance/ribbon-mid-v173-sheet.png",
+   "kind": "dance",
+   "size": [
+    1254,
+    1254
+   ],
+   "source": "assets/art/source/act2_ribbon_inbetweens_v173.png",
+   "note": "arkusz szarf; zewn\u0119trzne czarne t\u0142o zamienione na alf\u0119"
+  },
+  {
+   "name": "hero-pose-0",
+   "path": "hero/hero/pose-0-160x56.png",
+   "kind": "hero",
+   "size": [
+    160,
+    56
+   ],
+   "source": "build/basketball-hero-v177.rgba",
+   "note": "arkusz produkcyjny z alfa (monta\u017c u\u017cywa klatek v175)"
+  },
+  {
+   "name": "hero-pose-1",
+   "path": "hero/hero/pose-1-160x56.png",
+   "kind": "hero",
+   "size": [
+    160,
+    56
+   ],
+   "source": "build/basketball-hero-v177.rgba",
+   "note": "arkusz produkcyjny z alfa (monta\u017c u\u017cywa klatek v175)"
+  },
+  {
+   "name": "hero-pose-2",
+   "path": "hero/hero/pose-2-160x56.png",
+   "kind": "hero",
+   "size": [
+    160,
+    56
+   ],
+   "source": "build/basketball-hero-v177.rgba",
+   "note": "arkusz produkcyjny z alfa (monta\u017c u\u017cywa klatek v175)"
+  },
+  {
+   "name": "hero-pose-3",
+   "path": "hero/hero/pose-3-160x56.png",
+   "kind": "hero",
+   "size": [
+    160,
+    56
+   ],
+   "source": "build/basketball-hero-v177.rgba",
+   "note": "arkusz produkcyjny z alfa (monta\u017c u\u017cywa klatek v175)"
+  },
+  {
+   "name": "hero-pose-4",
+   "path": "hero/hero/pose-4-160x56.png",
+   "kind": "hero",
+   "size": [
+    160,
+    56
+   ],
+   "source": "build/basketball-hero-v177.rgba",
+   "note": "arkusz produkcyjny z alfa (monta\u017c u\u017cywa klatek v175)"
+  },
+  {
+   "name": "hero-pose-5",
+   "path": "hero/hero/pose-5-160x56.png",
+   "kind": "hero",
+   "size": [
+    160,
+    56
+   ],
+   "source": "build/basketball-hero-v177.rgba",
+   "note": "arkusz produkcyjny z alfa (monta\u017c u\u017cywa klatek v175)"
+  },
+  {
+   "name": "arena-interior",
+   "path": "hero/hero/arena-interior-160x56.png",
+   "kind": "hero",
+   "size": [
+    160,
+    56
+   ],
+   "source": "build/arena-interior-v151.rgb",
+   "note": "t\u0142o areny bez bohatera"
+  },
+  {
+   "name": "arena-exterior",
+   "path": "hero/hero/arena-exterior-200x64.png",
+   "kind": "hero",
+   "size": [
+    200,
+    64
+   ],
+   "source": "build/arena-exterior-v151.rgb",
+   "note": "panorama zewn\u0119trza areny"
+  }
+ ],
+ "baked": {
+  "practice": "pojedyncza ilustracja 160x192; brak czystego t\u0142a",
+  "trevor": "panele 160x64 z t\u0142em; tunel generowany wok\u00f3\u0142 sylwetki",
+  "final": "ch\u0142opiec i gwiazdy w jednej bitmapie 160x64",
+  "school-boy": "ch\u0142opiec wpieczony w school*.rgb; brak maski",
+  "ribbon-runtime": "w XEX klatki szarf s\u0105 ju\u017c z\u0142o\u017cone; arkusze powy\u017cej to \u017ar\u00f3d\u0142a"
+ }
+}

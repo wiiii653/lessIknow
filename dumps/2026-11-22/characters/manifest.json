@@ -1,0 +1,558 @@
+{
+ "generated": "2026-11-22",
+ "kind": "character animation frames, exact duplicates removed",
+ "source": {
+  "build": "build/visual-prototype-dev.xex",
+  "sha256": "62eb87c5f957c22c67430fd19a9aaed226afb64b91358a698aa437ab2e16bd43",
+  "release": "releases/less-i-know-demo-release-133-stereo.xex",
+  "release_sha256": "e56ea5f05ba6af99a019612fbfd283b0ed948725c90fc56bab1459a16ef5c43f"
+ },
+ "format": {
+  "indexed": "1:1 PNG, index = raw Atari pixel value",
+  "rgba": "source sprite with alpha; mask stored separately",
+  "preview": "4x nearest neighbour",
+  "contact": "2x contact sheet per character"
+ },
+ "totals": {
+  "frames": 188,
+  "unique": 188,
+  "removed": 0
+ },
+ "groups": [
+  {
+   "slug": "school-boy",
+   "title": "Ch\u0142opiec ze szko\u0142y",
+   "source": "school_story.boy_poses()",
+   "frames_input": 3,
+   "frames_unique": 3,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     192
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     157,
+     80,
+     88
+    ],
+    [
+     66,
+     111,
+     167
+    ],
+    [
+     222,
+     152,
+     138
+    ]
+   ]
+  },
+  {
+   "slug": "school-story",
+   "title": "Klatki spotkania (ch\u0142opiec + dziewczyna)",
+   "source": "school_story.story_frames()",
+   "frames_input": 6,
+   "frames_unique": 6,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     192
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     157,
+     80,
+     88
+    ],
+    [
+     66,
+     111,
+     167
+    ],
+    [
+     222,
+     152,
+     138
+    ]
+   ]
+  },
+  {
+   "slug": "school-girl",
+   "title": "Dziewczyna: ch\u00f3d, portret, zbli\u017cenie",
+   "source": "build/*.rgba + school_story",
+   "frames_input": 8,
+   "frames_unique": 8,
+   "duplicates": {},
+   "sizes": [
+    [
+     48,
+     64
+    ],
+    [
+     96,
+     128
+    ],
+    [
+     160,
+     64
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     157,
+     80,
+     88
+    ],
+    [
+     66,
+     111,
+     167
+    ],
+    [
+     222,
+     152,
+     138
+    ]
+   ]
+  },
+  {
+   "slug": "arena-walk-girl",
+   "title": "Dziewczyna id\u0105ca przed Atari Arena (18 klatek)",
+   "source": "school_parallax.frames()",
+   "frames_input": 18,
+   "frames_unique": 18,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     64
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     157,
+     80,
+     88
+    ],
+    [
+     66,
+     111,
+     167
+    ],
+    [
+     222,
+     152,
+     138
+    ]
+   ]
+  },
+  {
+   "slug": "school-practice",
+   "title": "Trening: trzy uj\u0119cia",
+   "source": "gym_practice.practice_pixels()",
+   "frames_input": 3,
+   "frames_unique": 3,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     64
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     142,
+     69,
+     66
+    ],
+    [
+     166,
+     112,
+     66
+    ],
+    [
+     194,
+     137,
+     112
+    ]
+   ]
+  },
+  {
+   "slug": "cheer-dance",
+   "title": "Tancerka z pompomami (prz\u00f3d)",
+   "source": "ribbon_dance.artwork()",
+   "frames_input": 20,
+   "frames_unique": 20,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     64
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     148,
+     48,
+     33
+    ],
+    [
+     180,
+     40,
+     110
+    ],
+    [
+     212,
+     115,
+     47
+    ]
+   ]
+  },
+  {
+   "slug": "ribbon-side",
+   "title": "Tancerka z boku (overlay z mask\u0105)",
+   "source": "ribbon_dance.side_actor_data()",
+   "frames_input": 8,
+   "frames_unique": 8,
+   "duplicates": {},
+   "sizes": [
+    [
+     68,
+     56
+    ]
+   ],
+   "palette": null
+  },
+  {
+   "slug": "ribbon-inbetweens",
+   "title": "Tancerka: klatki po\u015brednie",
+   "source": "ribbon_inbetweens.payloads()",
+   "frames_input": 18,
+   "frames_unique": 18,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     64
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     148,
+     48,
+     33
+    ],
+    [
+     180,
+     40,
+     110
+    ],
+    [
+     212,
+     115,
+     47
+    ]
+   ]
+  },
+  {
+   "slug": "trevor-panels",
+   "title": "Trevor: cztery panele",
+   "source": "trevor_polished.frames()",
+   "frames_input": 4,
+   "frames_unique": 4,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     64
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     255,
+     50,
+     160
+    ],
+    [
+     116,
+     0,
+     144
+    ],
+    [
+     255,
+     190,
+     206
+    ]
+   ]
+  },
+  {
+   "slug": "trevor-tunnel",
+   "title": "Trevor: tunel 16 faz x 4 etapy",
+   "source": "trevor_polished.tunnel_frames()",
+   "frames_input": 64,
+   "frames_unique": 64,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     64
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     255,
+     50,
+     160
+    ],
+    [
+     116,
+     0,
+     144
+    ],
+    [
+     255,
+     190,
+     206
+    ]
+   ]
+  },
+  {
+   "slug": "hero-basketball",
+   "title": "Koszykarz: pozy i rozpad tablicy",
+   "source": "basketball_hero.frames()/shattered_frame()",
+   "frames_input": 11,
+   "frames_unique": 11,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     56
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     148,
+     48,
+     33
+    ],
+    [
+     90,
+     33,
+     148
+    ],
+    [
+     180,
+     98,
+     40
+    ]
+   ]
+  },
+  {
+   "slug": "final-boy",
+   "title": "Ch\u0142opiec w finale",
+   "source": "final_boy.artwork()",
+   "frames_input": 1,
+   "frames_unique": 1,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     64
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     238,
+     238,
+     238
+    ],
+    [
+     40,
+     145,
+     180
+    ],
+    [
+     212,
+     115,
+     47
+    ]
+   ]
+  },
+  {
+   "slug": "crush-portraits",
+   "title": "Portrety dziewczyn (4 uj\u0119cia)",
+   "source": "crush_portraits.portraits()",
+   "frames_input": 4,
+   "frames_unique": 4,
+   "duplicates": {},
+   "sizes": [
+    [
+     80,
+     52
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     255,
+     50,
+     160
+    ],
+    [
+     0,
+     220,
+     255
+    ],
+    [
+     255,
+     190,
+     150
+    ]
+   ]
+  },
+  {
+   "slug": "crush-pompoms",
+   "title": "Portrety z ruchomymi pompomami",
+   "source": "pompom_effects.variants()",
+   "frames_input": 16,
+   "frames_unique": 16,
+   "duplicates": {},
+   "sizes": [
+    [
+     80,
+     52
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     255,
+     50,
+     160
+    ],
+    [
+     0,
+     220,
+     255
+    ],
+    [
+     255,
+     190,
+     150
+    ]
+   ]
+  },
+  {
+   "slug": "girl-eyes",
+   "title": "Oczy dziewczyny (4 fazy)",
+   "source": "girl_eyes.pixels()",
+   "frames_input": 4,
+   "frames_unique": 4,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     96
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     180,
+     138,
+     40
+    ],
+    [
+     180,
+     40,
+     110
+    ],
+    [
+     238,
+     238,
+     238
+    ]
+   ]
+  }
+ ],
+ "notes": [
+  "Trevor/tunel: 64 klatki r\u00f3\u017cni\u0105 si\u0119 t\u0142em tunelu; posta\u0107 ma 4 etapy.",
+  "Taniec: klatki 16-31 to samo t\u0142o sali bez tancerki, wi\u0119c pomini\u0119te.",
+  "Ch\u0142opiec szkolny i trening maj\u0105 t\u0142o wpieczone w klatk\u0119.",
+  "Dziewczyna szkolna jest zapisana jako sprite z alf\u0105 (\u017ar\u00f3d\u0142o builda).",
+  "school-girl/walk-0..3 to arkusz girl-walk-cycle-v177; bie\u017c\u0105cy monta\u017c go nie u\u017cywa.",
+  "Nieu\u017cywane arkusze (girl_back_art, walk_head_art, boy-whistle, hero-v177) pomini\u0119to."
+ ]
+}

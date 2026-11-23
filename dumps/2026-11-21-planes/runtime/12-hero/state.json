@@ -1,0 +1,102 @@
+{
+ "tick": 22100,
+ "note": "hero w bitmapie; pi\u0142ka/satelity na PMG",
+ "scene": 15,
+ "frame": 0,
+ "playfield": {
+  "width": 160,
+  "height": 235,
+  "bits_per_pixel": 2,
+  "display_list": "$8400"
+ },
+ "pmg": {
+  "base": "$8800",
+  "single_line": false,
+  "page_bytes": 128,
+  "prior": "$01",
+  "d400": "$2E",
+  "players_enabled": true,
+  "missiles_enabled": true,
+  "players": [
+   {
+    "plane": 0,
+    "address": "$8A00",
+    "bytes": 128,
+    "position": 124,
+    "size_bits": 1,
+    "scale": 2,
+    "color": "$56",
+    "visible": true
+   },
+   {
+    "plane": 1,
+    "address": "$8A80",
+    "bytes": 128,
+    "position": 124,
+    "size_bits": 1,
+    "scale": 2,
+    "color": "$9A",
+    "visible": true
+   },
+   {
+    "plane": 2,
+    "address": "$8B00",
+    "bytes": 128,
+    "position": 124,
+    "size_bits": 1,
+    "scale": 2,
+    "color": "$DC",
+    "visible": true
+   },
+   {
+    "plane": 3,
+    "address": "$8B80",
+    "bytes": 128,
+    "position": 124,
+    "size_bits": 1,
+    "scale": 2,
+    "color": "$1E",
+    "visible": true
+   }
+  ],
+  "missiles": [
+   {
+    "plane": 0,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 118,
+    "size_bits": 0,
+    "color": "$56",
+    "visible": true
+   },
+   {
+    "plane": 1,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 125,
+    "size_bits": 0,
+    "color": "$9A",
+    "visible": true
+   },
+   {
+    "plane": 2,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 145,
+    "size_bits": 0,
+    "color": "$DC",
+    "visible": true
+   },
+   {
+    "plane": 3,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 152,
+    "size_bits": 0,
+    "color": "$1E",
+    "visible": true
+   }
+  ]
+ },
+ "baked_into_playfield": []
+}

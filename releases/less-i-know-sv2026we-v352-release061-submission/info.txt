@@ -1,0 +1,42 @@
+THE LESS I KNOW THE BETTER
+Silly Venture 2026 WE
+
+AUTHOR
+Ognjen
+
+CATEGORY
+Atari XL/XE Demo Standard
+
+REQUIRED CONFIGURATION
+PAL Atari XL/XE, 1 MB Rambo-compatible expansion (64 x 16 KB banks),
+stereo POKEY (2 chips), GTIA. No VBXE or Rapidus required.
+
+DESCRIPTION
+A 4:20 Atari XE audiovisual demo: neon arena scenes, basketball, ribbon
+choreography, Trevor's comic punch impacts, vivid banana rotozooms,
+psychedelic tunnels, a close-up of the girl's eyes, and a quiet terminal
+outro. A rotator director takes over immediately after Trevor and changes
+motif, direction and speed on musical bars. Native ANTIC/GTIA bitmap scenes,
+player/missile graphics, bank-switched art and raster palette effects
+accompany a live POKEY performance.
+
+PRODUCTION AND AI DISCLOSURE
+Two weeks of day-and-night production with intensive collaboration with AI
+agents. AI tools assisted with programming and image assets; creative
+direction and final decisions by Ognjen.
+
+MUSIC AND RIGHTS
+POKEY arrangement by Ognjen, based on "The Less I Know The Better" by
+Tame Impala. The MIDI score was downloaded from the internet: MidiShow,
+item 200337 (credited in-demo as "MIDI / MIDISHOW 200337"). The author
+confirms permission to use the MIDI score and composition. No samples from
+the commercial recording are used.
+
+PUBLICATION
+The author reports that the demo has only been shared privately before this
+submission.
+
+EXECUTABLE
+less-i-know-demo.xex — stereo release 061 (v352)
+
+A 1920 x 1080 / 50 fps recording is not included.

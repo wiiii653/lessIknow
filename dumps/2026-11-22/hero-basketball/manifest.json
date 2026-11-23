@@ -1,0 +1,67 @@
+{
+ "generated": "2026-11-22",
+ "kind": "character animation frames, exact duplicates removed",
+ "source": {
+  "build": "build/visual-prototype-dev.xex",
+  "sha256": "a16369204db01d42aa2d2789f5ebdfec472bb5a5670c79e30beec6cacd6fc731",
+  "release": "releases/less-i-know-demo-release-133-stereo.xex",
+  "release_sha256": "e56ea5f05ba6af99a019612fbfd283b0ed948725c90fc56bab1459a16ef5c43f"
+ },
+ "format": {
+  "indexed": "1:1 PNG, index = raw Atari pixel value",
+  "rgba": "source sprite with alpha; mask stored separately",
+  "preview": "4x nearest neighbour",
+  "contact": "2x contact sheet per character"
+ },
+ "totals": {
+  "frames": 11,
+  "unique": 11,
+  "removed": 0
+ },
+ "groups": [
+  {
+   "slug": "hero-basketball",
+   "title": "Koszykarz: pozy i rozpad tablicy",
+   "source": "basketball_hero.frames()/shattered_frame()",
+   "frames_input": 11,
+   "frames_unique": 11,
+   "duplicates": {},
+   "sizes": [
+    [
+     160,
+     56
+    ]
+   ],
+   "palette": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     148,
+     48,
+     33
+    ],
+    [
+     90,
+     33,
+     148
+    ],
+    [
+     180,
+     98,
+     40
+    ]
+   ]
+  }
+ ],
+ "notes": [
+  "Trevor/tunel: 64 klatki r\u00f3\u017cni\u0105 si\u0119 t\u0142em tunelu; posta\u0107 ma 4 etapy.",
+  "Taniec: klatki 16-31 to samo t\u0142o sali bez tancerki, wi\u0119c pomini\u0119te.",
+  "Ch\u0142opiec szkolny i trening maj\u0105 t\u0142o wpieczone w klatk\u0119.",
+  "Dziewczyna szkolna jest zapisana jako sprite z alf\u0105 (\u017ar\u00f3d\u0142o builda).",
+  "school-girl/walk-0..3 to arkusz girl-walk-cycle-v177; bie\u017c\u0105cy monta\u017c go nie u\u017cywa.",
+  "Nieu\u017cywane arkusze (girl_back_art, walk_head_art, boy-whistle, hero-v177) pomini\u0119to."
+ ]
+}

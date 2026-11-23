@@ -1,0 +1,65 @@
+{
+ "tick": 51500,
+ "note": "karta fina\u0142owa; ch\u0142opiec w bitmapie, linie tekstowe pomini\u0119te",
+ "scene": 17,
+ "frame": 36,
+ "playfield": {
+  "width": 160,
+  "height": 235,
+  "bits_per_pixel": 2,
+  "display_list": "$BC00"
+ },
+ "pmg": {
+  "base": "$8800",
+  "single_line": false,
+  "page_bytes": 128,
+  "prior": "$01",
+  "d400": "$2E",
+  "players_enabled": true,
+  "missiles_enabled": false,
+  "players": [
+   {
+    "plane": 0,
+    "address": "$8A00",
+    "bytes": 128,
+    "position": 86,
+    "size_bits": 0,
+    "scale": 1,
+    "color": "$4F",
+    "visible": true
+   },
+   {
+    "plane": 1,
+    "address": "$8A80",
+    "bytes": 128,
+    "position": 70,
+    "size_bits": 0,
+    "scale": 1,
+    "color": "$6F",
+    "visible": true
+   },
+   {
+    "plane": 2,
+    "address": "$8B00",
+    "bytes": 128,
+    "position": 70,
+    "size_bits": 0,
+    "scale": 1,
+    "color": "$8F",
+    "visible": true
+   },
+   {
+    "plane": 3,
+    "address": "$8B80",
+    "bytes": 128,
+    "position": 86,
+    "size_bits": 0,
+    "scale": 1,
+    "color": "$AF",
+    "visible": true
+   }
+  ],
+  "missiles": []
+ },
+ "baked_into_playfield": []
+}

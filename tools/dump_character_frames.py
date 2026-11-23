@@ -283,6 +283,10 @@ def main():
                         default=ROOT / f'dumps/{DATE}/characters')
     parser.add_argument('--replace', action='store_true')
     parser.add_argument('--scale', type=int, default=4)
+    parser.add_argument('--group', action='append', default=None,
+                        help='only these character slugs (repeatable)')
+    parser.add_argument('--flat', action='store_true',
+                        help='write a single selected group directly into --output')
     args = parser.parse_args()
     output = args.output.resolve()
     if output.exists() and any(output.iterdir()) and not args.replace:
@@ -291,6 +295,14 @@ def main():
     build_sha = hashlib.sha256(BUILD.read_bytes()).hexdigest()
     reference_sha = hashlib.sha256(REFERENCE.read_bytes()).hexdigest()
     groups = build_groups()
+    if args.group:
+        wanted = set(args.group)
+        groups = [group for group in groups if group.slug in wanted]
+        missing = wanted - {group.slug for group in groups}
+        if missing:
+            raise SystemExit(f'unknown groups: {sorted(missing)}')
+        if args.flat and len(groups) != 1:
+            raise SystemExit('--flat requires exactly one --group')
     summary = []
     total_frames = total_unique = 0
 
@@ -299,7 +311,7 @@ def main():
         unique = group.dedupe()
         total_frames += before
         total_unique += unique
-        folder = output / group.slug
+        folder = output if args.flat else output / group.slug
         contact_frames = []
         for name, width, height, pixels, image in group.frames:
             if image is not None:

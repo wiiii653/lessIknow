@@ -1,0 +1,102 @@
+{
+ "tick": 26965,
+ "note": "BUM/BAM na players + missiles; Trevor w bitmapie",
+ "scene": 16,
+ "frame": 2,
+ "playfield": {
+  "width": 160,
+  "height": 235,
+  "bits_per_pixel": 2,
+  "display_list": "$8400"
+ },
+ "pmg": {
+  "base": "$8800",
+  "single_line": false,
+  "page_bytes": 128,
+  "prior": "$11",
+  "d400": "$2E",
+  "players_enabled": true,
+  "missiles_enabled": true,
+  "players": [
+   {
+    "plane": 0,
+    "address": "$8A00",
+    "bytes": 128,
+    "position": 149,
+    "size_bits": 0,
+    "scale": 1,
+    "color": "$00",
+    "visible": true
+   },
+   {
+    "plane": 1,
+    "address": "$8A80",
+    "bytes": 128,
+    "position": 157,
+    "size_bits": 0,
+    "scale": 1,
+    "color": "$00",
+    "visible": true
+   },
+   {
+    "plane": 2,
+    "address": "$8B00",
+    "bytes": 128,
+    "position": 165,
+    "size_bits": 0,
+    "scale": 1,
+    "color": "$00",
+    "visible": true
+   },
+   {
+    "plane": 3,
+    "address": "$8B80",
+    "bytes": 128,
+    "position": 173,
+    "size_bits": 0,
+    "scale": 1,
+    "color": "$00",
+    "visible": true
+   }
+  ],
+  "missiles": [
+   {
+    "plane": 0,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 145,
+    "size_bits": 3,
+    "color": "$5E",
+    "visible": true
+   },
+   {
+    "plane": 1,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 153,
+    "size_bits": 3,
+    "color": "$5E",
+    "visible": true
+   },
+   {
+    "plane": 2,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 161,
+    "size_bits": 3,
+    "color": "$5E",
+    "visible": true
+   },
+   {
+    "plane": 3,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 169,
+    "size_bits": 3,
+    "color": "$5E",
+    "visible": true
+   }
+  ]
+ },
+ "baked_into_playfield": []
+}

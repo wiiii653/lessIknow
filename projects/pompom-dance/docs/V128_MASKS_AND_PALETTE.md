@@ -1,28 +1,28 @@
-# V128 — maski postaci i paleta tańca
+# V128 — character masks and dance palette
 
-[ODCZYT] `build/visual-prototype-v128.xex`, identyczny z roboczym buildem.
+[READ] `build/visual-prototype-v128.xex`, identical to the working build.
 
-- Cheerleaderki: jednopikselowy kontur zamiast rozszerzenia o dwa piksele
-  górnej części sylwetki. Drobne zamknięte otwory maski w rejonie twarzy
-  i stroju są nieprzezroczyste; większe prześwity między ramionami pozostają
-  otwarte. Kolorowe piksele źródła są zachowane.
-- Paleta wyłącznie tańca: PF0=$5A, PF1=$AC, PF2=$2E — jaśniejszy róż,
-  turkus i ciepły kolor skóry/podłogi. Cztery kolory ANTIC E pozostają
-  wspólne dla sali i postaci.
-- Trevor: ponownie dopasowane kontury głowy, włosów, barków, rękawów,
-  pięści i dolnej krawędzi obu póz. Usunięte fragmenty starej sali,
-  dopracowany prześwit między opuszczoną pięścią a tułowiem.
-  Odbicia lustrzane korzystają z tych samych masek co obrazy źródłowe.
+- Cheerleaders: a one-pixel outline instead of the two-pixel expansion of the
+  upper part of the figure. Small closed mask holes in the area of the face
+  and costume are opaque; larger gaps between the arms remain
+  open. The coloured pixels of the source are preserved.
+- Dance-only palette: PF0=$5A, PF1=$AC, PF2=$2E — brighter pink,
+  turquoise and a warm skin/floor colour. The four ANTIC E colours remain
+  shared by the hall and the characters.
+- Trevor: readjusted outlines of the head, hair, shoulders, sleeves,
+  fists and the bottom edge of both poses. Removed fragments of the old hall,
+  refined the gap between the lowered fist and the torso.
+  Mirror reflections use the same masks as the source images.
 
-[ODCZYT] Wizualnie sprawdzono wygenerowane pozy oraz raster po wykonaniu
-callbacku: solo, duet, trio i obie strony uderzenia Trevora z PMG.
-Podgląd: `build/v128-live-preview.png`. Paleta PNG jest przybliżeniem PAL.
+[READ] The generated poses and the raster after executing the callback were
+checked visually: solo, duet, trio and both sides of Trevor's impact with PMG.
+Preview: `build/v128-live-preview.png`. The PNG palette is an approximation of PAL.
 
-[ODCZYT] Porównanie stereo POKEY w Atari800 PAL/1088XE: PASS,
-3 626 640 identycznych bajtów, około 1010,2 s emulacji, cały utwór.
+[READ] Stereo POKEY comparison in Atari800 PAL/1088XE: PASS,
+3 626 640 identical bytes, about 1010.2 s of emulation, the whole track.
 
-Test porównawczy v126 uwzględnia zamierzone różnice masek i palety;
-pozostałe sceny nadal są porównywane piksel w piksel. Bieżące testy
-postaci porównują raster z aktualnymi wygenerowanymi pozami.
+The v126 comparison test accounts for the intended mask and palette differences;
+the other scenes are still compared pixel for pixel. The current character tests
+compare the raster with the current generated poses.
 
-[ODCZYT] `make check`: 83/83 testy OK, 95,529 s.
+[READ] `make check`: 83/83 tests OK, 95.529 s.

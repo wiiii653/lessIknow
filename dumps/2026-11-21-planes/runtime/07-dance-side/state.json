@@ -1,0 +1,117 @@
+{
+ "tick": 9600,
+ "note": "bok tancerki: gym + bitmapowy overlay z mask\u0105 + akcenty PMG",
+ "scene": 14,
+ "frame": 24,
+ "playfield": {
+  "width": 160,
+  "height": 235,
+  "bits_per_pixel": 2,
+  "display_list": "$8400"
+ },
+ "pmg": {
+  "base": "$8800",
+  "single_line": false,
+  "page_bytes": 128,
+  "prior": "$11",
+  "d400": "$2E",
+  "players_enabled": true,
+  "missiles_enabled": true,
+  "players": [
+   {
+    "plane": 0,
+    "address": "$8A00",
+    "bytes": 128,
+    "position": 62,
+    "size_bits": 3,
+    "scale": 4,
+    "color": "$3A",
+    "visible": true
+   },
+   {
+    "plane": 1,
+    "address": "$8A80",
+    "bytes": 128,
+    "position": 42,
+    "size_bits": 3,
+    "scale": 4,
+    "color": "$7A",
+    "visible": true
+   },
+   {
+    "plane": 2,
+    "address": "$8B00",
+    "bytes": 128,
+    "position": 22,
+    "size_bits": 3,
+    "scale": 4,
+    "color": "$BA",
+    "visible": true
+   },
+   {
+    "plane": 3,
+    "address": "$8B80",
+    "bytes": 128,
+    "position": 115,
+    "size_bits": 3,
+    "scale": 4,
+    "color": "$FA",
+    "visible": true
+   }
+  ],
+  "missiles": [
+   {
+    "plane": 0,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 76,
+    "size_bits": 1,
+    "color": "$5E",
+    "visible": true
+   },
+   {
+    "plane": 1,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 55,
+    "size_bits": 1,
+    "color": "$5E",
+    "visible": true
+   },
+   {
+    "plane": 2,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 38,
+    "size_bits": 1,
+    "color": "$5E",
+    "visible": true
+   },
+   {
+    "plane": 3,
+    "address": "$8980",
+    "bytes": 128,
+    "position": 139,
+    "size_bits": 1,
+    "color": "$5E",
+    "visible": true
+   }
+  ]
+ },
+ "baked_into_playfield": [
+  "gym backdrop (banked frame)"
+ ],
+ "overlay": {
+  "kind": "side-dancer",
+  "pose": 4,
+  "bank": 28,
+  "address": "$4A00 pixels, $4E00 mask",
+  "placement": {
+   "x": 4,
+   "y": 8,
+   "width": 68,
+   "height": 56
+  },
+  "storage": "952 B 2bpp pixels + 952 B mask, row stride 17 B"
+ }
+}

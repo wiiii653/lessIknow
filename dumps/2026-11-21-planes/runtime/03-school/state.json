@@ -1,0 +1,24 @@
+{
+ "tick": 2992,
+ "note": "ch\u0142opiec i t\u0142o w bitmapie; brak PMG",
+ "scene": 8,
+ "frame": 0,
+ "playfield": {
+  "width": 160,
+  "height": 235,
+  "bits_per_pixel": 2,
+  "display_list": "$8400"
+ },
+ "pmg": {
+  "base": "$0000",
+  "single_line": false,
+  "page_bytes": 128,
+  "prior": "$00",
+  "d400": "$22",
+  "players_enabled": false,
+  "missiles_enabled": false,
+  "players": [],
+  "missiles": []
+ },
+ "baked_into_playfield": []
+}

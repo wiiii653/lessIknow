@@ -1,27 +1,30 @@
-# Pompom Dance — samodzielny projekt Atari
+# Pompom Dance — standalone Atari project
 
-Wydzielona scena pomponiar z TLIKTB v141. Zawiera własne źródła, obie grafiki
-wejściowe, oryginalny player v035, referencyjne klatki, generator, testy
-i gotowy `build/pompom-dance-v001.xex`. Nie wymaga plików projektu nadrzędnego.
+The cheerleader scene extracted from TLIKTB v141. It contains its own sources,
+both input images, the original v035 player, reference frames, the generator,
+tests and a ready `build/pompom-dance-v001.xex`. It does not require files from
+the parent project.
 
-## Uruchomienie
+## Running
 
-PAL, stereo POKEY, rozszerzenie zgodne z Atari800 `1088XE` (ta sama konfiguracja
-testowa co główne demo), Altirra OS. W Altirrze wybierz 65XE/PAL z rozszerzeniem
-1 MB i stereo POKEY. Projekt używa 14 banków po 16 KiB: 8 muzycznych i 6 grafiki.
+PAL, stereo POKEY, expansion compatible with Atari800 `1088XE` (the same test
+configuration as the main demo), Altirra OS. In Altirra choose 65XE/PAL with
+1 MB expansion and stereo POKEY. The project uses 14 banks of 16 KiB each:
+8 music and 6 graphics.
 
 ```sh
 atari800 -1088xe -pal -nobasic -run build/pompom-dance-v001.xex
 ```
 
-Od początku muzyki zapętlane są wejścia jednej, dwóch i trzech dziewczyn,
-w cyklu 2992 ticków (~15 s). Zachowano cztery pozy każdej grupy, cienie,
-czterokolorową salę i akcenty PMG. To osobny pokaz sceny; nie zawiera pozostałych
-aktów głównego dema. Muzyka pozostaje pełnym utworem v035.
+From the start of the music, the entrances of one, two and three girls are
+looped, in a cycle of 2992 ticks (~15 s). The four poses of each group, shadows,
+the four-colour hall and PMG accents are preserved. This is a separate scene
+show; it does not contain the remaining acts of the main demo. The music remains
+the full v035 track.
 
-## Budowanie i weryfikacja
+## Building and verification
 
-Python 3, GNU Make i ImageMagick (`convert`):
+Python 3, GNU Make and ImageMagick (`convert`):
 
 ```sh
 python3 -m venv .venv
@@ -30,37 +33,41 @@ make all PYTHON=.venv/bin/python
 make check PYTHON=.venv/bin/python
 ```
 
-`make all` tworzy wymienialny `build/pompom-dance-dev.xex` i JSON. Numerowanych
-wydań nie nadpisuj. Nowe wydanie:
+`make all` creates a replaceable `build/pompom-dance-dev.xex` and JSON. Do not
+overwrite numbered releases. New release:
 
 ```sh
 .venv/bin/python tools/build_pompom_demo.py --output build/pompom-dance-v002.xex
 ```
 
-`reference/dance_frames_v141.bin` zawiera dokładnie 98 304 B: 12 klatek po
-8192 B. Generator odmawia budowy, jeżeli odtworzona grafika różni się choćby
-bajtem. `reference/provenance.json` zapisuje sumy źródeł i wyjściowego v141.
+`reference/dance_frames_v141.bin` contains exactly 98 304 B: 12 frames of
+8192 B. The generator refuses to build if the reproduced graphics differ by
+even a single byte. `reference/provenance.json` records the sums of the sources
+and of the output v141.
 
-Testy sprawdzają wszystkie grupy i pozy przez wykonanie kodu 6502, identyczność
-referencji, banków muzycznych i odstępów czterech DLI. Kopia pełnej bitmapy
-jest przygotowywana w nieaktywnym buforze; ten projekt nie używa optymalizacji
-dirty-pages głównego dema. Tempo callbacków wymaga oceny w emulatorze/sprzęcie.
+The tests check all groups and poses by executing 6502 code, the identity of the
+reference, the music banks and the spacing of the four DLIs. A copy of the full
+bitmap is prepared in the inactive buffer; this project does not use the main
+demo's dirty-pages optimisation. The callback rate requires evaluation in an
+emulator/hardware.
 
-Porównanie muzyki wymaga Atari800 i ROM-u Altirra OS. Ścieżki oraz ustawienia
-znajdują się w `tools/check_playback.py`; w środowisku macierzystym polecenie
-`make playback PYTHON=/path/to/python` korzystało z dostępnego wrappera Atari800.
+The music comparison requires Atari800 and the Altirra OS ROM. The paths and
+settings are in `tools/check_playback.py`; in the host environment the command
+`make playback PYTHON=/path/to/python` used the available Atari800 wrapper.
 
-## Wyniki v001
+## v001 results
 
-[ODCZYT] 3/3 testy zaliczone. Oryginalna grafika wszystkich 12 klatek zgodna
-bajt w bajt z v141. Atari800 PAL/1088XE, Altirra OS, stereo POKEY:
-16 312 896 identycznych bajtów względem v035; cały utwór.
-Nie przeprowadzono testu na fizycznym Atari ani pomiaru FPS z DMA ANTIC.
+[READ] 3/3 tests passed. The original graphics of all 12 frames match v141 byte
+for byte. Atari800 PAL/1088XE, Altirra OS, stereo POKEY:
+16 312 896 identical bytes against v035; the entire track.
+No test on physical Atari and no FPS measurement with ANTIC DMA was
+performed.
 
 XEX: 253 197 B, SHA-256:
 `47c558dd06ba0bf2163b69e7d6bf8441e9fe1589d4f819d2df2e763a731ee8e5`.
 
-Mapa RAM: callback `$1000`, stan `$13E0`, display lists `$1400`/`$1800`,
-efekty `$1C00`, bufory bitmap `$8000`/`$A000`, PMG `$0980–$0BFF`.
-Archiwalne notatki rozwoju sceny znajdują się w `docs/`; opisują wcześniejszy
-silnik głównego projektu, a powyższa mapa dotyczy samodzielnego v001.
+RAM map: callback `$1000`, state `$13E0`, display lists `$1400`/`$1800`,
+effects `$1C00`, bitmap buffers `$8000`/`$A000`, PMG `$0980–$0BFF`.
+Archival notes on the scene's development are in `docs/`; they describe the
+earlier engine of the main project, while the map above applies to standalone
+v001.
