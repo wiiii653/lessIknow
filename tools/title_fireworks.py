@@ -4,6 +4,7 @@ Complete fireworks are drawn in front of plasma, letters and the crane.
 No silhouette/text clipping is applied to their radial burst and falling trails.
 """
 import math
+from engine_effects import PMBASE_SHADOW
 from build_sequence import Code
 
 ENTRY=0x6c00
@@ -150,7 +151,7 @@ def helper():
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     # Prepare the alternate PMG buffer while the last complete burst stays on.
-    a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e8);c.jump(0x8d,'back_bit')
+    a(0xad,PMBASE_SHADOW);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e8);c.jump(0x8d,'back_bit')
     for i,high in enumerate((9,10,10,11,11)):
         c.emit(0xa9,high);a(0x0d,0x83e8);c.jump(0x8d,f'clear{i}_hi')
     c.emit(0xa9,0,0xa2,127)
@@ -188,7 +189,7 @@ def helper():
     assert c.origin+len(c.data)<=PUBLISH
     c.emit(*bytes(PUBLISH-c.origin-len(c.data)))
     c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait');c.emit(0xc9,128);c.branch(0xb0,'wait')
-    c.jump(0xad,'back_bit');c.emit(0x09,8);a(0x8d,0xd407)
+    c.jump(0xad,'back_bit');c.emit(0x09,8);a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407)
     # PMG fade follows the same per-card fade envelope as the plasma.
     a(0xad,0x83e0);c.branch(0xd0,'title_fade')
     a(0xad,0x83fd);c.emit(0x4a,0xc9,7);c.branch(0x90,'luminance');c.emit(0xa9,7);c.jump(0x4c,'luminance')

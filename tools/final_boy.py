@@ -4,7 +4,7 @@ from collections import deque
 from functools import lru_cache
 from pathlib import Path
 from build_sequence import Code
-from engine_effects import cached_display_list
+from engine_effects import PMBASE_SHADOW, cached_display_list
 from music_timing import tick_at_bar
 from whistle_pmg import SHAPES as WHISTLE_SHAPES
 from outro_loader import ENTRY as OUTRO_ENTRY, FLAG as OUTRO_FLAG, PRELOAD as OUTRO_PRELOAD
@@ -151,7 +151,7 @@ def helper(copy_address):
     a(0xad,0x83ec);c.branch(0xf0,'portrait_light_ready')
     c.emit(0x4a,0x69,4,0x29,0xfe)
     c.label('portrait_light_ready');a(0x8d,PORTRAIT_LUMA)
-    a(0xad,0x83e8);c.emit(0x09,8);a(0x8d,0xd407)
+    a(0xad,0x83e8);c.emit(0x09,8);a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407)
     for plane in range(4):
         a(0xad,final_orbits.VALUES_X+plane);a(0x8d,0xd000+plane)
         a(0xae,0x83ff)

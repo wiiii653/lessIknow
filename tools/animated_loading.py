@@ -61,7 +61,12 @@ def frame_callback(glyph_start):
     c.jump(0xac, 'old_vbi_0')
     c.emit(0xa9, 6)
     absolute(0x20, SETVBV)
-    absolute(0x4c, 0x38a0)
+    absolute(0x20, 0x38a0)
+    # Final payloads replace the loader display list and font.
+    c.emit(0xa9, 0)
+    absolute(0x8d, 0x022f)
+    absolute(0x8d, 0xd400)
+    c.emit(0x60)
 
     c.label('vbi')
     c.emit(0x08, 0x48, 0x8a, 0x48, 0x98, 0x48, 0xa2, 0)
@@ -190,6 +195,24 @@ def install(data, *, full_rate=False):
         refresh_entry = labels['install']
         dlist = dlist.replace(b'\x42', b'\x44')
 
+    if full_rate:
+        # Keep the software display-list refresh in early vertical blank.
+        # This is the raster sync used in numbered prereleases 180 and 181.
+        sync_address = 0x3b80
+        sync = Code(sync_address)
+        sync.label('wait')
+        sync.emit(0xad, 0x0b, 0xd4, 0xc9, 124)
+        sync.branch(0x90, 'wait')
+        sync.emit(0xc9, 128)
+        sync.branch(0xb0, 'wait')
+        sync.emit(0x4c, 0xa0, 0x38)
+        sync_payload = bytes(sync.finish())
+        for address, block in early_blocks:
+            assert address + len(block) <= sync_address or address >= sync_address + len(sync_payload)
+        assert all(end < sync_address or start >= sync_address + len(sync_payload)
+                   for start, end, _ in entries[:last_wrapper+2])
+        early_blocks.insert(0, (sync_address, sync_payload))
+
     out = bytearray(b'\xff\xff')
     for index, (addr, _, payload) in enumerate(entries):
         if index == 0:
@@ -231,6 +254,9 @@ def install(data, *, full_rate=False):
             if full_rate and index == last_wrapper:
                 call = prefix.rindex(bytes.fromhex('20a038'))
                 prefix = prefix[:call+1] + labels['stop'].to_bytes(2,'little') + prefix[call+3:]
+            if full_rate:
+                prefix = prefix.replace(bytes.fromhex('20a038'),
+                                        b'\x20' + sync_address.to_bytes(2, 'little'))
             payload = prefix + loading(count) + loading(end_count)
         out.extend(xex_segment(addr,payload))
     assert len(out) < 1024*1024

@@ -1,5 +1,6 @@
 """Notes and treble clefs emitted from the mouth, with missile sparkle tails."""
 import math
+from engine_effects import PMBASE_SHADOW
 from build_sequence import Code
 from school_story import WHISTLE_START, WHISTLE_END
 ENTRY=0x6a00
@@ -41,7 +42,7 @@ def helper():
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     # Reuse the established alternate PMG buffers ($0980 and $8980).
-    a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);c.jump(0x8d,'back')
+    a(0xad,PMBASE_SHADOW);c.emit(0x29,0x80,0x49,0x80);c.jump(0x8d,'back')
     for i,high in enumerate((9,10,10,11,11)):
         c.emit(0x09,high);c.jump(0x8d,f'clear{i}_hi')
         c.jump(0xad,'back')
@@ -80,7 +81,7 @@ def helper():
     # buffer until all notes and tails are ready.
     c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait')
     c.emit(0xc9,128);c.branch(0xb0,'wait')
-    c.jump(0xad,'back');c.emit(0x09,8);a(0x8d,0xd407)
+    c.jump(0xad,'back');c.emit(0x09,8);a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407)
     for p in range(8):c.jump(0xad,f'pos{p}');a(0x8d,0xd000+p)
     for p in range(4):
         a(0xad,0x83ff);c.emit(0x4a,0x18,0x69,p*4,0x29,15,0xaa)

@@ -113,6 +113,7 @@ def effects_helper(state=0x83e0, intro_color=0):
     c.emit(0xca)
     c.branch(0x10, 'set_sizes')
     c.emit(0xa9, 8)
+    absop(0x8d, PMBASE_SHADOW)
     absop(0x8d, 0xd407)
     c.emit(0xa9, 1)
     absop(0x8d, 0xd01b)
@@ -146,6 +147,7 @@ def pmg_art():
 # LMS mapping of an entire display list, never the framebuffer's pixel content.
 RUNTIME_ORIGIN = 0x0c00
 RUNTIME_END = 0x0f40  # $0E00 side compositor; $0F00–$0F3F kiss bank trampoline
+PMBASE_SHADOW = 0x0dfd  # Last published PMBASE value. ANTIC $D407 is write-only.
 DL_KEYS = 0x0dfe
 COPY_PAGES = RUNTIME_ORIGIN
 DL_CHECK = 0x0d40
@@ -194,7 +196,7 @@ def runtime_helper():
     d.emit(0x9d, DL_KEYS & 255, DL_KEYS >> 8, 0xa9, 1, 0x60)
     d.label('hit'); d.emit(0xa9, 0, 0x60)
     code.extend(d.finish())
-    assert len(code) <= DL_KEYS - RUNTIME_ORIGIN
+    assert len(code) <= PMBASE_SHADOW - RUNTIME_ORIGIN
     code.extend(bytes(RUNTIME_END - RUNTIME_ORIGIN - len(code)))
     return code
 

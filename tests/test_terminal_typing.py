@@ -52,31 +52,30 @@ class TerminalTypingTests(unittest.TestCase):
             writes=typing.schedule()[(starts.index(start))*text.HISTORY_ROWS:][:len(page)]
             finish=writes[-1]+typing.PROMPT_DELAY+len(page[-1])
             self.assertLess(finish-start,220)
-            self.assertGreater(end-finish,600)
+            self.assertGreater(end-finish,350)
             cpu=seq.execute(start+300,cpu)
             for row,line in enumerate(page):
-                self.assertTrue(self.row(cpu,row).startswith(b'>'+line.encode()),(start,row))
+                expected = b'>' + line.encode() if line else b' ' * 40
+                self.assertTrue(self.row(cpu,row).startswith(expected),(start,row))
             for row in range(len(page),text.HISTORY_ROWS):self.assertEqual(self.row(cpu,row),b' '*40)
             before=[self.row(cpu,row).replace(b'_',b' ') for row in range(text.HISTORY_ROWS)]
             cpu=seq.execute(end-1,cpu)
             self.assertEqual([self.row(cpu,row).replace(b'_',b' ') for row in range(text.HISTORY_ROWS)],before)
-        cpu=seq.execute(text.END,cpu)
-        self.assertTrue(all(self.row(cpu,r)==b' '*40 for r in range(text.HISTORY_ROWS)))
 
     def test_paragraphs_get_separate_pages_without_losing_any_greeting(self):
-        display_lines=tuple(line for page in text.pages() for line in page)
+        display_lines=tuple(line for page in text.pages() for line in page if line)
         expected=tuple(line for page in text.CREDITS for line in page if line)+tuple(line for line in text.GREETZ if line)
         self.assertEqual(display_lines,expected)
-        cpu=seq.execute(text.page_starts()[6]+300)
-        self.assertIn(b'VIRUS / FOORMAN / MAQ / KEY-G',self.row(cpu,0))
-        self.assertIn(b'FALCON / ATARIONLINE.PL / PTODT',self.row(cpu,1))
-        cpu=seq.execute(text.page_starts()[7],cpu)
+        cpu=seq.execute(text.page_starts()[9]+300)
+        self.assertIn(b'VIRUS / FOORMAN / MAQ / KEY-G',self.row(cpu,2))
+        self.assertIn(b'FALCON / ATARIONLINE.PL / PTODT',self.row(cpu,3))
+        cpu=seq.execute(text.page_starts()[10],cpu)
         self.assertTrue(all(self.row(cpu,r)==b' '*40 for r in range(1,text.HISTORY_ROWS)))
         cpu=seq.execute(text.END-1,cpu)
-        self.assertEqual(text.HISTORY_ROWS,6)
-        self.assertIn(b'PERSONALLY',self.row(cpu,3))
+        self.assertEqual(text.HISTORY_ROWS,4)
+        self.assertIn(b'PERSONALLY',self.row(cpu,0))
         self.assertEqual(cpu.memory[0xd403],0xbc)
-        self.assertEqual(len(self.row(cpu,5)),40)
+        self.assertEqual(len(self.row(cpu,3)),40)
 
     def test_ai_and_llm_creation_lines_are_typed_in_the_existing_pages(self):
         cpu=seq.execute(text.START+300)

@@ -189,11 +189,23 @@ class TitleFireworkTests(unittest.TestCase):
             self.assertGreaterEqual(max(positions)-min(positions),20)
 
     def test_fireworks_keep_gtia11_and_use_only_inactive_pmg(self):
-        cpu=sequence.MPU(memory=TrackedMemory(sequence.XEX.read_bytes()))
-        sequence.execute(96,cpu)
+        from engine_effects import PMBASE_SHADOW
+
+        class WriteOnlyPMBaseMemory(TrackedMemory):
+            def __getitem__(self, address):
+                if address == 0xd407:
+                    return 0xff
+                return super().__getitem__(address)
+
+        memory = WriteOnlyPMBaseMemory(sequence.XEX.read_bytes())
+        cpu = sequence.MPU(memory=memory)
+        sequence.execute(96, cpu)
         for tick in (112,256,768,1496,1752,2008,2304,32,96,1592):
-            m=cpu.memory;active=(m[0xd407]&0xfc)<<8;m.writes.clear()
-            sequence.execute(tick,cpu)
+            m = cpu.memory
+            active = (m[PMBASE_SHADOW] & 0xfc) << 8
+            m.writes.clear()
+            sequence.execute(tick, cpu)
+            self.assertEqual((m[PMBASE_SHADOW] & 0xfc) << 8, active ^ 0x8000)
             self.assertFalse(any(active+0x180<=a<active+0x400 for a in m.writes),tick)
             self.assertEqual(m[0xd01b],0xc1)
             self.assertEqual(m[0xd400],0x2e)

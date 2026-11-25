@@ -1,6 +1,7 @@
 """PMG overlays for the held close-up and the wall bars in the practice atlas."""
 import math
 
+from engine_effects import PMBASE_SHADOW
 from build_sequence import Code
 from gym_practice import PRACTICE_CUTS, practice_pixels
 from whistle_pmg import SHAPES
@@ -210,7 +211,7 @@ def helper():
     state(0xad, 'page')
     state(0x8d, 'visible_page')
     c.emit(0x09, 8)
-    a(0x8d, 0xd407)
+    a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407)
     for p in range(4):
         state(0xad, f'px{p}')
         a(0x8d, 0xd000+p)

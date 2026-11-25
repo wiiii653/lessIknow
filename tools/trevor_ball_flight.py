@@ -1,5 +1,6 @@
 """Two original balls and their satellites, travelling around Trevor's impacts."""
 import math
+from engine_effects import PMBASE_SHADOW
 from build_sequence import Code
 from rainbow_ball import spin_masks
 from basketball_hero import satellite_orbits
@@ -81,7 +82,7 @@ def helper():
     c.label('fade_out');a(0xad,0x83ea);c.emit(0x38,0xe9,20)
     c.label('fade_select');c.branch(0xb0,'fade_lookup');c.emit(0xa9,0)
     c.label('fade_lookup');c.emit(0xaa);c.jump(0xbd,'fade_masks');c.jump(0x8d,'fade_mask')
-    c.label('buffer');a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e9)
+    c.label('buffer');a(0xad,PMBASE_SHADOW);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e9)
     c.emit(0x09,9);c.jump(0x8d,'clear_m_hi')
     for plane in range(4):
         a(0xad,0x83e9);c.emit(0x09,10 if plane<2 else 11)
@@ -139,7 +140,7 @@ def helper():
             c.label(f'write_bits{plane}_{row}');c.label(f'sat{plane}_{row}_write');a(0x99,0x980+row)
         c.label(f'sat_done{plane}')
     c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait');c.emit(0xc9,128);c.branch(0xb0,'wait')
-    a(0xad,0x83e9);c.emit(0x09,8);a(0x8d,0xd407)
+    a(0xad,0x83e9);c.emit(0x09,8);a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407)
     for plane in range(4):
         c.jump(0xad,'incoming');c.branch(0xf0,f'player_x{plane}')
         a(0xad,0x83eb)

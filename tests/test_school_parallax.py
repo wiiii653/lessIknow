@@ -5,13 +5,18 @@ import test_sequence as sequence
 from school_parallax import FACE_OFFSETS, PROFILE_POLISH, frames, party_frames
 
 class SchoolParallaxArtTests(unittest.TestCase):
-    def test_v330_walk_with_only_four_profile_pixels_changed(self):
+    def test_v330_walk_with_profile_and_sleeve_polish(self):
         original = party_frames()
         self.assertEqual(sha256(b''.join(original)).hexdigest(),
                          'ca87ddba2adaed2cf082f42c4c013b3db221ce48e43803a956a1954b36b02fa4')
         for i, (before, after, offset) in enumerate(zip(original, frames(), FACE_OFFSETS)):
             changed = {n: b for n, (a, b) in enumerate(zip(before, after)) if a != b}
             expected = {y * 160 + x + offset: ink for x, y, ink in PROFILE_POLISH}
+            for y in range(31, 36):
+                for x in range(38, 44):
+                    pixel = y * 160 + x + offset
+                    if before[pixel] == 3:
+                        expected[pixel] = 1
             self.assertEqual(changed, expected, i)
 
 

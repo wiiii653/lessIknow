@@ -56,7 +56,9 @@ new filename:
 python3 tools/build_hardware_xex.py build/visual-prototype-dev.xex /path/to/new-stereo-candidate.xex --approved-music --release-122-music --full-rate-loading
 ```
 
-The command matches the current Makefile audio and loader options. See
+The full-rate loader uses the early blanking refresh from prerelease 181.
+Its final wrapper restores the OS VBI and disables both the DMA shadow and
+ANTIC DMA before the final segments overwrite the loader display. See
 [Project Status](PLAN_STATUS.md) for prerelease-specific packaging differences.
 
 The packager refuses to overwrite numbered files, verifies the release 058

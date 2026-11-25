@@ -1,6 +1,6 @@
 """Bank-eight portrait renderer; music owns offsets below $0B10."""
 from pathlib import Path
-from engine_effects import cached_display_list, clear_pmg
+from engine_effects import PMBASE_SHADOW, cached_display_list, clear_pmg
 from build_sequence import Code
 from music_timing import tick_at_bar
 START, END = tick_at_bar(40), tick_at_bar(56)
@@ -79,7 +79,7 @@ def helper(eyes=None, effects_address=0):
     c.jump(0xbd,'hair_y');c.emit(0xa8,0xa9,3)
     a(0x99,0x0980);a(0x99,0x0981);a(0x99,0x0982)
     a(0xad,0x83e2);c.emit(0x29,32,0x4a,0x4a,0x4a,0x4a,0x4a,0x18);c.jump(0x7d,'hair_x');a(0x8d,0xd004)
-    for addr,val in ((0xd012,0x2c),(0xd013,0x2c),(0xd014,0),(0xd015,0),(0xd407,8),(0xd008,0),(0xd009,0),(0xd00a,0),(0xd00b,0),(0xd00c,0)):
+    for addr,val in ((0xd012,0x2c),(0xd013,0x2c),(0xd014,0),(0xd015,0),(PMBASE_SHADOW,8),(0xd407,8),(0xd008,0),(0xd009,0),(0xd00a,0),(0xd00b,0),(0xd00c,0)):
         c.emit(0xa9,val);a(0x8d,addr)
     # Eyes close for 16 music ticks once per 256 ticks.
     a(0xad,0x83e2);c.emit(0xc9,240);c.branch(0xb0,'blink')

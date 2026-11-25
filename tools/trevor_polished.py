@@ -1,7 +1,7 @@
 """Trevor reveal, alternating punches and synchronized comic impacts."""
 import math
 from pathlib import Path
-from engine_effects import COPY_PAGES, cached_display_list, clear_pmg
+from engine_effects import PMBASE_SHADOW, COPY_PAGES, cached_display_list, clear_pmg
 from build_sequence import Code
 from trevor_awakens import COLORS, HIT as TREVOR_HIT, END as TREVOR_END, MIDPOINT as TREVOR_MIDPOINT, FLIGHT_START
 from music_timing import tick_at_beat
@@ -457,7 +457,7 @@ def helper(bank_wrapper=0, impact_labels=None, rotator_puffs=True):
         c.label('rotator_fade_store');a(0x8d,ROTATOR_PUFF_DX)
         c.label('rotator_fade_ready')
     c.label('impact_wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'impact_wait');c.emit(0xc9,128);c.branch(0xb0,'impact_wait')
-    a(0xad,0x83e9);c.emit(0x09,8);a(0x8d,0xd407)
+    a(0xad,0x83e9);c.emit(0x09,8);a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407)
     for i in range(4):
         c.jump(0xad,f'impact_px{i}');a(0x8d,0xd000+i)
         c.jump(0xad,f'impact_mx{i}');a(0x8d,0xd004+i)
@@ -496,7 +496,7 @@ def helper(bank_wrapper=0, impact_labels=None, rotator_puffs=True):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
     c.label('bang_prepare')
-    a(0xad,0xd407);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e9)
+    a(0xad,PMBASE_SHADOW);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e9)
     for high in (9,10,11):
         c.emit(0xa9,high);a(0x0d,0x83e9)
         for label,hi in pmg_fixups:
@@ -568,7 +568,7 @@ def impact_hide_bridge():
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait')
     c.emit(0xc9,128);c.branch(0xb0,'wait')
-    c.emit(0xa9,0);a(0x8d,0xd407);a(0x8d,0xd01d);c.emit(0x60)
+    c.emit(0xa9,0);a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407);a(0x8d,0xd01d);c.emit(0x60)
     return bytes(c.finish())
 
 

@@ -1,6 +1,7 @@
 """Act 4: dark gym reveal, then PMG zoom, mirror poses and orbital accents."""
 import math
 from pathlib import Path
+from engine_effects import PMBASE_SHADOW
 from build_sequence import Code
 from music_timing import tick_at_bar
 START,MIDPOINT,HIT,END=tick_at_bar(64),tick_at_bar(68),tick_at_bar(72),tick_at_bar(90)-4000
@@ -126,7 +127,7 @@ def helper():
     c.emit(0x18,0x69,0x40);a(0x8d,0xd015);a(0x8d,0xd016)
     c.emit(0xa9,0x2e);a(0x8d,0xd014);a(0x8d,0xd018)
     c.label('colors_done')
-    for addr,val in ((0xd01a,0),(0xd407,8),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0x55)):
+    for addr,val in ((0xd01a,0),(PMBASE_SHADOW,8),(0xd407,8),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0x55)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0x60)
     for label in ('read','write','dl1','dl2',*(f'pm{i}' for i in range(4))):

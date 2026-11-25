@@ -400,7 +400,7 @@ class SequenceTests(unittest.TestCase):
                         mask = banks[7 + step // 4][step % 4 * FRAME_BYTES:(step % 4 + 1) * FRAME_BYTES]
                     else:
                         reveal = ({(0,1): 0, (0,2): 1, (1,2): 2, (1,3): 3}.get((card, stage))
-                                  if elapsed % 256 < 64 else None)
+                                  if elapsed < 1024 and elapsed % 256 < 64 else None)
                         if reveal is not None:
                             bank = banks[7 + reveal // 2]
                             offset = (4 + reveal % 2) * FRAME_BYTES

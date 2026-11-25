@@ -1,7 +1,7 @@
 """Four rainbow player bands and four missile spray streams, bank 15."""
 import math
 from build_sequence import Code
-from engine_effects import EFFECT_ORIGIN
+from engine_effects import PMBASE_SHADOW, EFFECT_ORIGIN
 from crush_portraits import START as CRUSH_START
 from scene_palettes import SCHOOL_GTIA, GYM_GTIA, PRACTICE_WALL_GTIA
 ENTRY=0x6000
@@ -127,7 +127,7 @@ def helper(practice_entry):
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x29,15,0xaa)
     for i in range(4):
         c.jump(0xbd,f'hues{i}');a(0x8d,0xd012+i)
-    for addr,val in ((0xd407,8),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0x55)):
+    for addr,val in ((PMBASE_SHADOW,8),(0xd407,8),(0xd01b,1),(0xd01d,3),(0xd400,0x2e),(0xd00c,0x55)):
         c.emit(0xa9,val);a(0x8d,addr)
     c.emit(0xa9,1,0xa2,3)
     c.label('sizes');a(0x9d,0xd008);c.emit(0xca);c.branch(0x10,'sizes');c.emit(0x60)

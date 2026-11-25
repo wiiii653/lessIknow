@@ -2,7 +2,7 @@
 from pathlib import Path
 from functools import lru_cache
 import math
-from engine_effects import cached_display_list
+from engine_effects import PMBASE_SHADOW, cached_display_list
 from build_sequence import Code
 from music_timing import tick_at_bar
 from trevor_awakens import FLIGHT_START as TREVOR_FLIGHT_START
@@ -327,7 +327,7 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     c.emit(0xc9,128);c.branch(0xb0,'publish')
     c.jump(0xad,'pending_dl');c.branch(0xf0,'publish_pmg')
     c.emit(0xa9,0);a(0x8d,0xd402);a(0xad,0x83e6);a(0x8d,0xd403);c.emit(0x49,4);a(0x8d,0x83e6)
-    c.label('publish_pmg');c.jump(0xad,'pmg_page');c.emit(0x09,8);a(0x8d,0xd407)
+    c.label('publish_pmg');c.jump(0xad,'pmg_page');c.emit(0x09,8);a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407)
     c.emit(0x49,0x88);c.jump(0x8d,'pmg_page')
     for i in range(4):c.jump(0xad,f'hpos{i}');a(0x8d,0xd004+i)
     a(0xad,0x83e8);c.emit(0x18,0x69,40)

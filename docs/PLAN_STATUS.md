@@ -12,7 +12,8 @@ Reviewed 2026-11-25 against the working tree and existing build artifacts.
 | [Release 133 / v390](../releases/less-i-know-demo-release-133-stereo.xex) | Latest approved numbered release |
 | [Prerelease 165](../releases/less-i-know-demo-prerelease-165-stereo.xex) | User accepted this prerelease |
 | [Prerelease 180](../releases/less-i-know-demo-prerelease-180-stereo.xex) | Includes the experimental hero art and the forward stripe loop. |
-| [Prerelease 181](../releases/less-i-know-demo-prerelease-181-stereo.xex) | Latest numbered prerelease. Restores the earlier hero frames and retains the forward stripe loop. |
+| [Prerelease 181](../releases/less-i-know-demo-prerelease-181-stereo.xex) | Restores the earlier hero frames and retains the forward stripe loop. |
+| [Prerelease 182](../releases/less-i-know-demo-prerelease-182-stereo.xex) | Latest numbered prerelease. Includes the PMBASE, title dissolve and loader handoff changes. |
 | [Release 058 / v330](../releases/less-i-know-demo-release-058-stereo.xex) | Documented full run from AVG on Atari 1088 Rambo and immutable loader reference |
 
 The user also reported successful machine playback during later prerelease work.
@@ -52,6 +53,19 @@ has no playback validation in this build record.
 - **Memory:** all 64 banks are allocated. The existing development JSON
   reports 295 unique shared scanlines. Regenerate it before budgeting memory
   for a change.
+
+The development tree after prerelease 181 shadows PMBASE at `$0DFD`
+for title fireworks, whistle PMG, and the two Trevor renderers. Sprite
+publishers keep that byte in sync with ANTIC. The title reveal stops selecting
+dissolve frames once the final text stage has elapsed. The full-rate loader
+now includes the early blanking sync in its build recipe and disables DMA
+before late payloads replace the loader display assets. These changes are in prerelease 182. The numbered file matches the hardware
+development build byte for byte. It is 1,044,790 bytes and retains 66 INIT
+wrappers and 64 staging clears. The build and targeted py65 checks passed.
+Physical Atari playback remains unverified.
+
+Prerelease 182 SHA-256:
+`7e601c30c5558e9354827c83e48d7083b30c1328d373dcd10e71860d8957b369`.
 
 ## Memory and loader constraints
 
