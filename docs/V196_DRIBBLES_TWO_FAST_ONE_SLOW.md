@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V196 — palm contact and dribble rhythm
 
 The centre of the ball was moved from X=97 to X=84, under the centre of the palm

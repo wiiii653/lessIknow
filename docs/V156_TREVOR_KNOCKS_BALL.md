@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V156 — Trevor knocks the ball away with every third hit
 
 Every third hit (3rd, 6th, 9th, …) keeps the usual start of BANG/BAM,

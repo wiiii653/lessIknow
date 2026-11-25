@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V281 — basketball from release 001 and corrected masks
 
 [READ] `less-i-know-demo-release-001.xex` is v254. The basketball player's

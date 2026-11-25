@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v350 — slower incoming flight of Trevor's balls
 
 The flight of each ball takes 48 instead of 32 ticks. The same 32-step path is

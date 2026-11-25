@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V178 — restored frames of the first scene
 
 In the first scene with people I returned to the composition from v176: the boy

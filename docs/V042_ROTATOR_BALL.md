@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v042 — ball in the rotator and tunnel
 
 The ball remains visible both in the tunnel and in the rotator. In the tunnel it

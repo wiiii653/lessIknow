@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V252 — the girl's eyes in the montage
 
 [READ] In ticks 39379–40126, in the existing montage after Trevor,

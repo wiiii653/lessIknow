@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V251 — visible change of the orbit path
 
 V250 changed mostly the radius, so the motion could still look like an unchanging

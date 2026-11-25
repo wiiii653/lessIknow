@@ -1,3 +1,5 @@
+> **Draft proposal. The changes proposed here require separate implementation and verification.** See the [current documentation guide](README.md) for active instructions.
+
 # Opening: loader star + 4-row terminal, then title with water
 
 **Status:** design brief for implementation. No code has been changed for this

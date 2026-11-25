@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Dunk payload artefact audit — v347
 
 The graphics and bank code of the dunk payload in v347 are identical to v330. In a comparison of 94 py65 phases it rendered the same pixels and PMG. This does not settle ANTIC behaviour on physical Atari.

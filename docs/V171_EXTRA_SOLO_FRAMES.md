@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V171 — additional solo frames
 
 > **Release v171 is defective and should not be played.** The streams of

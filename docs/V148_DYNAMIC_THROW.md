@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V148 — dance, fast throw and air rush
 
 [READ] As corrected by the user, the stretched preparation from v147 was

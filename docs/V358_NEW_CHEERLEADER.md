@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V358 — new cheerleader in the shots before the arena
 
 Reference points: the shots from 058 (v330, party pack), 061 (v352) and 070

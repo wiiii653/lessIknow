@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V269 — longer reverses and one POKEY
 
 The edit after Trevor uses longer, essentially two-bar runs,

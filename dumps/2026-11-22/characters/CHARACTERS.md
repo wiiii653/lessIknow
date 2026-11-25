@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../../../docs/README.md) for active instructions.
+
 # Klatki postaci — 2026-11-22
 
 Źródło: `build/visual-prototype-dev.xex` (SHA-256 `62eb87c5f957c22c67430fd19a9aaed226afb64b91358a698aa437ab2e16bd43`).

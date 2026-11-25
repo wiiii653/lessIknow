@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Credits and greetz — current text v261
 
 **Status:** credits and greetz implemented. V261 has seven terminal rows

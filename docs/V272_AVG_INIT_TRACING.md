@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V272 — tracing the INITs of the full demo
 
 [USER READ] The RUNAD test showed INIT OK and RUN OK. The RUN vector itself

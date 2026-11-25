@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V110 — arm motion and correct dribbling buffer
 
 Fixed the base address of the buffer used by the display list after updating

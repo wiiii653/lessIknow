@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Silly Venture 2026 WE — package status
 
 Archival state of the party preparation. The current post-party release is described in [project status](PLAN_STATUS.md).

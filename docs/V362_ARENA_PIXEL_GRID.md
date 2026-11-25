@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V362 — shared pixel grid in front of the arena
 
 The boy and the girl in the close-up by the arena use the same

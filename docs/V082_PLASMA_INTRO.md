@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V082 — plasma and opening titles
 
 Both existing GTIA 11 screens keep their boundaries: the performer from

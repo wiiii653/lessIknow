@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v038 — rotator and tunnel palettes
 
 The rotator and the tunnel change the colour pair once per half beat (187 ticks). The sequence

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v020 — rainbow ball on PMG
 
 [READ] The effect is active only in the throw shot: ticks 6981–7977.

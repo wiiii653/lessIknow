@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v347 — bubbles and pitch control
 
 The side bubbles from v340 were restored, after being disabled by mistake in v346. The PMG render in py65 shows four bubbles at an age of 56 and 72 ticks; in the eyes shot the ball is selected. The appearance on hardware has not been verified.

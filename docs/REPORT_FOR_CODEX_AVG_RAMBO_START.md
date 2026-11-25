@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Report for Codex — starting the demo on Atari with 1 MB Rambo via AVG
 
 Date: 2026-11-11. Author: OpenCode session. Scope: diagnosis of the failure to

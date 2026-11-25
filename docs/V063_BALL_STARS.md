@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V063 — four-colour ball and stars
 
 The four ball players receive four different saturated colours with brightness

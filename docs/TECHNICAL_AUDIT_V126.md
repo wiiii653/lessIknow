@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Technical and performance audit v126 — 2026-11-06
 
 Scope: the current `lessIknow-thebetter` engine, the XEX generator, effects, banking, tests and the build process. The separate 3D engine from the parent directory and the `impala-lessIknow` music project are not covered by this measurement. Production code, scene boundaries and ticks were not changed.

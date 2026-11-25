@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Gym behind the cheerleaders — v006
 
 Date: 2026-11-04. File: `build/visual-prototype-v006.xex`.

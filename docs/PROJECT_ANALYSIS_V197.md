@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Project analysis — anchored to v197 (report only)
 
 **Status:** read-only analysis of `build/visual-prototype-v197.xex` with its

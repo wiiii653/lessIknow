@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V235 — LLM and AI in credits
 
 At the author's request, two short lines about how the demo was made were added:

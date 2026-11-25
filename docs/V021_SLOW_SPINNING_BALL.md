@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v021 — one slow ball flight and spin
 
 [READ] The shot still runs from tick 6981 to 7978. The flight uses the

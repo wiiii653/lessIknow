@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v345 — pink beating heart
 
 The heart has a saturated pink palette and two expansion and contraction cycles during the flight. The fix for the position of the halves from v344 was preserved.

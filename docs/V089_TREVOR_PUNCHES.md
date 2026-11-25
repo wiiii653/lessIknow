@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V089 — alternating Trevor punches
 
 In the punch scene an opposite fist pose was added, created by mirroring the

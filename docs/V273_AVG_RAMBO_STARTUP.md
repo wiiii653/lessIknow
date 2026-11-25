@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V273 — startup on physical Atari with AVG and 1088 Rambo
 
 [READ from the user, 2026-11-12] The last two diagnostic files of the full

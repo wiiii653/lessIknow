@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../README.md) for active instructions.
+
 # 2. XEX format and program startup
 
 ## 2.1. What an XEX is

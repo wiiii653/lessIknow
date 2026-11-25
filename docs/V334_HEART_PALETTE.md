@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V334 — saturated heart palette
 
 The four heart colors in the kiss scene were brightened and shifted toward strong

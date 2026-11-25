@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V240 — earlier terminal, fast typing and time to read
 
 At the user's explicit instruction, the terminal and the lying boy start

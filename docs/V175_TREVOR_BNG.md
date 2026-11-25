@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V175 — BNG! in Trevor's speech bubble
 
 In the comic speech bubble of Trevor's punches, the alternating text is now `BNG!` and `BAM`.

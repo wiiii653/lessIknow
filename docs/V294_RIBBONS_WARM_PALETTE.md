@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V294 — warmer ribbon and ejection scene
 
 The entire ribbon sequence, from the side shot through the group and solo dance

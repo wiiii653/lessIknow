@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V184 — whistle one beat earlier
 
 At the user's request, the whistle entry together with the girl's last pose at

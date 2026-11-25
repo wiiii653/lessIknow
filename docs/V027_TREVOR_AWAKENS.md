@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v027 — TREVOR AWAKENS
 
 [READ] Act 4 covers ticks 23936–32911. The quiet part: 23936–26927,

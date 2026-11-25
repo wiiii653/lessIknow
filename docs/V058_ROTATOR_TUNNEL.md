@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V058 — rotator, tunnel and ball movement
 
 The rotator uses periodic, four-fold symmetric rosettes; the tunnel uses

@@ -8,8 +8,8 @@ py65 checks, `assets/` holds source art and music, and `releases/` preserves
 numbered XEX files.
 
 The latest approved release is v390 / stereo 133. The current source tree has
-unreleased development edits. Release 058 / v330 is the last full run confirmed
-on physical Atari 1088 Rambo hardware using AVG. See `docs/PLAN_STATUS.md` for
+unreleased development edits. Release 058 / v330 is the documented full run and loader reference
+for Atari 1088 Rambo using AVG. See `docs/PLAN_STATUS.md` for
 the current evidence and limitations, and `docs/TIMELINE_MAP.md` plus
 `docs/CURRENT_MONTAGE_V330.md` for current timing.
 
@@ -22,16 +22,16 @@ protocol. Use `make hardware` or `tools/build_hardware_xex.py` for a hardware
 candidate. Preserve the high-RAM loading screen, 66 INIT wrappers, 64 staging
 clears and compact bank payloads, deferred low RAM, and final `$4800`
 bootstrap. INIT counts alone do not establish compatibility. Releases 059/060
-failed on hardware; release 061 and later candidates have no confirmed full
-hardware run.
+failed on hardware. Record the exact XEX hash and machine setup for later
+hardware reports. See `docs/PLAN_STATUS.md` for evidence.
 
 ## Memory and runtime constraints
 
 - Build stereo only; mono releases are retired.
 - All 64 banks are allocated. Check the current allocator, overlap assertions
   and generated build JSON before changing memory use.
-- Main code occupies `$1400–$1DFF`. The shared scanline pool starts at `$1E00`
-  and currently contains 298 rows.
+- Main code occupies `$1400–$1DFF`. The shared scanline pool starts at `$1E00`.
+  Read `unique_rows` in the generated build JSON for the active count.
 - Preserve PORTB across music NMI and banked callbacks. Music remains on the
   original v035 player with four evenly spaced updates per PAL frame.
 - Prepare inactive bitmap and PMG buffers, then publish in an early bounded

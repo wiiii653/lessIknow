@@ -3,46 +3,55 @@
 The project is nearly finished. Further development is focused on graphics
 improvements only.
 
-Status reviewed on 2026-11-22. The numbered release and the source working
-tree are separate states; do not describe a development build as an approved
-release.
+Reviewed 2026-11-25 against the working tree and existing build artifacts.
 
-## Release state
+## Releases and hardware evidence
 
-- Accepted final stereo prerelease: `releases/less-i-know-demo-prerelease-165-stereo.xex`.
-- Latest approved stereo release: **release 133 / v390**.
-- Approved file: `releases/less-i-know-demo-release-133-stereo.xex`.
-- Approved music is embedded in that release. The development hardware build
-  derives its music from this file and can apply the earlier-percussion option.
-- Last full playback confirmed by the user on physical hardware: stereo release
-  058 / v330, loaded from AVG on an Atari 1088 Rambo.
-- Releases 059 and 060 failed on hardware. Release 061 and later releases have
-  no user-confirmed full hardware playback. Emulator tests do not change this.
+| Artifact | Status |
+|---|---|
+| [Release 133 / v390](../releases/less-i-know-demo-release-133-stereo.xex) | Latest approved numbered release |
+| [Prerelease 165](../releases/less-i-know-demo-prerelease-165-stereo.xex) | User accepted this prerelease |
+| [Prerelease 180](../releases/less-i-know-demo-prerelease-180-stereo.xex) | Includes the experimental hero art and the forward stripe loop. |
+| [Prerelease 181](../releases/less-i-know-demo-prerelease-181-stereo.xex) | Latest numbered prerelease. Restores the earlier hero frames and retains the forward stripe loop. |
+| [Release 058 / v330](../releases/less-i-know-demo-release-058-stereo.xex) | Documented full run from AVG on Atari 1088 Rambo and immutable loader reference |
+
+The user also reported successful machine playback during later prerelease work.
+The available record does not pin that report to an exact XEX hash and machine
+configuration. Releases 059 and 060 failed on hardware.
+
+Prerelease 181 is 1,044,667 bytes. SHA-256:
+`2cc75d3444b7754fff7a8277db4314a07e545d14b238c510ef08146320fdc984`.
+
+The build completed via `make all`. Act 3 uses the restored artwork in its
+existing bank layout starting at `$4B80`. The build JSON reports 295 shared
+rows and 2,541 main code bytes. The numbered package preserves prerelease
+180's additional loader raster sync: prepend its `$3B80–$3B8D` helper and
+route the 131 refresh calls in the 66 INIT wrappers through it. Packaging
+checked that the helper survives through the last wrapper and that the file
+fits below 1 MiB. This post-build step sits outside Make. Prerelease 181
+has no playback validation in this build record.
 
 ## Current development tree
 
-The current tree includes source edits made after release 133, including the
-opening reveal/fireworks work and refinements to the arena character masks.
-These edits have not been cut as a new numbered release. Do not overwrite any
-numbered release when building or packaging them.
-
-The opening now uses procedural plasma, a staged city reveal and progressively
-building PMG fireworks. The title animation code stores one city panorama and
-derives the plasma/reveal frames procedurally. The boy's arena silhouette mask
-has been refined around the hair and arena edge. These latest edits have passed
-their targeted source-level checks where recorded, but this document does not
-claim a full current playback or a real-hardware visual check.
-
-The ribbon-dance front solo now follows the same half-beat pose cadence as the
-preceding three-dancer section. Its inbetween poses remain enabled for smooth
-transitions, while quarter-beat subdivisions are disabled in this solo passage
-to keep its speed aligned with the trio. A stereo prerelease was built for
-listening; it has not been confirmed on physical hardware.
-
-The demo is stereo-only. The v035 player remains the music engine and runs four
-evenly spaced updates per PAL frame. Scene timing is driven by its update
-counter. The active allocator uses all 64 banks; there is no assumed free bank.
-The latest build uses 295 shared scanline rows, with the pool based at `$1E00`.
+- **Opening:** procedural plasma, one city panorama, staged reveal, title text
+  and staggered PMG fireworks. The city overlay starts at tick 1024.
+- **Loader:** the hardware target enables the animated ending star, static
+  rainbow text and animated dots after the centered LOADING word.
+- **Music:** the hardware target uses release 122 data with the opening kick
+  muted. Keep the v035 player and its four evenly spaced updates per PAL frame.
+  Release 133 audio remains available as a distinct packager option.
+- **Practice:** the close-up ball overlay uses a forward eight-phase stripe
+  loop. The finger mask and PMG buffer publication are separate from the
+  basketball hero artwork.
+- **Basketball hero:** the dribble and dunk use the earlier cleaned artwork
+  sourced by `tools/basketball_hero.py`. The redrawn poses and their masks are
+  backed up under [implemented-poses](../art-review/hero-basketball/implemented-poses/).
+- **Terminal and ending:** four terminal text rows below the boy, low resolution
+  rainbow text effects, and separate ending cards with fades, dual POKEY
+  credit and the four updates per PAL frame credit.
+- **Memory:** all 64 banks are allocated. The existing development JSON
+  reports 295 unique shared scanlines. Regenerate it before budgeting memory
+  for a change.
 
 ## Memory and loader constraints
 

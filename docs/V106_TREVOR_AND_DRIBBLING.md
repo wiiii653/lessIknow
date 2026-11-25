@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V106 — consistent Trevor lighting and shared dribbling background
 
 In Trevor's poses the brightness of the main colours and skin was equalised; the

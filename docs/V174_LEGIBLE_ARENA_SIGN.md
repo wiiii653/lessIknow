@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V174 — legible ATARI ARENA sign
 
 The first shot of the boy in front of the arena had black blotches and

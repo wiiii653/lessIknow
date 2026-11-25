@@ -1,6 +1,6 @@
 # Current Demo Timeline
 
-This concise map reflects the current source tree as reviewed on 2026-11-22.
+This concise map reflects the current source tree as reviewed on 2026-11-25.
 Exact tick boundaries are generated from the music clock; after timing edits,
 use `build/visual-prototype-dev.json` as the build-specific source of truth.
 The clock runs at about 199.44 updates per second on PAL, with roughly 373.956
@@ -10,7 +10,7 @@ ticks per 128 BPM bar.
 
 | Player ticks | Approx. time | Image |
 |---:|---:|---|
-| 0–1,023 | 0:00–0:05.14 | Full-screen procedural plasma |
+| 0–1,023 | 0:00–0:05.14 | Procedural plasma. Fireworks begin at tick 768. |
 | 1,024–1,495 | 0:05.14–0:07.50 | City panorama is revealed over the plasma |
 | 1,496–2,991 | 0:07.50–0:15.00 | Title phase: “TAME IMPALA”, then “THE LESS I KNOW THE BETTER”; fireworks build progressively |
 | 2,992 onward | 0:15.00 onward | School / arena sequence |
@@ -33,7 +33,7 @@ have not yet been verified in a full hardware run.
 | 21,690–23,933 | 1:49–2:00 | Basketball hero sequence and dunk |
 | 23,934–29,655 | 2:00–2:29 | Trevor fight with 13 hits |
 | 29,656–41,883 | 2:29–3:30 | Post-Trevor montage: bananas, tunnels and girl's eyes |
-| 41,884–51,231 | 3:30–4:17 | Terminal credits and greetz over the boy's still portrait |
+| 41,884–51,231 | 3:30–4:17 | Terminal credits and greetz below the boy's still portrait |
 | 51,232–51,979 | 4:17–4:21 | Final shot, orbiting sprites and fade |
 | 51,980 onward | 4:21–5:00 | Final card and orbit; music continues to five minutes |
 
@@ -52,5 +52,4 @@ been confirmed on physical hardware.
 Scene changes follow the v035 player update counter, not a separate VBI timer.
 The current source computes PAL tick positions in `tools/music_timing.py`.
 Emulator POKEY comparisons check the audio register stream; they do not verify
-visual synchronization on a physical Atari. The last full physical playback
-confirmed by the user is stereo release 058 / v330.
+visual synchronization on a physical Atari. See [Project Status](PLAN_STATUS.md) for hardware evidence.

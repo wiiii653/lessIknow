@@ -18,12 +18,20 @@ maintained project documentation in English.
 - [Music bank audit](MUSIC_BANK_AUDIT.md) — measured v035 decoder reads and
   unused music-bank space.
 
-## Historical records
+## Keeping the references current
 
-The `Vxxx_*.md` files are chronological change records. They describe
-historical builds and may contain superseded values. Use the current
-references above and inspect the source/build JSON before making
-implementation decisions.
+Use the Makefile and builders for build options, the generated JSON for
+allocation and timing, and Project Status for release approval and hardware
+evidence. Update the corresponding reference when one of those facts changes.
+Only associate a validation result with the artifact actually exercised.
 
-The imported `docs/boruta-atari8/` technical-reference library is preserved as
-source material and is not project-authored documentation.
+## Historical records and proposals
+
+Version notes, audits, dumps and the numbered loader chapters describe their
+recorded snapshots. The terminal briefs, implementation plans and outro text
+review are proposals. Confirm actual behavior in the current source before
+using them. The basketball hero redraw is preserved in the artwork review
+folder on the same basis.
+
+`projects/` contains separate experiments with their own instructions.
+The imported `docs/boruta-atari8/` library is external reference material.

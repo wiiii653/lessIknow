@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V338 — BUM/BAM on the banana rotators
 
 In the post-Trevor director the ball appears only in the tunnels. On the

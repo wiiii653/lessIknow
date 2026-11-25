@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V277 — stronger rotators and a new palette before the arena
 
 The rotator shades keep the order and rhythm of the changes. The brighter pulse

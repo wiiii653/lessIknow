@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../../docs/README.md) for active instructions.
+
 # Płaszczyzny — zrzut runtime i warstwy źródłowe
 
 Data: 2026-11-21. Źródło runtime: `build/visual-prototype-dev.xex`

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v343 — animated loader dots
 
 Restoring the v330 loader text in v342 lost the progress animation. v343

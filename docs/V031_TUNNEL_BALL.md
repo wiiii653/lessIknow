@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v031 — ball deep inside the tunnel
 
 At the tunnel's vanishing point sits an orange-gold basketball.

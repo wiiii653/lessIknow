@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V168 — morphing frame behind Trevor
 
 The geometric tunnel bands behind Trevor smoothly change shape within the

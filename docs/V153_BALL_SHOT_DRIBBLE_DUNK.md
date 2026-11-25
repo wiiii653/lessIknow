@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V153 — shared neon ball for shot, dribble and dunk
 
 Instead of the former stripes and transparent gaps, all three shots

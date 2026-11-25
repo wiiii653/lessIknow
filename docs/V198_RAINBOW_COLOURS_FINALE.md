@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V198 — rainbow object colours in the finale
 
 The stars, notes and treble clef orbiting around the head get a vivid, cyclic

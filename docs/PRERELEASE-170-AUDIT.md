@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Prerelease 170 audit — report only
 
 **Status:** read-only audit of the current development tree and

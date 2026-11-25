@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V359 — cheerleader in casual outfit
 
 The character reference is the girls dancing with ribbons and the squad poses screen.

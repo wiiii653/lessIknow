@@ -36,6 +36,5 @@ low-memory buffer at `$4000–$47FF`, and final bootstrap at `$4800`. Bank data 
 loaded through `$8000–$BFFF`. The exact code lengths can change only with a
 loader-contract audit.
 
-The reference is stereo release 058 / v330. Later numbered releases have no
-user-confirmed full physical playback. py65 and Atari800 evidence must not be
+The reference is stereo release 058 / v330. See [Project Status](../PLAN_STATUS.md) for later hardware reports. py65 and Atari800 evidence must not be
 described as AVG hardware confirmation.

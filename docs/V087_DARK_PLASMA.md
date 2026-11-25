@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V087 — dark plasma and raster title swap
 
 The plasma has a maximum GTIA 11 brightness of 8. At the start it emerges from

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v033 — side shot in front of the school
 
 The cut in ticks 3553–4113 shows a blonde girl in profile, mid-step, in front of

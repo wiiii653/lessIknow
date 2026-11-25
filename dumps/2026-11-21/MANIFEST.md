@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../../docs/README.md) for active instructions.
+
 # Zrzut bitmap — 2026-11-21
 
 Źródło: `build/visual-prototype-dev.xex` (SHA-256 `4aecdc0876a85e1d48109ce989cebc8bb6bdb3b5e6e3b9884875a6450716229e`).

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V140 — city fireworks and title entrance order
 
 [READ] The final layout of the second board remained unchanged: THE LESS at the

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V179 — opaque silhouette and reaction after the transition
 
 V179 completes the portrait mask in `arena_art.actor_mask()`: black pixels of the

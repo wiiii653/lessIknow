@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V341 — ball in the eyes shot and the v330 finale
 
 In the eyes shot frames 60–63 still show the girl's eyes, and the ball with four

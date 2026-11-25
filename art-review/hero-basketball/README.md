@@ -1,5 +1,10 @@
 # Basketball hero artwork drafts
 
+**Archived artwork.** The demo uses the earlier frames again.
+`implemented-poses/` preserves the exact eight redrawn poses and masks from
+the implementation, separately from the original approval drafts below.
+The corresponding compositor is preserved in commit `6c7c038`.
+
 Use `draft-in-arena.png` to review the eight poses against the arena and
 `current-poses.png` to compare with the current art. In playback order the
 dribble uses 0, 1, 6 and 7. The dunk uses 2 (crouch), 3 (rise), 4 (reach) and

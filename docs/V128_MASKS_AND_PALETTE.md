@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V128 — character masks and dance palette
 
 [READ] `build/visual-prototype-v128.xex`, identical to the working build.

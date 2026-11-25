@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V086 — full-screen title plasma
 
 In the GTIA 11 opening the plasma fills the whole screen; the letters are part

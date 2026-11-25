@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V144 — large historic Crane in the intro
 
 [READ] The Crane is 40×32 GTIA pixels on an 80×64 grid; it starts at (20,32).

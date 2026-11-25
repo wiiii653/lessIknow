@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V177 — production character art
 
 I replaced the test character graphics in the opening and the basketball sequence

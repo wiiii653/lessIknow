@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V227 — no split stars and notes above the head
 
 The bug was not intentional. The finale controller was reading `$D407` (PMBASE),

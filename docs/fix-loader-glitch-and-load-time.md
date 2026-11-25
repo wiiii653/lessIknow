@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Task: fix loading-screen flicker + cut load time (Atari 1088 Rambo demo)
 
 Target: `less-i-know-demo-prerelease-170-stereo.xex` (Tame Impala "The Less I Know the Better", 2xPOKEY).

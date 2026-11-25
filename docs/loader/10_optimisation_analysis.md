@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../README.md) for active instructions.
+
 # 10. Optimisation analysis (no code changes)
 
 The document describes **possibilities** for optimising the current demo. It was

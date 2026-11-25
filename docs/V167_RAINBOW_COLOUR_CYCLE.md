@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V167 — rainbow cycle of tunnel reflections
 
 After the Trevor scene, the colour of the bright tunnel reflections changes with each

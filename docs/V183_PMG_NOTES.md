@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V183 — notes flying out of the mouth on PMG
 
 The marks that looked like eyes above the entrance were treble clefs from the bitmap.

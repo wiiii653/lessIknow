@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V255 — a distinct change of path above the boy
 
 [READ] Successive terminal lines still choose the orbit target of the stars/notes.

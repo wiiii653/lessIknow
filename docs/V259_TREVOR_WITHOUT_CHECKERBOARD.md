@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V259 — one Trevor close-up
 
 [READ] The repeated six-field Trevor image from v257 was replaced with a

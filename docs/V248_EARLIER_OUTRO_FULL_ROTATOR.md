@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V248 — full montage, earlier outro
 
 At the user's request, 2000 ticks of montage lost in v240 were restored

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Loading-screen flicker — findings and handoff
 
 **Status:** The user confirmed that the raster-synced candidate loads and

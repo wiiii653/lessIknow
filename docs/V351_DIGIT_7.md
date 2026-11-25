@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v351 — the digit 7 in the credits
 
 The digit 7 in the ANTIC 4 terminal font now has its own 3×7 design with two

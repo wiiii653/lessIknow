@@ -14,9 +14,10 @@ contains data followed by `$FF`. Keep all banks until their playback reads have
 been verified. See [the music-bank audit](../../docs/MUSIC_BANK_AUDIT.md).
 
 The source banks preserve the original player data. The post-party stereo build
-uses the v035 player, four music updates per PAL frame, the approved stereo mix
-and the re-rendered ending in `v035-unfaded-ending.bin`. Build instructions
-and evidence are in the [project README](../../README.md) and
+uses the v035 player with four music updates per PAL frame. The hardware dev
+target uses release 122 music with the opening kick muted. See the Makefile
+for the active options. Build instructions and evidence are in the
+[project README](../../README.md) and
 [project status](../../docs/PLAN_STATUS.md).
 
 ## v035 Display-List Inspection

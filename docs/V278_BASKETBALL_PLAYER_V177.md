@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V278 — basketball player v177 in the dribble and the dunk
 
 Six poses from the v177 RGBA layer are composited onto the existing ATARI ARENA

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V218 — motionless boy and terminal
 
 From the first shot of the outro the boy remains in the same lower position.

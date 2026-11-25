@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V333 — first scene panorama fix
 
 Removed the extra shifting of the top ten rows of the arena panorama.

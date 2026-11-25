@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V102 — more readable Trevor hits
 
 The tempo of the scene was reduced: the combination keeps the order right,

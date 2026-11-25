@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v039 — checkerboard contrast
 
 The rotator and tunnel palettes select hues at least 60° apart according to the

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Free memory in expansion banks — report (state v244)
 
 Counted directly from the finished artifact `build/visual-prototype-v244.xex`:

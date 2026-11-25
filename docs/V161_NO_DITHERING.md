@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V161 — return to graphics without dithering
 
 At the user's request, the raster of shade transitions on the bananas and on the

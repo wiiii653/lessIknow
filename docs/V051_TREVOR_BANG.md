@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v051 — Trevor's comic BANG
 
 In the energetic part of the scene, at the pose with the fist pointing forward,

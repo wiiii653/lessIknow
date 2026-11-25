@@ -1,3 +1,5 @@
+> **Draft proposal. The changes proposed here require separate implementation and verification.** See the [current documentation guide](README.md) for active instructions.
+
 # Opening star, terminal and reflective title
 
 Feasible as a runtime scene, subject to a bank allocation and raster budget

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V143 — the girl and the ribbons crossing the frame
 
 [READ] In the side shot 8975–11967 the girl moves from x=40

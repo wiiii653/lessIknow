@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V275 — more vivid palettes and yellow bananas
 
 The bananas in both renderers use the PAL shades `$F8/$FA` and bright `$FE`;

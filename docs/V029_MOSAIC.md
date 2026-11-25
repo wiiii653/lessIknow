@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v029 — demoscene mosaic
 
 Replaces the former static image with row shifting with two geometric

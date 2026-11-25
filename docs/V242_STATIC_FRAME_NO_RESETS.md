@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V242 — stable lower frame without restoring the older display list
 
 After moving the outro in v240 to 51850, the guard in `title_plasma.invalidate`

@@ -15,7 +15,7 @@ checked against a newly generated build JSON after timing edits.
 | 38,705–39,378 | Bananas before the eyes, with yellow fruit and a slowly cycling backdrop and BUM/BAM from bar 104 |
 | 39,379–40,126 | Girl's eyes within the montage |
 | 40,127–41,135 | Bananas after the eyes, with yellow fruit and a slowly cycling backdrop, BUM/BAM and departing bubbles; motion changes on bars 108–109 |
-| 41,884–51,231 | Terminal credits and greetz over the still image of the boy lying down |
+| 41,884–51,231 | Terminal credits and greetz below the still image of the boy lying down |
 | 51,232–51,979 | Final shot with orbiting sprites and fade |
 | 51,980 onward | Final card with star and orbits; music continues to five minutes |
 

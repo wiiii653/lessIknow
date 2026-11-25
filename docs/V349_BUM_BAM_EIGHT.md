@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v349 — smoother BUM/BAM on the eight
 
 After the eyes, the cycle on the bananas lasts 94 ticks: a small empty bubble brightens,

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V094 — Trevor's punch combinations
 
 In the part from bar 72 to bar 88 Trevor performs combinations synchronised

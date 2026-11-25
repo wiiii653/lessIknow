@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V053 — complete music clock correction
 
 V053 keeps the bar mapping introduced in v052 and corrects the last threshold of

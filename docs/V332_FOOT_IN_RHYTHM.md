@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V332 — foot movement in the finale
 
 The lying boy moves the tip of his foot on every beat, in time with the player clock.

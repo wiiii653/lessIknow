@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V069 — multicolour letters at the beginning
 
 The two opening screens use ANTIC F and GTIA 11: an 80×192 pixel image

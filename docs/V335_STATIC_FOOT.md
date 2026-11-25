@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V335 — static foot in the finale
 
 The foot animation and the additional helper in the bank 49 gap were withdrawn.

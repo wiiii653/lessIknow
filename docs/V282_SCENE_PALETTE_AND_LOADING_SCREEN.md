@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V282 — scene, hall and loading screen palette
 
 The first school sequence uses the same palette throughout the shot as

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V243 — dense bananas and a faster decoder
 
 At the user's request, the image-symmetry saving from v241 was reverted.

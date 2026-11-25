@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V158 — PMG effect cycle after Trevor
 
 From the end of the fight, tick 32909, to the entry of the final boy at 59085,

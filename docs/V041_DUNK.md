@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v041 — dunk pacing and hand tracking
 
 The dunk shot keeps ticks 22440–23935. The preparation lasts 752 ticks,

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../README.md) for active instructions.
+
 # 1. Build pipeline
 
 Each stage is a separate tool in `tools/`. All of them write a new file in `xb`

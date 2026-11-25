@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../README.md) for active instructions.
+
 # 3. Loading screen
 
 ## 3.1. Where it lives

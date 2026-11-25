@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V090 — wind-up before every punch
 
 Trevor raises the arm he is about to strike with: a mirrored frame of that arm

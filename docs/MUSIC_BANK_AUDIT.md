@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v035 Music Bank Audit
 
 Source: `less-i-know-release-v035.xex`. Banks are numbered from 1 and contain

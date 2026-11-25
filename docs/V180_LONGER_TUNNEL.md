@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V180 — longer tunnel shot
 
 In act 5 the banana rotator now ends in bar 92 (tick 34404), and

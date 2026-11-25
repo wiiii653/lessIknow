@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](docs/README.md) for active instructions.
+
 # Original Demo Timeline Draft (v2)
 
 Historical planning document. Current scene timing is maintained in

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Protecting the baseline before the credits
 
 - The allocation check now covers `$9000–$AEFF` and `$B000–$CEFF`.

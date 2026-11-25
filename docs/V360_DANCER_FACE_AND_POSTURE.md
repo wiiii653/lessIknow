@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V360 — dancer's face and upright posture
 
 The reference points are the dancers with ribbons and the girl at the wall bars.

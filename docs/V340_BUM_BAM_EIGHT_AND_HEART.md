@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V340 — BUM/BAM figure eight and the heart
 
 In the banana rotators BUM/BAM follow the same 64-point figure-eight

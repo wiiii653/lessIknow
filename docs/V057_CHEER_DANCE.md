@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V057 — cheerleader dance
 
 [READ] The new hall and four cheerleader poses use a four-colour conversion

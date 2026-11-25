@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Hardware note — 2026-11-17
 The user confirmed the failure of the raw v353 prototype on a physical Atari.
 For the next attempt `releases/less-i-know-demo-release-062-stereo.xex`

@@ -4,7 +4,7 @@ Read this document before changing bank loading or packaging an XEX.
 
 ## Reference and confirmed evidence
 
-The last full run confirmed by the user on physical hardware was v330 / stereo
+The documented reference run on physical hardware was v330 / stereo
 release 058, loaded from AVG on an Atari 1088 Rambo. The user did not specify
 PAL/NTSC or the exact second-POKEY setup for that report. Do not add those as
 confirmed facts.
@@ -53,8 +53,11 @@ hardware target and its dependencies. To make a numbered candidate, choose a
 new filename:
 
 ```sh
-python3 tools/build_hardware_xex.py build/visual-prototype-dev.xex /path/to/new-stereo-candidate.xex --approved-music --earlier-percussion
+python3 tools/build_hardware_xex.py build/visual-prototype-dev.xex /path/to/new-stereo-candidate.xex --approved-music --release-122-music --full-rate-loading
 ```
+
+The command matches the current Makefile audio and loader options. See
+[Project Status](PLAN_STATUS.md) for prerelease-specific packaging differences.
 
 The packager refuses to overwrite numbered files, verifies the release 058
 SHA-256, rejects unknown changes to bank procedures and compares the loader

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # POKEY timbre audit — stereo 066 and mono 067
 
 November 18, 2026. The user reported badly sounding instruments or patterns

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V222 — typing terminal with cursor and Enters
 
 Credits and greetz appear character by character. The green block cursor blinks

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V159 — subtle dithering of the bananas and the tunnel fan
 
 The bananas receive a sparse golden raster on the transition between the shadow

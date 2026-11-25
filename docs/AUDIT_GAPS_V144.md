@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Audit of gaps against the plan — v144, 2026-11-07
 
 Scope: `TLIKTB_Atari_Timeline_v2.md`, `TLIKTB_Technical_Constraints.md`,

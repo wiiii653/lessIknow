@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V130 — Trevor entrance mask
 
 [READ] The earlier close entrance pose contained a separate shot of the room with a large

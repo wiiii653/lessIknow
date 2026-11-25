@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../../../../docs/README.md) for active instructions.
+
 # Party-Version Girl Reference
 
 The [reference frames captured from Atari800](opening.png) come from

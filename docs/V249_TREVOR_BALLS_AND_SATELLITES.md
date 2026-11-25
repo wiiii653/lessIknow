@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V249 — two balls with satellites on hits
 
 Each of the 13 retained hits begins with the arrival of the full rotator ball

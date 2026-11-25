@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../../../../docs/README.md) for active instructions.
+
 # Preserved v175 Frames
 
 Extracted from `build/visual-prototype-v175.xex`, SHA-256:

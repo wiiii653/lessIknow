@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v348 — director from the first rotators
 
 The director changes tempo and direction in the first rotators (ticks 11967–14958), in the tunnel before the insert (20942–21689) and in the montage after Trevor (29656–41883). The cuts of the story scenes remain unchanged. The eyes are at ticks 39379–40126; BUM/BAM with side speech bubbles is active only on the bananas after that shot. The bananas last until tick 41135, after which the tunnels return.

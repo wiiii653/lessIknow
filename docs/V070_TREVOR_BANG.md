@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v070 — Trevor's punch
 
 [READ] The speech bubble references the raster and jagged edges of v060: it develops in three sizes, pulses and keeps the BANG inscription without an exclamation mark. After the flash, four coloured PMG stars spread from the fist to the sides and vertically, then disappear. Outside the punch phase the missiles are disabled. The position of the whole effect still varies slightly between punches.

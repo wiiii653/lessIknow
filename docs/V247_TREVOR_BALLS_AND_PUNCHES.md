@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V247 — Trevor's balls and punches
 
 Each of the 40 existing punches keeps its tick, drawing, pose and

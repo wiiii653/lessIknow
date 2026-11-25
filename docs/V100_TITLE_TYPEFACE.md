@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V100 — title typeface inspired by the original
 
 The plasma lettering uses hand-built, thicker serif letters on

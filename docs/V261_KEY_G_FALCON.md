@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V261 — KEY-G and FALCON in greetz
 
 KEY-G and FALCON were added to the two existing greeting lines.

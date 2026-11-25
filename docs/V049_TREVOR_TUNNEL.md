@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v049 — Trevor in front of a moving tunnel
 
 Both existing Trevor poses from the energy part were cut from the bitmap

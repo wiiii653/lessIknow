@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v032 — rainbow ball and satellites
 
 The ball in the tunnel has two bright, contrasting halves. Eight sets pass

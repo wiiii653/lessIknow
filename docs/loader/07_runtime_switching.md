@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../README.md) for active instructions.
+
 # 7. Bank switching during playback
 
 ## 7.1. General principle

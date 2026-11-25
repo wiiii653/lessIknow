@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V117 — larger, high-contrast lettering on the plasma
 
 TAME and IMPALA occupy two centred rows. The performer letters are twice as

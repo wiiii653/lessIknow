@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v352 — BUM/BAM before the eyes
 
 BUM/BAM with speech bubbles and a wide figure eight works on the last bananas before the eyes

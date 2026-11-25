@@ -1,3 +1,5 @@
+> **Draft proposal. The changes proposed here require separate implementation and verification.** See the [current documentation guide](README.md) for active instructions.
+
 # Terminal text plan — main acts
 
 **Decision:** the title panorama is **without** the terminal. The 4-row strip

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v035 — two planes in a cutaway before school
 
 The exact figure from the v033 frame is used: cut out with a mask from the

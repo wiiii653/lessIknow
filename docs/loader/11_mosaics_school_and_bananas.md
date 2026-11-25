@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../README.md) for active instructions.
+
 # 11. Mosaics, school scene and bananas — analysis
 
 Read-only analysis: no code, build or tools were changed.

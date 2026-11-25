@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V250 — smooth orbits on new terminal lines
 
 Each of the 34 printed credits/greetz lines chooses a new orbit shape for the

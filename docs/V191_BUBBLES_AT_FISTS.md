@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V191 — centred BUM and bubbles at the fists
 
 BUM kept the alignment of the old four-letter BNG!, which is why the three

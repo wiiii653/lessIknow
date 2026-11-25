@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V336 — constant brightness of Trevor's punch frames
 
 The swing and punch frames now use the same brightness value `COLPF1=$66`.

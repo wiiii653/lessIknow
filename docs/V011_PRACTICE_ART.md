@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Three training shots — v011
 
 [READ] New graphics in the style of `act1_school_court_boy.png`: close-up of

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V192 — U from an inverted A
 
 The U glyph in BUM is computed from the actual A used in BAM:

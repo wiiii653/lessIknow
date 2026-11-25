@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V244 — raw bananas and bank reuse after the title
 
 The actual playback of both bananas now uses raw bitmaps,

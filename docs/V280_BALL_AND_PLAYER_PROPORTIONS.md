@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V280 — ball at the hand and v177 pose proportions
 
 The v177 poses are scaled and positioned with the raster proportions in mind;

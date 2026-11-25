@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V146 — readable throw and fireworks
 
 [READ] At the user's request, the grid, the pitch rectangle and its lines were

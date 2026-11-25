@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V234 — seventh terminal line
 
 The terminal now has **7 rows: the status and 6 rows of typed text**.

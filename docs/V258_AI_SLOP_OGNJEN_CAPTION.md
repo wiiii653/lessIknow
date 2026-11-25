@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V258 — caption during loading
 
 [READ] The third row of the loading screen is `AI-SLOP/OGNJEN`, in line

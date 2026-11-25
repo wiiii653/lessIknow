@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V181 — walk and framing from v175
 
 [READ] All 18 side frames of the girl were restored directly

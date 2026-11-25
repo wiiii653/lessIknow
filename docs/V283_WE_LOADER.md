@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V283 — WE suffix in the loader
 
 The third line of the loading screen now ends with `2026 WE`. `PRODUCED` was

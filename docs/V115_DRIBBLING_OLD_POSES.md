@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V115 — natural arm from earlier illustrations
 
 Two original dribbling poses from the v024 source and from the v100 XEX graphics

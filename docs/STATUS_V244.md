@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # Project STATUS — state as of v244 (10.11.2026)
 
 Demo: "The Less I Know The Better" at Silly Venture. Last commit

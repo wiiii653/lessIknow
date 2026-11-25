@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V182 — look, turn and whistle
 
 The boy's reaction is divided into three separate poses, while preserving

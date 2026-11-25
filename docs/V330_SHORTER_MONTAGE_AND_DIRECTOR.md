@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V330 — shorter montage and immediate takeover by the director
 
 V330 shortens the demo to about 4:20.7. The montage of rotators and tunnels after Trevor

@@ -1,3 +1,5 @@
+> **Draft proposal. The changes proposed here require separate implementation and verification.** See the [current documentation guide](README.md) for active instructions.
+
 # Four-row terminal across the main acts
 
 Feasible in principle. The existing ending proves that a 192-scanline

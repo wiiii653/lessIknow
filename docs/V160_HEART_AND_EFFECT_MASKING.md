@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V160 — beating heart and hole masking by the active effect
 
 At the user's request, the separate ball that in v158 constantly covered

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V239 — bunch and half-peeled banana, alternately
 
 The bunch remains. Every other visible entry of the banana rotator shows

@@ -12,14 +12,9 @@ improvements only. The accepted final prerelease is
 
 The latest approved stereo release is **release 133 / v390**:
 [`releases/less-i-know-demo-release-133-stereo.xex`](releases/less-i-know-demo-release-133-stereo.xex).
-The current source tree contains newer development edits and does not yet have
-a numbered release. A development build is not hardware-confirmed.
-
-Release 058 / v330 is the last full run confirmed on the user's Atari 1088
-Rambo from AVG. The later hardware packaging path preserves that loader
-contract; later candidates still require a real hardware run. See
-[`docs/PLAN_STATUS.md`](docs/PLAN_STATUS.md) and
-[`docs/HARDWARE_LOADER_CONTRACT.md`](docs/HARDWARE_LOADER_CONTRACT.md).
+For the current working tree, prerelease history and hardware evidence, see
+[Project Status](docs/PLAN_STATUS.md). Use the release above for the approved
+build. The development build includes the restored basketball hero frames.
 
 The source currently builds stereo only. All 64 expansion banks are allocated.
 The music clock advances four evenly spaced updates per PAL frame. Scene
@@ -34,11 +29,10 @@ make all PYTHON=/path/to/venv/bin/python
 make check PYTHON=/path/to/venv/bin/python
 ```
 
-This produces a replaceable development prototype and
-`build/hardware-dev.xex`. The hardware package uses the approved release 133
-music with the current earlier-percussion option. It does not create a numbered
-release. To package a reviewed prototype as a new, uniquely named hardware
-candidate, follow the release procedure in the hardware loader contract.
+This produces the replaceable raw prototype, its build JSON and
+`build/hardware-dev.xex`. The hardware target uses release 122 music with
+the opening kick muted and enables the animated loader. For numbered candidates,
+use the [hardware packaging procedure](docs/HARDWARE_LOADER_CONTRACT.md).
 
 ## Project map
 

@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V185 — earlier whistle and longer-visible notes
 
 The whistle starts at tick 4862, after the shot of the boy passing in the

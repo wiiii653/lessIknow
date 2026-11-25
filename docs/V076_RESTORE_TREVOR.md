@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v076 — restoring Trevor from v072
 
 The Trevor scene code, graphics and mode have been restored from v072. The display-list switching in the mosaic associated with the GTIA 10 experiment was also reverted. BANG, its positions and particle animation match v072.

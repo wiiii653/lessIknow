@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](docs/README.md) for active instructions.
+
 # Technical Constraints
 
 This is a stereo Atari XL/XE demo targeting PAL and a 1 MB expansion. Current

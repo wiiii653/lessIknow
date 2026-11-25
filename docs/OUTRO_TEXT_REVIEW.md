@@ -1,3 +1,5 @@
+> **Draft proposal. The changes proposed here require separate implementation and verification.** See the [current documentation guide](README.md) for active instructions.
+
 # Terminal text and ending cards — review copy
 
 **Source of truth:** `tools/outro_text.py`.

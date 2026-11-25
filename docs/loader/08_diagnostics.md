@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](../README.md) for active instructions.
+
 # 8. Loader diagnostics
 
 The diagnostic files were created while determining why the full demo does not

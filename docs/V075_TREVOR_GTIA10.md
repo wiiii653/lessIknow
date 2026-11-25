@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v075 — Trevor in GTIA 10
 
 [READ] The Trevor scene uses ANTIC F / GTIA 10 (80 × 192). The four original frames and the animated tunnel were converted to a palette with independent hues and luminances. The number of colours used depends on the shot. During a punch the image reserves the sprite colour registers for black letters and particles; the speech-bubble colour is shared with the GTIA 10 background register. The first PM colour is black to avoid a changing border colour, so the first projectile is dark. Scene timing and BANG behaviour are preserved.

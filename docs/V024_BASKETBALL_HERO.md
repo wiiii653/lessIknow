@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # v024 — BASKETBALL HERO
 
 [READ] Act 3 replaces the placeholder in ticks 20944–23935.

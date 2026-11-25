@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V145 — throw toward the camera, shattered backboard and the boy in the finale
 
 Script changes approved and commissioned by the user on 2026-11-07.

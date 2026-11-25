@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V059 — coloured ball seams
 
 Four players form two colours: both physical areas of the ball can each contain

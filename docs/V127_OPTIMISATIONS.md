@@ -1,3 +1,5 @@
+> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+
 # V127 — copy, display list and PMG optimisation
 
 [READ] Release: `build/visual-prototype-v127.xex`. SHA-256:
