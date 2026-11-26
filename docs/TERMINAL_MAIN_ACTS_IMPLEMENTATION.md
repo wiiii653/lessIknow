@@ -1,67 +1,164 @@
-> **Draft proposal. The changes proposed here require separate implementation and verification.** See the [current documentation guide](README.md) for active instructions.
+> **Draft implementation plan.** Reviewed against prerelease 182 and commit
+> `2d523ff`. The [main-act text draft](TERMINAL_TEXT_PLAN.md) supplies the ten
+> pages. [Project Status](PLAN_STATUS.md) records release evidence.
 
 # Four-row terminal across the main acts
 
-Feasible in principle. The existing ending proves that a 192-scanline
-picture and four text rows fit together. Extending that geometry to every
-main scene needs shared display-list ownership and a timing audit. This plan
-follows TERMINAL_TEXT_PLAN.md: the strip starts at school, persists through
-the main acts and hands off to the existing credits. The title and final card
-keep their own layouts. This differs from the opening brief's initial scope,
-so the two features can be implemented and evaluated independently.
+Keep a 40-column, four-row strip below the full 192-scanline picture from
+school through the post-Trevor montage. At the credits cue, hand off to the
+existing terminal at the same screen position. The title and final card
+use their own layouts. See the [opening plan](TERMINAL_OPENING_IMPLEMENTATION.md)
+for the separate star interlude and water reflection.
 
-1. **Measure the baseline.** Inventory both shared display lists, their
-   footer owners, the private ending list and all writes to DLIST, CHBASE,
-   PRIOR and playfield colors. Verify the layout during title-to-school,
-   portrait, practice, dance, cutaway, dunk, Trevor, tunnel and eyes cuts.
-   Cache keys must include any footer layout that can change while the
-   picture mapping is held. Record the existing four music DLI positions,
-   the baseline audio trace and available resident memory.
-2. **Create one footer template.** Keep the existing 192 LMS entries and
-   their offsets. On the shared lists, replace the 32 blank scanlines with
-   four eight-scanline ANTIC 4 rows after the two-scanline gap. Follow the
-   ending's geometry by putting the fourth music interrupt at the end of
-   the fourth text row. Preserve that line even on blank pages. Keep the
-   longer footer within the ANTIC list page and audit fixed-offset users
-   such as the ending restore code. Build or patch the inactive list and
-   publish it with the frame. Test a static page through several cuts
-   before adding any typing.
-3. **Bound the raster work.** On entry to the strip, establish text colors,
-   black background and font independently of the scene's PMG settings.
-   Restore the scene's palette and mode before its next picture. Preserve all
-   four POKEY updates and their WSYNC timing. Start with stable text colors.
-   Add per-row color changes only after the DLI cycle budget has been
-   measured with character DMA and the busiest scene. Keep the credits' own
-   palette path available.
-4. **Allocate buffers and records.** Two text pages need 320 bytes at 4 × 40
-   characters per page. Reserve these plus the active-page flag and typing
-   state in audited RAM visible to ANTIC throughout bank switches. Account
-   for the aligned font and compact page records separately. Do not assume
-   the ending's fixed addresses can be reused. Its current code couples
-   timing and length tables in the font region with a screen at $BF00.
-   Factor the shared typing rules around separate opening/main/credits
-   records and caller-supplied screen addresses, or keep a compact dedicated
-   act-strip writer if generalizing the late engine costs more. Change text
-   offscreen and publish it in bounded vertical blank.
-5. **Drive pages from actual cuts.** Map pages 01–10 to the builder's scene
-   constants and director cuts. Treat the brief's tick table as editorial
-   guidance. Each page types from its act's first tick and holds until the
-   next cue. If a page must land fully typed on its first beat, make that an
-   explicit, separately authored cue for that page. Do not silently start
-   typing the next caption over the previous act. Validate each line against
-   the 37-character limit and the actual font, including brackets and the
-   cursor glyph. Confirm the cutaway page completes before the dunk.
-6. **Hand off to credits.** Retire the shared footer as the private credits
-   list becomes active. Invalidate typing caches on entry and restart.
-   Clear visible references to text RAM before the final card repurposes
-   that RAM. Preserve the existing credits copy and final card.
+Start from the current source with commit `2d523ff` as the minimum baseline
+and compare candidates against the immutable prerelease 182 XEX. Preserve
+its animated loader and DMA handoff, four stereo music updates per PAL
+frame, scene cuts, title dissolve, PMG buffering and SELECT restart.
+Treat changes outside the strip and its display handoffs as regressions.
+Use the current source and build map wherever the older text draft differs.
 
-The largest risks are resident RAM ownership and extra DLI work in the
-busiest scenes. All banks are allocated, and the bytes below the 1 MiB XEX
-limit do not establish free RAM. Require an allocation map and size check
-before expanding beyond a single-act prototype. Verify geometry and the
-four music interrupts at every cut, compare the full POKEY write stream,
-then check visible tearing, colors, PMG effects and restart on emulator and
-real hardware. The fallback if the timing budget fails is a fixed palette
-and selected act captions. The transition to credits must still use the same
-display geometry.
+## 1. Reserve the display list space first
+
+The ordinary lists at `$8000` and `$8400` start with two bytes of blank
+instructions, then have 192 three-byte LMS entries and an eight-byte
+footer. The credits layout at `$BC00` proves the vertical geometry.
+The proposed main-act footer is 16 bytes: a two-scanline gap, four
+three-byte ANTIC 4 LMS instructions, and a three-byte JVB. Within the
+list, this gives the following geometry.
+
+| Relative scanlines | Role |
+|---|---|
+| 0–8 | Existing top blank, with music on line 0 |
+| 9–200 | Unchanged picture, with music on lines 78 and 156 |
+| 201–202 | Gap. Set up the strip palette here when enabled. |
+| 203–234 | Four eight-scanline text rows. The last row supplies the music DLI on 234. |
+
+The eight additional bytes per list would collide with packed scanlines
+starting at `$824A` and `$864A`. Reserve the larger spans before packing
+rows and regenerate the lookup tables. Update the allocator, list
+builders and shape assertions together. If repacking cannot fit, evaluate
+an ANTIC jump to a separately allocated footer and audit fetch timing
+there. Check all layouts against the 1 KiB display list boundary. Update
+fixed-offset users, especially `title_plasma.py` and
+`outro_text.BITMAP_JVB_HIGH`, before testing any return to the title.
+
+Implement the school-only prototype with a static strip, then exercise a
+scene whose renderer keeps the same list while updating PMG. Inventory
+ordinary list publication in `build_bitmap_sequence.py` and banked
+publishers in school parallax, practice, both dances, hero, Trevor, mosaic
+and eyes. Also check the private final-shot and final-card lists. Keep
+the 192 picture LMS entries in place so these renderers retain their
+existing row addresses.
+
+## 2. Keep the music and picture palette stable
+
+Start with one palette for all four text rows. Use a non-music DLI on the
+two-line gap, with the three intermediate text rows free of DLIs. Route the
+fourth music DLI through the existing WSYNC/player entry and bound the new
+gap handler. Route by the **published** list layout and raster position.
+The next scene can be prepared while the previous list is visible, and
+scene 14 is shared by the school portrait and ribbon dance.
+
+Audit CHBASE, PRIOR, COLBK, playfield colors and sprite coverage at the
+strip boundary. Restore the picture settings before the next picture
+fetch, including on held frames and effects that rewrite colors in the
+music interrupt. Capture or track the actual colors used by each scene
+rather than adding a generic restore palette. Preserve PORTB, the NMI
+stack and the PMBASE shadow. Check that active missiles or players do
+not spill into the footer and keep both PMG buffer spans intact.
+
+Measure the raster with character DMA, the stereo player's longest
+updates and the busiest scene callbacks. Verify music lines and POKEY
+write timing before adding rainbow or per-row effects. Add those
+effects only where the non-music DLIs have measured headroom. Keep the
+credits' existing router and palette path as a separate layout.
+
+## 3. Allocate the writer and publish complete pages
+
+Budget 320 bytes for two 4×40 screen pages, up to 1,024 bytes for an
+aligned font, and separate allocations for the compact text records,
+typing state and code. Use the current build map and bank ownership to
+place them. ANTIC must see the text screens and font while music banks
+are switched. Immutable text records can be banked if the foreground
+reader restores PORTB and its read is safe across an NMI. Prerelease
+182 has 3,786 bytes to the packaged 1 MiB boundary. The build's main
+code has 19 bytes to its allocation limit. Place new helpers in audited
+space and charge the whole feature to the hardware package.
+
+Reuse the ending glyphs and typing rules. Its active color font at
+`$B400` and text screen at `$BF00` are inside the live
+`$B000–$CEFF` framebuffer span during the main acts. The late engine
+also relies on `$C000–$CEFF`, and its scratch near
+`$0DD0` overlaps the montage director's state. Give the main strip
+its own font, screens and state. A compact foreground writer with
+page-relative line offsets is a good first implementation. Consider
+sharing code with the opening interlude once both lifetimes are mapped.
+
+Prepare changed rows and their LMS operands before blanking. Publish
+the ready list, matching text page and raster mode together in the early
+blanking window. Internally keep picture row cache, footer layout and
+text page identity distinct. When a renderer holds its bitmap or
+regenerates list entries, the strip still needs to advance. Prototype a
+text-only pointer commit in blanking, with all four operands ready and
+the window checked, or a list swap with the current picture mapping.
+Measure it through a held practice shot. Allow the previous complete
+page or typing state to remain visible if the next commit misses its
+window.
+
+## 4. Generate cues from the scene timeline
+
+Use the music tick snapshot from the foreground director. Generate the
+ten page starts from the same constants that drive the visible cuts,
+including the nominal dance entrances where the renderer starts
+preparation early. Use these values as a prerelease 182 cross-check.
+Intervals end at the next cue.
+
+| Page | Tick | Act |
+|---|---:|---|
+| 01 | 2992 | School arrival |
+| 02 | 5984 | Basketball practice |
+| 03 | 8975 | First side-dancer |
+| 04 | 11967 | Early tunnel and rotator sequence |
+| 05 | 14959 | Ribbon dance |
+| 06 | 20942 | Tunnel cutaway |
+| 07 | 21690 | Basketball hero |
+| 08 | 23934 | Trevor fight |
+| 09 | 29656 | Post-Trevor montage |
+| 10 | 38705 | Bananas before the eyes and the late montage |
+| Credits | 41884 | Existing boy terminal |
+
+Page 10 covers the lead into the eyes. The eyes themselves start at
+39379. Keep that grouping if the copy introduces the sequence, or move
+the eye caption to the actual eye cue. Type each page from its own cue
+and hold it through the act. Any caption that must already be complete
+at the cut can be prepared invisibly. Validate the 37-character
+editorial limit, prompt, cursor, brackets, font coverage and reading
+time at build time. The shortest planned page has 748 ticks
+(about 3.75 s), enough for the existing typing cadence. Test a skipped
+tick and cut entry with the old page still on screen.
+
+On the credits cut, keep the strip position and retire its raster mode
+as the private credits list is published. Audit the order of the final
+portrait setup, outro staging and takeover so no frame points at text
+or font data being overwritten. Invalidate both layout and text caches
+on SELECT. Confirm that the final card takes over its own buffers and
+that restart rebuilds the opening and school lists.
+
+## 5. Roll out and measure
+
+1. Fit the footer and a static school page. Check all 192 picture rows,
+   the POKEY stream and the four clock positions against prerelease 182.
+2. Add the typed writer and the text-only commit. Test school, practice,
+   the school-to-practice cut and SELECT before enabling all pages.
+3. Enable pages through the rest of the director. Inspect the dance
+   entrances and launch, hero and Trevor impacts, the tunnel hole,
+   the eyes, and the credits takeover. Capture near each cut and at a
+   held picture. Compare raster timing separately from the sampled
+   stereo stream. Spot-check the footer on a real display for overscan.
+4. Try rainbow text only after a stable single-palette run. If the
+   single-palette strip cannot fit a specific renderer, keep that as
+   an explicit scope decision before changing the planned coverage.
+5. Build with the normal full-rate hardware loader. Record the
+   allocation, final size and SHA-256. Compare test failures against
+   the baseline and record the exact emulator and physical Atari
+   configurations with their results.

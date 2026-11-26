@@ -1,4 +1,6 @@
-> **Draft proposal. The changes proposed here require separate implementation and verification.** See the [current documentation guide](README.md) for active instructions.
+> **Historical design brief.** Use this for draft copy and visual direction.
+> Its loader, timing and implementation suggestions are superseded by the
+> [opening implementation plan](TERMINAL_OPENING_IMPLEMENTATION.md).
 
 # Opening: loader star + 4-row terminal, then title with water
 

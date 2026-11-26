@@ -1,4 +1,6 @@
-> **Draft proposal. The changes proposed here require separate implementation and verification.** See the [current documentation guide](README.md) for active instructions.
+> **Historical text draft.** Use this for draft page copy. Its timing,
+> display layout and implementation suggestions are superseded by the
+> [main-act implementation plan](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md).
 
 # Terminal text plan — main acts
 

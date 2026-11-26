@@ -28,10 +28,15 @@ Only associate a validation result with the artifact actually exercised.
 ## Historical records and proposals
 
 Version notes, audits, dumps and the numbered loader chapters describe their
-recorded snapshots. The terminal briefs, implementation plans and outro text
-review are proposals. Confirm actual behavior in the current source before
-using them. The basketball hero redraw is preserved in the artwork review
-folder on the same basis.
+recorded snapshots. Use the current source, generated build map and hardware
+loader contract for implementation decisions. Resolve conflicts in favor of
+those sources and update the affected plan before implementing it.
+
+The [opening plan](TERMINAL_OPENING_IMPLEMENTATION.md) and
+[main-act strip plan](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md) target prerelease
+182 as their regression baseline. The older terminal briefs provide draft
+copy and visual direction. The outro text review and the basketball hero
+redraw are preserved as proposals.
 
 `projects/` contains separate experiments with their own instructions.
 The imported `docs/boruta-atari8/` library is external reference material.
