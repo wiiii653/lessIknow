@@ -56,7 +56,7 @@ class DisplayListTests(unittest.TestCase):
             output = self.inspect(path, FINAL_CARD_DL)
         lines = [int(row.rsplit(' ', 1)[1]) for row in output.splitlines()
                  if 'DLI on line' in row]
-        self.assertEqual(lines, [0, 78, 102, 118, 134, 150, 156, 234])
+        self.assertEqual(lines, [0, 78, 102, 150, 156, 234])
         self.assertIn('Total display-list scanlines: 235', output)
 
     def test_visible_image_has_no_blank_dli_seams(self):

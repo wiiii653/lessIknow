@@ -49,7 +49,7 @@ FINAL_CARD_PAGES = (
     ('STEREO MUSIC PLAYER / 2 POKEYS', 'CREATED AS A SEPARATE PROJECT',
      '4 POKEY UPDATES PER PAL FRAME'),
     ('OPENING EFFECTS', 'PROCEDURAL PLASMA / CITY REVEAL', 'TITLE REVEAL / PMG FIREWORKS'),
-    ('LOADER / TEXT EFFECTS', 'ANIMATED STAR / LOADING DOTS', 'RAINBOW DLI GLITCH / TEXT FADES'),
+    ('LOADER / TEXT EFFECTS', 'ANIMATED STAR / LOADING DOTS', 'GREETS DLI GLITCH / TEXT FADES'),
     ('SCENE DIRECTOR', 'MUSIC TICKS CUE EACH SCENE', 'ANTIC MODES / BANKED 1 MB RAM'),
 )
 FINAL_CARD_TEXT = 0xBF80
@@ -436,7 +436,9 @@ def final_card_display_list():
     for row in range(FINAL_CARD_TEXT_ROWS):
         address=FINAL_CARD_TEXT+row*40
         data.extend((0x44,address&255,address>>8))
-        data.append(0xf0)
+        if row < FINAL_CARD_TEXT_ROWS-1:
+            data.append(0x70)
+    data.append(0xf0)  # Restore the star inks after the final text row.
     data.extend([0xd0]+[0x70]*9+[0xd0,0x41,FINAL_CARD_DL&255,FINAL_CARD_DL>>8])
     return bytes(data)
 

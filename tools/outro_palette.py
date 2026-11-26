@@ -9,9 +9,10 @@ CARD_ENTRY = 0x3c00  # Late-loaded runtime, after the shared scanline pool.
 CARD_FONT_ENTRY = 0x3d20
 CARD_FADE = 0x0dd5
 CARD_CLOCK_PENDING = 0x80  # Also maps to the zero fade row in the DLI.
-CARD_DLI_VCOUNTS = (55,63,71)
+CARD_DLI_VCOUNT = 55
 CARD_RESTORE_VCOUNT = 79
 CARD_RESTORE_COLORS = (0x0e,0x9a,0x2c)
+CARD_INKS = (0x9e, 0x7c, 0x4c)
 # PAL GTIA colours in rainbow order, with a different dominant ink for
 # each row. One phase swaps the bright and dim scanlines for the glitch.
 INK_PHASES = (
@@ -58,9 +59,9 @@ def helper():
     return result
 
 
-def card_inks(level, phase):
+def fade_inks(level, palette):
     return tuple(((ink&0xf0) | (2*round((ink&14)*level/14))) if level else 0
-                 for ink in INK_PHASES[phase])
+                 for ink in palette)
 
 
 def card_helper():
@@ -69,15 +70,11 @@ def card_helper():
         c.emit(op,address&255,address>>8)
 
     c.emit(0xc9,3);c.branch(0xd0,'music')
-    a(0xad,0xd40b);c.emit(0xc9,CARD_DLI_VCOUNTS[0]-1);c.branch(0x90,'music')
+    a(0xad,0xd40b);c.emit(0xc9,CARD_DLI_VCOUNT-1);c.branch(0x90,'music')
     c.emit(0xc9,CARD_RESTORE_VCOUNT+2);c.branch(0xb0,'music')
     c.emit(0xc9,CARD_RESTORE_VCOUNT-1);c.branch(0xb0,'restore')
-    # The card counter keeps running after the final music packet.
-    c.emit(0x4a,0x18);a(0x6d,0x24aa);c.emit(0x4a,0x4a,0x29,7)
-    c.jump(0x8d,'phase')
-    a(0xad,CARD_FADE);c.emit(0x0a,0x0a)
-    c.label('combine');c.emit(0x09,0,0xaa)
-    c.labels['phase']=c.labels['combine']+1
+    # The pending value shares the fully dark entry at index zero.
+    a(0xad,CARD_FADE);c.emit(0x29,14,0x4a,0xaa)
     for pen in range(3):
         c.jump(0xbd,f'card_ink{pen}');a(0x8d,0xd016+pen)
     a(0x4c,EXIT)
@@ -87,7 +84,7 @@ def card_helper():
     a(0x4c,EXIT)
     c.label('music');a(0x8d,0xd40a);c.emit(0x60)
 
-    palettes = [card_inks(level,phase) for level in range(8) for phase in range(8)]
+    palettes = [fade_inks(level,CARD_INKS) for level in range(8)]
     for pen in range(3):
         c.label(f'card_ink{pen}');c.emit(*(palette[pen] for palette in palettes))
     return bytes(c.finish())

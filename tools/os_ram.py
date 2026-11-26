@@ -6,6 +6,7 @@ from build_visual_prototype import xex_segment
 ROM_REGIONS = ((0xc000, 0xd000), (0xd800, 0x10000))
 ROM_BYTES = 0x3800
 RUN = 0x13e0
+PLAYER_ENTRY = 0x2146
 
 
 def loader(blob):
@@ -39,12 +40,12 @@ def loader(blob):
             + xex_segment(0x02e2, bytes((0, 0x10))))
 
 
-def run_stub():
+def run_stub(entry=PLAYER_ENTRY):
     # Blank the loader's display as soon as the standalone player takes over.
     return bytes.fromhex(
         '78 a9 00 8d 0e d4 8d 00 d4 8d 1d d0 8d 1a d0 '
-        'ad 01 d3 29 fe 8d 01 d3 4c 46 21'
-    )
+        'ad 01 d3 29 fe 8d 01 d3 4c'
+    ) + entry.to_bytes(2, 'little')
 
 
 def image(chunks):

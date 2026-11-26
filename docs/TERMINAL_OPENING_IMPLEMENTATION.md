@@ -18,6 +18,25 @@ PMG buffering, corrected title dissolve, stereo mix and SELECT restart.
 Treat changes to these behaviors outside the planned opening as regressions.
 Use the current source and build map wherever the older brief differs.
 
+The current prototype on `feature/terminal-opening` advances the mark through
+all 32 original phases and types two pages in the four-row terminal at cold
+start. The second page starts at frame 144 and the final fade at frame 288.
+At frame 320, the cleanup helper at `$FD92` blanks the display, clears
+startup scratch in `$9000–$9BFF` and jumps to the original player entry.
+The interlude counts PAL blanking edges before the player starts. One
+display-list interrupt sets the current page's fixed striped text palette,
+which fades along with the star. The title reflection is implemented below.
+SELECT replay of the interlude is a subsequent milestone.
+
+The first opening-interlude candidate was 1,044,790 bytes. Compared with prerelease
+182, the segment addresses and lengths match, and payload differences
+are confined to the startup jump, the opening data and code in the first
+framebuffer, and the cleanup helper under ROM. The startup checks in py65
+cover mark phase changes, text progress, the fade and the player handoff.
+The full-track Atari800 comparison matched the stereo POKEY stream from
+prerelease 182 after alignment at the first nonzero sample.
+The new interlude has yet to be viewed on physical hardware.
+
 ## 1. Start the interlude in the runtime
 
 Use a dedicated runtime display list after the `$4800` bootstrap hands off
@@ -88,36 +107,20 @@ with the normal full-rate loader enabled.
 
 ## 4. Add the reflection in the title tail
 
-The existing title displays an 80×64 GTIA 11 field on 192 scanlines, with
-the city anchored at its bottom. Preserve those rows. Relative to the list
-start, the picture is on lines 9–200 and the fourth music DLI is on line 234.
-Prototype 33 water scanlines on lines 201–233 and keep a final one-line
-music marker at line 234. Check that this band is visible on the target
-display before committing to its depth.
+The title keeps its 192 picture scanlines and uses relative lines 201–233
+for water. The fourth music DLI stays on line 234. The reflection samples
+eleven rows of the live plasma before the opaque skyline is drawn, so the
+plasma is visible below the quay. Thin echoes near the surface sample the
+composited city. Each water row has a shallow horizontal ripple with
+clipped edges. Its coverage follows the city reveal from tick 1024 and the
+title's final dissolve. Fireworks have their own player/missile planes.
 
-Mirror eleven source rows around a fixed waterline, starting from the
-bottom of the composed city and plasma. Repeat each reflected source row
-three times. Sample before title lettering is composited, and treat PMG
-fireworks as a separate effect. Gate the band and its source pixels on the
-same reveal stage as the city. For the first version use a subtle texture
-at the existing title luminance. Then add slow horizontal offsets with
-edge fill so a displaced read never wraps into an adjacent source row.
-GTIA 11 shares luminance through COLBK. A dimmer band needs a timed
-luminance change and restore, so profile that as a separate step.
-
-A first RAM estimate is 440 bytes per buffer for eleven 40-byte rows.
-Repeating them with an LMS on each of 33 lines yields a 103-byte tail
-including the music marker and JVB. That tail cannot grow into the packed
-rows that start after the ordinary list. Evaluate a separate tail or a
-dedicated title list as part of the allocation. One alternative is 1,320
-bytes per buffer for 33 contiguous rows and a 39-byte tail, trading LMS
-overhead for more pixel writes. The unused part of the title's framebuffer
-span is a candidate while the title owns it. Check actual writes, ANTIC
-fetch boundaries and both buffer lifetimes. Measure the 6502 work before
-choosing. Build the reflection and its LMS pointers with the
-inactive title frame and publish them together. Restore the ordinary
-ANTIC E list, palette and pointers for school and invalidate both layout
-caches on restart.
+The inactive title framebuffer holds 440 bytes of water at offset
+`$0B00` and a 103-byte display-list tail at offset `$0D00`. The title
+bank holds the renderer, lookup tables and two tail templates. The bitmap
+and water are published together. The outgoing title restores both normal
+footers during blanking at the school cut or a restart to the early title.
+The main-act terminal then takes over the footer.
 
 ## 5. Implementation and acceptance order
 

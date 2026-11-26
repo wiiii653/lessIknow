@@ -104,12 +104,12 @@ class RibbonBufferTests(unittest.TestCase):
             self.assertEqual(memory[0xd301],0xff)
 
     def test_late_raster_retains_old_pmg_until_safe_commit(self):
-        for tick in (START,(STEPS[0]+STEPS[1])//2,FIREWORK_START+32):
+        for tick in (SIDE_START+64,START,(STEPS[0]+STEPS[1])//2,FIREWORK_START+32):
             with self.subTest(tick=tick):
                 self.check_late_raster_retains_old_pmg_until_safe_commit(tick)
 
     def check_late_raster_retains_old_pmg_until_safe_commit(self,tick):
-        for start in (0,248,255,290,305,306,311):
+        for start in (0,*range(248,268),290,305,306,311):
             memory=BeamMemory(sequence.XEX.read_bytes());cpu=sequence.MPU(memory=memory)
             sequence.execute(tick,cpu)
             cpu.processorCycles=0;memory.start=start*114;memory.cpu=cpu;memory.events=[]
@@ -123,7 +123,8 @@ class RibbonBufferTests(unittest.TestCase):
             self.assertTrue(registers)
             lines=[t/114%312 for t,_,_ in registers]
             self.assertGreaterEqual(min(lines),248)
-            self.assertLess(max(lines),260)
+            self.assertLess(min(lines),264)
+            self.assertLess(max(lines),272)
             self.assertFalse(any(a==0xd01d and v!=3 for _,a,v in registers))
 
     def test_banked_frame_copy_survives_music_nmi(self):

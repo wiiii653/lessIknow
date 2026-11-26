@@ -2,6 +2,7 @@
 import math
 from pathlib import Path
 from engine_effects import PMBASE_SHADOW, COPY_PAGES, cached_display_list, clear_pmg
+from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
 from trevor_awakens import COLORS, HIT as TREVOR_HIT, END as TREVOR_END, MIDPOINT as TREVOR_MIDPOINT, FLIGHT_START
 from music_timing import tick_at_beat
@@ -9,7 +10,7 @@ ENTRY=0x6000
 IMPACT_BRIDGE=0x5f80
 IMPACT_HIDE_BRIDGE=0x5fc0
 ROTATOR_X_TABLE=0x6900
-ROTATOR_Y_TABLE=0x6920
+ROTATOR_Y_TABLE=0x6940
 ROTATOR_HIT_AGE=0x0dd0
 ROTATOR_HIT_INDEX=0x0dd1
 ROTATOR_PUFF_START=48
@@ -258,7 +259,7 @@ IMPACT_HUES=(0x2e,0x3c,0x4e,0x5c,0x6e,0x7c,0x8e,0x9c,
 
 def helper(bank_wrapper=0, impact_labels=None, rotator_puffs=True):
     c=Code(ENTRY)
-    def a(op,address):c.emit(op,address&255,address>>8)
+    def a(op,address):emit_scene_io(c,op,address)
     # Impacts follow the music clock; the next hand is raised in recovery.
     c.emit(0xa9,16);a(0x8d,0x83e0)
     a(0xad,0x83e3);c.emit(0xc9,FLIGHT_START>>8);c.branch(0x90,'quiet')
@@ -547,11 +548,11 @@ def helper(bank_wrapper=0, impact_labels=None, rotator_puffs=True):
 def impact_bridge(labels):
     """Place rotator BUM/BAM on the former tunnel ball's figure-eight path."""
     c=Code(IMPACT_BRIDGE)
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     a(0xad,ROTATOR_HIT_AGE);a(0x8d,labels['hit_age'])
     a(0xad,ROTATOR_HIT_INDEX);a(0x8d,labels['hit_index'])
-    # Independent 64-step figure eight: one step per eight music ticks.
-    a(0xad,0x0dd3);c.emit(0x4a,0x4a,0x4a,0xaa)
+    # Sample the figure eight each PAL frame, preserving its full period.
+    a(0xad,0x0dd3);c.emit(0x4a,0x4a,0xaa)
     a(0xad,0x0dd4);c.emit(0x29,1);c.branch(0xf0,'x_positive')
     a(0xbd,ROTATOR_X_TABLE);c.emit(0x49,255,0x18,0x69,1);c.jump(0x4c,'x_ready')
     c.label('x_positive');a(0xbd,ROTATOR_X_TABLE)
@@ -565,7 +566,7 @@ def impact_bridge(labels):
 def impact_hide_bridge():
     """Disable the prior PMG impact during the short gap between words."""
     c=Code(IMPACT_HIDE_BRIDGE)
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait')
     c.emit(0xc9,128);c.branch(0xb0,'wait')
     c.emit(0xa9,0);a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407);a(0x8d,0xd01d);c.emit(0x60)
@@ -574,10 +575,12 @@ def impact_hide_bridge():
 
 def bank(phase=0, quiet=False, bank_wrapper=0):
     out=bytearray(16384);labels={};code=helper(bank_wrapper,labels,rotator_puffs=not quiet);out[0x2000:0x2000+len(code)]=code
-    if not quiet:
+    # The banana director maps loader bank 24 (action phase zero) for
+    # both impact helpers. The other action banks do not call the bridges.
+    if not quiet and phase == 0:
         path=bytes(v&255 for v in
-                   ([round(60*math.sin(math.tau*i/64)) for i in range(32)]+
-                    [round(30*math.sin(2*math.tau*i/64)) for i in range(32)]))
+                   ([round(60*math.sin(math.tau*i/128)) for i in range(64)]+
+                    [round(30*math.sin(2*math.tau*i/128)) for i in range(64)]))
         path_offset=ROTATOR_X_TABLE-0x4000
         assert 0x6000+len(code)<=ROTATOR_X_TABLE
         assert path_offset+len(path)<=0x2a00 and not any(out[path_offset:path_offset+len(path)])

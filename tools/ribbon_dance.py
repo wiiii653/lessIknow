@@ -8,6 +8,7 @@ from collections import deque
 from functools import lru_cache
 from bisect import bisect_right
 from pathlib import Path
+from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
 from engine_effects import PMBASE_SHADOW, cached_display_list, clear_pmg, DL_KEYS
 from music_timing import tick_at_bar, tick_at_beat
@@ -33,6 +34,8 @@ LAUNCH_PREP = STEPS[118]
 LAUNCH_START = STEPS[119]
 OVERHEAD_START = STEPS[120]
 FIREWORK_START = LAUNCH_START
+PUBLISH_VCOUNT_START = 124
+PUBLISH_VCOUNT_LIMIT = 132  # Start the swap on PAL scanlines 248–263.
 FIREWORK_CENTRES = ((18,42),(18,132),(142,54),(142,147))
 FIREWORK_ROWS = tuple((y+17)//2-8 for x,y in FIREWORK_CENTRES)
 SIDE_STEPS = tuple(tick_at_beat(24*8+i,2) for i in range(64))
@@ -59,7 +62,7 @@ def emit_rainbow(c):
     Music DLIs keep their original spacing; colours change AFTER the music
     decoder. The four calls per frame divide ribbons into broad rainbow bands.
     """
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     c.label('ribbon_palette')
     a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x4a,0x48)
     a(0xad,0xd40b);c.emit(0x29,0x60,0x4a,0xba)
@@ -341,7 +344,7 @@ def install_side_actor(bank,index):
 def install_runtime(runtime):
     """Unbanked masked overlay; music NMI may restore banks at any instruction."""
     c=Code(SIDE_COMPOSITOR)
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     from ribbon_inbetweens import COPY
     c.emit(0x48);a(0xad,0x83e5);c.branch(0x10,'normal_frame');c.emit(0x68);a(0x4c,COPY)
     c.label('normal_frame');c.emit(0x68)
@@ -491,7 +494,7 @@ def launch_spark_path(phase):
 
 def helper(copy_address, palette_address=0):
     c=Code(ENTRY)
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     # The side shot advances through every party pose on its own 16-tick
     # grid. Only the frontal shots need the half-beat selector.
     a(0xad,0x83e3);c.emit(0xc9,SIDE_END>>8)
@@ -557,7 +560,8 @@ def helper(copy_address, palette_address=0):
     from launch_kiss import PREPARE,COMMIT
     c.jump(0x20,'launch_fireworks');a(0x20,PREPARE);c.jump(0x4c,'wait')
     c.label('normal_ribbons')
-    # Copy five separately positioned 64-byte streams into inactive PMG RAM.
+    # Patch each load once per plane to avoid a subroutine call per byte.
+    # Copy the five separately positioned streams into inactive PMG RAM.
     for plane in range(5):
         a(0xad,0x83e2);c.emit(0x4a,0x4a,0x4a,0x29,15)
         if plane<4:
@@ -567,18 +571,22 @@ def helper(copy_address, palette_address=0):
             if plane in (1,3):c.emit(0x49,15)
             c.emit(0x18,0x69,(0,3,8,11)[plane],0x29,15)
             c.label(f'phase_ready{plane}')
-        c.emit(0xaa);c.jump(0xbd,'phase_lo');c.jump(0x8d,'get_lo')
+        c.emit(0xaa);c.jump(0xbd,'phase_lo');c.jump(0x8d,f'blit{plane}_lo')
         c.jump(0xbd,'phase_hi')
         if plane:c.emit(0x18,0x69,4*plane)
-        c.jump(0x8d,'get_hi')
+        c.jump(0x8d,f'blit{plane}_hi')
         a(0xae,0x83ed);a(0xbd,META+4*FRAME_COUNT+(plane if plane<4 else 0)*FRAME_COUNT);c.emit(0xa8)
         c.emit(0xa9,(0xa if plane<2 else 0xb if plane<4 else 9));a(0x0d,0x83e8);c.jump(0x8d,f'put{plane}_hi')
         c.emit(0xa2,0)
-        c.label(f'blit{plane}');c.jump(0x20,'get');c.emit(0xc0,128);c.branch(0xb0,f'skip{plane}')
+        c.label(f'blit{plane}');a(0xbd,0);c.emit(0xc0,128);c.branch(0xb0,f'skip{plane}')
         c.label(f'put{plane}');a(0x99,0xa00+(plane%2)*128 if plane<4 else 0x980)
         c.label(f'skip{plane}');c.emit(0xc8,0xe8,0xe0,64);c.branch(0xd0,f'blit{plane}')
-    # Atomic presentation: wait with OLD PMG enabled, then update DL/PMG/regs.
-    c.label('wait');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'wait');c.emit(0xc9,128);c.branch(0xb0,'wait')
+    # The text footer uses ANTIC DMA through the last music DLI. Allow the
+    # prepared buffers to swap after that DLI in early PAL vertical blank.
+    c.label('wait')
+    a(0xad,0xd40b)
+    c.emit(0xc9,PUBLISH_VCOUNT_START);c.branch(0x90,'wait')
+    c.emit(0xc9,PUBLISH_VCOUNT_LIMIT);c.branch(0xb0,'wait')
     a(0xad,0x83eb);c.branch(0xf0,'held')
     c.emit(0xa9,0);a(0x8d,0xd402);a(0xad,0x83e6);a(0x8d,0xd403);c.emit(0x49,4);a(0x8d,0x83e6)
     c.label('held')
@@ -600,7 +608,6 @@ def helper(copy_address, palette_address=0):
     a(0x20,COMMIT)
     a(0x20,palette_address)
     c.emit(0x60)
-    c.label('get');c.emit(0xbd,0,0);c.emit(0x60)
     # The overhead preparation is free of ribbons. On launch, use compact
     # bursts in side columns, leaving the central face/body unobstructed.
     c.label('launch_fireworks')
@@ -662,9 +669,11 @@ def helper(copy_address, palette_address=0):
         c.label(name);c.emit(*(launch_spark_path(step)[axis] for step in range(32)))
     c.labels['fw_shapes']=c.origin+len(c.data)-48
     c.emit(*firework_shapes()[48:])
-    for label in ('dl1','dl2','get'):
+    for label in ('dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     for i in range(5):
+        c.labels[f'blit{i}_lo']=c.labels[f'blit{i}']+1
+        c.labels[f'blit{i}_hi']=c.labels[f'blit{i}']+2
         c.labels[f'clear{i}_hi']=c.labels[f'clear{i}']+2
         c.labels[f'put{i}_hi']=c.labels[f'put{i}']+2
     c.label('phase_lo');c.emit(*((RIBBONS+i*64)&255 for i in range(16)))

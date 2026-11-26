@@ -13,7 +13,8 @@ Reviewed 2026-11-25 against the working tree and existing build artifacts.
 | [Prerelease 165](../releases/less-i-know-demo-prerelease-165-stereo.xex) | User accepted this prerelease |
 | [Prerelease 180](../releases/less-i-know-demo-prerelease-180-stereo.xex) | Includes the experimental hero art and the forward stripe loop. |
 | [Prerelease 181](../releases/less-i-know-demo-prerelease-181-stereo.xex) | Restores the earlier hero frames and retains the forward stripe loop. |
-| [Prerelease 182](../releases/less-i-know-demo-prerelease-182-stereo.xex) | Latest numbered prerelease. Includes the PMBASE, title dissolve and loader handoff changes. |
+| [Prerelease 182](../releases/less-i-know-demo-prerelease-182-stereo.xex) | Regression baseline. Includes the PMBASE, title dissolve and loader handoff changes. |
+| [Prerelease 183](../releases/less-i-know-demo-prerelease-183-stereo.xex) | Candidate on `feature/terminal-opening` for a physical Atari run. Includes the animated opening, ten caption pages and the training bitmap fix. |
 | [Release 058 / v330](../releases/less-i-know-demo-release-058-stereo.xex) | Documented full run from AVG on Atari 1088 Rambo and immutable loader reference |
 
 The user also reported successful machine playback during later prerelease work.
@@ -34,8 +35,9 @@ has no playback validation in this build record.
 
 ## Current development tree
 
-- **Opening:** procedural plasma, one city panorama, staged reveal, title text
-  and staggered PMG fireworks. The city overlay starts at tick 1024.
+- **Opening:** procedural plasma, one city panorama, moving water under the
+  quay, title text and staggered PMG fireworks. The city and reflection
+  begin revealing at tick 1024.
 - **Loader:** the hardware target enables the animated ending star, static
   rainbow text and animated dots after the centered LOADING word.
 - **Music:** the hardware target uses release 122 data with the opening kick
@@ -47,9 +49,10 @@ has no playback validation in this build record.
 - **Basketball hero:** the dribble and dunk use the earlier cleaned artwork
   sourced by `tools/basketball_hero.py`. The redrawn poses and their masks are
   backed up under [implemented-poses](../art-review/hero-basketball/implemented-poses/).
-- **Terminal and ending:** four terminal text rows below the boy, low resolution
-  rainbow text effects, and separate ending cards with fades, dual POKEY
-  credit and the four updates per PAL frame credit.
+- **Terminal and ending:** the opening and main-act strips use fixed striped
+  text palettes. The final-boy greetings use the animated rainbow DLI glitch.
+  The ending cards use fixed inks with fades and credit dual POKEY playback
+  and its four updates per PAL frame.
 - **Memory:** all 64 banks are allocated. The existing development JSON
   reports 295 unique shared scanlines. Regenerate it before budgeting memory
   for a change.
@@ -66,6 +69,17 @@ Physical Atari playback remains unverified.
 
 Prerelease 182 SHA-256:
 `7e601c30c5558e9354827c83e48d7083b30c1328d373dcd10e71860d8957b369`.
+
+Prerelease 183 is 1,044,796 bytes and matches the branch's hardware development
+XEX byte for byte. It uses the full-rate animated AVG loader. The opening
+temporarily uses `$9000–$9BFF`. The act strip and restored training lookup
+tables use RAM under ROM. The targeted py65 checks passed, including pixel
+comparisons for all three training shots with captions active. The full
+Atari800 stereo POKEY recording matched prerelease 182. Physical playback
+of 183 remains pending.
+
+Prerelease 183 SHA-256:
+`91a27f7901b94ea678bb7e2fee9c5a037478a516dc34fefa527887a0b906619b`.
 
 ## Memory and loader constraints
 

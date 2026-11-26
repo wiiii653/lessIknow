@@ -43,9 +43,9 @@ class OutroPaletteTests(unittest.TestCase):
                 row_palettes.append(palette)
             self.assertEqual(len(set(row_palettes)), TEXT_ROWS)
             self.assertEqual(len({palette[0] for palette in row_palettes}), TEXT_ROWS)
-            self.interrupt(cpu,BODY_DLI_VCOUNT*2)
+            # The first music DLI of the next frame restores the portrait.
+            self.interrupt(cpu,8)
             self.assertEqual(bytes(m[0xd016:0xd019]),body)
-            self.assertEqual(bytes(m[0x24a7:0x24aa]),before)
             self.assertEqual((m[0xd01a],m[0xd301]),(0,0xff))
 
     def test_live_phase_continues_through_a_page_change_and_stale_snapshot(self):
@@ -74,9 +74,10 @@ class OutroPaletteTests(unittest.TestCase):
             cpu=seq.execute(tick,cpu)
             self.assertEqual(cpu.memory[0xd016:0xd019],[0x48,pf1,0x2a])
 
-    def test_final_card_glitch_tracks_fade_without_clocking_music(self):
+    def test_final_card_fixed_inks_track_fade_without_clocking_music(self):
         from final_boy import END
-        from outro_palette import CARD_DLI_VCOUNTS, CARD_FADE, CARD_RESTORE_COLORS, CARD_RESTORE_VCOUNT, card_inks
+        from outro_palette import (CARD_DLI_VCOUNT, CARD_FADE, CARD_INKS,
+                                   CARD_RESTORE_COLORS, CARD_RESTORE_VCOUNT, fade_inks)
 
         cpu = seq.execute(END,seq.execute(END))
         m = cpu.memory
@@ -85,10 +86,8 @@ class OutroPaletteTests(unittest.TestCase):
             m[CARD_FADE] = level * 2
             for counter in range(0,32,4):
                 m[0x24aa] = counter
-                for vcount in CARD_DLI_VCOUNTS:
-                    self.interrupt(cpu,vcount*2)
-                    phase = ((counter+vcount//2)//4)&7
-                    self.assertEqual(bytes(m[0xd016:0xd019]),bytes(card_inks(level,phase)))
+                self.interrupt(cpu,CARD_DLI_VCOUNT*2)
+                self.assertEqual(tuple(m[0xd016:0xd019]),fade_inks(level,CARD_INKS))
                 self.interrupt(cpu,CARD_RESTORE_VCOUNT*2)
                 self.assertEqual(tuple(m[0xd016:0xd019]),CARD_RESTORE_COLORS)
                 self.assertEqual(bytes(m[0x24a7:0x24aa]),original_clock)

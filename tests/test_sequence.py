@@ -141,14 +141,63 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(bytes(memory[0xfffa:0xfffc]), b'\x10\x22')
         self.assertEqual(bytes(memory[0x26fc:0x270a]), bytes(v & 0xfe for v in bank_values))
         self.assertEqual(memory[0xd301], 0xff)  # OS restored before INIT returns
-        cpu = MPU(memory=RuntimeMemory(XEX.read_bytes()))
+        from outro_text import FINAL_MARK_FIRST_GLYPH, FINAL_MARK_ROWS, FINAL_MARK_WIDTH, final_mark
+        from terminal_opening import (ENTRY, FONT, HOLD_FRAMES, PAGE_SWITCH, PAGES,
+                                      SCREEN, TEXT, TEXT_BYTES, page_bytes)
+
+        tiles, glyphs = final_mark(0)
+        sampled_frames = (0, 8, 100, PAGE_SWITCH, PAGE_SWITCH+100, HOLD_FRAMES-1)
+
+        class StartupMemory(RuntimeMemory):
+            blank_edges = 0
+            beam = 124
+            frames = {}
+
+            def __getitem__(self, address):
+                if address == 0xd40b:
+                    # Advance to the next sampled edge without spinning a full frame.
+                    self.beam = 123 if self.beam == 124 else 124
+                    self.blank_edges += self.beam == 124
+                    return self.beam
+                return super().__getitem__(address)
+
+            def __setitem__(self, address, value):
+                frame = self.blank_edges - 1
+                if address == 0xd400 and value == 0x22 and frame in sampled_frames:
+                    glyph_start = FONT + FINAL_MARK_FIRST_GLYPH * 8
+                    self.frames[frame] = (
+                        bytes(self[SCREEN:TEXT+TEXT_BYTES]),
+                        bytes(self[glyph_start:glyph_start+len(glyphs)]),
+                        self[0xd016],
+                    )
+                super().__setitem__(address, value)
+
+        memory = StartupMemory(XEX.read_bytes())
+        cpu = MPU(memory=memory)
         cpu.pc = RUN
-        for _ in range(20):
+        for _ in range(300000):
             if cpu.pc == 0x2146:
                 break
             cpu.step()
         self.assertEqual(cpu.pc, 0x2146)
-        self.assertEqual(cpu.memory[0xd301] & 1, 0)
+        expected = bytearray(TEXT - SCREEN)
+        for row in range(FINAL_MARK_ROWS):
+            start = row * 40 + (40 - FINAL_MARK_WIDTH) // 2
+            first_tile = row * FINAL_MARK_WIDTH
+            expected[start:start+FINAL_MARK_WIDTH] = tiles[first_tile:first_tile+FINAL_MARK_WIDTH]
+        first, first_glyphs, _ = memory.frames[0]
+        self.assertEqual(first[:len(expected)], expected)
+        self.assertEqual(first[len(expected):len(expected)+2], b'> ')
+        self.assertEqual(first_glyphs, glyphs)
+        self.assertEqual(memory.frames[8][1], final_mark(8)[1])
+        self.assertNotEqual(memory.frames[8][1], first_glyphs)
+        self.assertEqual(memory.frames[100][0][len(expected):], page_bytes(PAGES[0]))
+        self.assertEqual(memory.frames[PAGE_SWITCH][0][TEXT-SCREEN+2:], bytes(TEXT_BYTES-2))
+        self.assertEqual(memory.frames[PAGE_SWITCH+100][0][len(expected):], page_bytes(PAGES[1]))
+        self.assertEqual(memory.frames[HOLD_FRAMES-1][2], 0)
+        self.assertEqual(memory.blank_edges, HOLD_FRAMES + 1)
+        self.assertFalse(any(memory[FONT:ENTRY+0x400]))
+        self.assertEqual(cpu.memory[0xd301], 0xfe)
         self.assertEqual(cpu.memory[0xd40e], 0)
         self.assertEqual([cpu.memory[a] for a in (0xd400, 0xd01d, 0xd01a)], [0, 0, 0])
 

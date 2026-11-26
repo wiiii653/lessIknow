@@ -10,6 +10,7 @@ from PIL import Image
 from build_sequence import Code, TITLE_TICK
 from school_portrait_bank import bank_value
 from music_timing import tick_at_beat
+import title_water
 
 SIZE = 2272
 STATE = 0x83e0
@@ -316,6 +317,7 @@ def plasma_renderer():
     c.emit(0xc9,64); c.branch(0xf0,'skyline'); c.jump(0x4c,'next_row')
 
     c.label('skyline')
+    a(0x20, title_water.ENTRY)
     a(0xad,STATE+3); c.emit(0xc9,CITY_REVEAL_START>>8)
     c.branch(0x90,'city_none'); c.branch(0xd0,'city_full')
     a(0xad,STATE+2); c.emit(0x4a,0x4a,0x4a,0x4a,0x4a,0x18,0x69,1)
@@ -434,9 +436,13 @@ def artwork():
     renderer, skyline = plasma_renderer()
     bank = bytearray(16384)
     end = 0
-    for address,data in ((PLASMA_ENTRY,renderer),(WAVE_TABLES,b''.join(plasma_tables())),
+    for address,data in ((PLASMA_ENTRY,renderer),(title_water.TEMPLATES,title_water.templates()),
+                         (WAVE_TABLES,b''.join(plasma_tables())),
                          (VERTICAL_WAVE,vertical_wave()),(SKYLINE_DATA,skyline),
+                         (title_water.FOOTER_ENTRY,title_water.footer()),
+                         (title_water.TABLES,title_water.tables()),
                          (FADE_RANKS,fade_bank()),
+                         (title_water.ENTRY,title_water.renderer(CITY_REVEAL_START)),
                          (0x6800,colors)):
         offset = address-0x4000
         assert offset>=end
@@ -607,9 +613,11 @@ def build(origin, blank):
     for page in (0x80,0x84):
         c.emit(0xa9,page);a(0x8d,(page<<8)+BITMAP_JVB_HIGH)
     c.label('outro_seek_done')
-    a(0xad, STATE); c.emit(0xc9, 2); c.branch(0x90, 'invalidate_done')
+    a(0xad, STATE); c.emit(0xc9, 2); c.branch(0xb0, 'invalidate_mask')
+    a(0x4c, title_water.RETIRE_ENTRY)
+    c.label('invalidate_mask')
     c.emit(0xa9, 0xff); c.jump(0x8d, 'mask_key')
-    c.label('invalidate_done'); c.emit(0x60)
+    c.emit(0x60)
     c.label('mask_key'); c.emit(0xff)
 
     c.label('draw')
@@ -664,6 +672,7 @@ def build(origin, blank):
     # The inactive display list determines which framebuffer can be written.
     a(0xad,STATE+6); c.emit(0x29,4,0x4a,0x4a,0x49,1,0xaa,0x48)
     c.emit(0x0a,0x0a,0x0a,0x0a,0x0a,0x18,0x69,0x90); a(0x8d,STATE+13)
+    c.jump(0xad, 'fade_phase'); a(0x8d,STATE+11)
     a(0x20,PLASMA_ENTRY)
     c.jump(0xad,'mask_key'); c.branch(0xd0,'letter_setup'); c.jump(0x4c,'composed')
     c.label('letter_setup')

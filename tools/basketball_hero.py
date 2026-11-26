@@ -3,6 +3,7 @@ from pathlib import Path
 from functools import lru_cache
 import math
 from engine_effects import PMBASE_SHADOW, cached_display_list
+from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
 from music_timing import tick_at_bar
 from trevor_awakens import FLIGHT_START as TREVOR_FLIGHT_START
@@ -166,7 +167,7 @@ def dribble_phase(elapsed):
 
 def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     c=Code(ENTRY)
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     # Delegate Act 4 through the unbanked bank-switch trampoline.
     a(0xad,0x83e4);c.branch(0xd0,'trevor')
     a(0xad,0x83e3);c.emit(0xc9,END>>8);c.branch(0x90,'hero');c.branch(0xd0,'trevor')

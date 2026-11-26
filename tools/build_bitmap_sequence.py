@@ -28,12 +28,16 @@ import title_fireworks
 import final_boy
 import outro_loader
 import terminal_typing
+import terminal_opening
+import main_act_terminal
+import scene_palette_io
 import outro_palette
 import post_trevor_director
 import launch_kiss
 import banana_variants
 import stereo_playback
 import title_plasma
+import title_water
 import trevor_ball_flight
 import loading_screen
 from school_parallax import banks as school_pan_banks
@@ -42,7 +46,8 @@ from trevor_polished import bank as polished_trevor_bank
 from basketball_hero import START as HERO_START, END as HERO_END, ENTRY as HERO_ENTRY, BANK_VALUE as HERO_BANK, bank as hero_bank
 from pompom_effects import ENTRY as POM_ENTRY, DATA as POM_DATA, helper as pom_helper
 from rainbow_ball import ENTRY as BALL_ENTRY, RESTORE as BALL_RESTORE, helper as ball_helper
-from os_ram import loader, image as os_image, run_stub, RUN
+from rainbow_ball import SPRAY_DATA, spray_data
+from os_ram import loader, image as os_image, run_stub, RUN, PLAYER_ENTRY
 
 from crush_portraits import START as CRUSH_TICK, END as CRUSH_END, ENTRY as CRUSH_ENTRY, DATA as CRUSH_DATA, helper as crush_helper, packed as crush_packed, cleanup as crush_cleanup
 
@@ -196,7 +201,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     blank = unique[bytes(40)]
     plasma_code, plasma_labels = plasma_build(table_end, blank)
     stereo_start = table_end + len(plasma_code)
-    stereo_code, stereo_labels = stereo_playback.start_gate(stereo_start, ORIGIN)
+    terminal_inserts, terminal_labels = main_act_terminal.build()
+    stereo_code, stereo_labels = stereo_playback.start_gate(
+        stereo_start, ORIGIN, after_video=terminal_labels['update'])
     assert stereo_start + len(stereo_code) <= table_end + PLASMA_SIZE
     title_pages, _ = title_plasma.mask_pages()
     effect_code = effects_helper(intro_color=plasma_labels['color'])
@@ -213,6 +220,23 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         tables.extend(a & 255 for a in selected)
         tables.extend(a >> 8 for a in selected)
     assert TABLE_BASE + len(tables) == table_end
+    # The practice atlas still selects the two legacy framebuffer maps at
+    # indices 2 and 3. Retain those maps in reserved RAM, sharing their low
+    # bytes. Other pre-school lookup slots have no caller.
+    practice_low = 0xd960
+    practice_high = (0xe180, 0xfdc8)
+    practice_tables = []
+    for index, high in zip((2, 3), practice_high):
+        lo_data = bytes(address & 255 for address in addresses[index])
+        hi_data = bytes(address >> 8 for address in addresses[index])
+        if index == 2:
+            practice_tables.append((practice_low, lo_data))
+        else:
+            assert lo_data == practice_tables[0][1]
+        practice_tables.append((high, hi_data))
+        table_pointers[index] = (practice_low, high)
+    live_table = table_pointers[8][0]
+    assert live_table == main_act_terminal.LIMIT
 
     def display(base):
         result = bytearray((0x80, 0x70))
@@ -232,7 +256,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c = Code(ORIGIN)
 
     def absolute(op, address):
-        c.emit(op, address & 255, address >> 8)
+        scene_palette_io.emit(c, op, address)
 
     def check_cached(tag):
         c.jump(0x20, 'cache_check')
@@ -278,6 +302,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         absolute(0xad, 0x24a7 + offset)
         absolute(0xcd, TICK + offset)
         c.branch(0xd0, 'snapshot')
+    absolute(0x20, terminal_labels['before'])
     absolute(0x20, plasma_labels['invalidate'])
     compare_tick(final_boy.START,'final_boy','before_final_boy')
     c.label('final_boy')
@@ -696,7 +721,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0xad, STATE+22)
     c.branch(0xf0, 'held_practice')
     c.emit(0xc9, 128)
-    c.branch(0xd0, 'effect_wait')
+    c.branch(0xd0, 'ordinary_effects')
     c.emit(0xe8)
     c.label('held_practice')
     c.jump(0x4c, 'practice_pmg')
@@ -771,7 +796,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
     c.label('music_entry')
     c.emit(0x48, 0x8a, 0x48, 0x98, 0x48)
-    absolute(0x20, outro_palette.ENTRY)
+    absolute(0x20, scene_palette_io.ROUTER)
     absolute(0xad, 0xd301)
     absolute(0x8d, STATE + 14)
     absolute(0xac, 0x24a5)
@@ -783,6 +808,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0xad,SCENE);c.emit(0xc9,14);c.branch(0xd0,'music_colors_done')
     c.jump(0x20,'ribbon_palette')
     c.label('music_colors_done')
+    absolute(0x20, terminal_labels['commit'])
     absolute(0xad, STATE + 14)
     absolute(0x8d, 0xd301)
     c.emit(0x68, 0xa8, 0x68, 0xaa, 0x68, 0x40)
@@ -804,6 +830,10 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     code = c.finish()
     ball_code=ball_helper(c.labels['practice_pmg'])
     girl_frame[BALL_ENTRY-0x4000:BALL_ENTRY-0x4000+len(ball_code)]=ball_code
+    ball_spray = spray_data()
+    spray_offset = SPRAY_DATA - 0x4000
+    assert not any(girl_frame[spray_offset:spray_offset+len(ball_spray)])
+    girl_frame[spray_offset:spray_offset+len(ball_spray)] = ball_spray
     portrait_code = crush_helper(effects_address=c.labels['banked_effects'])
     for pos, offset in ((source_patch + 1, 2), (target_patch + 1, 5)):
         code[pos:pos + 2] = (copy_labels['pixels'] + offset).to_bytes(2, 'little')
@@ -821,7 +851,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
 
     missiles, players = pmg_art()
     inserts = [(RUNTIME_ORIGIN, ribbon_dance.install_runtime(runtime_helper())), (0x0800, bytes(y // 3 for y in range(192))), (0x0980, missiles),
-               (0x0a00, players), (TABLE_BASE, tables), (ORIGIN, code), (RUN, run_stub()),
+               (0x0a00, players), (live_table, tables[live_table-TABLE_BASE:]), (ORIGIN, code),
+               (RUN, run_stub(terminal_opening.ENTRY)),
+               (terminal_opening.CLEANUP, terminal_opening.cleanup(PLAYER_ENTRY)),
                (EFFECT_ORIGIN, effect_code), (COPY_ORIGIN, copy_code),
                (0x8000, display(0x8000)),
                (0x8300, descriptors[:0x3f]), (STATE, descriptors[0xe0:]),
@@ -833,9 +865,13 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                (final_boy.ENTRY_VISIBLE,final_boy.entry_visible()),
                (COLOR_FONT_LOAD,color_font_loader()),
                (outro_palette.RASTER_ENTRY,outro_palette.raster_helper()),
-               (outro_palette.CARD_FONT_ENTRY,outro_palette.card_font_copy())]
+               (outro_palette.CARD_FONT_ENTRY,outro_palette.card_font_copy())] + terminal_inserts + practice_tables
+    inserts += scene_palette_io.inserts(terminal_labels['enabled'], terminal_labels['palette'])
+    inserts.append((title_water.RETIRE_ENTRY, title_water.retire(
+        title_plasma.CITY_REVEAL_START, main_act_terminal.SCHOOL_START)))
     # Framebuffers own their complete runtime spans, including RAM under ROM.
-    inserts += [(base, bytes(0x1f00)) for base in FRAME_BASES]
+    inserts += [(FRAME_BASES[0], terminal_opening.framebuffer(c.labels['music_entry'])),
+                (FRAME_BASES[1], bytes(0x1f00))]
     # Reject every overlap, including accidental code/data growth.
     validate_allocations(inserts)
     rom_chunks = [(address, data) for address, data in inserts if address >= 0xc000]
@@ -1011,7 +1047,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         'practice_bank_index': 7,
         'dance_framebuffers': FRAME_BASES, 'music_entry': c.labels['music_entry'],
         'music_exit': c.labels['music_exit'], 'video_bank_indices': list(range(8, 14)),
-        'display_lists': [0x8000, 0x8400]}, indent=2) + '\n')
+        'display_lists': [0x8000, 0x8400],
+        'main_terminal_update': terminal_labels['update'],
+        'main_terminal_commit': terminal_labels['commit']}, indent=2) + '\n')
     print(f'Built continuous sequence: {len(unique)} shared rows, {len(code)} code bytes')
 
 

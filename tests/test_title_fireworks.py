@@ -9,6 +9,58 @@ from title_fireworks import graphics, occupied, anchors, CENTRES, missile_fragme
 
 
 class TitleFireworkTests(unittest.TestCase):
+    def test_water_reflects_the_live_plasma_and_releases_both_lists(self):
+        from main_act_terminal import SCHOOL_START
+        from title_plasma import (
+            CITY_REVEAL_START, PLASMA_STEP_TICKS, TRANSITION_START,
+            city_reveal_level, procedural_frame,
+        )
+        from title_water import (
+            BUFFER_PAIRS, FIRST_FADE_OUT_PHASE, FOOTER_OFFSET, LAST_FADE_OUT_PHASE,
+            PIXELS_OFFSET, ROW_BYTES, ROW_COUNT,
+            TAIL_OFFSET, TAIL_SIZE, reflection, tail,
+        )
+
+        memory = TrackedMemory(sequence.XEX.read_bytes())
+        cpu = sequence.MPU(memory=memory)
+        sequence.execute(CITY_REVEAL_START-1, cpu)
+        for display, _ in BUFFER_PAIRS:
+            self.assertEqual(memory[display+FOOTER_OFFSET:display+FOOTER_OFFSET+3],
+                             [0x70]*3)
+
+        visible = set()
+        for tick in (1024, 1040, 1120, 1248, 1344, 1504, 2048, 2080, 2920, 2984):
+            active = (memory[0xd403] << 8) | memory[0xd402]
+            active_buffer = dict(BUFFER_PAIRS)[active]
+            memory.writes.clear()
+            sequence.execute(tick, cpu)
+            display = (memory[0xd403] << 8) | memory[0xd402]
+            framebuffer = dict(BUFFER_PAIRS)[display]
+            address = framebuffer + PIXELS_OFFSET
+            tail_address = framebuffer + TAIL_OFFSET
+            jump = bytes((1, tail_address & 255, tail_address >> 8))
+            self.assertEqual(bytes(memory[display+FOOTER_OFFSET:display+FOOTER_OFFSET+3]), jump)
+            self.assertEqual(bytes(memory[tail_address:tail_address+TAIL_SIZE]), tail(display, framebuffer))
+            phase = (tick // PLASMA_STEP_TICKS) & 127
+            level = city_reveal_level(tick)
+            fade = (tick - TRANSITION_START) // 32
+            if fade >= FIRST_FADE_OUT_PHASE:
+                level = LAST_FADE_OUT_PHASE - fade
+            expected = reflection(level, phase, procedural_frame(phase, 0))
+            self.assertEqual(bytes(memory[address:address+ROW_BYTES*ROW_COUNT]), expected)
+            self.assertFalse(any(active_buffer+PIXELS_OFFSET <= a <
+                                 active_buffer+TAIL_OFFSET+TAIL_SIZE for a in memory.writes))
+            visible.add(display)
+        self.assertEqual(visible, dict(BUFFER_PAIRS).keys())
+
+        for next_tick in (SCHOOL_START, 0):
+            sequence.execute(next_tick, cpu)
+            for display, _ in BUFFER_PAIRS:
+                self.assertEqual(memory[display+FOOTER_OFFSET:display+FOOTER_OFFSET+3],
+                                 [0x70]*3)
+            sequence.execute(1408, cpu)
+            sequence.execute(1424, cpu)
+
     def test_opening_introduces_fireworks_one_at_a_time(self):
         cpu = None
         for tick, expected in ((767, 0), (768, 1), (1215, 1), (1216, 2),

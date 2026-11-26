@@ -1,5 +1,6 @@
 """Raw banana animation banks and RLE tools for inspecting older builds."""
 from functools import lru_cache
+from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
 from music_timing import tick_at_bar
 ENTRY=0x7c00
@@ -65,7 +66,7 @@ def selector_inserts():
     assert terminal_typing.ENTRY+len(terminal_typing.helper().finish())<=VARIANT_ENTRY
     assert post_trevor_director.ENTRY+len(post_trevor_director.helper())<=SELECT_ENTRY
     c=Code(VARIANT_ENTRY)
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     a(0xad,0xd301);c.emit(0x48);a(0xad,0x24b5);a(0x8d,0xd301)
     a(0x20,0x7400);c.emit(0xaa,0x68);a(0x8d,0xd301);c.emit(0x8a,0x60)
     variant=bytes(c.finish());assert VARIANT_ENTRY+len(variant)<=EYE_MAP_ENTRY
@@ -150,7 +151,7 @@ def decoder():
     # packets at both boundaries, so inner loops need no 16-bit pointer maths.
     # Source padding uses token 0; completion is exactly fifteen output pages.
     c=Code(DECODER)
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     a(0xad,SRC+1)
     for label in ('control','value','lit0','lit1'):c.jump(0x8d,label+'_hi')
     a(0xac,SRC);a(0xad,0x83fe)
@@ -194,7 +195,7 @@ def decoder():
 
 def entry_helpers():
     c=Code(ENTRY)
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     a(0x20,HELPER);a(0x2c,KEY);c.branch(0x50,'classic')
     c.emit(0xa9,0xee);a(0x8d,0xd018);c.emit(0xa9,0xea);a(0x8d,0xd016)
     c.label('classic');c.emit(0xa9,255);a(0x8d,0x83fa);c.emit(0x60)

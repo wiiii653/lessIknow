@@ -11,8 +11,8 @@ ticks per 128 BPM bar.
 | Player ticks | Approx. time | Image |
 |---:|---:|---|
 | 0–1,023 | 0:00–0:05.14 | Procedural plasma. Fireworks begin at tick 768. |
-| 1,024–1,495 | 0:05.14–0:07.50 | City panorama is revealed over the plasma |
-| 1,496–2,991 | 0:07.50–0:15.00 | Title phase: “TAME IMPALA”, then “THE LESS I KNOW THE BETTER”; fireworks build progressively |
+| 1,024–1,495 | 0:05.14–0:07.50 | City panorama and plasma reflection reveal together |
+| 1,496–2,991 | 0:07.50–0:15.00 | The song title replaces “TAME IMPALA” over rippling water as fireworks build |
 | 2,992 onward | 0:15.00 onward | School / arena sequence |
 
 The opening is generated from a single panorama and procedural plasma rather

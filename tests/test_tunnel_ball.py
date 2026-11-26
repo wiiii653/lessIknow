@@ -7,6 +7,18 @@ from engine_effects import pmg_art
 from mosaic import KALEIDO_START
 from post_trevor_director import START, BUM_START, SHIFT, frame_at
 
+
+def director_phase(tick, memory):
+    # Position between two bitmap orientations, at the director's signed rate.
+    mode = memory[0x0dda]
+    rate = (-1 if mode & 128 else 1) * (2 if mode & 64 else 1)
+    return 4*(memory[0x83ed] & 31) + rate*((tick >> 2) & 3)
+
+
+def tunnel_drift(tick, memory):
+    angle = director_phase(tick, memory)*math.tau/128
+    return round(5*math.sin(angle)), round(2*math.sin(2*angle))
+
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class TunnelBallTests(unittest.TestCase):
     def test_all_rotations_and_four_missiles(self):
@@ -30,13 +42,16 @@ class TunnelBallTests(unittest.TestCase):
             cpu=sequence.execute(tick);m=cpu.memory
             self.assertEqual(m[0xd01b],0x11)
             self.assertEqual(m[0xd01d],3)
-            dx,dy=tunnel_offsets()[m[0x83ed]&31]
+            dx,dy=tunnel_drift(tick, m)
             self.assertEqual(m[0xd000:0xd004],[112+dx,128+dx,112+dx,128+dx])
             for i in range(4):self.assertTrue(any(b&(3<<(2*i)) for b in m[0x980:0xa00]))
             origin=40+(m[0x83e9] if m[0x83e9]<128 else m[0x83e9]-256)
-            expected=frames[(tick>>4)&15]
+            key = (tick >> 4) & 15
+            mix = (tick >> 2) & 3
             for plane in range(4):
-                self.assertEqual(bytes(m[0xa00+plane*128+origin:0xa00+plane*128+origin+32]),expected[plane],(tick,plane))
+                expected = bytes(frames[(key+(row % 4 < mix)) & 15][plane][row]
+                                 for row in range(32))
+                self.assertEqual(bytes(m[0xa00+plane*128+origin:0xa00+plane*128+origin+32]),expected,(tick,plane))
             raw=sequence.SequenceTests().raster(cpu)
             painted=sequence.SequenceTests().raster(cpu,effects=True)
             self.assertNotEqual(raw,painted)
@@ -94,12 +109,14 @@ class TunnelBallTests(unittest.TestCase):
         for i,tick in sorted(ticks.items()):
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0xd01d],3)
-            self.assertEqual(m[0xd000],112+offsets[i])
-            self.assertEqual(m[0xd001],128+offsets[i])
-            self.assertEqual(m[0x83e9], vertical[i] & 255)
+            angle = (director_phase(tick, m) + 4*(i & 32))*math.tau/256
+            dx, dy = round(40*math.sin(angle)), round(8*math.sin(2*angle))
+            self.assertEqual(m[0xd000],112+dx)
+            self.assertEqual(m[0xd001],128+dx)
+            self.assertEqual(m[0x83e9], dy & 255)
             self.assertTrue(any(m[0x980:0xa00]))
             for j in range(4):
-                self.assertLessEqual(abs(m[0xd004+j]-(128+offsets[i])),44)
+                self.assertLessEqual(abs(m[0xd004+j]-(128+dx)),44)
         self.assertLessEqual(abs(offsets[-1]),4)
         centered=next(t for t in range(tick+1,BUM_START) if frame_at(t)==32)
         cpu=sequence.execute(centered,cpu)
@@ -117,8 +134,7 @@ class TunnelBallTests(unittest.TestCase):
         for i,tick in sorted(ticks.items()):
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             # The eye frames occupy slots 60–63.
-            phase=i-32
-            dx,dy=tunnel_offsets()[phase];positions.add((dx,dy))
+            dx,dy=tunnel_drift(tick, m);positions.add((dx,dy))
             self.assertEqual(m[0xd000],112+dx)
             self.assertEqual(m[0x83e9],dy&255)
             for x in range(75,86):
@@ -137,18 +153,32 @@ class TunnelBallTests(unittest.TestCase):
 
     def test_two_paired_missile_stars_follow_different_ellipses(self):
         cpu=None
-        for j in range(32):
-            cpu=sequence.execute(12288+j*8,cpu);m=cpu.memory
+        for j in range(64):
+            cpu=sequence.execute(12288+j*4,cpu);m=cpu.memory
             dx=m[0x83e8] if m[0x83e8]<128 else m[0x83e8]-256
             dy=m[0x83e9] if m[0x83e9]<128 else m[0x83e9]-256
             for i in range(4):
                 rx,ry=((25,14) if i<2 else (40,23))
-                angle=(j+(0 if i<2 else 8))*math.tau/32
+                angle=(j+(0 if i<2 else 16))*math.tau/64
                 half_offset=-4 if i%2==0 else 0
                 self.assertEqual(m[0xd004+i],128+half_offset+round(rx*math.cos(angle))+dx)
                 first=55+round(ry*math.sin(angle))+dy
                 rows=[y for y in range(128) if m[0x980+y] & (3 << (2*i))]
                 self.assertEqual(rows,list(range(first,first+5)))
+
+    def test_eyes_ball_follows_figure_eight_at_pal_frame_cadence(self):
+        from girl_eyes import START as EYES_START
+        cpu = None
+        positions = set()
+        for tick in range(EYES_START+4, EYES_START+4+64, 4):
+            cpu = sequence.execute(tick, cpu)
+            frame = ((tick+SHIFT) >> 2) & 255
+            dx = round(40*math.sin(math.tau*frame/256))
+            dy = round(8*math.sin(math.tau*frame/128))
+            self.assertEqual(cpu.memory[0xd000], 112 + dx)
+            self.assertEqual(cpu.memory[0x83e9], dy & 255)
+            positions.add((dx, dy))
+        self.assertGreater(len(positions), 8)
 
     def test_reused_cycle_memory_and_original_tunnel_covering_are_separate(self):
         cpu=None

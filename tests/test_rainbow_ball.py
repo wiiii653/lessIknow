@@ -3,7 +3,7 @@ import unittest
 import test_sequence as sequence
 from engine_effects import pmg_art
 from gym_practice import practice_shot
-from rainbow_ball import paths
+from rainbow_ball import FLIGHT_FRAMES, paths
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class RainbowBallTests(unittest.TestCase):
@@ -22,10 +22,12 @@ class RainbowBallTests(unittest.TestCase):
             colors.update(cpu.memory[0xd012:0xd016]);positions.add(cpu.memory[0xd000])
             self.assertEqual(sequence.SequenceTests().raster(cpu),raw)
             self.assertNotEqual(sequence.SequenceTests().raster(cpu,effects=True),raw)
-            self.assertTrue(all(any(v & (3<<(2*i)) for v in cpu.memory[0x980:0xa00]) for i in range(4)))
+            base = (cpu.memory[0xd407] & 0x80) << 8
+            self.assertTrue(all(any(v & (3<<(2*i)) for v in
+                                    cpu.memory[base+0x980:base+0xa00]) for i in range(4)))
         self.assertGreater(len(colors),10)
         self.assertGreater(len(positions),4)
-        p=paths();self.assertLess(p[24][1],p[8][1]);self.assertEqual(p[124][0],137)
+        p=paths();self.assertLess(p[48][1],p[16][1]);self.assertEqual(p[-1][0],137)
 
     def test_effect_is_confined_to_shot_and_restores_dance_masks(self):
         cpu=sequence.execute(6980)
@@ -51,14 +53,38 @@ class RainbowBallTests(unittest.TestCase):
     def test_single_flight_spans_whole_shot_without_low_byte_wrap(self):
         cpu=None
         xs=[]
-        for elapsed in (0,128,256,384,512,640,768,896,996):
+        for elapsed in (0,4,8,128,256,384,512,640,768,896,996):
             cpu=sequence.execute(6981+elapsed,cpu)
-            self.assertEqual(cpu.memory[0x83ff],elapsed//8)
+            self.assertEqual(cpu.memory[0x83ff],elapsed//4)
             self.assertEqual(cpu.memory[0xd008:0xd00c],[1]*4)
             xs.append(cpu.memory[0xd000])
         self.assertEqual(xs,sorted(xs))
         self.assertGreater(xs[-1]-xs[0],40)
-        self.assertEqual(cpu.memory[0x83ff],124)
+        self.assertEqual(cpu.memory[0x83ff],FLIGHT_FRAMES-1)
+
+    def test_late_shot_callback_keeps_front_visible_until_next_blanking(self):
+        from test_tunnel_raster import BeamMemory
+        from rainbow_ball import SHOT_START
+
+        memory = BeamMemory(sequence.XEX.read_bytes())
+        cpu = sequence.MPU(memory=memory)
+        sequence.execute(SHOT_START, cpu)
+        for frame, start in enumerate((248, 255, 280, 305), 1):
+            front = (memory[0xd407] & 0x80) << 8
+            memory.cpu = cpu
+            memory.start = start * 114 - cpu.processorCycles
+            memory.events.clear()
+            sequence.execute(SHOT_START + 4*frame, cpu)
+            self.assertFalse(any(front+0x980 <= address < front+0xc00
+                                 for _, address, _ in memory.events))
+            self.assertFalse(any(address == 0xd01d and value != 3
+                                 for _, address, value in memory.events))
+            publish = [(cycle // 114 % 312, value)
+                       for cycle, address, value in memory.events if address == 0xd407]
+            self.assertEqual(len(publish), 1)
+            line, page = publish[0]
+            self.assertIn(line, range(248, 257))
+            self.assertNotEqual(page & 0x80, front >> 8)
 
     def test_spin_changes_geometry_as_well_as_color(self):
         from rainbow_ball import spin_masks

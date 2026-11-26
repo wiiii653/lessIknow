@@ -21,7 +21,7 @@ def install_attacks(bank):
     return bank[:offset] + data + bank[offset+len(data):]
 
 
-def start_gate(origin, callback):
+def start_gate(origin, callback, *, after_video=None):
     c = Code(origin)
 
     def absolute(opcode, address):
@@ -141,7 +141,11 @@ def start_gate(origin, callback):
     c.branch(0xd0, 'video_wait')
     c.jump(0xad, 'restart_stage')
     c.branch(0xd0, 'prepare_intro')
-    absolute(0x4c, callback)
+    if after_video is None:
+        absolute(0x4c, callback)
+    else:
+        absolute(0x20, callback)
+        absolute(0x4c, after_video)
     c.label('prepare_intro')
     c.emit(0xc9, 3)
     c.branch(0xf0, 'video_wait')

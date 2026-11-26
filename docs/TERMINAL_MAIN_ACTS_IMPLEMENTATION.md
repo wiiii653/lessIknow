@@ -17,6 +17,35 @@ frame, scene cuts, title dissolve, PMG buffering and SELECT restart.
 Treat changes outside the strip and its display handoffs as regressions.
 Use the current source and build map wherever the older text draft differs.
 
+The implementation on `feature/terminal-opening` types all ten pages at
+their act cues and holds each finished page until the next cue. The ordinary
+display lists jump to separate tails while the strip is active and recover
+their original tails at credits or restart. The font, two text screens,
+and writer use reclaimed LMS table space at `$D800–$E23F`. Training still
+needs the framebuffer maps at descriptor indices 2 and 3. Their shared low
+bytes are at `$D960`, with high bytes at `$E180` and `$FDC8`. The allocator
+checks all three ranges. Picture rows and active school table addresses stay
+in place.
+
+Text uses the credits' striped glyphs with a fixed three-ink palette for each
+caption. The foreground prepares the inactive screen and the last music
+interrupt publishes it in early blanking. A single interrupt in the gap
+applies the caption palette, and the top blank restores the scene inks
+from RAM. The final-boy greetings retain the animated row-by-row rainbow.
+If the last music interrupt runs past the publication window, the ready
+caption stays queued for the next frame.
+The py65 check covers all ten cues, double buffering, all three training
+bitmaps with the active strip, and the credits handoff.
+The Atari800 monitor confirmed the first live publication with the
+expected font in early blanking. The dance renderer copies each ribbon
+plane without a per-byte subroutine call and can start publishing its
+prepared buffers on PAL scanlines 248–263. In Atari800 PAL 1088XE with
+the strip visible, the first dancer published 185 bitmaps and held a pose
+for at most five PAL frames. The front solo published 364 PMG buffers.
+Prerelease 182 recorded 185, five, and 363 respectively. The full stereo
+POKEY stream matched prerelease 183. Physical playback and screen framing
+on a real display remain to be verified.
+
 ## 1. Reserve the display list space first
 
 The ordinary lists at `$8000` and `$8400` start with two bytes of blank
@@ -155,9 +184,8 @@ that restart rebuilds the opening and school lists.
    the eyes, and the credits takeover. Capture near each cut and at a
    held picture. Compare raster timing separately from the sampled
    stereo stream. Spot-check the footer on a real display for overscan.
-4. Try rainbow text only after a stable single-palette run. If the
-   single-palette strip cannot fit a specific renderer, keep that as
-   an explicit scope decision before changing the planned coverage.
+4. Compare the fixed-palette strip and the animated greeting design at
+   matched music ticks to check how often each effect presents a new pose.
 5. Build with the normal full-rate hardware loader. Record the
    allocation, final size and SHA-256. Compare test failures against
    the baseline and record the exact emulator and physical Atari

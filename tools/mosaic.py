@@ -9,6 +9,7 @@ import math
 from pmg_preview import atari_rgb
 from functools import lru_cache
 from engine_effects import COPY_PAGES, cached_display_list
+from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
 from music_timing import tick_at_bar
 from post_trevor_director import LATE_BANANA_START
@@ -119,7 +120,7 @@ def palette_pairs():
 
 def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,cache_address=0x83fa,raw=False,peeled=False):
     c=Code(origin)
-    def a(op,address):c.emit(op,address&255,address>>8)
+    def a(op,address):emit_scene_io(c,op,address)
     def highlight_index():
         a(0xad,0x83e3);c.emit(0x0a,0x0a);a(0x8d,0x83ea)
         a(0xad,0x83e2);c.emit(*([0x4a]*HIGHLIGHT_SHIFT))

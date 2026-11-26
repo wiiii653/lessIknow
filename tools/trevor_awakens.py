@@ -2,6 +2,7 @@
 import math
 from pathlib import Path
 from engine_effects import PMBASE_SHADOW
+from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
 from music_timing import tick_at_bar
 START,MIDPOINT,HIT,END=tick_at_bar(64),tick_at_bar(68),tick_at_bar(72),tick_at_bar(90)-4000
@@ -54,7 +55,7 @@ def pmg_frames():
 
 def helper():
     c=Code(ENTRY)
-    def a(op,addr):c.emit(op,addr&255,addr>>8)
+    def a(op,addr):emit_scene_io(c,op,addr)
     c.emit(0xa9,16);a(0x8d,0x83e0)
     # Classify the quiet/loud half and set a unique bitmap cache key.
     a(0xad,0x83e3);c.emit(0xc9,HIT>>8);c.branch(0x90,'quiet');c.branch(0xd0,'loud')
@@ -170,8 +171,12 @@ def legacy_bank():
 
 def bank():
     # Only the already-used tunnel/rotator renderer remains in this bank.
-    from tunnel_ball import helper as tunnel_helper, rebound_helper
+    from tunnel_ball import helper as tunnel_helper, motion_tables, rebound_helper
     out=bytearray(16384);code=tunnel_helper()
     rebound=rebound_helper();out[:len(rebound)]=rebound
     out[0x3800:0x3800+len(code)]=code
+    for address, data in motion_tables():
+        offset = address - 0x4000
+        assert not any(out[offset:offset+len(data)])
+        out[offset:offset+len(data)] = data
     return bytes(out)

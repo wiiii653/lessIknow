@@ -2,6 +2,7 @@
 from pathlib import Path
 
 from engine_effects import COPY_PAGES, cached_display_list
+from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
 from music_timing import tick_at_bar
 ENTRY=0x7000
@@ -46,7 +47,7 @@ def frames():
 
 def helper():
     c=Code(ENTRY)
-    def a(op,address):c.emit(op,address&255,address>>8)
+    def a(op,address):emit_scene_io(c,op,address)
     # Frame number is computed from the coherent music clock by the main callback.
     a(0xad,0x83ed);c.emit(0x09,0xc0);a(0xcd,0x83fa)
     c.branch(0xd0,'changed');c.jump(0x4c,'colors')
