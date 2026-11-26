@@ -7,6 +7,8 @@ ROM_REGIONS = ((0xc000, 0xd000), (0xd800, 0x10000))
 ROM_BYTES = 0x3800
 RUN = 0x13e0
 PLAYER_ENTRY = 0x2146
+FRAMEBUFFER_CLEAR = 0x3ce0
+FRAMEBUFFER_SIZE = 0x1f00
 
 
 def loader(blob):
@@ -40,12 +42,33 @@ def loader(blob):
             + xex_segment(0x02e2, bytes((0, 0x10))))
 
 
-def run_stub(entry=PLAYER_ENTRY):
+def run_stub(entry=PLAYER_ENTRY, clear_framebuffer=False):
     # Blank the loader's display as soon as the standalone player takes over.
     return bytes.fromhex(
         '78 a9 00 8d 0e d4 8d 00 d4 8d 1d d0 8d 1a d0 '
-        'ad 01 d3 29 fe 8d 01 d3 4c'
-    ) + entry.to_bytes(2, 'little')
+        'ad 01 d3 29 fe 8d 01 d3'
+    ) + (b'\x20' + FRAMEBUFFER_CLEAR.to_bytes(2, 'little') if clear_framebuffer else b'') + (
+        b'\x4c' + entry.to_bytes(2, 'little'))
+
+
+def framebuffer_clear():
+    """Initialize the second framebuffer with ANTIC DMA and OS ROM off."""
+    from dance_banks import FRAME_BASES
+
+    c = Code(FRAMEBUFFER_CLEAR)
+    c.emit(0xa9, FRAME_BASES[1] >> 8)
+    c.jump(0x8d, 'destination_high')
+    c.emit(0xa9, 0, 0xa2, FRAMEBUFFER_SIZE >> 8, 0xa0, 0)
+    c.label('clear')
+    c.label('destination')
+    c.emit(0x99, 0, FRAME_BASES[1] >> 8, 0xc8)
+    c.branch(0xd0, 'clear')
+    c.jump(0xee, 'destination_high')
+    c.emit(0xca)
+    c.branch(0xd0, 'clear')
+    c.emit(0x60)
+    c.labels['destination_high'] = c.labels['destination'] + 2
+    return bytes(c.finish())
 
 
 def image(chunks):

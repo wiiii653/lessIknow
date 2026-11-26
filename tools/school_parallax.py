@@ -5,7 +5,14 @@ from engine_effects import COPY_PAGES, cached_display_list
 from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
 from music_timing import tick_at_bar
+from school_portrait_bank import bank_value
 ENTRY=0x7000
+BANK_INDEX = 19
+FRAME_COUNT = 18
+FRAMES_PER_BANK = 4
+FRAME_BYTES = 2560
+DISPATCH = 0x3d00
+COPY_FROM_BANK = DISPATCH + 15
 START=tick_at_bar(19,2)
 # Horizontal displacement of the face in the precomposed walk.
 FACE_OFFSETS = (0, 2, 4, 6, 8, 11, 13, 15, 17, 20, 22, 24, 26, 29, 31, 33, 35, 38)
@@ -55,7 +62,7 @@ def helper():
     a(0xad,0x83ed);c.emit(0x29,3,0xaa)
     c.jump(0xbd,'source_hi');c.emit(0x48)
     a(0xad,0x83e6);c.emit(0x29,4,0x0a,0x0a,0x0a,0x49,0xb0);a(0x8d,0x83fe)
-    c.emit(0x68,0xa2,2);a(0x20,COPY_PAGES)
+    c.emit(0x68,0xa2,2);a(0x20,COPY_FROM_BANK)
     cached_display_list(c, 2)
     a(0xad,0x83e6);c.jump(0x8d,'dl1_hi');c.jump(0x8d,'dl2_hi')
     c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');c.emit(0xa9,4);c.jump(0x8d,'dl2_lo');c.emit(0xa0,0)
@@ -82,12 +89,34 @@ def helper():
     return result
 
 
+def dispatch():
+    """Run one common helper and select the art bank only during the copy."""
+    c = Code(DISPATCH)
+    first = bank_value(BANK_INDEX)
+    c.emit(0xbd, first & 255, first >> 8)
+    c.jump(0x8d, 'art_selector')
+    c.emit(0xad, first & 255, first >> 8, 0x8d, 1, 0xd3)
+    c.emit(0x4c, ENTRY & 255, ENTRY >> 8)
+    assert c.origin + len(c.data) == COPY_FROM_BANK
+    c.emit(0x48)
+    c.label('load_art_selector')
+    c.emit(0xa9, 0, 0x8d, 1, 0xd3, 0x68)
+    c.emit(0x20, COPY_PAGES & 255, COPY_PAGES >> 8)
+    c.emit(0xad, first & 255, first >> 8, 0x8d, 1, 0xd3, 0x60)
+    c.labels['art_selector'] = c.labels['load_art_selector'] + 1
+    return bytes(c.finish())
+
+
 def banks():
-    pictures=frames(); code=helper()
-    for group in range(5):
-        out=bytearray(16384);out[0x3000:0x3000+len(code)]=code
-        for i in range(4):
-            p=pictures[min(group*4+i,17)]
+    pictures = frames()
+    assert len(pictures) == FRAME_COUNT
+    for start in range(0, FRAME_COUNT, FRAMES_PER_BANK):
+        out = bytearray(16384)
+        if start == 0:
+            code = helper()
+            offset = ENTRY - 0x4000
+            out[offset:offset+len(code)] = code
+        for i, p in enumerate(pictures[start:start+FRAMES_PER_BANK]):
             data=bytes(sum(p[j+k]<<(6-2*k) for k in range(4)) for j in range(0,len(p),4))
-            out[i*2560:(i+1)*2560]=data
+            out[i*FRAME_BYTES:(i+1)*FRAME_BYTES]=data
         yield bytes(out)

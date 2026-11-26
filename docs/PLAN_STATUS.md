@@ -55,7 +55,10 @@ has no playback validation in this build record.
   and its four updates per PAL frame.
 - **Memory:** all 64 banks are allocated. The existing development JSON
   reports 295 unique shared scanlines. Regenerate it before budgeting memory
-  for a change.
+  for a change. Its `bank_manifest` lists logical load slots, selector
+  addresses, owners and verified empty spans using exclusive end addresses.
+  The school panorama stores 18 frames and shares its renderer from slot 33.
+  The runtime clears the second framebuffer at startup.
 
 The development tree after prerelease 181 shadows PMBASE at `$0DFD`
 for title fireworks, whistle PMG, and the two Trevor renderers. Sprite

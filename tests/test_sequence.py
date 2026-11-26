@@ -173,9 +173,16 @@ class SequenceTests(unittest.TestCase):
                 super().__setitem__(address, value)
 
         memory = StartupMemory(XEX.read_bytes())
+        from dance_banks import FRAME_BASES
+        from os_ram import FRAMEBUFFER_SIZE
+
+        back = FRAME_BASES[1]
+        end = back + FRAMEBUFFER_SIZE
+        memory[back:end] = b'\xa5' * FRAMEBUFFER_SIZE
+        guard = bytes(memory[end:end+8])
         cpu = MPU(memory=memory)
         cpu.pc = RUN
-        for _ in range(300000):
+        for _ in range(350000):
             if cpu.pc == 0x2146:
                 break
             cpu.step()
@@ -197,6 +204,8 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(memory.frames[HOLD_FRAMES-1][2], 0)
         self.assertEqual(memory.blank_edges, HOLD_FRAMES + 1)
         self.assertFalse(any(memory[FONT:ENTRY+0x400]))
+        self.assertFalse(any(memory[back:end]))
+        self.assertEqual(bytes(memory[end:end+8]), guard)
         self.assertEqual(cpu.memory[0xd301], 0xfe)
         self.assertEqual(cpu.memory[0xd40e], 0)
         self.assertEqual([cpu.memory[a] for a in (0xd400, 0xd01d, 0xd01a)], [0, 0, 0])

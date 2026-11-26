@@ -40,14 +40,15 @@ import title_plasma
 import title_water
 import trevor_ball_flight
 import loading_screen
-from school_parallax import banks as school_pan_banks
+import school_parallax
 from trevor_awakens import END as TREVOR_END, HIT as TREVOR_HIT, bank as trevor_bank
 from trevor_polished import bank as polished_trevor_bank
 from basketball_hero import START as HERO_START, END as HERO_END, ENTRY as HERO_ENTRY, BANK_VALUE as HERO_BANK, bank as hero_bank
 from pompom_effects import ENTRY as POM_ENTRY, DATA as POM_DATA, helper as pom_helper
 from rainbow_ball import ENTRY as BALL_ENTRY, RESTORE as BALL_RESTORE, helper as ball_helper
 from rainbow_ball import SPRAY_DATA, spray_data
-from os_ram import loader, image as os_image, run_stub, RUN, PLAYER_ENTRY
+from os_ram import (loader, image as os_image, run_stub, RUN, PLAYER_ENTRY,
+                    FRAMEBUFFER_CLEAR, FRAMEBUFFER_SIZE, framebuffer_clear)
 
 from crush_portraits import START as CRUSH_TICK, END as CRUSH_END, ENTRY as CRUSH_ENTRY, DATA as CRUSH_DATA, helper as crush_helper, packed as crush_packed, cleanup as crush_cleanup
 
@@ -75,6 +76,38 @@ def validate_allocations(inserts):
             raise ValueError(f'memory overlap at ${next_start:04X}')
 
 
+def bank_manifest():
+    """Describe logical load order and explicitly reserved empty ranges."""
+    groups = (
+        (0, 7, 'Stereo music'),
+        (7, 8, 'Stereo music and practice atlas'),
+        (8, 14, 'Ribbon frames and kiss effect'),
+        (14, 15, 'School portrait, notes and final card resources'),
+        (15, 16, 'Basketball hero'),
+        (16, 17, 'Trevor entrance, montage director and ribbon selector'),
+        (17, 25, 'Banana bunch frames'),
+        (25, 33, 'Tunnel and eyes frames'),
+        (33, 38, 'School panorama, star phases and title masks'),
+        (38, 54, 'Trevor poses, ribbon assets, title masks and final portrait'),
+        (54, 55, 'Title plasma, reflection and fireworks'),
+        (55, 63, 'Peeled banana frames'),
+        (63, 64, 'Dance and finale controllers'),
+    )
+    banks = [{'slot': slot, 'selector_address': 0x26fc+slot if slot < 14 else bank_value(slot-14),
+              'cpu_start': 0x4000, 'cpu_end_exclusive': 0x8000, 'owner': owner}
+             for first, end, owner in groups for slot in range(first, end)]
+    first_school = 14 + school_parallax.BANK_INDEX
+    helper_end = school_parallax.ENTRY + len(school_parallax.helper())
+    full_banks, last_frames = divmod(school_parallax.FRAME_COUNT, school_parallax.FRAMES_PER_BANK)
+    last_school = first_school + full_banks
+    for slot in range(first_school+1, last_school+1):
+        banks[slot]['verified_free_ranges'] = [[school_parallax.ENTRY, helper_end]]
+    banks[last_school]['verified_free_ranges'].insert(
+        0, [0x4000+last_frames*school_parallax.FRAME_BYTES,
+            0x4000+school_parallax.FRAMES_PER_BANK*school_parallax.FRAME_BYTES])
+    return banks
+
+
 def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     if output_path.exists() and not replace:
         raise FileExistsError(f'Preserving existing XEX: {output_path}; choose --output with a new name')
@@ -100,6 +133,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     portrait_code = crush_helper([])
     portrait_data = crush_packed()
     practice_frame = frame_blob(packed_rows(practice_pixels()))
+    assert (SCHOOL_PORTRAIT_END - SCHOOL_PORTRAIT_TICK + 31)//32 == school_parallax.FRAME_COUNT
     # Compact the vertical mapping without dropping a single image pixel.
     # Dance: full 192-line gym; kaleidoscope: 96 doubled lines; school: 64 tripled.
     sample_rows = [list(range(192)) if frame < 2 else
@@ -452,7 +486,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     for _ in range(5):c.emit(0x4a);absolute(0x6e,STATE+13)
     absolute(0xad,STATE+13);c.emit(0x4a,0x4a,0xaa)
     absolute(0xad,0xd301);c.emit(0x48)
-    absolute(0xbd,0x08d3);absolute(0x8d,0xd301);absolute(0x20,0x7000)
+    absolute(0x20,school_parallax.DISPATCH)
     c.emit(0x68);absolute(0x8d,0xd301);c.emit(0x60)
     c.label('copy_practice')
     compare_tick(PRACTICE_CUTS[2], 'practice_third', 'practice_before_third')
@@ -852,7 +886,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     missiles, players = pmg_art()
     inserts = [(RUNTIME_ORIGIN, ribbon_dance.install_runtime(runtime_helper())), (0x0800, bytes(y // 3 for y in range(192))), (0x0980, missiles),
                (0x0a00, players), (live_table, tables[live_table-TABLE_BASE:]), (ORIGIN, code),
-               (RUN, run_stub(terminal_opening.ENTRY)),
+               (RUN, run_stub(terminal_opening.ENTRY, clear_framebuffer=True)),
                (terminal_opening.CLEANUP, terminal_opening.cleanup(PLAYER_ENTRY)),
                (EFFECT_ORIGIN, effect_code), (COPY_ORIGIN, copy_code),
                (0x8000, display(0x8000)),
@@ -869,11 +903,12 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     inserts += scene_palette_io.inserts(terminal_labels['enabled'], terminal_labels['palette'])
     inserts.append((title_water.RETIRE_ENTRY, title_water.retire(
         title_plasma.CITY_REVEAL_START, main_act_terminal.SCHOOL_START)))
+    inserts.append((school_parallax.DISPATCH, school_parallax.dispatch()))
     # Framebuffers own their complete runtime spans, including RAM under ROM.
     inserts += [(FRAME_BASES[0], terminal_opening.framebuffer(c.labels['music_entry'])),
-                (FRAME_BASES[1], bytes(0x1f00))]
+                (FRAMEBUFFER_CLEAR, framebuffer_clear())]
     # Reject every overlap, including accidental code/data growth.
-    validate_allocations(inserts)
+    validate_allocations([*inserts, (FRAME_BASES[1], bytes(FRAMEBUFFER_SIZE))])
     rom_chunks = [(address, data) for address, data in inserts if address >= 0xc000]
     rom = bytearray(os_image(rom_chunks))
     rom[-6:-4] = c.labels['music_entry'].to_bytes(2, 'little')
@@ -957,7 +992,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             output.extend(school_bank_loader(post_trevor_director.install(ribbon_inbetweens.install(trevor_bank(),2)),index=2,progress=True))
             for index, frame in enumerate(mosaic_banks(),3):
                 output.extend(school_bank_loader(frame,index=index,progress=True))
-            for index, frame in enumerate(school_pan_banks(),19):
+            for index, frame in enumerate(school_parallax.banks(), school_parallax.BANK_INDEX):
                 if index==trevor_ball_flight.BANK_INDEX:frame=trevor_ball_flight.install(frame)
                 frame = final_boy.install_mark_frames(frame, index)
                 frame = title_plasma.install_mask_pages(frame, index, title_pages)
@@ -989,9 +1024,17 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             loading_inserted = True
     if not patched or not inserted or not loading_inserted:
         raise ValueError('missing v035 code or RUN vector')
+    manifest = bank_manifest()
+    bank_payloads = [payload for start, end, payload in segments(output)
+                     if (start, end) == (0x8000, 0xbfff)]
+    assert len(manifest) == len(bank_payloads) == 64
+    for entry, payload in zip(manifest, bank_payloads):
+        for start, end in entry.get('verified_free_ranges', ()):
+            assert not any(payload[start-0x4000:end-0x4000]), (entry['slot'], hex(start))
     with output_path.open('wb' if replace else 'xb') as stream:
         stream.write(output)
     output_path.with_suffix('.json').write_text(json.dumps({
+        'bank_manifest': manifest,
         'title_tick': TITLE_TICK, 'school_tick': SCHOOL_TICK,
         'school_phases': SCHOOL_PHASES, 'table_base': TABLE_BASE,
         'dance_tick': DANCE_TICK, 'dance_second_tick': DANCE_SECOND_TICK,
