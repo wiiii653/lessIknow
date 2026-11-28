@@ -4,50 +4,30 @@ Source [outro_text.py](../tools/outro_text.py). See also [Greetings terminal](gr
 
 ## Terminal credits
 
-### Page 1
+The terminal opens blank. After four PAL frames, the status line starts typing
+on the bottom row. Each Enter scrolls the text up one row. The cursor blinks
+while typing and during the pause before the next line. The same cadence
+carries straight into the greetings.
+
+### Credits in typing order
 
 ```text
-[XE-OS] LINK:ONLINE // SV2026 [OK]
+>[XE-OS] LINK:ONLINE // SV2026 [OK]
 >SYS.OPEN CREDITS [OK]
 >THE LESS I KNOW THE BETTER
 >A\SLOP BY OGNJEN / ATARI XE 1 MB
-```
-
-### Page 2
-
-```text
 >I STARTED VIBECODING IN JULY 2026
 >THIS IS MY FIRST WORK FOR ATARI
 >MADE WITH OPENAI CODEX
-```
-
-### Page 3
-
-```text
 >SYS.OPEN AUDIO.LOG [OK]
 >SONG / TAME IMPALA
 >THE LESS I KNOW THE BETTER
 >POKEY / OGNJEN / CODEX
-```
-
-### Page 4
-
-```text
 >MIDI / MIDISHOW 200337
-```
-
-### Page 5
-
-```text
 >UPLINK SV2026 [CONNECTED]
 >MADE FOR
 >SILLY VENTURE 2026
 >AI TOOLS / ATARI SOUL
-```
-
-### Page 6
-
-```text
 >HUMAN VISION / LLM CODE
 ```
 

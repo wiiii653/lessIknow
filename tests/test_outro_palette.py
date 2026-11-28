@@ -48,9 +48,9 @@ class OutroPaletteTests(unittest.TestCase):
             self.assertEqual(bytes(m[0xd016:0xd019]),body)
             self.assertEqual((m[0xd01a],m[0xd301]),(0,0xff))
 
-    def test_live_phase_continues_through_a_page_change_and_stale_snapshot(self):
+    def test_live_phase_continues_through_a_scroll_and_stale_snapshot(self):
         from outro_palette import INK_PHASES, LIVE_TICK, TICKS_PER_PHASE
-        from outro_text import HISTORY_ROWS, STATE_START, TEXT_DLI_VCOUNT, page_starts
+        from outro_text import STATE_START, TEXT_DLI_VCOUNT, page_starts
 
         start = page_starts()[1]
         cpu = seq.execute(start-1)
@@ -60,8 +60,8 @@ class OutroPaletteTests(unittest.TestCase):
         self.assertEqual(bytes(cpu.memory[0xd016:0xd019]), bytes(INK_PHASES[previous]))
 
         cpu = seq.execute(start, cpu)
-        self.assertEqual(cpu.memory[STATE_START], HISTORY_ROWS)
-        # Advance music across frames while foreground stays on the page start.
+        self.assertEqual(cpu.memory[STATE_START], 1)
+        # Advance music across frames while foreground stays on the line cue.
         for tick in range(start, start+4*TICKS_PER_PHASE, TICKS_PER_PHASE):
             cpu.memory[LIVE_TICK] = tick&255
             self.interrupt(cpu, TEXT_DLI_VCOUNT*2)

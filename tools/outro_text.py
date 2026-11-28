@@ -5,6 +5,7 @@ from music_timing import tick_at_bar
 ENTRY = 0xC000
 RESET_ENTRY = 0xC340
 START, END = tick_at_bar(112), tick_at_bar(137)
+TYPE_START = START + 16  # Show the empty terminal for four PAL frames.
 TEXT_POINTERS = 0xC400
 FONT = 0xC800
 COLOR_FONT = 0xB400
@@ -31,6 +32,7 @@ BODY_DLI_VCOUNT = 123
 # eight-byte footer ending in the JVB target's high byte.
 BITMAP_JVB_HIGH = 2 + 192 * 3 + 7
 PROMPT = b'>'
+STATUS_HEADER = '[XE-OS] LINK:ONLINE // SV2026 [OK]'
 FINAL_CARD_ENTRY = 0x5F90
 FINAL_CARD_DL = 0xBE80
 FINAL_CARD_SOURCE = 0x5C60   # control bank, before the final-orbit data
@@ -63,7 +65,6 @@ CREDITS = (
     ("UPLINK SV2026 [CONNECTED]", "MADE FOR", "SILLY VENTURE 2026",
      "AI TOOLS / ATARI SOUL", "HUMAN VISION / LLM CODE"),
 )
-GREETINGS_START = START + len(CREDITS) * 1000
 GREETZ = (
     "GREETINGS TO ALL MY CHOOMS!",
     "ESPECIALLY MY SON VICVIP AND HIS",
@@ -147,7 +148,8 @@ GLYPHS = {
 
 
 def all_lines():
-    lines = tuple(dict.fromkeys(tuple(line for page in CREDITS for line in page) + GREETZ))
+    lines = tuple(dict.fromkeys(tuple(line for page in CREDITS for line in page) + GREETZ
+                                + (STATUS_HEADER,)))
     if len(lines) > 40 or any(len(line) > 37 for line in lines):
         raise ValueError('outro text exceeds its compact line layout')
     if len(GREETZ) > 27:
@@ -248,7 +250,6 @@ def font_data(card=False):
     for char in set(''.join(all_lines())+card_lines+'>'):
         rows=TERMINAL_FONT[char].split() if char in TERMINAL_FONT else tuple(''.join(row[i] for i in (0,2,4)) for row in GLYPHS[char])
         font[ord(char)*8:ord(char)*8+8]=bytes(sum((int(bit)<<(6-2*i)) for i,bit in enumerate(row)) for row in rows)+b'\0'
-    font[:40]=b'[XE-OS] LINK:ONLINE // SV2026 [OK]'.ljust(40,b' ')
     # Unused control glyphs hold timing/length tables, loaded on entry.
     # The retired UI bytes are available for compressed staging instead.
     lines=display_lines()
@@ -324,7 +325,7 @@ def helper():
     a(0xAD, STATE_FLAG); c.branch(0xF0, 'init_text');c.jump(0x4C,'text_ready')
     c.label('init_text')
     c.emit(0xA9, 1); a(0x8D, STATE_FLAG)
-    from terminal_typing import CACHE_ENTRY, CACHED_LINES, ENTRY as typing_entry, cache_helper
+    from terminal_typing import CACHE_ENTRY, CACHED_LINES, ENTRY as typing_entry, TIMES, cache_helper, schedule
     c.emit(0xa9,0xff,0xa2,HISTORY_ROWS-1)
     c.label('invalidate_rows');a(0x9d,CACHED_LINES);c.emit(0xca);c.branch(0x10,'invalidate_rows')
     for offset in range(0,BITMAP_ROWS*3,256):
@@ -358,12 +359,14 @@ def helper():
             a(0x8D,base+TEXT_DL+row*3+offset)
     c.jump(0x4C,'done')
     c.label('cards')
-    # Write a whole page quickly, then hold it until the next page starts.
-    c.emit(0xA2,len(pages())-1)
-    c.label('find_page');a(0xAD,0x83E3);c.jump(0xDD,'page_hi');c.branch(0x90,'previous_page');c.branch(0xD0,'page_found')
-    a(0xAD,0x83E2);c.jump(0xDD,'page_lo');c.branch(0xB0,'page_found')
+    # The start time of the bottom row also cues the next scroll.
+    cue_lo = TIMES + HISTORY_ROWS - 1
+    cue_hi = cue_lo + len(schedule())
+    c.emit(0xA2,len(page_starts())-1)
+    c.label('find_page');a(0xAD,0x83E3);a(0xDD,cue_hi);c.branch(0x90,'previous_page');c.branch(0xD0,'page_found')
+    a(0xAD,0x83E2);a(0xDD,cue_lo);c.branch(0xB0,'page_found')
     c.label('previous_page');c.emit(0xCA);c.branch(0x10,'find_page');c.emit(0xA2,0)
-    c.label('page_found');c.jump(0xBD,'page_offset');a(0x8D,STATE_START)
+    c.label('page_found');a(0x8E,STATE_START)
     c.label('update')
     # A real prompt stays in one column; only the cursor advances.
     c.emit(0xA2, 0)
@@ -377,8 +380,6 @@ def helper():
     a(0xAD, TMP_LO); a(0x99, 0xBC00+TEXT_DL+1)
     c.emit(0xa9,0xbf); a(0x99, 0xBC00+TEXT_DL+2)
     c.emit(0xE8, 0xE0, HISTORY_ROWS); c.branch(0xD0, 'row')
-    a(0xAD,STATE_START);c.branch(0xD0,'done')
-    a(0x8D,base+TEXT_DL+1);c.emit(0xA9,FONT>>8);a(0x8D,base+TEXT_DL+2)
     c.label('done')
     a(0xAD,STATE_FLAG);c.emit(0xC9,1);c.branch(0xD0,'published')
     c.label('publish_wait');a(0xAD,0xD40B);c.emit(0xC9,124);c.branch(0x90,'publish_wait');c.emit(0xC9,128);c.branch(0xB0,'publish_wait')
@@ -390,9 +391,6 @@ def helper():
     c.label('published');c.emit(0x60)
     c.label('line_lo'); c.emit(*(a & 255 for a in display_addresses()))
     c.label('line_hi'); c.emit(*(a >> 8 for a in display_addresses()))
-    c.label('page_lo');c.emit(*(t&255 for t in page_starts()))
-    c.label('page_hi');c.emit(*(t>>8 for t in page_starts()))
-    c.label('page_offset');c.emit(*(i*HISTORY_ROWS for i in range(len(pages()))))
     assert c.origin+len(c.data)<=CACHE_ENTRY
     c.emit(*bytes(CACHE_ENTRY-c.origin-len(c.data)),*cache_helper())
     if c.origin+len(c.data)>RESET_ENTRY:raise ValueError('text helper exceeds reset boundary')
@@ -450,28 +448,17 @@ def display_addresses():
 
 
 def display_lines():
-    return tuple(line for page in pages() for line in (*page,*(['']*(HISTORY_ROWS-len(page)))))+('',)*HISTORY_ROWS
+    return ('',)*(HISTORY_ROWS-1) + typing_lines() + ('',)*HISTORY_ROWS
 
 
-def pages():
-    first = ("", *CREDITS[0][:HISTORY_ROWS-1])
-    greetings = tuple(line for line in GREETZ if line)
-    assert len(greetings) >= HISTORY_ROWS
-    credits = [CREDITS[0][HISTORY_ROWS-1:], *CREDITS[1:]]
-    credit_pages = tuple(page[i:i+HISTORY_ROWS] for page in credits
-                         for i in range(0, len(page), HISTORY_ROWS))
-    greeting_pages = tuple(greetings[i:i+HISTORY_ROWS]
-                           for i in range(0, len(greetings)-HISTORY_ROWS, HISTORY_ROWS))
-    # Keep the lead-in to the closing line visible on the last page.
-    return (first, *credit_pages, *greeting_pages, greetings[-HISTORY_ROWS:])
+def typing_lines():
+    credits = tuple(line for group in CREDITS for line in group if line)
+    return (STATUS_HEADER,) + credits + tuple(line for line in GREETZ if line)
 
 
 def page_starts():
-    credit_pages=sum((len(page)+HISTORY_ROWS-1)//HISTORY_ROWS for page in (("", *CREDITS[0]), *CREDITS[1:]))
-    greetings=len(pages())-credit_pages
-    assert GREETINGS_START<END and greetings>0
-    return tuple(START+(GREETINGS_START-START)*i//credit_pages for i in range(credit_pages))+tuple(
-        GREETINGS_START+(END-GREETINGS_START)*i//greetings for i in range(greetings))
+    line_count = len(typing_lines())
+    return tuple(TYPE_START + (END-TYPE_START)*i//line_count for i in range(line_count))
 
 
 def inserts():

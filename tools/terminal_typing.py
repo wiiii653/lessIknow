@@ -15,21 +15,11 @@ CACHE_LOOKUP=0xebcf
 
 def schedule():
     import outro_text as text
-    ticks=[]
-    starts=text.page_starts()
-    for start,end,page in zip(starts,(*starts[1:],text.END),text.pages()):
-        if start >= text.GREETINGS_START:
-            # The page selector still gates visibility at start. Pre-age
-            # all four rows so the first displayed frame has complete text.
-            ready = text.GREETINGS_START - PROMPT_DELAY - max(map(len, text.GREETZ))
-            ticks.extend([ready] * text.HISTORY_ROWS)
-            continue
-        now=start
-        for line in page:
-            ticks.append(now);now+=PROMPT_DELAY+len(line)+ENTER_DELAY
-        assert now<=end,(page,now,end)
-        ticks.extend([end]*(text.HISTORY_ROWS-len(page)))
-    return ticks+[text.END]*(text.HISTORY_ROWS+1)
+    starts = text.page_starts()
+    for start, end, line in zip(starts, (*starts[1:], text.END), text.typing_lines()):
+        assert start + PROMPT_DELAY + len(line) + ENTER_DELAY <= end
+    return ([text.START] * (text.HISTORY_ROWS-1) + list(starts)
+            + [text.END] * (text.HISTORY_ROWS+1))
 
 def helper():
     import outro_text as text
