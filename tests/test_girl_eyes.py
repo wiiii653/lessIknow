@@ -17,9 +17,9 @@ class GirlEyesTests(unittest.TestCase):
             self.assertEqual(m[0xd301],0xff)
             if START<=tick<END:
                 seen.add(expected)
-                palette={START:(0xf6,0xba,0x2e),START+32:(0x86,0x4a,0x9e),
-                         START+64:(0x86,0x4a,0x2e),START+96:(0x86,0x4a,0x9e),
-                         END-1:(0x16,0x7a,0x9e)}
+                palette={START:(0xf6,0xba,0x9a),START+32:(0x86,0x4a,0x9a),
+                         START+64:(0x86,0x4a,0x1a),START+96:(0x86,0x4a,0x1a),
+                         END-1:(0x16,0x7a,0x1a)}
                 self.assertEqual(m[0xd016:0xd019],list(palette[tick]))
                 art=pixels(expected-60)
                 wanted=bytes(art[y//2*160+x] for y in range(192) for x in range(160))

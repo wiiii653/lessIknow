@@ -19,11 +19,11 @@ class RibbonBufferTests(unittest.TestCase):
             base=(m[0xd407]&0xfc)<<8
             for plane,(x,y) in enumerate(hands):
                 self.assertEqual(m[0xd000+plane],x+34,(tick,plane))
-                origin=((y*3+17)//2-32)&255
+                origin=(y*3+17)//2-32
                 expected=bytearray(128)
                 shape=streams[plane*1024+phases[plane]*64:plane*1024+(phases[plane]+1)*64]
                 for row,value in enumerate(shape):
-                    if origin+row<128:expected[origin+row]=value
+                    if 0<=origin+row<128:expected[origin+row]=value
                 start=base+0x200+plane*128
                 self.assertEqual(bytes(m[start:start+128]),bytes(expected),(tick,plane))
 

@@ -622,12 +622,20 @@ class SequenceTests(unittest.TestCase):
             self.assertLess(cpu.processorCycles, limit)
 
     def test_inactive_buffer_is_updated_then_swapped(self):
+        from title_water import BUFFER_PAIRS, FOOTER_OFFSET, TAIL_OFFSET
+
         cpu = execute(0)
         for tick, expected in ((1496, 0x8000), (1592, 0x8400), (2992, 0x8000),
                                (DANCE_TICK+96, 0x8400), (KALEIDO_TICK, 0x8000)):
             active = cpu.memory[0xd402] | cpu.memory[0xd403] << 8
             previous = cpu.memory[active:active + 586]
             cpu = execute(tick, cpu)
+            if tick == 2992:
+                water_tail = dict(BUFFER_PAIRS)[active] + TAIL_OFFSET
+                self.assertEqual(previous[FOOTER_OFFSET:FOOTER_OFFSET + 3],
+                                 [1, water_tail & 255, water_tail >> 8])
+                # Title retirement restores the footer during blanking.
+                previous[FOOTER_OFFSET:FOOTER_OFFSET + 3] = [0x70] * 3
             self.assertEqual(cpu.memory[active:active + 586], previous)
             self.assertEqual(cpu.memory[0xd402] | cpu.memory[0xd403] << 8, expected)
 

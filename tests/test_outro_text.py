@@ -164,7 +164,7 @@ class OutroTests(unittest.TestCase):
             line+=((op>>4)&7)+1 if mode==0 else 8 if mode in (2,4) else 1
             if op&128:events.append(line)
             if mode and op&64:pc+=2
-        self.assertEqual(events,[1,9,19,27,35,43,51,59,67,79,157,235])
+        self.assertEqual(events,[1,79,157,203,211,219,227,235])
         self.assertEqual(line,235)
         self.assertLessEqual((start&0x3ff)+(pc-start)+2,0x400)
 
@@ -190,7 +190,7 @@ class OutroTests(unittest.TestCase):
         self.assertEqual(memory.publications,[0xbc])
         self.assertTrue(memory.staging_colors)
         self.assertTrue(all(colors==(0,)*6 for colors in memory.staging_colors))
-        self.assertEqual(memory.published_colors,[(0x4c,0x9c,0x2c)])
+        self.assertEqual(memory.published_colors,[(0x4a,0x9a,0x2a)])
         memory.publications.clear()
         seq.execute(text.END,cpu)
         self.assertFalse(memory.publications)

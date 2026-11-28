@@ -129,7 +129,8 @@ class HeroTests(unittest.TestCase):
 
     def test_dunk_ball_follows_hand_until_release(self):
         cpu=None
-        for phase,pose,center in ((0,2,(85,102)),(46,2,(85,102)),
+        # The crouch and its hand are raised two source rows for this cut.
+        for phase,pose,center in ((0,2,(85,95)),(46,2,(85,95)),
                                   (47,3,(99,28)),(60,3,(99,28)),
                                   (61,4,(115,18)),(74,4,(115,18)),
                                   (75,5,(124,32)),(81,5,(124,32))):
@@ -143,18 +144,19 @@ class HeroTests(unittest.TestCase):
 
     def test_four_satellites_orbit_the_ball_on_distinct_counter_rotating_paths(self):
         from basketball_hero import satellite_orbits
-        paths=satellite_orbits();actual=[[] for _ in range(4)];cpu=None
-        for age in range(0,256,8):
+        paths=satellite_orbits(training=True);actual=[[] for _ in range(4)];cpu=None
+        for age in range(0,128,4):
             tick=DUNK+age;cpu=sequence.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0xd00c],0x55)
             self.assertEqual(m[0xd301],0xff)
             missile_base = ((m[0xd407]&0xfc)<<8) + 0x180
             for plane in range(4):
                 rows=[row for row in range(128) if m[missile_base+row]&(3<<(2*plane))]
-                self.assertEqual(rows,list(range(rows[0],rows[0]+3)))
+                self.assertEqual(len(rows),3)
+                self.assertEqual(rows,list(range(rows[0],rows[0]+6,2)))
                 self.assertEqual([(m[missile_base+row]>>(2*plane))&3 for row in rows],[1,3,1])
                 point=(m[0xd004+plane]-m[0x83e8]-46,rows[0]-m[0x83e9]-6)
-                self.assertEqual(point,paths[plane][(tick>>3)&31])
+                self.assertEqual(point,paths[plane][(tick>>2)&31])
                 actual[plane].append(point)
         self.assertEqual(len({tuple(path) for path in actual}),4)
         areas=[sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(path,path[1:]+path[:1])) for path in actual]
@@ -165,22 +167,27 @@ class HeroTests(unittest.TestCase):
 
     def test_satellites_follow_airborne_ball_and_become_glass_on_first_crack(self):
         from basketball_hero import satellite_orbits
-        paths=satellite_orbits();cpu=None
+        paths=satellite_orbits(training=True);cpu=None
         for phase in (46,47,60,61,74):
             tick=DUNK+phase*DUNK_PHASE_TICKS
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             missile_base = ((m[0xd407]&0xfc)<<8) + 0x180
             for plane in range(4):
-                dx,dy=paths[plane][(tick>>3)&31]
+                dx,dy=paths[plane][(tick>>2)&31]
                 self.assertEqual(m[0xd004+plane],m[0x83e8]+46+dx)
                 rows=[row for row in range(128) if m[missile_base+row]&(3<<(2*plane))]
                 self.assertEqual(rows[0],m[0x83e9]+6+dy)
                 self.assertGreaterEqual(rows[0],0);self.assertLess(rows[-1],128)
-        for phase in (75,76,81,87,93):
+        for phase, positions in (
+            (75, [168,174,177,177]),
+            (76, [167,174,177,178]),
+            (81, [162,170,175,182]),
+            (87, [149,161,176,194]),
+            (93, [135,158,184,209]),
+        ):
             cpu=sequence.execute(DUNK+phase*DUNK_PHASE_TICKS,cpu);m=cpu.memory
             self.assertEqual(m[0xd00c],0)
-            for plane in range(4):
-                self.assertEqual(m[0xd004+plane],round(130+(plane-1.5)*(5+(phase-75)*.7))+48)
+            self.assertEqual(m[0xd004:0xd008],positions)
 
     def test_dunk_only_writes_inactive_pmg_and_publishes_during_blanking(self):
         import json

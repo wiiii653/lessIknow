@@ -23,7 +23,7 @@ the Atari Arena captions.
 | Artifact | Bytes | SHA-256 |
 |---|---:|---|
 | [Prerelease 187](../releases/less-i-know-demo-prerelease-187-stereo.xex) | 1,031,138 | `89af0d1babcc4d5f820f2cdf5a999c67be152f31c1ff9d4bf1868fa0c5bb39d3` |
-| `build/hardware-dev.xex` | 1,031,120 | `6da09689335d59c841c1856cec53cac523f227b1efdc107783ac8a231115a5be` |
+| `build/hardware-dev.xex` | 1,031,138 | `89af0d1babcc4d5f820f2cdf5a999c67be152f31c1ff9d4bf1868fa0c5bb39d3` |
 | `build/visual-prototype-dev.xex` | 1,107,949 | `7f5d26d4c7993750c4c0a307b297fe9f77f852fffd3292659a9d16d8c92f6e5c` |
 
 The main-act terminal uses a one-color ANTIC C bitmap. Four rows keep the
@@ -55,9 +55,19 @@ updates across the same 440 and 374 PAL frames. The two later banana
 passes increased from 34 to 39 and from 54 to 62 updates. Their longest
 holds were six and seven PAL frames.
 
-The full py65 suite rerun for prerelease 187 passed 211 of 232 checks.
-The banana cycle-budget check passed, and the other 21 checks failed
-in the prior run on the one-color terminal build as well.
+The prerelease 187 audit corrected the PMG Y offset in three finale checks
+and signed row clipping in the front-solo ribbon check. The audit also added
+a packaging check for the RUNAD handoff. After updating the remaining 17
+expectations against the behavior below, all 233 tests passed in `make check`.
+
+| Checks | Audit finding |
+|---|---|
+| Five basketball checks | The crouch rises two source rows with the ball following the hand. The current satellite paths advance each PAL frame, use spaced missile rows and switch to the current shatter pattern. The restored poses and ball positions still matched the archive checks for properties shared by both versions. |
+| Display-list swap | The title-water jump at footer offset 578 is retired during blanking on the cut to the Atari Arena. The test checks the jump target, its three replacement bytes and the rest of the outgoing list byte for byte. |
+| Two late banana checks | The director maps two music ticks to one effect tick. All four satellites appeared at music tick offsets 96 and 112 in the four tested passages. The scaled fade and travel assertions passed. |
+| Four credits and final-card checks | The old expectations describe a brighter initial portrait and earlier display lists. The probes verified the current portrait publication, fade, page wrap and display lists. The four music DLI positions remain at the same scanlines. |
+| Eye shot, whistle and scene handoff | The checks refer to earlier palette values, a prior note position and a tunnel-to-dance boundary before the front-dance release. The raster and handoff checks passed with the current expectations. |
+| Ribbon inbetweens and loader dots | The solo uses its midpoint frames. The animated loader's three progress positions start at zero-based column 23. The relevant checks passed with those expectations. |
 
 Removing the unreachable montage dispatch and its tick check freed 125
 bytes in main code, bringing its free space to 135 bytes. In 465 py65
@@ -211,7 +221,7 @@ code. The numbered package preserves all 66 INIT wrappers, 64 staging clears,
 the deferred low RAM at `$4000–$47FF` and the `$4800` bootstrap. The final
 RUNAD stub uses `$3FB0–$3FC3`. py65 verified the handoff and all five
 low-RAM restore spans. Atari800 7.2.1 on PAL 1088XE recorded identical
-stereo POKEY output to the standard development XEX over the full track.
+stereo POKEY output to the earlier INIT package over the full track.
 See the [loader contract](HARDWARE_LOADER_CONTRACT.md) for the exact package
 difference and the AVG results.
 

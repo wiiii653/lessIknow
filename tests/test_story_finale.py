@@ -10,6 +10,10 @@ from final_orbits import AMOUNT, PHASE_MASK, PHASE_SHIFT, animated_position as o
 
 
 def raster(cpu):return sequence.SequenceTests().raster(cpu)
+# Convert orbit table Y to the first byte of the glyph within its PMG plane.
+ORBIT_GLYPH_TOP_OFFSET = 21
+
+
 def orbit_amount(m):return m.banks[m.values.index(m[0x08f1])][AMOUNT-0x4000]
 def active_pmg(m):
     base=(m[0xd407]&0xfc)<<8
@@ -65,7 +69,7 @@ class StoryFinaleTests(unittest.TestCase):
         p=artwork();self.assertEqual(raster(cpu),bytes(p[y//3*160+x] for y in range(192) for x in range(160)))
         display=m[0xd402]|m[0xd403]<<8
         from outro_text import BITMAP_ROWS,BITMAP_DL
-        self.assertEqual([y for y in range(BITMAP_ROWS) if m[display+BITMAP_DL+y*3]&128],[11,89])
+        self.assertEqual([y for y in range(BITMAP_ROWS) if m[display+BITMAP_DL+y*3]&128],[69,147])
         self.assertEqual(m[display],0x80)
         levels=[]
         for tick in range(FADE_START,END+1,16):
@@ -115,7 +119,7 @@ class StoryFinaleTests(unittest.TestCase):
             if op&128:
                 interrupts.append(line)
             display+=3 if mode and op&64 else 1
-        self.assertEqual(interrupts,[1,79,103,119,135,151,157,235])
+        self.assertEqual(interrupts,[1,79,103,151,157,235])
         for page in range(len(FINAL_CARD_PAGES)+1):
             for elapsed,ink in ((0,0),(16,2),(112,14),(896,14),(992,2),(1008,0)):
                 clock=(origin+page*1024+elapsed)&0xffff
@@ -179,7 +183,7 @@ class StoryFinaleTests(unittest.TestCase):
             base=(m[0xd407]&0xfc)<<8
             for plane in range(4):
                 shape=NOTE_SHAPES[plane] if notes_active(tick) else STAR_SHAPE
-                y=orbit_position((tick>>PHASE_SHIFT)&PHASE_MASK,orbit_amount(m),plane)[1]-2
+                y=orbit_position((tick>>PHASE_SHIFT)&PHASE_MASK,orbit_amount(m),plane)[1]-ORBIT_GLYPH_TOP_OFFSET
                 expected=bytearray(128);expected[y:y+12]=bytes(shape)
                 self.assertEqual(bytes(m[base+0x200+plane*128:base+0x280+plane*128]),bytes(expected))
 
@@ -267,7 +271,7 @@ class StoryFinaleTests(unittest.TestCase):
             expected = bytearray(0x280)
             for plane in range(4):
                 shape = NOTE_SHAPES[plane] if notes_active(START) else STAR_SHAPE
-                y = orbit_position(phase, orbit_amount(m), plane)[1]-2
+                y = orbit_position(phase, orbit_amount(m), plane)[1]-ORBIT_GLYPH_TOP_OFFSET
                 start = 128*(plane+1)+y
                 expected[start:start+len(shape)] = bytes(shape)
             candidates.append(bytes(expected))

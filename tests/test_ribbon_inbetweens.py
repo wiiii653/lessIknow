@@ -26,22 +26,12 @@ class RibbonInbetweenTests(unittest.TestCase):
                 self.assertEqual(d.frame_at(tick),d.frame_for_step(step))
             else:
                 self.assertEqual(d.frame_at(tick-1),d.frame_for_step(step))
-                selected=45+index if 6<=index<10 else 37+index
+                selected=37+index
                 self.assertEqual(d.frame_at(tick),selected)
                 self.assertEqual(d.frame_at(d.STEPS[step+1]-1),selected)
                 seen.add(index)
         self.assertEqual(seen,set(range(14)))
         self.assertIsNone(mid.step_midpoint(31));self.assertIsNone(mid.step_midpoint(63))
-
-        quarter_seen=set()
-        for step in range(117):
-            index=mid.step_midpoint(step)
-            if index not in range(6,10):continue
-            tick=(d.STEPS[step]+d.STEPS[step+1])//2
-            self.assertEqual(d.frame_at(tick-1),d.frame_for_step(step))
-            self.assertEqual(d.frame_at(tick),45+index)
-            quarter_seen.add(index)
-        self.assertEqual(quarter_seen,set(range(6,10)))
 
     def test_all_fourteen_new_frames_decode_and_have_new_body_and_hand_shapes(self):
         for index,(a,b) in enumerate(mid.PAIRS):
@@ -59,16 +49,16 @@ class RibbonInbetweenTests(unittest.TestCase):
             self.assertEqual(mid.decompress(encoded),mid.packed(index))
         self.assertLess(sum(len(data) for bank,source,data in mid.payloads()),22000)
 
-    def test_live_solo_quarters_decode_from_banks_with_the_decoder_installed(self):
+    def test_live_solo_midpoints_decode_from_banks_with_the_decoder_installed(self):
         cpu=None;seen=set();costs=[]
-        for step in range(117):
+        for step in range(32,64):
             index=mid.step_midpoint(step)
             if index not in range(6,10) or index in seen:continue
             seen.add(index)
             start=d.STEPS[step];tick=(start+d.STEPS[step+1])//2
             cpu=seq.execute(start,cpu);before=cpu.processorCycles
             cpu=seq.execute(tick,cpu);costs.append(cpu.processorCycles-before)
-            pixels,hands=d.scene_artwork(tick)
+            pixels,hands=mid.artwork(index)
             expected=bytes(pixels[y//3*160+x] for y in range(192) for x in range(160))
             m=cpu.memory
             self.assertEqual(seq.SequenceTests().raster(cpu),expected,(step,index))

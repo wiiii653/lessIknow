@@ -152,13 +152,20 @@ class PostTrevorDirectorTests(unittest.TestCase):
 
     def test_both_late_banana_sections_include_word_and_satellites(self):
         from music_timing import tick_at_bar
+        from trevor_polished import ROTATOR_PUFF_START
+
         cpu=None;words=[]
         for bar in (104,105,108,109):
             start=tick_at_bar(bar)
             cpu=seq.execute(start+16,cpu);m=cpu.memory
             self.assertEqual(m[0x0dd2],1,bar);words.append(m[0x0dd1])
-            cpu=seq.execute(start+56,cpu);m=cpu.memory
+            word_base=(m[0xd407]&0xfc)<<8
+            self.assertEqual(sum(any(m[word_base+0x200+p*128:word_base+0x280+p*128])
+                                 for p in range(4)),3,bar)
+            self.assertEqual(m[0xd008:0xd00c],[0]*4,bar)
+            cpu=seq.execute(start+2*ROTATOR_PUFF_START,cpu);m=cpu.memory
             base=(m[0xd407]&0xfc)<<8
+            self.assertEqual(m[0x0dd2],1,bar)
             self.assertEqual(m[0xd008:0xd00c],[1]*4,bar)
             self.assertTrue(all(any(m[base+0x200+p*128:base+0x280+p*128]) for p in range(4)),bar)
         self.assertEqual(words[0]^words[1],1)
@@ -173,7 +180,8 @@ class PostTrevorDirectorTests(unittest.TestCase):
         counts={};ink={};satellite_delta={}
         for age in (0,2,4,6,8,16,47,48,56,64,72,78,79,82,85,86,90,93):
             m=cpu.memory;old_base=(m[0xd407]&0xfc)<<8;m.writes.clear()
-            seq.execute(start+age,cpu)
+            # The director maps two music ticks to one effect tick.
+            seq.execute(start+2*age,cpu)
             self.assertFalse(any(old_base+0x180<=a<old_base+0x400 for a in m.writes),age)
             self.assertEqual(m[0xd301],0xff,age)
             base=(m[0xd407]&0xfc)<<8

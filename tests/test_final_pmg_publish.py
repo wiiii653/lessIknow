@@ -2,9 +2,9 @@
 import unittest
 import test_sequence as seq
 from test_engine_cache import TrackedMemory
-from final_boy import START,STAR_SHAPE,NOTE_SHAPES,notes_active,star_position
+from final_boy import START,STAR_SHAPE,NOTE_SHAPES,notes_active
 from final_orbits import PHASE_MASK, PHASE_SHIFT, animated_position as orbit_position
-from test_story_finale import orbit_amount
+from test_story_finale import ORBIT_GLYPH_TOP_OFFSET, orbit_amount
 
 class FinalPMGPublishTests(unittest.TestCase):
     def test_one_clean_glyph_per_plane_with_write_only_pmbase(self):
@@ -25,7 +25,8 @@ class FinalPMGPublishTests(unittest.TestCase):
             self.assertFalse(any(0x980<=a<0xc00 or 0x8980<=a<0x8c00 for a in m.writes[publication+1:]))
             for plane in range(4):
                 shape=NOTE_SHAPES[plane] if notes_active(tick) else STAR_SHAPE
-                expected=bytearray(128);y=orbit_position((tick>>PHASE_SHIFT)&PHASE_MASK,orbit_amount(m),plane)[1]-2
+                expected=bytearray(128)
+                y=orbit_position((tick>>PHASE_SHIFT)&PHASE_MASK,orbit_amount(m),plane)[1]-ORBIT_GLYPH_TOP_OFFSET
                 expected[y:y+12]=bytes(shape)
                 self.assertEqual(bytes(m[base+0x200+plane*128:base+0x280+plane*128]),expected)
             previous=base

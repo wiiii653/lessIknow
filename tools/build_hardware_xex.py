@@ -194,6 +194,32 @@ def replace_staging_clear(entries):
     return bytes(out)
 
 
+def with_runad_handoff(data):
+    """Install the base-RAM startup used in AVG-tested prerelease 187."""
+    entries = list(segments(data))
+    init_vector = xex_segment(0x02e2, b'\x00\x48')
+    run_vector = xex_segment(0x02e0, b'\xe0\x13')
+    tail = init_vector + run_vector
+    require(data.endswith(tail)
+            and entries[-2:] == [(0x02e2, 0x02e3, b'\x00\x48'),
+                                 (0x02e0, 0x02e1, b'\xe0\x13')]
+            and [entry[:2] for entry in entries[-4:-2]] == [
+                (0x4000, 0x47ff), (0x4800, 0x4873)],
+            'Unexpected low-RAM restore and startup records')
+    stub_address = 0x3fb0
+    stub = bytes.fromhex(
+        '78 a9 00 8d 0e d4 8d 00 d4 8d 2f 02'  # Disable IRQ, NMI and DMA.
+        ' a9 ff 8d 01 d3 4c 00 48'              # Select base RAM and enter bootstrap.
+    )
+    stub_end = stub_address + len(stub) - 1
+    require(all(end < stub_address or start > stub_end for start, end, _ in entries),
+            'RUNAD stub overlaps existing XEX data')
+    result = (data[:-len(tail)] + xex_segment(stub_address, stub)
+              + xex_segment(0x02e0, stub_address.to_bytes(2, 'little')))
+    require(len(result) < 1024 * 1024, 'Hardware XEX exceeds the established size bound')
+    return result
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source', type=Path)
@@ -204,6 +230,8 @@ if __name__ == '__main__':
                         help='show the finale star during bank loading')
     parser.add_argument('--full-rate-loading', action='store_true',
                         help='use the full finale star animation in a loader VBI')
+    parser.add_argument('--runad-handoff', action='store_true',
+                        help='use the AVG-tested base-RAM startup from prerelease 187')
     parser.add_argument('--fast-clear', action='store_true',
                         help='use the experimental unrolled staging clear')
     parser.add_argument('--approved-music', action='store_true',
@@ -223,6 +251,8 @@ if __name__ == '__main__':
     if args.animated_loading or args.full_rate_loading:
         from animated_loading import install
         result = install(result, full_rate=args.full_rate_loading)
+    if args.runad_handoff:
+        result = with_runad_handoff(result)
     if args.replace_dev:
         require(args.output.resolve() == ROOT / 'build/hardware-dev.xex',
                 '--replace-dev is restricted to build/hardware-dev.xex')

@@ -29,10 +29,10 @@ make check PYTHON=/path/to/venv/bin/python
 
 `make all` produces the replaceable raw prototype `build/visual-prototype-dev.xex`,
 its layout and timing JSON, and the AVG-packaged `build/hardware-dev.xex`.
-The hardware target uses release 122 music with the opening kick muted and
-enables the full-rate animated loader. `make check` runs the discovered test
-suite against the raw prototype and also exercises the packager. For numbered candidates,
-use the [hardware packaging procedure](docs/HARDWARE_LOADER_CONTRACT.md).
+The hardware target uses release 122 music with the opening kick muted, the
+full-rate animated loader and the AVG-tested RUNAD handoff. `make check` runs
+the discovered test suite against the raw prototype and exercises the packager.
+For numbered candidates, use the [hardware packaging procedure](docs/HARDWARE_LOADER_CONTRACT.md).
 
 ## Project map
 

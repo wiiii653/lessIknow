@@ -30,16 +30,16 @@ launch-to-opening time were unrecorded.
 
 ## Prerelease 187 packaging
 
-The base was rebuilt with `make all`. Its `hardware-dev.xex` has SHA-256
-`6da09689335d59c841c1856cec53cac523f227b1efdc107783ac8a231115a5be`.
-The numbered build replaces the last two XEX records, `INITAD=$4800` and
+The packager's `--runad-handoff` option reproduces the handoff used in
+prerelease 187. It replaces the last two XEX records, `INITAD=$4800` and
 `RUNAD=$13E0`, with a stub at `$3FB0–$3FC3` and `RUNAD=$3FB0`. The stub
 disables IRQ, NMI and display DMA, selects base RAM with `PORTB=$FF` and
 jumps to `$4800`. Its payload is
 `78 A9 00 8D 0E D4 8D 00 D4 8D 2F 02 A9 FF 8D 01 D3 4C 00 48`.
-All preceding XEX records matched the rebuilt base. The final file matched
-the hash from the AVG test. The two loading-speed experiments below are
-closed and their changes are absent from prerelease 187.
+All preceding XEX records match the INIT package. The current `make hardware`
+output compares byte for byte with the archived prerelease 187. The two
+loading-speed experiments below are closed and their changes are absent
+from prerelease 187.
 
 ## Selective clear test
 
@@ -104,7 +104,7 @@ execution and gives no measurement of AVGCart transfer time.
   `$0900–$0976`, `$0980–$09FF`, `$0A00–$0BFF`. Audit any increase; do not
   silently change the bootstrap.
 - Keep PORTB unchanged between loading the `$4000` buffer and executing the
-  bootstrap in the standard INIT package. For the RUNAD package, the
+  bootstrap in the legacy INIT package. For the RUNAD package, the
   stub explicitly selects the same base RAM that holds the deferred data.
   In either package, the `$4800` bootstrap disables IRQ/NMI, restores low
   RAM and jumps directly to `$13E0`.
@@ -122,11 +122,13 @@ hardware target and its dependencies. To make a numbered candidate, choose a
 new filename:
 
 ```sh
-python3 tools/build_hardware_xex.py build/visual-prototype-dev.xex /path/to/new-stereo-candidate.xex --approved-music --release-122-music --full-rate-loading
+python3 tools/build_hardware_xex.py build/visual-prototype-dev.xex /path/to/new-stereo-candidate.xex --approved-music --release-122-music --full-rate-loading --runad-handoff
 ```
 
-The development target enables the full-rate animated loader. Wrapper
-refreshes use the bounded `124 <= VCOUNT < 128` blanking window inherited
+The development target enables the full-rate animated loader and the RUNAD
+handoff. The command-line packager retains the INIT handoff when invoked
+without `--runad-handoff`. Wrapper refreshes use the bounded
+`124 <= VCOUNT < 128` blanking window inherited
 from prerelease 181. The final wrapper restores the OS VBI and disables
 both the DMA shadow and ANTIC DMA before late segments overwrite the loader
 display. See [Project Status](PLAN_STATUS.md#current-development-build)

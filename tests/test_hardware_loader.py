@@ -2,7 +2,7 @@
 import unittest
 from artifact import XEX
 from build_hardware_xex import build, REFERENCE, ROOT, LOW_ENDS
-from build_hardware_xex import APPROVED_STEREO, with_approved_music
+from build_hardware_xex import APPROVED_STEREO, with_approved_music, with_runad_handoff
 from build_visual_prototype import xex_segment
 from extract_music import segments
 
@@ -18,6 +18,17 @@ class HardwareLoaderTests(unittest.TestCase):
         cls.source = XEX.read_bytes()
         cls.result = build(cls.source)
         cls.fast = build(cls.source, fast_clear=True)
+
+    def test_runad_handoff_preserves_base_package_and_matches_187_startup(self):
+        baseline = ROOT / 'releases/less-i-know-demo-prerelease-187-stereo.xex'
+        expected = list(segments(baseline.read_bytes()))
+        source = list(segments(self.result))
+        result = list(segments(with_runad_handoff(self.result)))
+        self.assertEqual(result[:-2], source[:-2])
+        self.assertEqual(result[-2:], expected[-2:])
+        with self.assertRaisesRegex(ValueError, 'overlaps'):
+            with_runad_handoff(self.result[:2] + xex_segment(0x3fb0, b'\0')
+                               + self.result[2:])
 
     @unittest.skipUnless((ROOT / 'build/visual-prototype-v330.xex').exists(),
                          'archived raw v330 prototype required for round-trip check')
@@ -57,14 +68,20 @@ class HardwareLoaderTests(unittest.TestCase):
         entries = list(segments(animated))
         self.assertEqual(len(entries), len(original) + 4)
         loading = entries[4][2][40:80]
+        dot_codes = set()
         for old, new in zip(original, entries[4:]):
             if old[0] == 0x3900:
                 self.assertEqual(old[2][:60], new[2][:60])
-                for row in (new[2][60:100], new[2][100:140]):
-                    self.assertEqual(row[:22], loading[:22])
-                    self.assertEqual(row[25:], loading[25:])
+                for offset in (60, 100):
+                    row = new[2][offset:offset+40]
+                    count = old[2][offset:offset+40].count(14)
+                    self.assertEqual(row[:23], loading[:23])
+                    self.assertEqual(row[23+count:], loading[23+count:])
+                    self.assertTrue(all(row[23:23+count]))
+                    dot_codes.update(row[23:23+count])
             elif old[0] not in (0x3800, 0x3880, 0x38a0):
                 self.assertEqual(old, new)
+        self.assertEqual(len(dot_codes), 1)
 
         cpu = MPU()
         for address, end, payload in entries[:7]:

@@ -6,8 +6,8 @@ all: build/visual-prototype-dev.xex build/visual-prototype-dev.json build/hardwa
 
 hardware: build/hardware-dev.xex
 
-build/hardware-dev.xex: build/visual-prototype-dev.xex tools/build_hardware_xex.py tools/animated_loading.py tools/build_audio_revision.py tools/build_compact_xex.py tools/build_avg_late_lowram.py releases/less-i-know-demo-release-058-stereo.xex releases/less-i-know-demo-release-122-stereo.xex
-	$(PYTHON) tools/build_hardware_xex.py $< $@ --replace-dev --approved-music --release-122-music --full-rate-loading
+build/hardware-dev.xex: build/visual-prototype-dev.xex tools/build_hardware_xex.py tools/animated_loading.py tools/build_audio_revision.py tools/build_compact_xex.py tools/build_avg_late_lowram.py releases/less-i-know-demo-release-058-stereo.xex releases/less-i-know-demo-release-122-stereo.xex Makefile
+	$(PYTHON) tools/build_hardware_xex.py $< $@ --replace-dev --approved-music --release-122-music --full-rate-loading --runad-handoff
 
 check: build/visual-prototype-dev.xex build/visual-prototype-dev.json build/kaleidoscope.xex
 	$(PYTHON) -c "import py65"

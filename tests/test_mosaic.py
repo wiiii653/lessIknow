@@ -110,9 +110,12 @@ class MosaicTests(unittest.TestCase):
         self.assertEqual(m[0xd301],0xff)
 
     def test_scene_handoffs_and_restart(self):
+        from ribbon_dance import FRONT_PREP_LEAD
         from trevor_awakens import END as TREVOR_END
+
+        front_prep = CRUSH_START - FRONT_PREP_LEAD
         cpu=None
-        for tick,scene in ((KALEIDO_START-1,14),(KALEIDO_START,6),(CRUSH_START-1,6),(CRUSH_START,14),
+        for tick,scene in ((KALEIDO_START-1,14),(KALEIDO_START,6),(front_prep-1,6),(front_prep,14),(CRUSH_START,14),
                            (TREVOR_END-1,16),(TREVOR_END,6),(96,0),(9163,14),(KALEIDO_START,6)):
             cpu=sequence.execute(tick,cpu)
             self.assertEqual(cpu.memory[0x83e0],scene)

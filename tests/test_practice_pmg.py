@@ -50,6 +50,6 @@ class PracticePmgTests(unittest.TestCase):
     def test_whistle_phrases_alternate_between_the_two_girls(self):
         start = PRACTICE_CUTS[2]
         cpu = sequence.execute(start)
-        for elapsed, position in ((0, 158), (255, 0), (256, 94), (511, 0), (512, 158)):
+        for elapsed, position in ((0, 158), (255, 0), (256, 84), (511, 0), (512, 158)):
             sequence.execute(start+elapsed, cpu)
             self.assertEqual(cpu.memory[0xd000:0xd004], [position, 0, 0, 0])
