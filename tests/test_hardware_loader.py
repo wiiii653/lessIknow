@@ -84,14 +84,15 @@ class HardwareLoaderTests(unittest.TestCase):
 
     @unittest.skipIf(MPU is None, 'py65 required')
     def test_full_rate_loading_decodes_all_finale_poses_and_wraps(self):
-        from animated_loading import FONT, frame_callback, install
+        from animated_loading import DELTAS, FONT, MARK, VBI_CODE, frame_callback, install
         from outro_text import FINAL_MARK_PHASES, final_mark
 
-        entries = list(segments(install(self.result, full_rate=True)))
+        entries = tuple(segments(install(self.result, full_rate=True)))
         cpu = MPU()
-        for address, end, payload in entries[:4]:
+        for start in (FONT, MARK, VBI_CODE, DELTAS):
+            address, end, payload = next(entry for entry in entries if entry[0] == start)
             cpu.memory[address:end+1] = payload
-        mark_row = entries[1][2][:40]
+        mark_row = cpu.memory[MARK:MARK+40]
         glyph_start = FONT + next(code for code in mark_row if code)*8
         _, labels = frame_callback(glyph_start)
         cpu.memory[labels['old_vbi_0']] = 0

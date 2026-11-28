@@ -21,10 +21,52 @@ the Atari Arena captions.
 
 | Artifact | Bytes | SHA-256 |
 |---|---:|---|
-| `build/hardware-dev.xex` | 1,028,248 | `64990331f51b176f93c2ee267e98f531d8b05c830dc1e747ac11e438c5c99e59` |
-| `build/visual-prototype-dev.xex` | 1,108,074 | `c0ecffad405a965b409759c42e78f5c3f44b156fc27825604f368a6256927e14` |
+| `build/hardware-dev.xex` | 1,031,120 | `6da09689335d59c841c1856cec53cac523f227b1efdc107783ac8a231115a5be` |
+| `build/visual-prototype-dev.xex` | 1,107,949 | `7f5d26d4c7993750c4c0a307b297fe9f77f852fffd3292659a9d16d8c92f6e5c` |
 
-The current build passed seven focused terminal checks. An Atari800 PAL
+The main-act terminal uses a one-color ANTIC C bitmap. Four rows keep the
+same placement and timing. Two pages of four row slots use 1,120 bytes of
+unbanked bitmap storage. The writer only redraws affected character pairs,
+and scrolling rotates the row pointers. All 42 captions completed within
+their cue windows in Atari800. The stereo POKEY stream matched the
+preceding build over the full track.
+
+Atari800 7.2.1 on PAL 1088XE recorded 174 tunnel bitmap updates and 355
+ball updates over the first 744-frame tunnel sequence, up from 158 and
+315. In the dunk cutaway, the bitmap increased from 38 to 43 updates over
+187 frames, and the ball increased from 78 to 90. The longest ball hold
+there dropped from seven to four frames. Party build 058 recorded 121 ball
+updates in the same cutaway.
+
+The banana bitmap copy processes all 15 aligned pages in one indexed loop.
+The routine uses 138 bytes at `$7F40–$7FC9` in each of the 16 banana banks.
+The late BUM/BAM overlay uses the existing shared copy to retain its raster
+timing. All 64 banana bitmaps and the profile ribbon midpoint data were
+verified byte for byte. The copy saves 2,384 cycles when the overlay is
+inactive. The highest warm callback cost across all 64 views fell from
+49,020 to 47,518 cycles.
+
+Before the bitmap terminal change, the faster copy increased bitmap
+updates from 86 to 91 in the first banana pass and from 73 to 80 in the
+second. With the bitmap terminal, those passes recorded 108 and 93
+updates across the same 440 and 374 PAL frames. The two later banana
+passes increased from 34 to 39 and from 54 to 62 updates. Their longest
+holds were six and seven PAL frames.
+
+The full py65 suite passed 211 of 232 checks. The banana cycle-budget
+test now passes, and the 21 remaining failures also occurred before this
+change.
+
+Removing the unreachable montage dispatch and its tick check freed 125
+bytes in main code, bringing its free space to 135 bytes. In 465 py65
+samples from tunnels and the montage, the display lists, bitmap and
+PMG bytes, GTIA registers, and PORTB matched the previous build. The
+loader star test finds its data by load address and verifies all 32 phases
+and the wrap.
+
+The previous build
+`64990331f51b176f93c2ee267e98f531d8b05c830dc1e747ac11e438c5c99e59`
+passed seven focused terminal checks. An Atari800 PAL
 1088XE trace recorded all 42 main-act captions fully typed before the end
 of their action windows. Stereo POKEY output matched the preceding build
 over the full track.
@@ -72,21 +114,21 @@ of consecutive frames with PMG DMA and GTIA graphics enabled.
 
 | Effect | Sampled player ticks | Frames with changed sprite data |
 |---|---:|---:|
-| Title fireworks | 768–2,919 | 85 of 537 |
-| Atari Arena whistle notes | 4,864–5,609 | 138 of 183 |
-| Practice ball and accents | 5,992–8,971 | 613 of 738 |
+| Title fireworks | 768–2,919 | 86 of 537 |
+| Atari Arena whistle notes | 4,864–5,609 | 145 of 184 |
+| Practice ball and accents | 5,992–8,971 | 642 of 738 |
 | Profile ribbons and sparks | 9,004–11,966 | 740 of 740 |
-| First spiral and organic tunnels | 11,992–14,943 | 312 of 737 |
-| Trio, front solo and trio reprise | 15,000–20,399 | 585 of 1,349 |
+| First spiral and organic tunnels | 11,992–14,943 | 353 of 737 |
+| Trio, front solo and trio reprise | 15,000–20,399 | 616 of 1,349 |
 | Lift and launch fireworks | 20,400–20,941 | 112 of 135 |
-| Tunnel cutaway | 20,972–21,671 | 74 of 174 |
-| Basketball hero ball and accents | 21,720–23,889 | 435 of 542 |
-| Trevor impacts and ball | 26,936–29,643 | 215 of 669 |
-| Banana bunch | 29,932–30,275 | 33 of 85 |
-| Peeled banana | 30,304–30,651 | 34 of 86 |
-| Montage spiral | 31,440–31,735 | 29 of 73 |
-| Montage organic | 31,792–32,135 | 36 of 85 |
-| Eye-shot ball | 39,384–40,128 | 102 of 186 |
+| Tunnel cutaway | 20,972–21,671 | 84 of 174 |
+| Basketball hero ball and accents | 21,720–23,889 | 464 of 542 |
+| Trevor impacts and ball | 26,936–29,643 | 225 of 669 |
+| Banana bunch | 29,932–30,275 | 46 of 85 |
+| Peeled banana | 30,304–30,651 | 50 of 86 |
+| Montage spiral | 31,440–31,735 | 34 of 73 |
+| Montage organic | 31,792–32,135 | 42 of 85 |
+| Eye-shot ball | 39,384–40,128 | 139 of 186 |
 | Credits orbit | 41,904–51,199 | 2,271 of 2,323 |
 | Finale orbit | 51,420–51,779 | 88 of 89 |
 

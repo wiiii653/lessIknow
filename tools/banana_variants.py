@@ -4,6 +4,7 @@ from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
 from music_timing import tick_at_bar
 ENTRY=0x7c00
+RAW_COPY = 0x7f40
 KEY,CACHE=0x0ddd,0x0dde
 FRAMES=32
 
@@ -221,19 +222,64 @@ def bank(index):
 def raw_helper(peeled=False):
     import mosaic
 
-    return mosaic.helper(ENTRY, cache_key=KEY, banana_only=True,
+    return mosaic.helper(ENTRY, copy_entry=RAW_COPY, cache_key=KEY, banana_only=True,
                          cache_address=CACHE, raw=True, peeled=peeled)
+
+
+def raw_copy():
+    """Copy the 15 aligned bitmap pages in one indexed pass through the bank."""
+    from engine_effects import COPY_PAGES
+    from post_trevor_director import OVERLAY_ACTIVE
+
+    c = Code(RAW_COPY)
+    # BUM/BAM already waits for blanking before the bitmap copy. Retain the
+    # established copy timing while that overlay is active.
+    c.emit(0xac, OVERLAY_ACTIVE & 255, OVERLAY_ACTIVE >> 8)
+    c.branch(0xf0, 'fast_copy')
+    c.emit(0x4c, COPY_PAGES & 255, COPY_PAGES >> 8)
+    c.label('fast_copy')
+    pages = 15
+    pair_bytes = 6  # LDA abs,Y and STA abs,Y
+    # A holds the first source page. Y walks the source pages while X
+    # selects each pair of instruction operands. Save target minus source
+    # so the same Y also determines the destination page.
+    c.emit(0xa8, 0x49, 0xff, 0x38, 0x6d, 0xfe, 0x83)
+    c.jump(0x8d, 'page_delta')
+    c.emit(0xa2, 0)
+    c.label('patch')
+    c.emit(0x98)
+    c.jump(0x9d, 'source_hi')
+    c.emit(0x18)
+    c.jump(0x6d, 'page_delta')
+    c.jump(0x9d, 'target_hi')
+    c.emit(0xc8, 0x8a, 0x18, 0x69, pair_bytes, 0xaa, 0xe0, pages*pair_bytes)
+    c.branch(0xd0, 'patch')
+    c.emit(0xa0, 0)
+    c.label('copy')
+    c.labels['source_hi'] = c.labels['copy'] + 2
+    c.labels['target_hi'] = c.labels['copy'] + 5
+    for page in range(pages):
+        c.emit(0xb9, 0, 0x40 + page, 0x99, 0, 0x90 + page)
+    c.emit(0xc8)
+    c.branch(0xd0, 'copy')
+    c.emit(0x60)
+    c.label('page_delta')
+    c.emit(0)
+    code = bytes(c.finish())
+    assert RAW_COPY + len(code) <= 0x8000
+    return code
 
 
 def raw_bank(group, peeled=False):
     frames = b''.join(packed(group * 4 + i, peeled) for i in range(4))
     code = raw_helper(peeled)
     assert len(frames) == ENTRY - 0x4000
-    assert len(frames) + len(code) <= 16384
-    return (frames + code).ljust(16384, b'\0')
+    assert ENTRY + len(code) <= RAW_COPY
+    return ((frames + code).ljust(RAW_COPY - 0x4000, b'\0') + raw_copy()).ljust(16384, b'\0')
 
 
 def memory_report():
     return dict(variants=2, frames_per_variant=32, runtime_raw_banks=16,
                 bunch_banks=list(range(3, 11)), peeled_banks=list(range(41, 49)),
-                runtime_raw_bitmap_bytes=64 * 3840)
+                runtime_raw_bitmap_bytes=64 * 3840,
+                raw_copy_entry=RAW_COPY, raw_copy_bytes_per_bank=len(raw_copy()))

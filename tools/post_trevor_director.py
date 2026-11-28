@@ -18,6 +18,7 @@ FIRST_LATE_BANANA_CUT=11+104-80
 CYCLE_START=tick_at_bar(80)
 from outro_text import START as END
 DESC=0x0dda
+OVERLAY_ACTIVE = 0x0dd2
 VLO,VHI=0x0dd3,0x0dd4
 QSTART,ELAPSED=0x0ddb,0x0ddc
 ACTLO,ACTHI=0x0dd5,0x0dd6
@@ -82,14 +83,14 @@ def helper():
     # Resolve the eye shot before deciding which effect owns PMG.
     a(0x20,0xec04)
     # On late banana frames, animate the BUM/BAM bubble across two beats.
-    c.emit(0xa9,0);a(0x8d,0x0dd2)
+    c.emit(0xa9,0);a(0x8d,OVERLAY_ACTIVE)
     a(0xad,0x83e0);c.emit(0xc9,6);c.branch(0xf0,'scene_ready');c.jump(0x4c,'done')
     c.label('scene_ready');a(0xad,0x83e3);c.emit(0xc9,BUM_START>>8);c.branch(0xb0,'time_low');c.jump(0x4c,'done')
     c.label('time_low');c.branch(0xd0,'after_start');a(0xad,0x83e2);c.emit(0xc9,BUM_START&255);c.branch(0xb0,'after_start');c.jump(0x4c,'done')
     c.label('after_start')
     a(0xad,0x83ed);c.emit(0xc9,32);c.branch(0x90,'banana_ready');c.jump(0x4c,'done')
     c.label('banana_ready')
-    c.emit(0xa9,1);a(0x8d,0x0dd2)
+    c.emit(0xa9,1);a(0x8d,OVERLAY_ACTIVE)
     # Elapsed ticks from the selected director cut; one word per two beats.
     a(0xad,0x83e2);c.emit(0x38);a(0xed,0x0dd8);a(0x8d,0x83ea)
     a(0xad,0x83e3);a(0xed,0x0dd9);a(0x8d,0x83eb)

@@ -46,7 +46,7 @@ aspect ratio also depends on the display's scaling.
 | Ribbon dance | Banked base compositions and in-between poses. The single dancer in profile uses double-buffered PMG ribbons and sparks that advance independently every PAL frame. |
 | Trevor | Bitmap poses, PMG impact words and bubbles, protected ball effects |
 | Post-Trevor montage | Banked banana mosaic, tunnel images and eye frames selected by a music-tick director |
-| Main-act terminal | Four scrolling ANTIC 4 rows below the picture, with eased palette transitions and double-buffered text |
+| Main-act terminal | Four scrolling one-bit ANTIC C rows below the picture, with eased ink transitions and double-buffered bitmap rows |
 | Credits and greetings | Four scrolling ANTIC 4 rows below the boy's portrait, with animated rainbow DLI effects and a shoe patch timed to alternate kicks |
 | Final shot | Bitmap portrait with orbiting PMG stars/notes, followed by ending cards with text fades |
 

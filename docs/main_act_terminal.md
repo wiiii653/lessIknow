@@ -3,9 +3,9 @@
 Source [main_act_terminal.py](../tools/main_act_terminal.py).
 
 The agent types on the bottom row as each action begins. Enter scrolls the
-previous lines up and the last four rows carry across cuts. The palette eases
-into the next scene's colors independently of the text. The credits terminal
-takes over after the montage.
+previous lines up and the last four rows carry across cuts. The single
+text ink eases into the next scene's color independently of the text.
+The credits terminal takes over after the montage.
 
 ### 1. Atari Arena arrival
 

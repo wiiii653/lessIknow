@@ -56,8 +56,6 @@ from crush_portraits import START as CRUSH_TICK, END as CRUSH_END, ENTRY as CRUS
 
 KALEIDO_TICK = tick_at_bar(32)  # eight bars / 15 seconds after the dancer enters
 SCHOOL_TICK = tick_at_bar(8)  # equal 7.5-second artist and title screens
-# Align the post-Act-5 global motif cycle to its next complete tunnel phase.
-ACT5_CYCLE_TICK = ((tick_at_bar(112) + 1023) // 1024) * 1024 - post_trevor_director.SHIFT
 ORIGIN = 0x1400
 POOL_LOW = 0x1e00
 TABLE_BASE = 0xd800
@@ -106,13 +104,22 @@ def bank_manifest():
         banks[slot]['verified_free_ranges'] = [[school_parallax.ENTRY, helper_end]]
     assert last_school == 14 + main_act_terminal.PALETTE_BANK
     frame_end = 0x4000+last_frames*school_parallax.FRAME_BYTES
-    assert frame_end < main_act_terminal.TEXT_ENTRY < main_act_terminal.PALETTE_ENTRY
-    banks[last_school]['owner'] += ', terminal transcript and palette ramps'
-    banks[last_school]['verified_free_ranges'].insert(0, [frame_end, main_act_terminal.TEXT_ENTRY])
+    banks[last_school]['owner'] += ', terminal transcript, palette and bitmap writer'
     assert last_school == 14 + side_ribbons.CONTROL_BANK and frame_end == side_ribbons.CONTROL_ENTRY
     ribbon_code_end = side_ribbons.CONTROL_ENTRY + len(side_ribbons.controller())
-    banks[last_school]['verified_free_ranges'][0][0] = ribbon_code_end
+    terminal_blocks = dict(main_act_terminal.bank_inserts())
+    update = main_act_terminal.BANK_UPDATE
+    draw = main_act_terminal.DRAW_ROW
+    draw_end = draw + len(terminal_blocks[draw])
+    assert ribbon_code_end <= update < update+len(terminal_blocks[update]) <= main_act_terminal.TEXT_ENTRY
+    assert school_parallax.ENTRY <= draw < draw_end <= helper_end
+    banks[last_school]['verified_free_ranges'] = [
+        [ribbon_code_end, update], [update+len(terminal_blocks[update]), main_act_terminal.TEXT_ENTRY],
+        [draw_end, helper_end],
+    ]
     banks[last_school]['owner'] += ', profile ribbon controller'
+    copy_start = banana_variants.RAW_COPY
+    copy_end = copy_start + len(banana_variants.raw_copy())
     for slots, end in (
         (range(17, 25), banana_variants.ENTRY + len(banana_variants.raw_helper())),
         (range(25, 33), mosaic.ENTRY + len(mosaic.helper())),
@@ -120,11 +127,12 @@ def bank_manifest():
     ):
         for slot in slots:
             if slot - 14 in side_ribbons.MIDPOINT_BANKS:
-                banks[slot]['owner'] += ', profile ribbon midpoint'
+                banks[slot]['owner'] += ', profile ribbon midpoint and banana copy routine'
                 start = side_ribbons.MIDPOINT_ENTRY
-                assert end <= start
-                banks[slot]['verified_free_ranges'] = [[end, start],
-                    [start + 64 * len(side_ribbons.PLANES), 0x8000]]
+                midpoint_end = start + 64 * len(side_ribbons.PLANES)
+                assert end <= start <= midpoint_end <= copy_start < copy_end <= 0x8000
+                gaps = ((end, start), (midpoint_end, copy_start), (copy_end, 0x8000))
+                banks[slot]['verified_free_ranges'] = [[lo, hi] for lo, hi in gaps if lo < hi]
             else:
                 banks[slot]['verified_free_ranges'] = [[end, 0x8000]]
     return banks
@@ -338,17 +346,6 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         c.jump(0x4c, no)
         c.label(tag + '_yes')
         c.jump(0x4c, yes)
-
-    def compare_tick16(threshold, yes, no, fallthrough_no=False):
-        """Compact 16-bit compare for the sub-65536 Act 5 dispatch."""
-        tag=f'cmp16_{threshold}_{yes}'
-        absolute(0xad,TICK+1);c.emit(0xc9,threshold>>8)
-        c.branch(0x90,tag+'_no');c.branch(0xd0,tag+'_yes')
-        absolute(0xad,TICK);c.emit(0xc9,threshold&255)
-        c.branch(0x90,tag+'_no')
-        c.label(tag+'_yes');c.jump(0x4c,yes)
-        c.label(tag+'_no')
-        if not fallthrough_no:c.jump(0x4c,no)
 
     c.label('snapshot')
     for offset in (2, 1, 0):
@@ -806,26 +803,6 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('mosaic')
     c.emit(0xa9,0);absolute(0x8d,SHIFT)
     absolute(0x20,post_trevor_director.ENTRY)
-    # The director owns the selected rotator/tunnel phase from the first shot.
-    # Keep the legacy selection below for callbacks before that first shot.
-    compare_tick(KALEIDO_TICK, 'mosaic_frame_ready', 'act5_select')
-    c.label('act5_select')
-    compare_tick16(ACT5_CYCLE_TICK, 'mosaic_frame_ready', 'act5_motif', True)
-    c.label('act5_motif')
-    # Run all 32 banana phases continuously through bar 96. Separately
-    # looping each 16-frame half caused jumps at every half-turn/bar 92.
-    compare_tick16(tick_at_bar(96)-post_trevor_director.SHIFT, 'act5_tunnel', 'act5_kaleido', True)
-    c.label('act5_kaleido')
-    absolute(0xad,STATE+13);c.emit(0x29,31);absolute(0x8d,STATE+13)
-    c.jump(0x4c,'mosaic_frame_ready')
-    c.label('act5_tunnel')
-    absolute(0xad,STATE+13);c.emit(0x29,15);absolute(0x8d,STATE+13)
-    compare_tick16(tick_at_bar(108)-post_trevor_director.SHIFT,'act5_tunnel_texture2','act5_tunnel_texture1',True)
-    c.label('act5_tunnel_texture1')
-    absolute(0xad,STATE+13);c.emit(0x09,32);absolute(0x8d,STATE+13)
-    c.jump(0x4c,'mosaic_frame_ready')
-    c.label('act5_tunnel_texture2')
-    absolute(0xad,STATE+13);c.emit(0x09,48);absolute(0x8d,STATE+13)
     c.label('mosaic_frame_ready')
     absolute(0x20,banana_variants.SELECT_ENTRY)
     absolute(0xad,0xd301);c.emit(0x48)
@@ -1034,7 +1011,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                 frame = final_boy.install_mark_frames(frame, index)
                 frame = title_plasma.install_mask_pages(frame, index, title_pages)
                 if index == main_act_terminal.PALETTE_BANK:
-                    frame = main_act_terminal.install_bank(frame, terminal_labels)
+                    frame = main_act_terminal.install_bank(frame)
                 if index == side_ribbons.CONTROL_BANK:
                     frame = side_ribbons.install(frame, side_ribbons.CONTROL_ENTRY,
                                                  side_ribbons.controller())
@@ -1138,6 +1115,8 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         'dance_framebuffers': FRAME_BASES, 'music_entry': c.labels['music_entry'],
         'music_exit': c.labels['music_exit'], 'video_bank_indices': list(range(8, 14)),
         'display_lists': [0x8000, 0x8400],
+        'main_terminal_bitmap_rows': main_act_terminal.BITMAP_ROWS,
+        'main_terminal_bitmap_bytes': len(main_act_terminal.BITMAP_ROWS)*main_act_terminal.ROW_BYTES,
         'main_terminal_update': terminal_labels['update'],
         'main_terminal_commit': terminal_labels['commit']}, indent=2) + '\n')
     print(f'Built continuous sequence: {len(unique)} shared rows, {len(code)} code bytes')

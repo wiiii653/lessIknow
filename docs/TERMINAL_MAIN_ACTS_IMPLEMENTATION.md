@@ -1,7 +1,7 @@
 # Four-row terminal across the main acts
 
 [main_act_terminal.py](../tools/main_act_terminal.py) types a continuous
-40-column ANTIC 4 log below the full 192-scanline picture. The bottom row
+40-column one-color ANTIC C log below the full 192-scanline picture. The bottom row
 types at one character every four PAL frames. The cursor blinks while
 typing and during pauses. Each Enter scrolls the three most recent lines
 up and starts a new bottom row. See [current captions](main_act_terminal.md).
@@ -10,38 +10,35 @@ up and starts a new bottom row. See [current captions](main_act_terminal.md).
 
 The normal display lists at `$8000` and `$8400` jump to separate tails
 while captions are active. Relative scanlines 201–202 provide the gap
-before four eight-scanline text rows at 203–234. The gap DLI applies three
-published caption inks, and the top split restores the scene inks from RAM.
-At a scene cut, the terminal retains its current inks and eases to the
-next palette over about 0.6 seconds. The current text screen and typing
-position carry through the cut.
+before four eight-scanline text rows at 203–234. Each text row begins with
+a blank scanline and uses seven 20-byte one-bit bitmap scanlines. The gap
+DLI applies the published terminal ink to PF0. The top split restores the
+scene's PF0 from RAM. At a scene cut, the terminal eases to the next ink
+over about 0.6 seconds. The current text and typing position carry through
+the cut.
 The four music events stay on relative lines 0, 78, 156 and 234.
 
-The current palettes retain each act's hues and lower each GTIA luminance
-value by 6, which is three even luminance steps. The brightness change is
-limited to the main-act terminal. The cold-start opening has its own
-palette and fade, and the credits sequence uses its animated rainbow
-palette through the greetings.
+The main act uses the first ink from each previous dimmed palette. The
+cold-start opening has its own palette and fade. The credits and greetings
+use their animated rainbow ANTIC 4 text.
 
 ## Allocation and publication
 
-The strip font is at `$D800`, its two screens start at `$DA20` and `$DB20`,
-and its writer starts at `$DC00`. The training renderer still uses the two
-legacy framebuffer maps at descriptor indices 2 and 3. Their shared low
-bytes are at `$D960`, with high bytes at `$E180` and `$FDC8`. The allocator
-checks these ranges alongside the caption and runtime data. The schedule
-and scene tables use space at `$DAEB` and `$DBEB` between existing allocations.
-The transcript and palette ramps share space in the last arena panorama
-bank. The display interrupt reads the published screen and inks from
-unbanked RAM.
+The two bitmap pages use eight 140-byte slots at `$D800`, `$DA20`,
+`$DB20` and `$DC00–$DEBB`. The total is 1,120 bytes of unbanked bitmap
+storage. The display-list tails are at `$DF6D` and `$DAEB`. The transcript,
+glyphs, palette ramps and foreground writer live in the final Atari Arena
+panorama bank. The build validates these allocations against the existing
+bitmap, scanline and practice framebuffer tables.
 
 The foreground prepares the inactive caption screen and the final music
 interrupt publishes it during bounded early blanking. If the interrupt
 misses the publication window, the old screen stays visible until the next
-commit. A palette-only update publishes without swapping the text buffers.
-Each text screen caches its bottom line number. When the inactive screen
-already holds that line, typing and cursor changes repaint the bottom row.
-Enter or a seek can rebuild the history on either screen as needed.
+commit. A palette-only update publishes without swapping the bitmap pages.
+Each page caches the transcript line and character count in each slot.
+Typing and cursor changes update the affected character pairs. Enter
+rotates the display-list pointers and reuses completed rows. A seek
+rebuilds any slots that need different contents.
 The normal footer is restored for credits or restart.
 
 ## Palette cues
