@@ -317,7 +317,6 @@ def plasma_renderer():
     c.emit(0xc9,64); c.branch(0xf0,'skyline'); c.jump(0x4c,'next_row')
 
     c.label('skyline')
-    a(0x20, title_water.ENTRY)
     a(0xad,STATE+3); c.emit(0xc9,CITY_REVEAL_START>>8)
     c.branch(0x90,'city_none'); c.branch(0xd0,'city_full')
     a(0xad,STATE+2); c.emit(0x4a,0x4a,0x4a,0x4a,0x4a,0x18,0x69,1)
@@ -339,6 +338,7 @@ def plasma_renderer():
         c.labels[f'city_write_hi{index}'] = c.labels[f'city_write{index}']+2
         c.emit(0x88,0xc0,255); c.branch(0xd0,f'city{index}')
         c.label(f'city_done{index}')
+    a(0x20, title_water.ENTRY)
     # Every plasma phase uses the same LMS addresses in a given buffer.
     # Rebuild only when a different renderer has used the inactive list.
     from engine_effects import cached_display_list
@@ -449,6 +449,13 @@ def artwork():
         end = offset+len(data)
         bank[offset:end] = data
     assert end == 0x2c00  # Firework code starts at $6C00.
+    for address,data in ((title_water.RIPPLE_MASKS,title_water.ripple_masks()),
+                         (title_water.EDGE_ENTRY,title_water.edge_filler()),
+                         (title_water.RIPPLE_TABLES,title_water.ripple_tables())):
+        offset = address-0x4000
+        assert end <= offset and offset+len(data) <= len(bank)
+        end = offset+len(data)
+        bank[offset:end] = data
     banks = [bytes(bank)] + [bytes(16384)]*3
     masks = []
     # Large two-line artist card; taller, centred song-title lettering.
@@ -721,7 +728,21 @@ def build(origin, blank):
 
     c.label('color')
     # Entire picture rises from black and falls back before the scene cut.
-    c.jump(0xae,'fade_phase'); c.jump(0xbd,'brightness'); a(0x8d,0xd01a); c.emit(0x60)
+    c.jump(0xae,'fade_phase'); c.jump(0xbd,'brightness')
+    c.jump(0x8d,'published_light'); a(0x8d,0xd01a); c.emit(0x60)
+    c.label('water_raster')
+    # The extra DLI at relative line 201 lies between the music events
+    # at 156 and 234. Restore the sky at the latter, before the next frame.
+    a(0xad,0xd40b); c.emit(0xc9,96); c.branch(0x90,'music')
+    c.emit(0xc9,113); c.branch(0xb0,'restore_light')
+    c.jump(0xad,'published_light'); c.branch(0xf0,'water_light')
+    c.emit(0x38,0xe9,2)
+    c.label('water_light'); a(0x8d,0xd01a)
+    from outro_palette import EXIT
+    a(0x4c,EXIT)
+    c.label('restore_light'); c.jump(0xad,'published_light'); a(0x8d,0xd01a)
+    c.label('music'); a(0x8d,0xd40a); c.emit(0x60)
+    c.label('published_light'); c.emit(0)
     c.label('brightness')
     c.emit(*([0,2,4,6,6,6,6] + [6]*32 + [6,6,6,4,4,2,0,0]))
     c.label('letter_keep')

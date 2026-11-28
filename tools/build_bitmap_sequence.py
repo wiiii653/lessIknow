@@ -102,9 +102,11 @@ def bank_manifest():
     last_school = first_school + full_banks
     for slot in range(first_school+1, last_school+1):
         banks[slot]['verified_free_ranges'] = [[school_parallax.ENTRY, helper_end]]
-    banks[last_school]['verified_free_ranges'].insert(
-        0, [0x4000+last_frames*school_parallax.FRAME_BYTES,
-            0x4000+school_parallax.FRAMES_PER_BANK*school_parallax.FRAME_BYTES])
+    assert last_school == 14 + main_act_terminal.PALETTE_BANK
+    frame_end = 0x4000+last_frames*school_parallax.FRAME_BYTES
+    assert frame_end < main_act_terminal.TEXT_ENTRY < main_act_terminal.PALETTE_ENTRY
+    banks[last_school]['owner'] += ', terminal transcript and palette ramps'
+    banks[last_school]['verified_free_ranges'].insert(0, [frame_end, main_act_terminal.TEXT_ENTRY])
     return banks
 
 
@@ -900,7 +902,8 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                (COLOR_FONT_LOAD,color_font_loader()),
                (outro_palette.RASTER_ENTRY,outro_palette.raster_helper()),
                (outro_palette.CARD_FONT_ENTRY,outro_palette.card_font_copy())] + terminal_inserts + practice_tables
-    inserts += scene_palette_io.inserts(terminal_labels['enabled'], terminal_labels['palette'])
+    inserts += scene_palette_io.inserts(terminal_labels['enabled'], terminal_labels['palette'],
+                                       plasma_labels['water_raster'])
     inserts.append((title_water.RETIRE_ENTRY, title_water.retire(
         title_plasma.CITY_REVEAL_START, main_act_terminal.SCHOOL_START)))
     inserts.append((school_parallax.DISPATCH, school_parallax.dispatch()))
@@ -996,6 +999,8 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                 if index==trevor_ball_flight.BANK_INDEX:frame=trevor_ball_flight.install(frame)
                 frame = final_boy.install_mark_frames(frame, index)
                 frame = title_plasma.install_mask_pages(frame, index, title_pages)
+                if index == main_act_terminal.PALETTE_BANK:
+                    frame = main_act_terminal.install_bank(frame, terminal_labels)
                 output.extend(school_bank_loader(frame, index=index, progress=True))
             for phase in range(16):
                 art=ribbon_dance.install_side_actor(polished_trevor_bank(phase,bank_wrapper=c.labels['banked_effects']),24+phase)

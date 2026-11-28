@@ -1,11 +1,16 @@
 """Draw and publish the title's procedural reflection in title-owned RAM."""
 
+import math
+
 from build_sequence import Code
 
 TEMPLATES = 0x4430
 FOOTER_ENTRY = 0x5468
 TABLES = 0x54b0
 ENTRY = 0x6638
+RIPPLE_MASKS = 0x7140  # Between firework code and anchor data.
+EDGE_ENTRY = 0x71e0
+RIPPLE_TABLES = 0x7f10  # Beyond the firework missile routine.
 RETIRE_ENTRY = 0x3c80
 STATE = 0x83e0
 ROW_BYTES = 40
@@ -17,26 +22,33 @@ FOOTER_OFFSET = 2 + 192 * 3
 BUFFER_PAIRS = ((0x8400, 0x9000), (0x8000, 0xb000))
 TAIL_SIZE = ROW_COUNT * 9 + 4
 
-# Spread each new group of streaks across the width of the water.
+# Sample the city near the quay and the live sky deeper into the reflection.
+SOURCE_ROWS = (62, 61, 60, 57, 51, 45, 40, 33, 28, 24, 20)
+SCANLINES = (2, 2, 3, 1, 4, 4, 4, 1, 5, 1, 6)
+WIDE_RIPPLE_ROW = 5
+RIPPLE = tuple(tuple(round(amplitude*math.sin(math.tau*i/16)) for i in range(16))
+               for amplitude in (1, 2))
+# Interrupt the continuous reflection on just these single scanlines.
+RIPPLE_LINES = (3, 7, 9)
+# Spread each reveal step across the water.
 COLUMNS = tuple(sorted(range(1, 39), key=lambda column: (column * 17) % 41))
 MIDDLE_COLUMNS = tuple(sorted(range(1, 39), key=lambda column: (column * 13 + 5) % 43))
-RIPPLE = (0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, -1, -1, -1, -1, -1)
-GLINTS = {3: 0xf0, 7: 0x0f, 10: 0xf0}
 FIRST_FADE_OUT_PHASE = 39
 LAST_FADE_OUT_PHASE = 46
 
 
 def tail(display, framebuffer):
     data = bytearray()
-    for row in range(ROW_COUNT):
+    assert len(SCANLINES) == ROW_COUNT and sum(SCANLINES) == 3 * ROW_COUNT
+    for row, height in enumerate(SCANLINES):
         pixels = framebuffer + PIXELS_OFFSET + row * ROW_BYTES
         assert pixels // 0x1000 == (pixels + ROW_BYTES - 1) // 0x1000
-        sources = (pixels, pixels, pixels)
-        if row < 2:
-            # A thin echo of the facade catches the ripple beside the quay.
-            sources = (pixels, framebuffer + (62-row) * ROW_BYTES, pixels)
-        for source in sources:
-            data.extend((0x4f, source & 255, source >> 8))
+        line = (0x4f, pixels & 255, pixels >> 8)
+        if row == 0:
+            # A short palette DLI at the waterline leaves music timing intact.
+            data.extend((0xcf, *line[1:]))
+            height -= 1
+        data.extend(line * height)
     data.extend((0x80, 0x41, display & 255, display >> 8))
     assert len(data) == TAIL_SIZE
     assert (framebuffer + TAIL_OFFSET) % 0x400 + len(data) <= 0x400
@@ -48,24 +60,56 @@ def templates():
 
 
 def tables():
-    return bytes((*MIDDLE_COLUMNS, 0, ROW_BYTES-1,
-                  *(value & 255 for value in RIPPLE + RIPPLE[:ROW_COUNT-1]),
+    return bytes((*COLUMNS, 0, ROW_BYTES-1, *MIDDLE_COLUMNS, 0, ROW_BYTES-1))
+
+
+def ripple_tables():
+    return bytes((*(value & 255 for wave in RIPPLE for value in wave*2),
                   *(round(len(COLUMNS) * level / 8) for level in range(9))))
 
 
-def reflection(level, phase, plasma):
+def ripple_masks():
+    masks = bytearray()
+    for row in RIPPLE_LINES:
+        edge = 4 if row >= WIDE_RIPPLE_ROW else 2
+        pixels = []
+        for pixel in range(ROW_BYTES*2):
+            phase = pixel*0.37 + row*1.3
+            wave = math.sin(phase) + 0.35*math.sin(2*phase+pixel*0.12)
+            pixels.append(15 if edge <= pixel < ROW_BYTES*2-edge and wave <= 0.4 else 0)
+        masks.extend(left << 4 | right for left, right in zip(pixels[::2], pixels[1::2]))
+    masks.extend(bytes([0, 0] + [255]*(ROW_BYTES-4) + [0, 0]))
+    return bytes(masks)
+
+
+def mask_offset(row):
+    if row in RIPPLE_LINES:
+        return RIPPLE_LINES.index(row)*ROW_BYTES
+    if row >= WIDE_RIPPLE_ROW:
+        return len(RIPPLE_LINES)*ROW_BYTES
+    return None
+
+
+def reflection(level, phase, scene):
     """Reference for byte-packed mirror, ripple and dissolve."""
     result = bytearray()
+    masks = ripple_masks()
     count = round(len(COLUMNS) * level / 8)
-    for row in range(ROW_COUNT):
+    for row, source_row in enumerate(SOURCE_ROWS):
         order = MIDDLE_COLUMNS if 4 <= row < 8 else COLUMNS
         shown = set(order[:count])
-        source = (63 - row) * ROW_BYTES
-        shift = RIPPLE[(phase + row) & 15]
-        ink = GLINTS.get(row, 0xff)
-        interior = bytes(plasma[source + column + shift] & ink if column in shown else 0
-                         for column in range(1, 39))
-        result.extend(b'\0' + interior + b'\0')
+        source = source_row * ROW_BYTES
+        wave = RIPPLE[row >= WIDE_RIPPLE_ROW]
+        shift = wave[(phase + 2*row) & 15]
+        offset = mask_offset(row)
+        mask = bytes([255])*ROW_BYTES if offset is None else masks[offset:offset+ROW_BYTES]
+        pixels = bytearray(ROW_BYTES)
+        for column in shown:
+            pixels[column] = scene[source + column + shift] & mask[column]
+        edge = 2 if row >= WIDE_RIPPLE_ROW else 1
+        pixels[:edge] = bytes([(pixels[edge] >> 4)*17])*edge
+        pixels[-edge:] = bytes([(pixels[-edge-1] & 15)*17])*edge
+        result.extend(pixels)
     return bytes(result)
 
 
@@ -75,9 +119,7 @@ def renderer(reveal_start):
     def a(op, address):
         c.emit(op, address & 255, address >> 8)
 
-    ripple_table = TABLES + ROW_BYTES
-    coverage_table = ripple_table + len(RIPPLE) + ROW_COUNT - 1
-    # The skyline has yet to cover the plasma at the quay.
+    coverage_table = RIPPLE_TABLES + 2*sum(map(len,RIPPLE))
     assert reveal_start % 256 == 0
     a(0xad, STATE+3)
     c.emit(0xc9, reveal_start >> 8)
@@ -100,38 +142,41 @@ def renderer(reveal_start):
 
     a(0xad, STATE+12)
     c.emit(0x4a, 0x29, 15, 0xaa)
-    for row in range(ROW_COUNT):
-        source = (63 - row) * ROW_BYTES
-        assert 0 < (source & 255) < 255
-        a(0xbd, ripple_table + row)
+    for row, source_row in enumerate(SOURCE_ROWS):
+        source = source_row * ROW_BYTES
+        wide = row >= WIDE_RIPPLE_ROW
+        assert 2 <= (source & 255) <= 253
+        a(0xbd, RIPPLE_TABLES + (2*len(RIPPLE[0]) if wide else 0) + (2*row & 15))
         c.emit(0x18, 0x69, source & 255)
         c.jump(0x8d, f'read_lo{row}')
 
     # Patch the high bytes by page so the column loops stay small.
-    for page in (8, 9, 11, 12):
+    pages = {source*ROW_BYTES >> 8 for source in SOURCE_ROWS}
+    pages.update((PIXELS_OFFSET+row*ROW_BYTES) >> 8 for row in range(ROW_COUNT))
+    for page in sorted(pages):
         a(0xad, STATE+13)
         c.emit(0x09, page)
-        for row in range(ROW_COUNT):
-            if (63-row)*ROW_BYTES >> 8 == page:
+        for row, source_row in enumerate(SOURCE_ROWS):
+            if source_row*ROW_BYTES >> 8 == page:
                 c.jump(0x8d, f'read_hi{row}')
             if (PIXELS_OFFSET+row*ROW_BYTES) >> 8 == page:
                 for mode in ('dry', 'wet'):
                     c.jump(0x8d, f'{mode}_hi{row}')
 
-    # The two edge columns always go through the zero-fill path, keeping
-    # shifted reads inside the corresponding source row.
+    # Keep shifted reads away from the edges, then extend the nearest
+    # reflected pixels into the guard columns.
     c.emit(0xa2, ROW_BYTES-1)
     c.label('dry')
     c.label('dry_limit')
     c.emit(0xe0, 0)
     c.branch(0x90, 'wet')
-    c.jump(0xbc, 'columns')
+    a(0xbc, TABLES)
     c.emit(0xa9, 0)
     for row in range(ROW_COUNT):
         if row == 4:
-            a(0xbc, TABLES)
+            a(0xbc, TABLES+ROW_BYTES)
         if row == 8:
-            c.jump(0xbc, 'columns')
+            a(0xbc, TABLES)
         c.labels[f'dry_hi{row}'] = c.origin + len(c.data)+2
         a(0x99, PIXELS_OFFSET+row*ROW_BYTES)
     c.emit(0xca)
@@ -139,26 +184,74 @@ def renderer(reveal_start):
     c.jump(0x4c, 'finished')
 
     c.label('wet')
-    c.jump(0xbc, 'columns')
+    a(0xbc, TABLES)
     for row in range(ROW_COUNT):
         if row == 4:
-            a(0xbc, TABLES)
+            a(0xbc, TABLES+ROW_BYTES)
         if row == 8:
-            c.jump(0xbc, 'columns')
+            a(0xbc, TABLES)
         c.labels[f'read_lo{row}'] = c.origin + len(c.data)+1
         c.labels[f'read_hi{row}'] = c.origin + len(c.data)+2
         a(0xb9, 0x9000)
-        if row in GLINTS:
-            c.emit(0x29, GLINTS[row])
+        offset = mask_offset(row)
+        if offset is not None:
+            a(0x39, RIPPLE_MASKS+offset)
         c.labels[f'wet_hi{row}'] = c.origin + len(c.data)+2
         a(0x99, PIXELS_OFFSET+row*ROW_BYTES)
     c.emit(0xca)
     c.branch(0x10, 'wet')
     c.label('finished')
-    a(0x4c, FOOTER_ENTRY)
+    a(0x4c, EDGE_ENTRY)
     c.labels['coverage_operand'] = c.labels['dry_limit']+1
-    c.label('columns')
-    c.emit(*COLUMNS, 0, ROW_BYTES-1)
+    return bytes(c.finish())
+
+
+def edge_filler():
+    """Extend each row's outermost safe reflected pixels to the edges."""
+    c = Code(EDGE_ENTRY)
+
+    def a(op, address):
+        c.emit(op, address & 255, address >> 8)
+
+    operands = ('read_left', 'write_left', 'read_right', 'write_right')
+    # Use the same patched row base for the reads and the writes.
+    c.emit(0xa2,0,0xa9,PIXELS_OFFSET & 255)
+    c.jump(0x8d,'row_lo')
+    a(0xad,STATE+13);c.emit(0x09,PIXELS_OFFSET >> 8)
+    c.jump(0x8d,'row_hi')
+    c.label('row')
+    c.jump(0xad,'row_lo')
+    for name in operands:
+        c.jump(0x8d,name+'_lo')
+    c.jump(0xad,'row_hi')
+    for name in operands:
+        c.jump(0x8d,name+'_hi')
+    c.emit(0xa0,1,0xe0,WIDE_RIPPLE_ROW);c.branch(0x90,'read_left');c.emit(0xc8)
+    c.label('read_left');a(0xb9,0)
+    c.emit(0x4a,0x4a,0x4a,0x4a)
+    c.jump(0x20,'repeat_nibble')
+    c.label('left');c.emit(0x88)
+    c.label('write_left');a(0x99,0);c.branch(0xd0,'left')
+    c.emit(0xa0,ROW_BYTES-2,0xe0,WIDE_RIPPLE_ROW)
+    c.branch(0x90,'read_right');c.emit(0x88)
+    c.label('read_right');a(0xb9,0)
+    c.jump(0x20,'repeat_nibble')
+    c.label('right');c.emit(0xc8)
+    c.label('write_right');a(0x99,0)
+    c.emit(0xc0,ROW_BYTES-1);c.branch(0x90,'right')
+    c.jump(0xad,'row_lo');c.emit(0x18,0x69,ROW_BYTES)
+    c.jump(0x8d,'row_lo');c.branch(0x90,'next')
+    c.jump(0xee,'row_hi')
+    c.label('next');c.emit(0xe8,0xe0,ROW_COUNT);c.branch(0xd0,'row')
+    a(0x4c, FOOTER_ENTRY)
+    c.label('repeat_nibble');c.emit(0x29,15)
+    c.jump(0x8d,'outer_pixel')
+    c.emit(0x0a,0x0a,0x0a,0x0a);c.jump(0x0d,'outer_pixel');c.emit(0x60)
+    for name in operands:
+        c.labels[name+'_lo'] = c.labels[name]+1
+        c.labels[name+'_hi'] = c.labels[name]+2
+    for name in ('row_lo', 'row_hi', 'outer_pixel'):
+        c.label(name);c.emit(0)
     return bytes(c.finish())
 
 

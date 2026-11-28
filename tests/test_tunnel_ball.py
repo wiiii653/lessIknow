@@ -15,10 +15,8 @@ def director_phase(tick, memory):
     return 4*(memory[0x83ed] & 31) + rate*((tick >> 2) & 3)
 
 
-def tunnel_drift(tick, memory):
-    phase = director_phase(tick, memory)
-    organic = memory[0x83ed] >= 48
-    angle = (phase-64 if organic else phase)*math.tau/(48 if organic else 64)
+def tunnel_drift(tick):
+    angle = (tick//4 % 64)*math.tau/64
     return round(5*math.sin(angle)), round(2*math.sin(2*angle))
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
@@ -44,7 +42,7 @@ class TunnelBallTests(unittest.TestCase):
             cpu=sequence.execute(tick);m=cpu.memory
             self.assertEqual(m[0xd01b],0x11)
             self.assertEqual(m[0xd01d],3)
-            dx,dy=tunnel_drift(tick, m)
+            dx,dy=tunnel_drift(tick)
             self.assertEqual(m[0xd000:0xd004],[112+dx,128+dx,112+dx,128+dx])
             for i in range(4):self.assertTrue(any(b&(3<<(2*i)) for b in m[0x980:0xa00]))
             origin=40+(m[0x83e9] if m[0x83e9]<128 else m[0x83e9]-256)
@@ -81,11 +79,11 @@ class TunnelBallTests(unittest.TestCase):
         self.assertEqual(sequence.SequenceTests().raster(cpu,effects=True),
                          sequence.SequenceTests().raster(sequence.execute(9163),effects=True))
 
-    def test_tunnel_ball_drift_wraps_at_pal_cadence_in_both_directions(self):
+    def test_ball_keeps_moving_forward_while_tunnels_reverse(self):
         passes = timeline()[:5]
+        cpu = previous = None
         for (start, mode, _, _), (end, _, _, _) in zip(passes, passes[1:]):
             with self.subTest(mode=hex(mode)):
-                cpu = previous = None
                 low, high = (48, 59) if mode & 16 else (32, 47)
                 wrap = (low, high) if mode & 128 else (high, low)
                 wrapped = False
@@ -93,7 +91,7 @@ class TunnelBallTests(unittest.TestCase):
                     cpu = sequence.execute(tick, cpu)
                     memory = cpu.memory
                     frame = memory[0x83ed]
-                    x, y = tunnel_drift(tick, memory)
+                    x, y = tunnel_drift(tick)
                     self.assertEqual(memory[0xd000], 112+x)
                     self.assertEqual(memory[0x83e9], y & 255)
                     if previous is not None:
@@ -144,8 +142,9 @@ class TunnelBallTests(unittest.TestCase):
         self.assertLessEqual(abs(offsets[-1]),4)
         centered=next(t for t in range(tick+1,BUM_START) if frame_at(t)==32)
         cpu=sequence.execute(centered,cpu)
-        self.assertEqual(cpu.memory[0xd000],112)
-        self.assertEqual(cpu.memory[0xd001],128)
+        dx,_=tunnel_drift(centered)
+        self.assertEqual(cpu.memory[0xd000],112+dx)
+        self.assertEqual(cpu.memory[0xd001],128+dx)
         self.assertEqual(cpu.memory[0xd01d],3)
 
     def test_tunnel_bob_covers_central_hole_at_every_phase(self):
@@ -158,7 +157,7 @@ class TunnelBallTests(unittest.TestCase):
         for i,tick in sorted(ticks.items()):
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             # The eye frames occupy slots 60–63.
-            dx,dy=tunnel_drift(tick, m);positions.add((dx,dy))
+            dx,dy=tunnel_drift(tick);positions.add((dx,dy))
             self.assertEqual(m[0xd000],112+dx)
             self.assertEqual(m[0x83e9],dy&255)
             for x in range(75,86):

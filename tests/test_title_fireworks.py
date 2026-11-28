@@ -46,7 +46,7 @@ class TitleFireworkTests(unittest.TestCase):
             fade = (tick - TRANSITION_START) // 32
             if fade >= FIRST_FADE_OUT_PHASE:
                 level = LAST_FADE_OUT_PHASE - fade
-            expected = reflection(level, phase, procedural_frame(phase, 0))
+            expected = reflection(level, phase, procedural_frame(phase, tick))
             self.assertEqual(bytes(memory[address:address+ROW_BYTES*ROW_COUNT]), expected)
             self.assertFalse(any(active_buffer+PIXELS_OFFSET <= a <
                                  active_buffer+TAIL_OFFSET+TAIL_SIZE for a in memory.writes))
@@ -73,6 +73,33 @@ class TitleFireworkTests(unittest.TestCase):
                 self.assertEqual(any(shape), plane < expected, (tick, plane))
             if tick < 2048:
                 self.assertFalse(any(memory[base + 0x180:base + 0x200]))
+
+    def test_waterline_dims_only_the_reflection_without_clocking_music(self):
+        from test_outro_palette import OutroPaletteTests
+        from title_water import BUFFER_PAIRS, TAIL_OFFSET, TAIL_SIZE
+
+        interrupt = OutroPaletteTests().interrupt
+        cpu = None
+        for tick in (1360, 2432, 2920, 2984):
+            cpu = sequence.execute(tick, cpu)
+            memory = cpu.memory
+            display = memory[0xd402] | memory[0xd403] << 8
+            tail = dict(BUFFER_PAIRS)[display] + TAIL_OFFSET
+            opcodes = memory[tail:tail+TAIL_SIZE-4:3]
+            self.assertEqual([row for row, op in enumerate(opcodes) if op & 0x80], [0])
+            sky = memory[0xd01a]
+            bank = memory[0xd301]
+            original_tick = int.from_bytes(bytes(memory[0x24a7:0x24aa]), 'little')
+            for line in (8, 86, 164, 209, 242):
+                interrupt(cpu, line)
+                if line == 209:
+                    self.assertEqual(memory[0xd01a], max(0, sky-2))
+                    self.assertEqual(int.from_bytes(bytes(memory[0x24a7:0x24aa]), 'little'),
+                                     original_tick+3)
+                else:
+                    self.assertEqual(memory[0xd01a], sky)
+                self.assertEqual(memory[0xd301], bank)
+            self.assertEqual(int.from_bytes(bytes(memory[0x24a7:0x24aa]), 'little'), original_tick+4)
 
     def test_city_reveal_survives_music_interrupts(self):
         import json

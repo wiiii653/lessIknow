@@ -11,6 +11,8 @@ from rainbow_ball import spin_masks
 CUTAWAY_START,START,DUNK,END=(tick_at_bar(bar) for bar in (56,58,62,64))
 DUNK_PHASE_TICKS=8
 DUNK_OFFSET=DUNK-START
+SHATTER_PHASES=(75,81,87)
+SHATTER_START=DUNK+SHATTER_PHASES[0]*DUNK_PHASE_TICKS
 ENTRY,DATA,HEIGHT=0x4000,0x4b80,56
 BANK_VALUE=0x24b4
 DRIBBLE_X, DRIBBLE_WIDTH = 64, 44
@@ -119,7 +121,7 @@ def frames():
     return [poses[i] for i in range(8)]
 
 def shatter_stage(phase):
-    return 0 if phase<75 else 1 if phase<81 else 2 if phase<87 else 3
+    return sum(phase>=threshold for threshold in SHATTER_PHASES)
 
 
 def shattered_frame(stage):
@@ -153,7 +155,7 @@ def ball_paths():
     for i in range(94):
         if i<47: x,cy=85,102-round(CROUCH_LIFT*192/HEIGHT)
         elif i<61: x,cy=99,28
-        elif i<75: x,cy=115,18
+        elif i<SHATTER_PHASES[0]: x,cy=115,18
         elif i<82: x,cy=124,32
         else:
             t=(i-82)/11
@@ -208,13 +210,13 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     c.label('dunk');a(0xad,0x83ea);c.emit(0x38,0xe9,DUNK_OFFSET&255);a(0x8d,0x83ea);a(0xad,0x83eb);c.emit(0xe9,DUNK_OFFSET>>8)
     for _ in range(3):c.emit(0x4a);a(0x6e,0x83ea)
     a(0xad,0x83ea);a(0x8d,0x83ff);c.emit(0xa9,1);a(0x8d,0x83ed)
-    a(0xad,0x83ff);c.emit(0xc9,75,0xa9,5);c.branch(0xb0,'pose_ready')
+    a(0xad,0x83ff);c.emit(0xc9,SHATTER_PHASES[0],0xa9,5);c.branch(0xb0,'pose_ready')
     a(0xad,0x83ff);c.emit(0xc9,61,0xa9,4);c.branch(0xb0,'pose_ready')
     a(0xad,0x83ff);c.emit(0xc9,47,0xa9,3);c.branch(0xb0,'pose_ready');c.emit(0xa9,2)
     c.label('pose_ready');a(0x8d,0x83ec)
     c.emit(0xa9,0);a(0x8d,0x83e5);a(0xad,0x83ed);c.branch(0xf0,'stage_ready')
-    a(0xad,0x83ff);c.emit(0xc9,75);c.branch(0x90,'stage_ready')
-    c.emit(0xa2,1,0xc9,81);c.branch(0x90,'save_stage');c.emit(0xe8,0xc9,87);c.branch(0x90,'save_stage');c.emit(0xe8)
+    a(0xad,0x83ff);c.emit(0xc9,SHATTER_PHASES[0]);c.branch(0x90,'stage_ready')
+    c.emit(0xa2,1,0xc9,SHATTER_PHASES[1]);c.branch(0x90,'save_stage');c.emit(0xe8,0xc9,SHATTER_PHASES[2]);c.branch(0x90,'save_stage');c.emit(0xe8)
     c.label('save_stage');a(0x8e,0x83e5)
     c.label('stage_ready');c.emit(0xa9,0);c.jump(0x8d,'pending_dl')
     a(0xad,0x83e5);c.emit(0x0a,0x0a,0x0a,0x18);a(0x6d,0x83ec);c.emit(0x69,0x50)
@@ -306,7 +308,7 @@ def helper(bank_wrapper=0, bank_operand=0, cutaway_entry=0):
     a(0xad,0x83e5);c.branch(0xd0,'shattered_droplets')
     c.jump(0x4c,'orbit_satellites')
     c.label('shattered_droplets')
-    a(0xad,0x83ff);c.emit(0x38,0xe9,75,0xaa)
+    a(0xad,0x83ff);c.emit(0x38,0xe9,SHATTER_PHASES[0],0xaa)
     for i in range(4):
         c.jump(0xbd,f'shard_x{i}');c.jump(0x8d,f'hpos{i}')
         c.jump(0xbd,f'shard_y{i}');c.emit(0xa8)

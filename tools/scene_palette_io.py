@@ -17,7 +17,7 @@ def emit(c, opcode, address):
     c.emit(opcode, address & 255, address >> 8)
 
 
-def inserts(active_address, palette_address):
+def inserts(active_address, palette_address, water_address):
     from outro_palette import ENTRY
     from outro_text import TEXT_DLI_VCOUNT
 
@@ -40,7 +40,7 @@ def inserts(active_address, palette_address):
         c.emit(op,addr&255,addr>>8)
 
     a(0xad, active_address)
-    c.branch(0xf0, 'outro')
+    c.branch(0xf0, 'no_caption')
     a(0xad, 0xd40b)
     c.emit(0xc9, 8)
     c.branch(0x90, 'restore')
@@ -55,6 +55,11 @@ def inserts(active_address, palette_address):
     c.label('music')
     a(0x8d, 0xd40a)
     c.emit(0x60)
+    c.label('no_caption')
+    a(0xad, 0x83e0)
+    c.emit(0xc9, 2)
+    c.branch(0xb0, 'outro')
+    a(0x4c, water_address)
     c.label('outro')
     a(0x4c, ENTRY)
     assert ROUTER+len(c.data) <= 0xdc00

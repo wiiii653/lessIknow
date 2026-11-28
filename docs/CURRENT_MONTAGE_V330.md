@@ -10,7 +10,7 @@ after timing edits.
 |---:|---|
 | 11,967–14,958 | First rotators: spiral and organic tunnels; direction and speed change each bar |
 | 20,942–21,689 | Tunnel before the dunk, selected by the director |
-| 23,934–29,655 | Trevor enters and fights; 13 hits with balls |
+| 23,934–29,655 | Trevor enters, then punches and deflects the ball |
 | 29,656–41,883 | Post-Trevor montage; bananas begin on the first callback after the fight, preserving phase |
 | 29,917–41,883 | 32 short passages: peeled/golden bananas, spiral and organic tunnels, changing directions |
 | 38,705–39,378 | Bananas before the eyes, with yellow fruit and a slowly cycling backdrop and BUM/BAM from bar 104 |

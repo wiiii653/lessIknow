@@ -10,18 +10,12 @@ ORBIT_TABLES = 0x76d0
 EYE_POSITION = 0x77d0
 DRIFT_X, DRIFT_Y = 0x5b00, 0x5b80
 SCENE_POSITION = 0x5c00
-SPIRAL_DRIFT_PERIOD = 16 * 4
-ORGANIC_DRIFT_PERIOD = 12 * 4
-DRIFT_PADDING = 2 * 3  # Three PAL subphases at up to double speed.
+DRIFT_PERIOD = 64  # PAL frames on the unshifted music clock.
 
 
 def motion_tables():
     """Sample each centre path and satellite orbit once per PAL frame."""
-    spiral = tunnel_offsets(SPIRAL_DRIFT_PERIOD)
-    organic = tunnel_offsets(ORGANIC_DRIFT_PERIOD)
-    # The organic key indices start at 64. Pad both ends so signed
-    # subphases wrap through the same loop without a modulo operation.
-    drift = spiral + organic[-DRIFT_PADDING:] + organic + organic[:DRIFT_PADDING]
+    drift = tunnel_offsets(DRIFT_PERIOD)
     assert DRIFT_X + len(drift) <= DRIFT_Y
     assert DRIFT_Y + len(drift) <= SCENE_POSITION
     tables = [
@@ -45,8 +39,9 @@ def motion_tables():
     assert c.origin+len(c.data) <= ENTRY
 
     d = Code(SCENE_POSITION)
-    # Start from the director's current four-frame key and add the
-    # subphase in the same direction and at the same speed as the art.
+    d.emit(0xad,0xed,0x83,0x29,32)
+    d.branch(0xd0,'drift')
+    # The banana sweep still follows the director's key and signed subphase.
     d.emit(0xad,0xe2,0x83,0x4a,0x4a,0x29,3,0xaa)
     d.emit(0xad,0xda,0x0d,0x29,0x40,0xf0,0x02,0x8a,0x0a)
     d.branch(0xd0,'rate_ready')
@@ -58,8 +53,6 @@ def motion_tables():
     d.label('direction_ready')
     d.emit(0x8d,0xe8,0x83,0xad,0xed,0x83,0x29,31,0x0a,0x0a)
     d.emit(0x18,0x6d,0xe8,0x83,0xaa)
-    d.emit(0xad,0xed,0x83,0x29,32)
-    d.branch(0xd0,'drift')
     d.emit(0xad,0xd4,0x0d,0x29,2)
     d.branch(0xf0,'sweep')
     d.emit(0x8a,0x18,0x69,128,0xaa)
@@ -67,13 +60,10 @@ def motion_tables():
     d.emit(0xbd,EYE_X&255,EYE_X>>8,0x8d,0xe8,0x83,0x8a,0x29,127,0xaa)
     d.emit(0xbd,EYE_Y&255,EYE_Y>>8,0x8d,0xe9,0x83,0x60)
     d.label('drift')
-    d.emit(0xad,0xed,0x83,0x29,16)
-    d.branch(0xf0,'spiral_drift')
-    d.emit(0x8a,0x18,0x69,DRIFT_PADDING)
-    d.branch(0xd0,'drift_lookup')
-    d.label('spiral_drift')
-    d.emit(0x8a,0x29,SPIRAL_DRIFT_PERIOD-1)
-    d.label('drift_lookup')
+    # Both tunnel motifs share a forward loop. The low byte spans exactly
+    # 64 PAL frames, even when the background changes motif or reverses.
+    assert DRIFT_PERIOD == 64
+    d.emit(0xad,0xe2,0x83,0x4a,0x4a)
     d.emit(0xaa,0xbd,DRIFT_X&255,DRIFT_X>>8,0x8d,0xe8,0x83)
     d.emit(0xbd,DRIFT_Y&255,DRIFT_Y>>8,0x8d,0xe9,0x83,0x60)
     c.data[eye_jump:eye_jump+2] = d.labels['sweep'].to_bytes(2, 'little')

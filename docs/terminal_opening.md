@@ -18,18 +18,16 @@ The loading indicator progresses through `LOADING..`, `LOADING...`,
 
 Source [terminal_opening.py](../tools/terminal_opening.py).
 
-### Page 1
+The terminal opens blank. Text types on the bottom row with a blinking
+cursor and soft POKEY key clicks, one character every four PAL frames.
+Each Enter scrolls up one row. The
+transcript scrolls in the order shown below before the music starts.
 
 ```text
-> SYS.OPEN BEGIN.SYS [OK]
-> THE LESS I KNOW THE BETTER
-> TAME IMPALA / ATARI XE 1 MB
-> LOADING TITLE...
-```
-
-### Page 2
-
-```text
-> CITY PANORAMA
-> SILLY VENTURE 2026
+TWO WEEKS PASSED AND THINGS HAVE
+CHANGED. THIS IS THE FINAL RELEASE
+OF THE DEMO.
+> REVIEW THE FINAL BUILD
+AGENT: CHECKING SCENE CUES.
+I WILL TRACE THE FRAME HANDOFFS.
 ```

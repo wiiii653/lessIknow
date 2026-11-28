@@ -142,16 +142,27 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(bytes(memory[0x26fc:0x270a]), bytes(v & 0xfe for v in bank_values))
         self.assertEqual(memory[0xd301], 0xff)  # OS restored before INIT returns
         from outro_text import FINAL_MARK_FIRST_GLYPH, FINAL_MARK_ROWS, FINAL_MARK_WIDTH, final_mark
-        from terminal_opening import (ENTRY, FONT, HOLD_FRAMES, PAGE_SWITCH, PAGES,
-                                      SCREEN, TEXT, TEXT_BYTES, page_bytes)
+        from terminal_opening import (AUDC1, AUDF1, CURSOR, ENTRY, FADE_START, FONT, HOLD_FRAMES,
+                                      KEY_TONE, ROW_BYTES, SCREEN, TEXT, TEXT_BYTES, TRANSCRIPT,
+                                      TYPE_STEP)
 
         tiles, glyphs = final_mark(0)
-        sampled_frames = (0, 8, 100, PAGE_SWITCH, PAGE_SWITCH+100, HOLD_FRAMES-1)
+        sampled_frames = {0, FADE_START, HOLD_FRAMES-1}
+        key_frames = set()
+        for start, line in TRANSCRIPT:
+            end = start + TYPE_STEP*len(line)
+            sampled_frames.update((start, start+1, start+TYPE_STEP, end, end+16))
+            key_frames.update(range(start+TYPE_STEP, end+1, TYPE_STEP))
 
         class StartupMemory(RuntimeMemory):
             blank_edges = 0
             beam = 124
-            frames = {}
+            dli_pending = False
+
+            def __init__(self, data):
+                super().__init__(data)
+                self.frames = {}
+                self.key_pulses = {}
 
             def __getitem__(self, address):
                 if address == 0xd40b:
@@ -163,13 +174,17 @@ class SequenceTests(unittest.TestCase):
 
             def __setitem__(self, address, value):
                 frame = self.blank_edges - 1
-                if address == 0xd400 and value == 0x22 and frame in sampled_frames:
-                    glyph_start = FONT + FINAL_MARK_FIRST_GLYPH * 8
-                    self.frames[frame] = (
-                        bytes(self[SCREEN:TEXT+TEXT_BYTES]),
-                        bytes(self[glyph_start:glyph_start+len(glyphs)]),
-                        self[0xd016],
-                    )
+                if address == AUDC1 and 0 <= frame < HOLD_FRAMES:
+                    self.key_pulses.setdefault(frame, []).append(value)
+                if address == 0xd400 and value == 0x22:
+                    self.dli_pending = True
+                    if frame in sampled_frames:
+                        glyph_start = FONT + FINAL_MARK_FIRST_GLYPH * 8
+                        self.frames[frame] = (
+                            bytes(self[SCREEN:TEXT+TEXT_BYTES]),
+                            bytes(self[glyph_start:glyph_start+len(glyphs)]),
+                            self[0xd016],
+                        )
                 super().__setitem__(address, value)
 
         memory = StartupMemory(XEX.read_bytes())
@@ -182,9 +197,12 @@ class SequenceTests(unittest.TestCase):
         guard = bytes(memory[end:end+8])
         cpu = MPU(memory=memory)
         cpu.pc = RUN
-        for _ in range(350000):
+        for _ in range(1000*HOLD_FRAMES):
             if cpu.pc == 0x2146:
                 break
+            if memory.dli_pending:
+                memory.dli_pending = False
+                cpu.nmi()
             cpu.step()
         self.assertEqual(cpu.pc, 0x2146)
         expected = bytearray(TEXT - SCREEN)
@@ -194,13 +212,22 @@ class SequenceTests(unittest.TestCase):
             expected[start:start+FINAL_MARK_WIDTH] = tiles[first_tile:first_tile+FINAL_MARK_WIDTH]
         first, first_glyphs, _ = memory.frames[0]
         self.assertEqual(first[:len(expected)], expected)
-        self.assertEqual(first[len(expected):len(expected)+2], b'> ')
+        self.assertEqual(first[len(expected):], b' '*TEXT_BYTES)
         self.assertEqual(first_glyphs, glyphs)
-        self.assertEqual(memory.frames[8][1], final_mark(8)[1])
-        self.assertNotEqual(memory.frames[8][1], first_glyphs)
-        self.assertEqual(memory.frames[100][0][len(expected):], page_bytes(PAGES[0]))
-        self.assertEqual(memory.frames[PAGE_SWITCH][0][TEXT-SCREEN+2:], bytes(TEXT_BYTES-2))
-        self.assertEqual(memory.frames[PAGE_SWITCH+100][0][len(expected):], page_bytes(PAGES[1]))
+        first_enter = TRANSCRIPT[0][0]
+        self.assertEqual(memory.frames[first_enter][1], final_mark(first_enter)[1])
+        self.assertNotEqual(memory.frames[first_enter][1], first_glyphs)
+        for frame in sampled_frames:
+            visible = [line[:(frame-start)//TYPE_STEP].encode()
+                       for start,line in TRANSCRIPT if start <= frame]
+            if visible and frame & 16 == 0:
+                visible[-1] += bytes([CURSOR])
+            window = visible[-4:]
+            rows = [b'']*(4-len(window)) + window
+            self.assertEqual(memory.frames[frame][0][len(expected):],
+                             b''.join(row.ljust(ROW_BYTES) for row in rows), frame)
+        for frame in range(HOLD_FRAMES):
+            self.assertEqual(memory.key_pulses[frame], [KEY_TONE, 0] if frame in key_frames else [0])
         self.assertEqual(memory.frames[HOLD_FRAMES-1][2], 0)
         self.assertEqual(memory.blank_edges, HOLD_FRAMES + 1)
         self.assertFalse(any(memory[FONT:ENTRY+0x400]))
@@ -208,6 +235,7 @@ class SequenceTests(unittest.TestCase):
         self.assertEqual(bytes(memory[end:end+8]), guard)
         self.assertEqual(cpu.memory[0xd301], 0xfe)
         self.assertEqual(cpu.memory[0xd40e], 0)
+        self.assertEqual([cpu.memory[a] for a in (AUDF1, AUDC1)], [0, 0])
         self.assertEqual([cpu.memory[a] for a in (0xd400, 0xd01d, 0xd01a)], [0, 0, 0])
 
     def test_side_dancer_uses_all_sixteen_composed_frames(self):

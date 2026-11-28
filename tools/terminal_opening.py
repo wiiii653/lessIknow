@@ -13,46 +13,64 @@ from outro_palette import fade_inks
 FONT = FRAME_BASES[0]
 SCREEN = FONT + 0x400
 TEXT = SCREEN + FINAL_MARK_ROWS * 40
-TEXT_BYTES = 4 * 40
-PAGE_ADDRESS = FONT + 0x600
+ROW_BYTES = 40
+TEXT_BYTES = 4 * ROW_BYTES
+TYPING_ROW = TEXT + TEXT_BYTES - ROW_BYTES
+SCRIPT_ADDRESS = FONT + 0x600
 ENTRY = FONT + 0x800
 CLEANUP = 0xfd92
-PAGE_SWITCH = 144
-FADE_START = 288
-HOLD_FRAMES = 320
+TYPE_STEP = 4
+FADE_START = 896
+HOLD_FRAMES = 928
 COLORS = (0x0e, 0x9a, 0x2c)
-PAGE_INKS = ((0x9e, 0x7c, 0x4e), (0xae, 0x3c, 0x2e))
-PAGES = (
-    ('SYS.OPEN BEGIN.SYS [OK]', 'THE LESS I KNOW THE BETTER',
-     'TAME IMPALA / ATARI XE 1 MB', 'LOADING TITLE...'),
-    ('CITY PANORAMA', 'SILLY VENTURE 2026'),
+TEXT_INKS = (0x9e, 0x7c, 0x4e)
+ENTER = 1
+CURSOR = ord('_')
+AUDF1, AUDC1 = 0xd200, 0xd201
+KEY_TONE = 0xa2
+KEY_DIVISOR = 26
+TRANSCRIPT = (
+    (12, 'TWO WEEKS PASSED AND THINGS HAVE'),
+    (160, 'CHANGED. THIS IS THE FINAL RELEASE'),
+    (320, 'OF THE DEMO.'),
+    (444, '> REVIEW THE FINAL BUILD'),
+    (584, 'AGENT: CHECKING SCENE CUES.'),
+    (724, 'I WILL TRACE THE FRAME HANDOFFS.'),
 )
 
 
-def page_bytes(lines):
-    rows = tuple('> ' + line for line in lines)
-    assert len(rows) <= 4 and all(len(row) <= 39 for row in rows)
-    return b''.join(row.encode('ascii').ljust(40) for row in
-                    (*rows, *('',) * (4 - len(rows))))
+def typing_script():
+    assert HOLD_FRAMES % TYPE_STEP == 0 and HOLD_FRAMES//TYPE_STEP <= 256
+    script = bytearray(HOLD_FRAMES//TYPE_STEP)
+    starts = tuple(frame for frame, _ in TRANSCRIPT)
+    for (start, line), end in zip(TRANSCRIPT, (*starts[1:], FADE_START)):
+        glyphs = line.encode('ascii')
+        assert start % TYPE_STEP == 0 and len(glyphs) < ROW_BYTES
+        assert start + TYPE_STEP*(len(glyphs)+1) < end
+        slot = start//TYPE_STEP
+        script[slot] = ENTER
+        script[slot+1:slot+1+len(glyphs)] = glyphs
+    assert SCRIPT_ADDRESS + len(script) <= ENTRY
+    return script
 
 
 def framebuffer(music_nmi):
     """Supply startup data inside the existing first framebuffer segment."""
     data = bytearray(0x1f00)
     font = color_font()
-    for page in PAGES:
-        for char in page_bytes(page):
-            offset = (char - 32) * 8
-            assert 32 <= char < 96 and (char == 32 or any(font[offset:offset+8]))
+    script = typing_script()
+    for char in ({code for code in script if code > ENTER} | {CURSOR}) - {32}:
+        offset = (char - 32) * 8
+        assert 32 <= char < 96 and any(font[offset:offset+8])
+    data[TEXT-FONT:TEXT-FONT+TEXT_BYTES] = b' ' * TEXT_BYTES
     data[0x100:0x100+len(font)] = font
     tiles, _ = final_mark(0)
     for row in range(FINAL_MARK_ROWS):
         start = SCREEN - FONT + row * 40 + (40 - FINAL_MARK_WIDTH) // 2
         data[start:start+FINAL_MARK_WIDTH] = bytes(
             tiles[row * FINAL_MARK_WIDTH:(row + 1) * FINAL_MARK_WIDTH])
-    for index, page in enumerate(PAGES):
-        offset = PAGE_ADDRESS - FONT + index * 256
-        data[offset:offset+TEXT_BYTES] = page_bytes(page)
+    offset = SCRIPT_ADDRESS - FONT
+    data[offset:offset+len(script)] = script
     code = helper(music_nmi)
     offset = ENTRY - FONT
     data[offset:offset+len(code)] = code
@@ -77,29 +95,17 @@ def helper(music_nmi):
     for register, label in ((0xfffa, 'nmi_lo'), (0xfffb, 'nmi_hi')):
         c.jump(0xad, label)
         absolute(0x8d, register)
+    set_byte(AUDF1, KEY_DIVISOR)
+    set_byte(AUDC1, 0)
 
     c.label('frame')
     c.jump(0x20, 'next_blank')
     c.jump(0xad, 'frame_hi')
-    c.branch(0xf0, 'first_256')
+    c.emit(0xc9,HOLD_FRAMES >> 8)
+    c.branch(0xd0, 'draw')
     c.jump(0xad, 'frame_lo')
     c.emit(0xc9, HOLD_FRAMES & 255)
     c.branch(0xf0, 'done')
-    c.branch(0xd0, 'draw')
-    c.label('first_256')
-    c.jump(0xad, 'frame_lo')
-    c.emit(0xc9, PAGE_SWITCH)
-    c.branch(0xd0, 'draw')
-
-    c.emit(0xa9, (PAGE_ADDRESS >> 8) + 1)
-    c.jump(0x8d, 'read_page_hi')
-    c.emit(0xa9, 0)
-    c.jump(0x8d, 'text_index')
-    c.emit(0xa2, TEXT_BYTES - 1)
-    c.label('clear_text')
-    absolute(0x9d, TEXT)
-    c.emit(0xca, 0xe0, 0xff)
-    c.branch(0xd0, 'clear_text')
 
     c.label('draw')
     c.jump(0x20, 'mark')
@@ -113,6 +119,8 @@ def helper(music_nmi):
     c.jump(0x4c, 'frame')
     c.label('done')
     set_byte(0xd40e, 0)
+    set_byte(AUDC1, 0)
+    set_byte(AUDF1, 0)
     set_byte(0xfffa, music_nmi & 255)
     set_byte(0xfffb, music_nmi >> 8)
     absolute(0x4c, CLEANUP)
@@ -149,24 +157,44 @@ def helper(music_nmi):
     c.emit(0x60)
 
     c.label('text')
-    c.jump(0xae, 'text_index')
-    c.emit(0xe0, TEXT_BYTES)
-    c.branch(0xf0, 'text_done')
-    c.emit(0xa0, 2)  # Two columns per frame, including the spaces at line ends.
+    # Erase the old cursor before a keystroke or the Enter scroll.
+    c.jump(0xae, 'column')
+    c.emit(0xa9, 32);absolute(0x9d, TYPING_ROW)
+    assert TYPE_STEP == 4
+    c.jump(0xad, 'frame_lo');c.emit(0x29, TYPE_STEP-1);c.branch(0xd0, 'cursor')
+    # Divide the frame counter by four to address the compact script page.
+    c.jump(0xad, 'frame_hi');c.emit(*([0x0a]*6));c.jump(0x8d, 'slot_high')
+    c.jump(0xad, 'frame_lo');c.emit(0x4a,0x4a);c.jump(0x0d, 'slot_high');c.emit(0xa8)
+    absolute(0xb9, SCRIPT_ADDRESS)
+    c.branch(0xf0, 'cursor')
+    c.emit(0xc9, ENTER);c.branch(0xd0, 'type_char')
+    c.emit(0xa2, 0)
+    c.label('scroll')
+    absolute(0xbd, TEXT+ROW_BYTES);absolute(0x9d, TEXT)
+    c.emit(0xe8, 0xe0, TEXT_BYTES-ROW_BYTES);c.branch(0xd0, 'scroll')
+    c.emit(0xa2, ROW_BYTES-1, 0xa9, 32)
+    c.label('clear_row');absolute(0x9d, TYPING_ROW)
+    c.emit(0xca);c.branch(0x10, 'clear_row')
+    c.emit(0xa2, 0);c.jump(0x8e, 'column')
+    c.emit(0xe8);c.jump(0x8e, 'started')
+    c.jump(0x4c, 'cursor')
     c.label('type_char')
-    c.label('read_page')
-    absolute(0xbd, PAGE_ADDRESS)
-    absolute(0x9d, TEXT)
-    c.emit(0xe8, 0x88)
-    c.branch(0xd0, 'type_char')
-    c.jump(0x8e, 'text_index')
+    absolute(0x9d, TYPING_ROW)
+    c.emit(0xe8);c.jump(0x8e, 'column')
+    set_byte(AUDC1, KEY_TONE)
+    c.label('cursor')
+    c.jump(0xad, 'started');c.branch(0xf0, 'text_done')
+    c.jump(0xad, 'frame_lo');c.emit(0x29, 16);c.branch(0xd0, 'text_done')
+    c.jump(0xae, 'column')
+    c.emit(0xa9, CURSOR);absolute(0x9d, TYPING_ROW)
     c.label('text_done')
     c.emit(0x60)
 
     c.label('palette')
     c.emit(0xa2, 0)
     c.jump(0xad, 'frame_hi')
-    c.branch(0xf0, 'set_colors')
+    c.emit(0xc9, FADE_START >> 8)
+    c.branch(0xd0, 'set_colors')
     c.jump(0xad, 'frame_lo')
     c.emit(0xc9, FADE_START & 255)
     c.branch(0x90, 'set_colors')
@@ -175,16 +203,8 @@ def helper(music_nmi):
     for pen in range(3):
         c.jump(0xbd, f'color_{pen}')
         absolute(0x8d, 0xd016 + pen)
-    # X holds the star fade step. The typed page selects a fixed ink set.
-    c.emit(0x8a, 0x4a, 0x4a, 0x49, 7, 0xaa)
-    c.jump(0xad, 'read_page_hi')
-    c.emit(0xc9, PAGE_ADDRESS >> 8)
-    c.branch(0xf0, 'first_inks')
-    c.emit(0x8a, 0x09, 8)
-    c.branch(0xd0, 'ink_index')
-    c.label('first_inks')
-    c.emit(0x8a)
-    c.label('ink_index')
+    # X holds the star fade step. Text fades on the same envelope.
+    c.emit(0x8a, 0x4a, 0x4a, 0x49, 7)
     c.jump(0x8d, 'text_ink_index')
     c.emit(0x60)
 
@@ -194,11 +214,13 @@ def helper(music_nmi):
     for pen in range(3):
         c.jump(0xbd, f'text_inks{pen}')
         absolute(0x8d, 0xd016+pen)
+    # End the key pulse before displaying the text. The music NMI takes
+    # over only after the opener has explicitly muted this channel.
+    set_byte(AUDC1, 0)
     c.emit(0x68, 0xaa, 0x68, 0x40)
 
     c.labels['read_mark_hi'] = c.labels['read_mark'] + 2
-    c.labels['read_page_hi'] = c.labels['read_page'] + 2
-    for name in ('frame_lo', 'frame_hi', 'text_index', 'text_ink_index'):
+    for name in ('frame_lo', 'frame_hi', 'column', 'started', 'slot_high', 'text_ink_index'):
         c.label(name)
         c.emit(0)
     for pen, color in enumerate(COLORS):
@@ -206,7 +228,7 @@ def helper(music_nmi):
         for step in range(HOLD_FRAMES - FADE_START):
             level = ((color & 14) // 2) * (31 - step) // 31
             c.emit((color & 0xf0) | (2 * level) if level else 0)
-    palettes = [fade_inks(level, inks) for inks in PAGE_INKS for level in range(8)]
+    palettes = [fade_inks(level, TEXT_INKS) for level in range(8)]
     for pen in range(3):
         c.label(f'text_inks{pen}')
         c.emit(*(inks[pen] for inks in palettes))

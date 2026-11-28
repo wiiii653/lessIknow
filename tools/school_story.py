@@ -10,10 +10,11 @@ from scene_palettes import ART_PALETTE
 GIRL_PORTRAIT_SCENE = 14
 SCHOOL_PORTRAIT_TICK = tick_at_bar(19, 2)
 SCHOOL_PORTRAIT_END = tick_at_bar(11)
+SCHOOL_PASS_START = tick_at_bar(12)
 WHISTLE_START = tick_at_bar(13)  # after the foreground pass
 WHISTLE_END = tick_at_bar(15)  # arrival at the doorway
 SCHOOL_PHASES = ((tick_at_bar(8), 8), (SCHOOL_PORTRAIT_TICK, GIRL_PORTRAIT_SCENE),
-                 (SCHOOL_PORTRAIT_END, 8), (tick_at_bar(12), 9),
+                 (SCHOOL_PORTRAIT_END, 8), (SCHOOL_PASS_START, 9),
                  (tick_at_bar(13), 10), (tick_at_bar(14), 11),
                  (tick_at_bar(15), 12), (PRACTICE_TICK, PRACTICE_SCENE))
 # (left, top, width, height), in the 160x64 school artwork's coordinates.
