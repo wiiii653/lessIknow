@@ -31,7 +31,7 @@ legacy framebuffer maps at descriptor indices 2 and 3. Their shared low
 bytes are at `$D960`, with high bytes at `$E180` and `$FDC8`. The allocator
 checks these ranges alongside the caption and runtime data. The schedule
 and scene tables use space at `$DAEB` and `$DBEB` between existing allocations.
-The transcript and palette ramps share space in the last school panorama
+The transcript and palette ramps share space in the last arena panorama
 bank. The display interrupt reads the published screen and inks from
 unbanked RAM.
 
@@ -39,13 +39,16 @@ The foreground prepares the inactive caption screen and the final music
 interrupt publishes it during bounded early blanking. If the interrupt
 misses the publication window, the old screen stays visible until the next
 commit. A palette-only update publishes without swapping the text buffers.
+Each text screen caches its bottom line number. When the inactive screen
+already holds that line, typing and cursor changes repaint the bottom row.
+Enter or a seek can rebuild the history on either screen as needed.
 The normal footer is restored for credits or restart.
 
 ## Palette cues
 
 | Palette | Player tick | Act |
 |---|---:|---|
-| 01 | 2,992 | School arrival |
+| 01 | 2,992 | Atari Arena arrival |
 | 02 | 5,984 | Basketball practice |
 | 03 | 8,975 | First side-dancer sequence |
 | 04 | 11,967 | Early tunnels and rotators |
@@ -55,14 +58,18 @@ The normal footer is restored for credits or restart.
 | 08 | 23,934 | Trevor fight |
 | 09 | 29,656 | Post-Trevor montage |
 | 10 | 38,705 | Bananas leading into the eye sequence |
-| Credits handoff | 41,884 | Boy portrait and credits terminal |
+| Credits preparation | 41,804 | Retire the main terminal and prepare the closing portrait |
+| Credits handoff | 41,876 | First visible portrait and credits terminal in the Atari800 trace |
 
 The palette cues come from `CUES` in the source. Each entry in `CAPTIONS`
 has a music-clock window for the action it describes. Typing starts on the
 first PAL frame at least three frames into that window. The builder checks
 that the full line fits before the action ends and leaves at least 48 ticks
 before the next line starts. Short moments such as the backboard crack use
-short entries. Completed lines scroll normally across scene cuts. See the
+short entries. Practice cues follow the close-up, shot at the hoop, then
+wall-bar stretches. The first tunnel rotation changes have short cues for
+the actual spiral or organic view, and the lift has its own cue when the
+trio starts the launch. Completed lines scroll across scene cuts. See the
 [timeline](TIMELINE_MAP.md) for the scene ranges.
 
 ## Regression checks
@@ -71,5 +78,5 @@ short entries. Completed lines scroll normally across scene cuts. See the
 split, blanking deferral, double buffering, training framebuffer maps and
 the credits handoff. It checks that caption palette interrupts leave the
 music clock unchanged. See [Project Status](PLAN_STATUS.md) for which
-artifacts have been tested. The [terminal text plan](TERMINAL_TEXT_PLAN.md)
+artifacts have been tested. The [terminal text plan](backup/TERMINAL_TEXT_PLAN.md)
 preserves the earlier draft copy.

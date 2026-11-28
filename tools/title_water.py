@@ -12,6 +12,7 @@ RIPPLE_MASKS = 0x7140  # Between firework code and anchor data.
 EDGE_ENTRY = 0x71e0
 RIPPLE_TABLES = 0x7f10  # Beyond the firework missile routine.
 RETIRE_ENTRY = 0x3c80
+RASTER_ENTRY = 0xe140  # Between the shared mosaic tables and the practice map.
 STATE = 0x83e0
 ROW_BYTES = 40
 ROW_COUNT = 11
@@ -20,11 +21,15 @@ TAIL_OFFSET = 0x0d00
 FOOTER_OFFSET = 2 + 192 * 3
 # The title draws into $9000 when the inactive display list is $8400.
 BUFFER_PAIRS = ((0x8400, 0x9000), (0x8000, 0xb000))
-TAIL_SIZE = ROW_COUNT * 9 + 4
 
 # Sample the city near the quay and the live sky deeper into the reflection.
 SOURCE_ROWS = (62, 61, 60, 57, 51, 45, 40, 33, 28, 24, 20)
-SCANLINES = (2, 2, 3, 1, 4, 4, 4, 1, 5, 1, 6)
+SCANLINES = (2, 2, 3, 1, 4, 4, 4, 1, 4, 1, 3)
+DEEP_ROW = 8
+# Keep the last music DLI at relative line 234 while giving the water edge
+# some clearance from the bottom of the picture.
+BOTTOM_BLANK = 33 - sum(SCANLINES)
+TAIL_SIZE = sum(SCANLINES)*3 + 5
 WIDE_RIPPLE_ROW = 5
 RIPPLE = tuple(tuple(round(amplitude*math.sin(math.tau*i/16)) for i in range(16))
                for amplitude in (1, 2))
@@ -39,17 +44,17 @@ LAST_FADE_OUT_PHASE = 46
 
 def tail(display, framebuffer):
     data = bytearray()
-    assert len(SCANLINES) == ROW_COUNT and sum(SCANLINES) == 3 * ROW_COUNT
+    assert len(SCANLINES) == ROW_COUNT and 1 <= BOTTOM_BLANK <= 8
     for row, height in enumerate(SCANLINES):
         pixels = framebuffer + PIXELS_OFFSET + row * ROW_BYTES
         assert pixels // 0x1000 == (pixels + ROW_BYTES - 1) // 0x1000
         line = (0x4f, pixels & 255, pixels >> 8)
-        if row == 0:
-            # A short palette DLI at the waterline leaves music timing intact.
+        if row in (0, DEEP_ROW):
+            # Palette DLIs dim the waterline and the deeper bands.
             data.extend((0xcf, *line[1:]))
             height -= 1
         data.extend(line * height)
-    data.extend((0x80, 0x41, display & 255, display >> 8))
+    data.extend(((BOTTOM_BLANK-1) << 4, 0x80, 0x41, display & 255, display >> 8))
     assert len(data) == TAIL_SIZE
     assert (framebuffer + TAIL_OFFSET) % 0x400 + len(data) <= 0x400
     return bytes(data)
@@ -88,6 +93,38 @@ def mask_offset(row):
     if row >= WIDE_RIPPLE_ROW:
         return len(RIPPLE_LINES)*ROW_BYTES
     return None
+
+
+def raster(published_light):
+    """Dim the two water bands and preserve the title's four music DLIs."""
+    from outro_palette import EXIT
+
+    c = Code(RASTER_ENTRY)
+
+    def a(op, address):
+        c.emit(op, address & 255, address >> 8)
+
+    # Palette-only DLIs lie at relative lines 201 and 222. The event
+    # at 234 restores the sky and continues through the music player.
+    a(0xad, 0xd40b); c.emit(0xc9, 96); c.branch(0x90, 'music')
+    c.emit(0xc9, 113); c.branch(0x90, 'surface')
+    c.emit(0xc9, 120); c.branch(0xb0, 'restore')
+    c.emit(0xa2, 2); c.branch(0xd0, 'water')
+    c.label('surface'); c.emit(0xa2, 1)
+    c.label('water')
+    a(0xad, published_light)
+    c.label('dim')
+    c.emit(0xc9, 2); c.branch(0x90, 'water_light')
+    c.emit(0xe9, 2, 0xca); c.branch(0xd0, 'dim')
+    c.label('water_light')
+    a(0x8d, 0xd01a); a(0x4c, EXIT)
+    c.label('restore')
+    a(0xad, published_light); a(0x8d, 0xd01a)
+    c.label('music')
+    a(0x8d, 0xd40a); c.emit(0x60)
+    result = bytes(c.finish())
+    assert RASTER_ENTRY + len(result) <= 0xe180
+    return result
 
 
 def reflection(level, phase, scene):

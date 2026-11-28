@@ -27,21 +27,56 @@ from os_ram import image, loader, RUN
 from gym_practice import PRACTICE_TICK, PRACTICE_SCENE, practice_pixels, BALL_PATH, practice_shot, PRACTICE_CUTS
 
 
-def execute(tick, cpu=None):
+def run_callback(cpu, address):
+    cpu.sp = 0xfd
+    cpu.memory[0x1fe:0x200] = [0xfe, 0x7f]
+    cpu.pc = address
+    for _ in range(100000):
+        if cpu.pc == 0x7fff:
+            return cpu
+        cpu.step()
+    raise AssertionError(f'callback did not return: PC=${cpu.pc:04X}')
+
+
+def side_ribbon_interrupt(cpu, vcount):
+    info = json.loads(METADATA.read_text())
+    entry = info.get('side_ribbon_nmi')
+    if entry:
+        cpu.memory[0xd40b] = vcount
+        if cpu.memory[0x83e0] == 14:
+            run_callback(cpu, info['ribbon_palette'])
+        run_callback(cpu, entry)
+
+
+def publish_side_ribbons(cpu):
+    from side_ribbons import ACTIVE_POSE, BACK, NMI_ENTRY, PENDING_POSE
+
+    memory = cpu.memory
+    if not (memory[PENDING_POSE] or memory[ACTIVE_POSE]):
+        return
+    # Some tests use execute() with a CPU loaded from an archived prototype.
+    if memory[NMI_ENTRY:NMI_ENTRY+3] != [0xad, PENDING_POSE & 255, PENDING_POSE >> 8]:
+        return
+    if not memory[BACK]:
+        side_ribbon_interrupt(cpu, 124)
+    side_ribbon_interrupt(cpu, 43)
+    side_ribbon_interrupt(cpu, 124)
+    if memory[PENDING_POSE]:
+        side_ribbon_interrupt(cpu, 43)
+        side_ribbon_interrupt(cpu, 124)
+
+
+def execute(tick, cpu=None, *, publish_side=True):
     if cpu is None:
         cpu = MPU(memory=RuntimeMemory(XEX.read_bytes()))
     cpu.memory[0x23cd] = 0x60  # UI callback isolated from the scene routine
     cpu.memory[0xd40b] = 124  # VCOUNT already in vertical blank
     for byte in range(3):
         cpu.memory[0x24a7 + byte] = (tick >> (8 * byte)) & 255
-    cpu.sp = 0xfd
-    cpu.memory[0x1fe:0x200] = [0xfe, 0x7f]
-    cpu.pc = json.loads(METADATA.read_text())['callback']
-    for _ in range(100000):
-        if cpu.pc == 0x7fff:
-            return cpu
-        cpu.step()
-    raise AssertionError(f'callback did not return: PC=${cpu.pc:04X}')
+    run_callback(cpu, json.loads(METADATA.read_text())['callback'])
+    if publish_side:
+        publish_side_ribbons(cpu)
+    return cpu
 
 
 def bitmap_layout(memory,display):
@@ -61,13 +96,14 @@ class SequenceTests(unittest.TestCase):
     def test_act5_motif_boundaries(self):
         # Act 5 uses banana phases 0–31, spiral phases 32–47 and twelve
         # organic phases 48–59; eye art owns IDs 60–63.
-        from post_trevor_director import START, CYCLE_START, END, cuts
+        from post_trevor_director import START, CYCLE_START, cuts
+        from outro_text import PREP_START
         for tick in sorted({START-1,START,CYCLE_START-1,CYCLE_START,39379,
-                            40126,END-1,END,*[t for t,_ in cuts()]}):
+                            40126,PREP_START-1,PREP_START,*[t for t,_ in cuts() if t<PREP_START]}):
             cpu=execute(tick)
             if tick==START-1:
                 self.assertEqual(cpu.memory[0x83e0],16)
-            elif tick<END:
+            elif tick<PREP_START:
                 self.assertEqual(cpu.memory[0x83e0],6)
                 self.assertLess(cpu.memory[0x83ed],64)
             else:
@@ -532,6 +568,7 @@ class SequenceTests(unittest.TestCase):
 
     def test_scene_boundaries(self):
         from ribbon_dance import SIDE_PREP_START
+        from outro_text import PREP_START
         for tick, frame, shift in ((0, 0, 0), (48, 0, 0), (96, 0, 0), (1495, 0, 0), (1496, 1, 0),
                                    (1544, 1, 0), (1592, 1, 0), (2991, 1, 0),
                                    (2992, 8, 0), (4487, 8, 0), (4488, 9, 0),
@@ -541,7 +578,7 @@ class SequenceTests(unittest.TestCase):
                                    (DANCE_TICK+48, 14, 0),
                                    (DANCE_TICK+96, 14, 0),
                                    (KALEIDO_TICK-1, 14, 0), (KALEIDO_TICK, 6, 0),
-                                   (tick_at_bar(112)-1, 6, 0), (tick_at_bar(112),17,0),
+                                   (PREP_START-1, 6, 0), (PREP_START,17,0),
                                    (51231, 17, 0), (51232,17,0),
                                    (65536, 17, 0), (0xffffff, 17, 0)):
             with self.subTest(tick=tick):

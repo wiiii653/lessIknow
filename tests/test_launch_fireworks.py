@@ -90,7 +90,8 @@ class LaunchFireworksTests(unittest.TestCase):
         for tick in (FIREWORK_START,FIREWORK_START+8,FIREWORK_START+32,STEPS[126],START,9163):
             m=cpu.memory;active=(m[0xd407]&0xfc)<<8
             m.writes.clear();sequence.execute(tick,cpu)
-            self.assertFalse(any(active+0x180<=a<active+0x400 for a in m.writes))
+            commit = m.writes.index(0xd407)
+            self.assertFalse(any(active+0x180<=a<active+0x400 for a in m.writes[:commit]))
             fresh=sequence.execute(tick).memory
             self.assertEqual(active_planes(m),active_planes(fresh))
             self.assertEqual(m[0xd008:0xd00c],[3]*4 if tick<FIREWORK_START else [1]*4)

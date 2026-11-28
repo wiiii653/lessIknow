@@ -6,6 +6,82 @@ import outro_loader as loader
 from ribbon_inbetweens import decompress
 
 class OutroTests(unittest.TestCase):
+    def test_foot_taps_on_alternate_kicks_and_changes_only_the_shoe_patch(self):
+        import credits_foot as foot
+        from build_audio_revision import music_packets
+        from build_hardware_xex import with_approved_music
+        from final_boy import BITMAP_BANK, packed
+        from school_portrait_bank import bank_value
+
+        xex = seq.XEX.read_bytes()
+        packets = music_packets(with_approved_music(xex, release_122=True))
+        kicks = tuple(tick for tick in range(text.START-1, text.END)
+                      if packets[tick][4] == 18 and packets[tick][5] & 15 >= 6
+                      and packets[tick-1][4] != 18)
+        self.assertEqual(kicks[0], 41883)
+        self.assertEqual(foot.ATTACKS, kicks[::2])
+
+        rest = packed()
+        raised = bytearray(rest)
+        _, patch = foot.patches(rest)
+        for row in range(len(foot.LIFTED)):
+            dest = (foot.TOP+row)*40 + foot.LEFT//4
+            start = row*foot.ROW_BYTES
+            raised[dest:dest+foot.ROW_BYTES] = patch[start:start+foot.ROW_BYTES]
+
+        class LateFootMemory(seq.RuntimeMemory):
+            late = False
+            next_packet = None
+
+            def __getitem__(self, address):
+                if (self.ram[0xd301] == self.ram[bank_value(BITMAP_BANK)]
+                        and foot.ENTRY <= cpu.pc < foot.BANK_LIMIT):
+                    if address == 0xd40b and self.late:
+                        return 132
+                    if self.next_packet is not None and address in (0x24a7, 0x24a8):
+                        return self.next_packet >> (8*(address-0x24a7)) & 255
+                return super().__getitem__(address)
+
+        memory = LateFootMemory(xex)
+        cpu = seq.MPU(memory=memory)
+        first, second = foot.ATTACKS[:2]
+        last = foot.ATTACKS[-1]
+        seq.execute(text.PREP_START-1,cpu)
+        self.assertEqual(memory[0x83e0], 6)
+        for tick in (text.PREP_START, foot.LIFTS[0]-2):
+            seq.execute(tick,cpu)
+            self.assertEqual(memory[text.STATE_FLAG], 1)
+            self.assertNotEqual(memory[0xd403], 0xbc)
+            self.assertEqual(memory[0xd016:0xd019], [0,0,0])
+        seq.execute(foot.LIFTS[0]-1,cpu)
+        self.assertEqual(memory[0xd403], 0xbc)
+        self.assertEqual(bytes(memory[foot.PORTRAIT:foot.PORTRAIT+len(rest)]), raised)
+        # The value at $24A7 in blanking is the first of the two packets that
+        # will play before the shoe is drawn.
+        for tick, expected, late in (
+            (first-2, raised, False), (first-1, rest, False),
+            (text.START, rest, False),
+            (kicks[1]-1, rest, False), (foot.LIFTS[1]-2, rest, False),
+            (foot.LIFTS[1]-1, rest, True), (foot.LIFTS[1]-1, raised, False),
+            (second-2, raised, False), (second-1, rest, False),
+            (last-2, raised, False), (last-1, rest, False), (text.END, rest, False),
+            (0, None, False), (text.START, rest, False),
+        ):
+            with self.subTest(tick=tick, late=late):
+                memory.late = late
+                seq.execute(tick, cpu)
+                self.assertEqual(memory[0xd301], 0xff)
+                if expected is not None:
+                    actual = bytes(memory[foot.PORTRAIT:foot.PORTRAIT+len(rest)])
+                    self.assertEqual(actual, expected)
+
+        # A late publication must not introduce a downstroke off the beat.
+        seq.execute(0,cpu)
+        memory.next_packet = first+57
+        seq.execute(text.START,cpu)
+        self.assertEqual(bytes(memory[foot.PORTRAIT:foot.PORTRAIT+len(rest)]), rest)
+        self.assertEqual(memory[0xd403], 0xbc)
+
     def test_both_restored_display_lists_loop_to_their_own_page(self):
         cpu=seq.execute(text.START)
         memory=cpu.memory
@@ -109,7 +185,7 @@ class OutroTests(unittest.TestCase):
                 super().__setitem__(address,value)
         memory=PublicationMemory(seq.XEX.read_bytes())
         cpu=seq.MPU(memory=memory)
-        seq.execute(text.START-1,cpu);memory.publications.clear()
+        seq.execute(text.PREP_START-1,cpu);memory.publications.clear()
         seq.execute(text.START,cpu)
         self.assertEqual(memory.publications,[0xbc])
         self.assertTrue(memory.staging_colors)

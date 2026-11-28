@@ -51,6 +51,75 @@ class RibbonBufferTests(unittest.TestCase):
             cpu = sequence.execute(tick, cpu)
             self.assertEqual(cpu.memory[0x83ed], frame_at(tick))
 
+    def test_side_ribbon_phases_advance_during_held_pose(self):
+        from ribbon_dance import FRAME_COUNT, metadata, ribbon_streams
+        from side_ribbons import PHASE, PLANES, midpoint_streams
+        if 'side_ribbon_nmi' not in json.loads(sequence.METADATA.read_text()):
+            self.skipTest('build predates independent side ribbons')
+
+        start = 9200  # The held pose has two clipped ribbon anchors.
+        cpu = sequence.execute(start)
+        memory = cpu.memory
+        display = memory[0xd402] | memory[0xd403] << 8
+        pose = frame_at(start)
+        anchors = metadata()
+        streams = ribbon_streams(), midpoint_streams()
+        frames = set()
+        for tick in range(start, start + 128, 4):
+            memory[0x24a7:0x24aa] = tick.to_bytes(3, 'little')
+            previous_base = memory[0xd407]
+            sequence.side_ribbon_interrupt(cpu, 43)
+            self.assertEqual(memory[0xd407], previous_base)
+            sequence.side_ribbon_interrupt(cpu, 132)
+            self.assertEqual(memory[0xd407], previous_base)
+            sequence.side_ribbon_interrupt(cpu, 124)
+            self.assertEqual(memory[0xd407], previous_base ^ 0x80)
+            self.assertEqual(memory[0xd402] | memory[0xd403] << 8, display)
+            phase = (tick >> 2) & 31
+            self.assertEqual(memory[PHASE], phase)
+            snapshot = []
+            for plane, address in enumerate(PLANES):
+                origin = anchors[(4 + plane % 4)*FRAME_COUNT + pose]
+                offset = plane*1024 + (phase//2)*64
+                expected = bytearray(128)
+                for row, value in enumerate(streams[phase%2][offset:offset+64]):
+                    y = (origin + row) & 255
+                    if y < 128:
+                        expected[y] = value
+                address += (memory[0xd407] & 0x80) << 8
+                actual = bytes(memory[address:address+128])
+                self.assertEqual(actual, expected, (tick, plane))
+                if plane < 4:
+                    snapshot.append(actual)
+            frames.add(tuple(snapshot))
+        self.assertEqual(len(frames), 32)
+
+    def test_side_handoff_keeps_ribbons_on_published_bitmap(self):
+        from side_ribbons import ACTIVE_POSE, PENDING_POSE
+        if 'side_ribbon_nmi' not in json.loads(sequence.METADATA.read_text()):
+            self.skipTest('build predates independent side ribbons')
+
+        tick = 9200
+        cpu = sequence.execute(tick)
+        memory = cpu.memory
+        old_display = memory[0xd403]
+        old_positions = memory[0xd000:0xd004]
+        sequence.side_ribbon_interrupt(cpu, 43)
+        sequence.execute(tick+16, cpu, publish_side=False)
+        queued = frame_at(tick+16)
+        self.assertEqual(memory[PENDING_POSE], queued)
+        sequence.side_ribbon_interrupt(cpu, 124)
+        self.assertEqual(memory[PENDING_POSE], queued)
+        self.assertEqual(memory[0xd403], old_display)
+        self.assertEqual(memory[0xd000:0xd004], old_positions)
+        sequence.side_ribbon_interrupt(cpu, 43)
+        sequence.side_ribbon_interrupt(cpu, 124)
+        self.assertEqual(memory[PENDING_POSE], 0)
+        self.assertEqual(memory[ACTIVE_POSE], queued)
+        self.assertEqual(memory[0xd403], old_display ^ 4)
+        _, hands = scene_artwork(tick+16)
+        self.assertEqual(memory[0xd000:0xd004], [(x+34)&255 for x, _ in hands])
+
     def test_rainbow_raster_bands_cycle_without_touching_banks_or_framebuffers(self):
         from ribbon_dance import rainbow_palette
         address=json.loads(sequence.METADATA.read_text())['ribbon_palette']
@@ -95,16 +164,17 @@ class RibbonBufferTests(unittest.TestCase):
             active_dl=memory[0xd403]<<8
             active_bitmap=0x9000 if active_dl==0x8400 else 0xb000
             memory.writes.clear()
-            sequence.execute(tick,cpu)
+            sequence.execute(tick,cpu,publish_side=False)
             from ribbon_dance import PALETTE
-            self.assertEqual(memory[0xd016:0xd019],list(PALETTE[1:]),tick)
             self.assertFalse(any(active+0x180<=a<active+0x400 for a in memory.writes),tick)
             self.assertFalse(any(active_bitmap<=a<active_bitmap+2560 for a in memory.writes),tick)
+            sequence.publish_side_ribbons(cpu)
+            self.assertEqual(memory[0xd016:0xd019],list(PALETTE[1:]),tick)
             self.assertIn(memory[0xd407],(8,0x88))
             self.assertEqual(memory[0xd301],0xff)
 
     def test_late_raster_retains_old_pmg_until_safe_commit(self):
-        for tick in (SIDE_START+64,START,(STEPS[0]+STEPS[1])//2,FIREWORK_START+32):
+        for tick in (START,(STEPS[0]+STEPS[1])//2,FIREWORK_START+32):
             with self.subTest(tick=tick):
                 self.check_late_raster_retains_old_pmg_until_safe_commit(tick)
 
@@ -160,6 +230,7 @@ class RibbonBufferTests(unittest.TestCase):
             cpu.step()
         else:self.fail('callback did not finish')
         self.assertGreater(count,3)
+        sequence.publish_side_ribbons(cpu)
         pixels,_=scene_artwork(tick)
         expected=bytes(pixels[y//3*160+x] for y in range(192) for x in range(160))
         self.assertEqual(sequence.SequenceTests().raster(cpu),expected)

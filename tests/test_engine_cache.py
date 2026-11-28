@@ -1,6 +1,7 @@
 """Exercise warm caches, per-buffer ownership, partial copies and PMG accents."""
 from artifact import XEX, METADATA
 from pathlib import Path
+import json
 import unittest
 
 import test_sequence as sequence
@@ -62,12 +63,19 @@ class CacheTests(unittest.TestCase):
             self.assertEqual(self.pixels(cpu), practice_shot(tick))
 
     def test_side_pose_copies_only_its_compact_frame(self):
-        from ribbon_dance import scene_artwork
+        from ribbon_dance import SIDE_ACTOR_BYTES, SIDE_ACTOR_ROWS, frame_at, scene_artwork, side_actor_data
         cpu=self.cpu()
+        clipped = 'side_ribbon_nmi' in json.loads(METADATA.read_text())
         for tick, copies in ((9216,3512),(9232,3512),(9248,3512),
                              (9264,3512),(9268,0),(9280,3512),(9856,3512)):
             active=0x9000 if cpu.memory[0xd403]==0x84 else 0xb000
             self.step(cpu,tick)
+            if copies and clipped:
+                actor = side_actor_data((frame_at(tick)-16)//2)
+                start = SIDE_ACTOR_BYTES
+                stops = actor[start+1024:start+1024+SIDE_ACTOR_ROWS]
+                lasts = actor[start:start+SIDE_ACTOR_ROWS]
+                copies = 2560 + sum((last-stop) & 255 for last, stop in zip(lasts, stops))
             self.assertEqual(self.copied(cpu),copies)
             self.assertFalse(any(active<=a<active+2560 for a in cpu.memory.writes))
             art,_=scene_artwork(tick)

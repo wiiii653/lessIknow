@@ -76,24 +76,29 @@ class TitleFireworkTests(unittest.TestCase):
 
     def test_waterline_dims_only_the_reflection_without_clocking_music(self):
         from test_outro_palette import OutroPaletteTests
-        from title_water import BUFFER_PAIRS, TAIL_OFFSET, TAIL_SIZE
+        from title_water import BOTTOM_BLANK, BUFFER_PAIRS, DEEP_ROW, SCANLINES, TAIL_OFFSET, TAIL_SIZE
 
         interrupt = OutroPaletteTests().interrupt
+        deep_line = sum(SCANLINES[:DEEP_ROW])
         cpu = None
         for tick in (1360, 2432, 2920, 2984):
             cpu = sequence.execute(tick, cpu)
             memory = cpu.memory
             display = memory[0xd402] | memory[0xd403] << 8
             tail = dict(BUFFER_PAIRS)[display] + TAIL_OFFSET
-            opcodes = memory[tail:tail+TAIL_SIZE-4:3]
-            self.assertEqual([row for row, op in enumerate(opcodes) if op & 0x80], [0])
+            opcodes = memory[tail:tail+TAIL_SIZE-5:3]
+            self.assertEqual([row for row, op in enumerate(opcodes) if op & 0x80],
+                             [0, deep_line])
+            self.assertEqual(memory[tail+TAIL_SIZE-5], (BOTTOM_BLANK-1) << 4)
+            self.assertEqual(sum(SCANLINES)+BOTTOM_BLANK, 33)
+            self.assertEqual(memory[tail+TAIL_SIZE-4], 0x80)
             sky = memory[0xd01a]
             bank = memory[0xd301]
             original_tick = int.from_bytes(bytes(memory[0x24a7:0x24aa]), 'little')
-            for line in (8, 86, 164, 209, 242):
+            for line in (8, 86, 164, 209, 209+deep_line, 242):
                 interrupt(cpu, line)
-                if line == 209:
-                    self.assertEqual(memory[0xd01a], max(0, sky-2))
+                if line in (209, 209+deep_line):
+                    self.assertEqual(memory[0xd01a], max(0, sky-(2 if line == 209 else 4)))
                     self.assertEqual(int.from_bytes(bytes(memory[0x24a7:0x24aa]), 'little'),
                                      original_tick+3)
                 else:

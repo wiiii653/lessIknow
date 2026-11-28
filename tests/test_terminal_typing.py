@@ -59,7 +59,7 @@ class TerminalTypingTests(unittest.TestCase):
         self.assertEqual(final_boy.START,text.START)
         self.assertEqual(text.END,tick_at_bar(137))
         self.assertEqual(final_boy.END,tick_at_bar(139))
-        cpu=seq.execute(text.START-1)
+        cpu=seq.execute(text.PREP_START-1)
         self.assertEqual(cpu.memory[0x83e0],6)
         cpu=seq.execute(text.START,cpu)
         self.assertEqual(cpu.memory[0x83e0],17)

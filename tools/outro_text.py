@@ -5,6 +5,7 @@ from music_timing import tick_at_bar
 ENTRY = 0xC000
 RESET_ENTRY = 0xC340
 START, END = tick_at_bar(112), tick_at_bar(137)
+PREP_START = START - 80  # Blank and prepare the portrait before its first kick.
 TYPE_START = START + 16  # Show the empty terminal for four PAL frames.
 TEXT_POINTERS = 0xC400
 FONT = 0xC800
@@ -49,9 +50,12 @@ FINAL_CARD_PAGES = (
     ('A\\SLOP BY OGNJEN 2026', 'SILLY VENTURE WE', ''),
     ('STEREO MUSIC PLAYER / 2 POKEYS', 'CREATED AS A SEPARATE PROJECT',
      '4 POKEY UPDATES PER PAL FRAME'),
-    ('OPENING EFFECTS', 'PROCEDURAL PLASMA / CITY REVEAL', 'TITLE REVEAL / PMG FIREWORKS'),
-    ('LOADER / TEXT EFFECTS', 'ANIMATED STAR / LOADING DOTS', 'GREETS DLI GLITCH / TEXT FADES'),
-    ('SCENE DIRECTOR', 'MUSIC TICKS CUE EACH SCENE', 'ANTIC MODES / BANKED 1 MB RAM'),
+    ('OPENING EFFECTS', 'PROCEDURAL PLASMA / CITY REVEAL', 'WATER REFLECTION / PMG FIREWORKS'),
+    ('LOADER AND TERMINAL', 'ANIMATED STAR / KEY CLICKS', 'SCROLLING LOG / PALETTE FADES'),
+    ('MUSIC-SYNCED EFFECTS', 'REVERSING TUNNELS / FORWARD BALL', 'CREDITS FOOT TAPS ON THE BEAT'),
+    ('80X64 GTIA / 160X64 ANTIC / 3X ROWS',
+     '160X96 TUNNELS AND MOSAICS / 2X ROWS',
+     'WATER AND TEXT IN VERTICAL OVERSCAN'),
 )
 FINAL_CARD_TEXT = 0xBF80
 FINAL_CARD_TEXT_ROWS = 3
@@ -59,9 +63,9 @@ CREDITS = (
     ("SYS.OPEN CREDITS [OK]", "THE LESS I KNOW THE BETTER",
      "A\\SLOP BY OGNJEN / ATARI XE 1 MB", "I STARTED VIBECODING IN JULY 2026",
      "THIS IS MY FIRST WORK FOR ATARI", "MADE WITH OPENAI CODEX"),
-    ("SYS.OPEN AUDIO.LOG [OK]", "SONG / TAME IMPALA", "THE LESS I KNOW THE BETTER",
+    ("SYS.OPEN AUDIO.LOG [OK]", "SONG / TAME IMPALA",
      "POKEY / OGNJEN / CODEX", "MIDI / MIDISHOW 200337"),
-    ("UPLINK SV2026 [CONNECTED]", "MADE FOR", "SILLY VENTURE 2026",
+    ("UPLINK SV2026 [CONNECTED]", "MADE FOR SILLY VENTURE 2026 WE",
      "AI TOOLS / ATARI SOUL", "HUMAN VISION / LLM CODE"),
 )
 GREETZ = (
@@ -243,7 +247,7 @@ def final_mark(phase=0):
     return bytes(screen), bytes(glyphs)
 
 
-def font_data(card=False):
+def font_data():
     font=bytearray(1024)
     card_lines = ''.join(line for page in FINAL_CARD_PAGES for line in page)
     for char in set(''.join(all_lines())+card_lines+'>'):
@@ -260,8 +264,6 @@ def font_data(card=False):
     font[TIMES-FONT:TIMES-FONT+len(timing)]=timing
     font[LENGTHS-FONT:LENGTHS-FONT+len(lengths)]=lengths
     font[95*8:96*8]=bytes([0]*6+[0x54,0])  # blinking baseline underscore
-    if card:
-        font[0x100:0x300] = bytes(value*3 for value in font[0x100:0x300])
     return bytes(font)
 
 
@@ -371,6 +373,17 @@ def helper():
     c.emit(0xE8, 0xE0, HISTORY_ROWS); c.branch(0xD0, 'row')
     a(0xAD,STATE_FLAG);c.emit(0xC9,1);c.branch(0xD0,'published')
     c.label('publish_wait');a(0xAD,0xD40B);c.emit(0xC9,124);c.branch(0x90,'publish_wait');c.emit(0xC9,128);c.branch(0xB0,'publish_wait')
+    from credits_foot import LIFTS, MUSIC_NEXT_TICK, PATCH_ENTRY
+    # Show the anticipation before the first downstroke. Two music packets
+    # play before ANTIC reaches the shoe on the next frame.
+    first_frame = LIFTS[0] - 1
+    a(0xAD,MUSIC_NEXT_TICK+2);c.branch(0xD0,'show_portrait')
+    a(0xAD,MUSIC_NEXT_TICK+1);c.emit(0xC9,first_frame>>8)
+    c.branch(0x90,'published');c.branch(0xD0,'show_portrait')
+    a(0xAD,MUSIC_NEXT_TICK);c.emit(0xC9,first_frame&255)
+    c.branch(0x90,'published')
+    c.label('show_portrait')
+    a(0x20,PATCH_ENTRY)
     from final_boy import ENTRY_VISIBLE
     a(0x20,ENTRY_VISIBLE)
     c.emit(0xA9,COLOR_FONT>>8);a(0x8D,0xD409)
@@ -452,4 +465,7 @@ def page_starts():
 
 
 def inserts():
-    return [(ENTRY, helper()), (FONT, font_data(card=True)), *line_records()]
+    # The staged font's control slots carry the terminal timing and lengths.
+    # Printable glyphs come from the banked color font. The final card
+    # copies them to FONT when it takes over.
+    return [(ENTRY, helper()), (FONT, font_data()[:32*8]), *line_records()]

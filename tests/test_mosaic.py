@@ -13,6 +13,42 @@ from girl_eyes import frame_at as eye_frame_at, pixels as eye_pixels, START as E
 
 @unittest.skipIf(sequence.MPU is None, 'py65 required')
 class MosaicTests(unittest.TestCase):
+    def test_late_bitmap_swap_keeps_previous_list_until_early_blanking(self):
+        from mosaic import ENTRY
+
+        class LateSwap(TrackedMemory):
+            def __getitem__(self, address):
+                if (address == 0xd40b and self.counts and ENTRY <= cpu.pc < 0x8000):
+                    self.assert_front()
+                    self.count = self.counts.pop(0)
+                    return self.count
+                return super().__getitem__(address)
+
+            def assert_front(self):
+                self_test.assertEqual(self.ram[0xd403], front)
+
+            def __setitem__(self, address, value):
+                if address == 0xd403:
+                    self.publications.append(self.count)
+                super().__setitem__(address, value)
+
+        self_test = self
+        for tick in (KALEIDO_START, START, EYE_START):
+            with self.subTest(tick=tick):
+                memory = LateSwap(XEX.read_bytes())
+                memory.counts = []
+                memory.publications = []
+                memory.count = None
+                cpu = sequence.MPU(memory=memory)
+                sequence.execute(tick-1, cpu)
+                front = memory[0xd403]
+                memory.counts = [149, 5, 124]
+                memory.publications.clear()
+                sequence.execute(tick, cpu)
+                self.assertEqual(memory.counts, [])
+                self.assertEqual(memory.publications, [124])
+                self.assertNotEqual(memory[0xd403], front)
+
     def test_bananas_stay_yellow_and_tunnel_highlights_cycle_hue(self):
         from trevor_awakens import END as TREVOR_END
         from music_timing import tick_at_bar

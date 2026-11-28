@@ -20,12 +20,14 @@ from school_story import (story_frames, SCHOOL_PHASES, girl_front_pixels,
                           GIRL_PORTRAIT_SCENE, SCHOOL_PORTRAIT_TICK,
                           SCHOOL_PORTRAIT_END)
 from school_portrait_bank import loader as school_bank_loader, BANK_VALUE, bank_value
-from mosaic import banks as mosaic_banks
-from outro_text import COLOR_FONT_LOAD, color_font_loader, install_color_font
+import mosaic
+from outro_text import PREP_START as CREDITS_PREP_START, COLOR_FONT_LOAD, color_font_loader, install_color_font
 import ribbon_dance
 import ribbon_inbetweens
+import side_ribbons
 import title_fireworks
 import final_boy
+import credits_foot
 import outro_loader
 import terminal_typing
 import terminal_opening
@@ -107,6 +109,24 @@ def bank_manifest():
     assert frame_end < main_act_terminal.TEXT_ENTRY < main_act_terminal.PALETTE_ENTRY
     banks[last_school]['owner'] += ', terminal transcript and palette ramps'
     banks[last_school]['verified_free_ranges'].insert(0, [frame_end, main_act_terminal.TEXT_ENTRY])
+    assert last_school == 14 + side_ribbons.CONTROL_BANK and frame_end == side_ribbons.CONTROL_ENTRY
+    ribbon_code_end = side_ribbons.CONTROL_ENTRY + len(side_ribbons.controller())
+    banks[last_school]['verified_free_ranges'][0][0] = ribbon_code_end
+    banks[last_school]['owner'] += ', profile ribbon controller'
+    for slots, end in (
+        (range(17, 25), banana_variants.ENTRY + len(banana_variants.raw_helper())),
+        (range(25, 33), mosaic.ENTRY + len(mosaic.helper())),
+        (range(55, 63), banana_variants.ENTRY + len(banana_variants.raw_helper(peeled=True))),
+    ):
+        for slot in slots:
+            if slot - 14 in side_ribbons.MIDPOINT_BANKS:
+                banks[slot]['owner'] += ', profile ribbon midpoint'
+                start = side_ribbons.MIDPOINT_ENTRY
+                assert end <= start
+                banks[slot]['verified_free_ranges'] = [[end, start],
+                    [start + 64 * len(side_ribbons.PLANES), 0x8000]]
+            else:
+                banks[slot]['verified_free_ranges'] = [[end, 0x8000]]
     return banks
 
 
@@ -340,7 +360,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         c.branch(0xd0, 'snapshot')
     absolute(0x20, terminal_labels['before'])
     absolute(0x20, plasma_labels['invalidate'])
-    compare_tick(final_boy.START,'final_boy','before_final_boy')
+    compare_tick(CREDITS_PREP_START,'final_boy','before_final_boy')
     c.label('final_boy')
     c.emit(0xa9,17);absolute(0x8d,SCENE)
     absolute(0xad,0xd301);c.emit(0x48)
@@ -364,6 +384,10 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     c.label('before_crush_end')
     compare_tick(ribbon_dance.FRONT_PREP_STEPS[0], 'crush', 'before_crush')
     c.label('crush')
+    absolute(0xad, side_ribbons.PENDING_POSE)
+    c.branch(0xf0, 'draw_ribbons')
+    c.emit(0x60)
+    c.label('draw_ribbons')
     c.emit(0xa9, 14)
     absolute(0x8d, SCENE)
     c.emit(0xa9, 0)
@@ -847,6 +871,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
     absolute(0x20, terminal_labels['commit'])
     absolute(0xad, STATE + 14)
     absolute(0x8d, 0xd301)
+    absolute(0x20, side_ribbons.NMI_ENTRY)
     c.emit(0x68, 0xa8, 0x68, 0xaa, 0x68, 0x40)
     # Unbanked trampoline: frames live in player banks 9–14, while the
     # controller executes in loader bank 49. Side actors use loader 24–31.
@@ -899,11 +924,18 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                (final_boy.CARD_UPDATE,final_boy.card_update()),
                (final_boy.ENTRY_BLANK,final_boy.entry_blank()),
                (final_boy.ENTRY_VISIBLE,final_boy.entry_visible()),
+               (credits_foot.DISPATCH,credits_foot.dispatch(final_boy.BITMAP_BANK)),
                (COLOR_FONT_LOAD,color_font_loader()),
                (outro_palette.RASTER_ENTRY,outro_palette.raster_helper()),
                (outro_palette.CARD_FONT_ENTRY,outro_palette.card_font_copy())] + terminal_inserts + practice_tables
+    inserts.append((mosaic.SHARED_TABLES, mosaic.shared_tables()[0]))
+    inserts.append((title_water.RASTER_ENTRY, title_water.raster(plasma_labels['published_light'])))
+    inserts += [(side_ribbons.NMI_ENTRY, side_ribbons.nmi()),
+                (side_ribbons.BLIT_ENTRY, side_ribbons.blitter()[0]),
+                (side_ribbons.PENDING_POSE, bytes(side_ribbons.PHASE - side_ribbons.PENDING_POSE + 1)),
+                (side_ribbons.QUEUE_ENTRY, side_ribbons.queue())]
     inserts += scene_palette_io.inserts(terminal_labels['enabled'], terminal_labels['palette'],
-                                       plasma_labels['water_raster'])
+                                       title_water.RASTER_ENTRY)
     inserts.append((title_water.RETIRE_ENTRY, title_water.retire(
         title_plasma.CITY_REVEAL_START, main_act_terminal.SCHOOL_START)))
     inserts.append((school_parallax.DISPATCH, school_parallax.dispatch()))
@@ -993,7 +1025,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             output.extend(school_bank_loader(girl_bank, progress=True))
             output.extend(school_bank_loader(hero_bank(c.labels['banked_effects'],c.labels['banked_effects']+5,c.labels['hero_cutaway']),index=1,progress=True))
             output.extend(school_bank_loader(post_trevor_director.install(ribbon_inbetweens.install(trevor_bank(),2)),index=2,progress=True))
-            for index, frame in enumerate(mosaic_banks(),3):
+            for index, frame in enumerate(mosaic.banks(),3):
+                if index in side_ribbons.MIDPOINT_BANKS:
+                    frame = side_ribbons.install_midpoint(frame, index)
                 output.extend(school_bank_loader(frame,index=index,progress=True))
             for index, frame in enumerate(school_parallax.banks(), school_parallax.BANK_INDEX):
                 if index==trevor_ball_flight.BANK_INDEX:frame=trevor_ball_flight.install(frame)
@@ -1001,6 +1035,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
                 frame = title_plasma.install_mask_pages(frame, index, title_pages)
                 if index == main_act_terminal.PALETTE_BANK:
                     frame = main_act_terminal.install_bank(frame, terminal_labels)
+                if index == side_ribbons.CONTROL_BANK:
+                    frame = side_ribbons.install(frame, side_ribbons.CONTROL_ENTRY,
+                                                 side_ribbons.controller())
                 output.extend(school_bank_loader(frame, index=index, progress=True))
             for phase in range(16):
                 art=ribbon_dance.install_side_actor(polished_trevor_bank(phase,bank_wrapper=c.labels['banked_effects']),24+phase)
@@ -1012,7 +1049,9 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
             output.extend(school_bank_loader(title, index=PLASMA_FIRST_BANK, progress=True))
             for group in range(8):
                 bank = banana_variants.raw_bank(group, peeled=True)
-                output.extend(school_bank_loader(bank, index=PLASMA_FIRST_BANK+1+group, progress=True))
+                index = PLASMA_FIRST_BANK + 1 + group
+                bank = side_ribbons.install_midpoint(bank, index)
+                output.extend(school_bank_loader(bank, index=index, progress=True))
             control=ribbon_dance.install_control(polished_trevor_bank(0, quiet=True,bank_wrapper=c.labels['banked_effects']),c.labels['ribbon_copy'],c.labels['ribbon_palette'])
             output.extend(school_bank_loader(final_boy.install_control(control,c.labels['ribbon_copy']), index=49,progress=True))
             output.extend(loader(rom))
@@ -1053,6 +1092,7 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         'ribbon_copy': c.labels['ribbon_copy'],
         'ribbon_side_start': ribbon_dance.SIDE_START,
         'ribbon_side_end': ribbon_dance.SIDE_END,
+        'side_ribbon_nmi': side_ribbons.NMI_ENTRY,
         'ribbon_frame_count': ribbon_dance.FRAME_COUNT,
         'ribbon_frame_bytes': 2560, 'ribbon_frames_per_bank': 6,
         'ribbon_control_bytes': len(ribbon_dance.helper(c.labels['ribbon_copy'],c.labels['ribbon_palette'])),
@@ -1077,6 +1117,8 @@ def build(output_path=Path('build/visual-prototype-dev.xex'), replace=False):
         'post_trevor_director': post_trevor_director.ENTRY,
         'post_trevor_cuts': post_trevor_director.cuts(),
         'banana_variants': banana_variants.memory_report(),
+        'mosaic_shared_tables': mosaic.SHARED_TABLES,
+        'mosaic_shared_table_bytes': len(mosaic.shared_tables()[0]),
         'final_boy_start': final_boy.START, 'final_boy_end': final_boy.END,
         'final_boy_entry': final_boy.ENTRY, 'final_boy_bytes': len(final_boy.helper(c.labels['ribbon_copy'])),
         'table_bytes': len(tables),

@@ -18,7 +18,7 @@ to music start. See the [opening implementation](TERMINAL_OPENING_IMPLEMENTATION
 | 0–1,023 | 0:00–0:05.14 | Procedural plasma. Fireworks begin at tick 768. |
 | 1,024–1,495 | 0:05.14–0:07.50 | City panorama and plasma reflection reveal together |
 | 1,496–2,991 | 0:07.50–0:15.00 | The song title replaces “TAME IMPALA” over rippling water as fireworks build |
-| 2,992 onward | 0:15.00 onward | School / arena sequence |
+| 2,992 onward | 0:15.00 onward | Atari Arena arrival |
 
 The opening is generated from a single panorama and procedural plasma rather
 than a stack of full-screen animated city frames. The title and fireworks are
@@ -29,7 +29,7 @@ have not yet been verified in a full hardware run.
 
 | Player ticks | Approx. time | Act |
 |---:|---:|---|
-| 2,992–5,983 | 0:15–0:30 | School arrival, girl passes, boy whistles |
+| 2,992–5,983 | 0:15–0:30 | Atari Arena arrival, girl passes, boy whistles |
 | 5,984–8,974 | 0:30–0:45 | Basketball practice build-up |
 | 8,975–11,966 | 0:45–1:00 | One ribbon dancer in profile against the scrolling gym |
 | 11,967–14,958 | 1:00–1:15 | Alternating spiral and organic tunnels |
@@ -37,13 +37,14 @@ have not yet been verified in a full hardware run.
 | 20,942–21,689 | 1:45–1:49 | Tunnel cutaway before the dunk |
 | 21,690–23,933 | 1:49–2:00 | Basketball hero sequence and dunk |
 | 23,934–29,655 | 2:00–2:29 | Trevor enters, then punches and deflects the ball |
-| 29,656–41,883 | 2:29–3:30 | Post-Trevor montage: bananas, tunnels and girl's eyes |
-| 41,884–51,231 | 3:30–4:17 | Terminal credits and greetz below the boy's still portrait |
+| 29,656–41,803 | 2:29–3:30 | Post-Trevor montage: bananas, tunnels and girl's eyes |
+| 41,804–41,875 | 3:30 | Brief black transition while the credits bitmap and terminal are prepared |
+| 41,876–51,231 | 3:30–4:17 | Credits portrait and terminal. The shoe lifts before the first kick and lands on it. |
 | 51,232–51,979 | 4:17–4:21 | Final shot, orbiting sprites and fade |
 | 51,980 onward | 4:21–5:00 | Final card and orbit; music continues to five minutes |
 
 The [main-act terminal](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md) scrolls a
-continuous log starting at school. Its typing follows the individual shots
+continuous log starting at the Atari Arena. Its typing follows the individual shots
 and action cues. The final palette takes over at tick
 38,705 before the eye shot. The post-Trevor cuts are listed in detail in
 [`CURRENT_MONTAGE_V330.md`](CURRENT_MONTAGE_V330.md). The table above is a

@@ -12,14 +12,26 @@ from pathlib import Path
 import statistics
 import sys
 
-CASES = {
-    'intro': range(0, 100, 4), 'title': range(1496, 1596, 4),
-    'school': range(2992, 3092, 4), 'pan': range(3553, 3853, 4),
-    'practice': range(6000, 6100, 4), 'dance': range(9216, 9472, 4),
-    'mosaic': range(12000, 12300, 4), 'crush': range(18000, 18100, 4),
-    'hero': range(21000, 21300, 4), 'trevor': range(27000, 27300, 4),
-    'late_mosaic': range(59000, 59300, 4),
-}
+def sample_windows(info):
+    def window(start, span=300):
+        return range(start, start+span, 4)
+
+    return {
+        'intro': window(0, 100),
+        'title': window(info['title_tick']),
+        'school': window(info['school_tick'], 100),
+        'pan': window(info['school_portrait_tick']),
+        'practice': window(info['practice_tick']),
+        'side_dancer': window(info['ribbon_side_start']),
+        'early_tunnel': window(info['kaleido_tick']),
+        'ribbon_trio': window(info['crush_tick']),
+        'tunnel_cutaway': window(info['hero_cutaway_start']),
+        'hero': window(info['hero_start']),
+        'trevor': window(info['trevor_hit']),
+        'post_trevor_montage': window(info['trevor_end']),
+        'late_montage': window(info['post_trevor_cuts'][-4][0]),
+        'credits': window(info['final_boy_start']),
+    }
 
 
 def main():
@@ -34,14 +46,16 @@ def main():
     import test_sequence as sequence
 
     result = {}
-    for name, ticks in CASES.items():
+    for name, ticks in sample_windows(json.loads(sequence.METADATA.read_text())).items():
         cpu = None
         costs = []
         for tick in ticks:
             before = cpu.processorCycles if cpu else 0
-            cpu = sequence.execute(tick, cpu)
+            cpu = sequence.execute(tick, cpu, publish_side=False)
             costs.append(cpu.processorCycles - before)
+            sequence.publish_side_ribbons(cpu)
         result[name] = {
+            'first_tick': ticks[0], 'last_tick': ticks[-1],
             'samples': len(costs), 'min': min(costs),
             'median': statistics.median(costs), 'max': max(costs),
             'over_pal_frame': sum(c > 35568 for c in costs), 'costs': costs,

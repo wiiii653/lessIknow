@@ -218,12 +218,16 @@ def bank(index):
     code=decoder();out[DECODER-0x4000:DECODER-0x4000+len(code)]=code
     return bytes(out)
 
-def raw_bank(group, peeled=False):
+def raw_helper(peeled=False):
     import mosaic
 
-    frames = b''.join(packed(group * 4 + i, peeled) for i in range(4))
-    code = mosaic.helper(ENTRY, cache_key=KEY, banana_only=True,
+    return mosaic.helper(ENTRY, cache_key=KEY, banana_only=True,
                          cache_address=CACHE, raw=True, peeled=peeled)
+
+
+def raw_bank(group, peeled=False):
+    frames = b''.join(packed(group * 4 + i, peeled) for i in range(4))
+    code = raw_helper(peeled)
     assert len(frames) == ENTRY - 0x4000
     assert len(frames) + len(code) <= 16384
     return (frames + code).ljust(16384, b'\0')

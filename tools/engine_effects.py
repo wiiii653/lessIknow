@@ -150,6 +150,8 @@ RUNTIME_END = 0x0f40  # $0E00 side compositor; $0F00–$0F3F kiss bank trampolin
 PMBASE_SHADOW = 0x0dfd  # Last published PMBASE value. ANTIC $D407 is write-only.
 DL_KEYS = 0x0dfe
 COPY_PAGES = RUNTIME_ORIGIN
+COPY_SIDE = 0x0cc3
+SIDE_COPY_LOOP = 0x0cfe
 DL_CHECK = 0x0d40
 
 
@@ -185,6 +187,8 @@ def runtime_helper():
         for op in ('read', 'write'):
             c.labels[f'{op}{page}_hi'] = c.labels[f'{op}{page}'] + 2
     code = c.finish()
+    assert RUNTIME_ORIGIN + len(code) == COPY_SIDE
+    code.extend(side_background_copy())
     if RUNTIME_ORIGIN + len(code) > DL_CHECK:
         raise ValueError('copy helper overlaps DL cache helper')
     code.extend(bytes(DL_CHECK - RUNTIME_ORIGIN - len(code)))
@@ -199,6 +203,35 @@ def runtime_helper():
     assert len(code) <= PMBASE_SHADOW - RUNTIME_ORIGIN
     code.extend(bytes(RUNTIME_END - RUNTIME_ORIGIN - len(code)))
     return code
+
+
+def side_background_copy():
+    """Copy a complete 40×64 packed profile background in one indexed loop."""
+    c = Code(COPY_SIDE)
+    first_operand = SIDE_COPY_LOOP + 2
+
+    def a(op, address):
+        c.emit(op, address & 255, address >> 8)
+
+    c.jump(0x8d, 'source_page'); a(0xad, 0x83fe); c.jump(0x8d, 'target_page')
+    c.emit(0xa2, 0)
+    c.label('patch')
+    c.jump(0xad, 'source_page'); a(0x9d, first_operand)
+    c.jump(0xee, 'source_page')
+    c.jump(0xad, 'target_page'); a(0x9d, first_operand + 3)
+    c.jump(0xee, 'target_page')
+    c.emit(0x8a, 0x18, 0x69, 6, 0xaa, 0xe0, 60)
+    c.branch(0xd0, 'patch')
+    c.emit(0xa0, 0); c.jump(0x4c, 'copy')
+    c.label('source_page'); c.emit(0)
+    c.label('target_page'); c.emit(0)
+    assert COPY_SIDE + len(c.data) <= SIDE_COPY_LOOP
+    c.emit(*bytes(SIDE_COPY_LOOP - COPY_SIDE - len(c.data)))
+    c.label('copy')
+    for page in range(10):
+        c.emit(0xb9, 0, 0x40 + page, 0x99, 0, 0x90 + page)
+    c.emit(0xc8); c.branch(0xd0, 'copy'); c.emit(0x60)
+    return bytes(c.finish())
 
 
 def cached_display_list(c, key):

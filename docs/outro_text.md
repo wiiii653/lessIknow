@@ -9,6 +9,12 @@ on the bottom row. Each Enter scrolls the text up one row. The cursor blinks
 while typing and during the pause before the next line. The same cadence
 carries straight into the greetings.
 
+The black transition begins early to prepare the portrait and terminal.
+The shoe lifts 16 music ticks before the kick, about 80 milliseconds.
+It lands on the first quiet kick at packet 41,883 and on every second
+kick after that. The shoe stays at rest for the fade. The patch covers
+24 by 10 pixels.
+
 ### Credits in typing order
 
 ```text
@@ -21,12 +27,10 @@ carries straight into the greetings.
 >MADE WITH OPENAI CODEX
 >SYS.OPEN AUDIO.LOG [OK]
 >SONG / TAME IMPALA
->THE LESS I KNOW THE BETTER
 >POKEY / OGNJEN / CODEX
 >MIDI / MIDISHOW 200337
 >UPLINK SV2026 [CONNECTED]
->MADE FOR
->SILLY VENTURE 2026
+>MADE FOR SILLY VENTURE 2026 WE
 >AI TOOLS / ATARI SOUL
 >HUMAN VISION / LLM CODE
 ```
@@ -54,21 +58,29 @@ CREATED AS A SEPARATE PROJECT
 ```text
 OPENING EFFECTS
 PROCEDURAL PLASMA / CITY REVEAL
-TITLE REVEAL / PMG FIREWORKS
+WATER REFLECTION / PMG FIREWORKS
 ```
 
 ### Card 4
 
 ```text
-LOADER / TEXT EFFECTS
-ANIMATED STAR / LOADING DOTS
-GREETS DLI GLITCH / TEXT FADES
+LOADER AND TERMINAL
+ANIMATED STAR / KEY CLICKS
+SCROLLING LOG / PALETTE FADES
 ```
 
 ### Card 5
 
 ```text
-SCENE DIRECTOR
-MUSIC TICKS CUE EACH SCENE
-ANTIC MODES / BANKED 1 MB RAM
+MUSIC-SYNCED EFFECTS
+REVERSING TUNNELS / FORWARD BALL
+CREDITS FOOT TAPS ON THE BEAT
+```
+
+### Card 6
+
+```text
+80X64 GTIA / 160X64 ANTIC / 3X ROWS
+160X96 TUNNELS AND MOSAICS / 2X ROWS
+WATER AND TEXT IN VERTICAL OVERSCAN
 ```

@@ -7,8 +7,9 @@ from build_sequence import Code
 from engine_effects import PMBASE_SHADOW, cached_display_list
 from music_timing import tick_at_bar
 from whistle_pmg import SHAPES as WHISTLE_SHAPES
-from outro_loader import ENTRY as OUTRO_ENTRY, FLAG as OUTRO_FLAG, PRELOAD as OUTRO_PRELOAD
-from outro_text import START
+from outro_loader import FLAG as OUTRO_FLAG, PRELOAD as OUTRO_PRELOAD
+from outro_text import START, STATE_FLAG
+import credits_foot
 
 STAR_SHAPE=(0,0,0x10,0x54,0x38,0xfe,0x38,0x54,0x10,0,0,0)
 NOTE_SHAPES=tuple(glyph[::2] for glyph in WHISTLE_SHAPES)
@@ -160,12 +161,12 @@ def helper(copy_address):
         c.emit(0xa9,0);a(0x8d,0xd004+plane);a(0x8d,0xd008+plane)
     for addr,val in ((0xd01b,1),(0xd400,0x2e),(0xd01a,0),(0xd00c,0)):
         c.emit(0xa9,val);a(0x8d,addr)
-    a(0xad,OUTRO_FLAG);c.branch(0xf0,'load_terminal')
+    a(0xad,STATE_FLAG);c.emit(0xc9,2);c.branch(0xd0,'load_terminal')
     a(0xad,0x83ec);c.branch(0xf0,'dark_pixels')
-    a(0x20,ENTRY_VISIBLE);a(0x4c,OUTRO_ENTRY)
+    a(0x20,ENTRY_VISIBLE);a(0x4c,credits_foot.DISPATCH)
     c.label('dark_pixels');c.emit(0xa9,0)
     for addr in (0xd016,0xd017,0xd018,0xd01d):a(0x8d,addr)
-    c.label('load_terminal');a(0x4c,OUTRO_ENTRY)
+    c.label('load_terminal');a(0x4c,credits_foot.DISPATCH)
     for label in ('dl1','dl2'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     for i in range(5):c.labels[f'clear{i}_hi']=c.labels[f'clear{i}']+2
@@ -280,6 +281,10 @@ def install_bitmap(bank,index):
     out=bytearray(bank);data=packed();offset=BITMAP_SOURCE-0x4000
     assert out[offset:offset+len(data)]==bytes(len(data))
     out[offset:offset+len(data)]=data
+    patch=credits_foot.helper(data)
+    offset=credits_foot.ENTRY-0x4000
+    assert not any(out[offset:offset+len(patch)])
+    out[offset:offset+len(patch)]=patch
     return bytes(out)
 
 def install_mark_frames(bank, index):
@@ -339,6 +344,7 @@ def entry_blank():
     c.emit(0xa9,0)
     for address in (0xd016,0xd017,0xd018,0xd019,0xd01a,0xd01d):
         c.emit(0x8d,address&255,address>>8)
+    c.emit(0x8d,STATE_FLAG&255,STATE_FLAG>>8)
     c.emit(0x60)
     return bytes(c.finish())
 

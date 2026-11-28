@@ -60,7 +60,7 @@ The development target enables the full-rate animated loader. Wrapper
 refreshes use the bounded `124 <= VCOUNT < 128` blanking window inherited
 from prerelease 181. The final wrapper restores the OS VBI and disables
 both the DMA shadow and ANTIC DMA before late segments overwrite the loader
-display. See [Project Status](PLAN_STATUS.md#current-development-baseline)
+display. See [Project Status](PLAN_STATUS.md#current-development-build)
 for the development package hash and [loader text](terminal_opening.md)
 for the current screen copy.
 

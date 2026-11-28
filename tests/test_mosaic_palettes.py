@@ -3,7 +3,7 @@ import unittest
 import math
 from pmg_preview import atari_rgb
 import test_sequence as sequence
-from final_boy import START as FINAL_SHOT
+from outro_text import PREP_START
 from banana_variants import variant_at
 from ribbon_dance import FRONT_PREP_STEPS
 from post_trevor_director import LATE_BANANA_START
@@ -17,7 +17,7 @@ def banana_shadow(tick):
 @unittest.skipIf(sequence.MPU is None,'py65 required')
 class MosaicPaletteTests(unittest.TestCase):
     def test_palette_stays_saturated_from_first_cycle_to_last(self):
-        for tick in (11968,11969,12155,FRONT_PREP_STEPS[0]-1,32912,32913,FINAL_SHOT-1):
+        for tick in (11968,11969,12155,FRONT_PREP_STEPS[0]-1,32912,32913,PREP_START-1):
             with self.subTest(tick=tick):
                 memory=sequence.execute(tick).memory
                 self.assertEqual(memory[0x83e0],6)
@@ -35,7 +35,7 @@ class MosaicPaletteTests(unittest.TestCase):
         ticks=[11968+187*i for i in range(16)] + [32912+187*i for i in range(145)]
         # V145 replaces the last 8C interval with its own picture and fade;
         # both samples of a mosaic colour pair must remain inside that effect.
-        ticks=[tick for tick in ticks if tick+32<FINAL_SHOT]
+        ticks=[tick for tick in ticks if tick+32<PREP_START]
         from girl_eyes import START as EYES_START, END as EYES_END
         ticks=[tick for tick in ticks if not (tick<EYES_END and tick+32>=EYES_START)]
         for tick in ticks:

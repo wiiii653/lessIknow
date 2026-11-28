@@ -57,9 +57,11 @@ class StoryFinaleTests(unittest.TestCase):
         self.assertEqual(len(set(pictures)),3)
 
     def test_final_shot_keeps_music_dlis_and_shows_final_card_after_end(self):
-        cpu=sequence.execute(START-1)
+        from outro_text import PREP_START
+        cpu=sequence.execute(PREP_START-1)
         self.assertEqual(cpu.memory[0x83e0],6)
         cpu=sequence.execute(START,cpu);m=cpu.memory
+        # The first downstroke has landed by START.
         p=artwork();self.assertEqual(raster(cpu),bytes(p[y//3*160+x] for y in range(192) for x in range(160)))
         display=m[0xd402]|m[0xd403]<<8
         from outro_text import BITMAP_ROWS,BITMAP_DL
@@ -153,9 +155,11 @@ class StoryFinaleTests(unittest.TestCase):
                          FINAL_CARD_PAGES[0][0])
 
     def test_four_stars_orbit_on_a_held_bitmap(self):
+        from credits_foot import ATTACKS
+        first_rest = (ATTACKS[0]+7)//8*8
         cpu=None;positions=set();masks=set();p=None
         for phase in range(32):
-            tick=(START+7)//8*8+phase*8
+            tick=first_rest+phase*8
             cpu=sequence.execute(tick,cpu);m=cpu.memory
             if p is None:p=bytes(raster(cpu))
             self.assertEqual(raster(cpu),p)
@@ -190,8 +194,12 @@ class StoryFinaleTests(unittest.TestCase):
         self.assertTrue(all((color&15)==15 or color in (0x1e,0x5e,0x9e) for color in colors))
 
     def test_final_updates_only_inactive_buffers_and_cleanly_restarts(self):
+        from credits_foot import LEFT, TOP, LIFTED, PORTRAIT, ROW_BYTES
+        from outro_text import PREP_START
+        shoe_bytes = {PORTRAIT+(TOP+row)*40+LEFT//4+column
+                      for row in range(len(LIFTED)) for column in range(ROW_BYTES)}
         cpu=sequence.MPU(memory=TrackedMemory(sequence.XEX.read_bytes()))
-        sequence.execute(START-1,cpu)
+        sequence.execute(PREP_START-1,cpu)
         for tick in (START,START+16,START+48,FADE_START,END):
             m=cpu.memory;active=(m[0xd407]&0xfc)<<8;enabled=m[0xd01d]&3
             bitmap=0x9000
@@ -200,7 +208,7 @@ class StoryFinaleTests(unittest.TestCase):
             visible_writes=[i for i,a in enumerate(m.writes) if active+0x180<=a<active+0x400]
             if tick!=START:self.assertFalse(visible_writes)
             elif enabled and visible_writes:self.assertLess(m.writes.index(0xd01d),visible_writes[0])
-            if tick!=START:self.assertFalse(any(bitmap<=a<bitmap+2560 for a in m.writes))
+            if tick!=START:self.assertFalse(any(bitmap<=a<bitmap+2560 and a not in shoe_bytes for a in m.writes))
             self.assertEqual(m[0xd301],0xff)
         for tick in (96,9163,20942,27000,START):
             cpu=sequence.execute(tick,cpu);fresh=sequence.execute(tick)

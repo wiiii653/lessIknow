@@ -2,7 +2,7 @@
 
 from build_sequence import Code, DANCE_TICK
 from music_timing import tick_at_bar
-from outro_text import START as CREDITS_START, GLYPHS, TERMINAL_FONT
+from outro_text import PREP_START as CREDITS_START, GLYPHS, TERMINAL_FONT
 from outro_palette import EXIT, GLYPH_INKS
 import basketball_hero as hero
 import girl_eyes
@@ -46,35 +46,36 @@ CUES = (SCHOOL_START, PRACTICE_CUTS[0], DANCE_TICK, FIRST_ROTATOR, RIBBON_CUTS[0
 # Each entry has a window in which the action it describes is on screen.
 CAPTIONS = (
     (
-        (SCHOOL_START, SCHOOL_PORTRAIT_TICK, 'TRACKING THE SCHOOL ARRIVAL.'),
-        (SCHOOL_PORTRAIT_TICK, SCHOOL_PORTRAIT_END, 'CUT TO THE GIRL IN CLOSE-UP.'),
-        (SCHOOL_PORTRAIT_END, SCHOOL_PASS_START, 'BACK OUTSIDE.'),
+        (SCHOOL_START, SCHOOL_PORTRAIT_TICK, 'ATARI ARENA. TRACKING ARRIVAL.'),
+        (SCHOOL_PORTRAIT_TICK, SCHOOL_PORTRAIT_END, 'TRACKING HER IN CLOSE-UP.'),
+        (SCHOOL_PORTRAIT_END, SCHOOL_PASS_START, 'BACK TO THE BOY.'),
         (SCHOOL_PASS_START, WHISTLE_START, 'SHE WALKS PAST.'),
         (WHISTLE_START, WHISTLE_END, 'THE BOY WHISTLES AS SHE WALKS AWAY.'),
         (WHISTLE_END, PRACTICE_CUTS[0], 'AT THE DOORWAY.'),
     ),
     (
-        (PRACTICE_CUTS[0], PRACTICE_CUTS[1], 'TRACKING THE WIDE PRACTICE SHOT.'),
-        (PRACTICE_CUTS[1], PRACTICE_CUTS[2], 'CHECKING THE BALL AGAINST THE HAND.'),
+        (PRACTICE_CUTS[0], PRACTICE_CUTS[1], 'CLOSE-UP. HE HOLDS THE BALL.'),
+        (PRACTICE_CUTS[1], PRACTICE_CUTS[2], 'HE SHOOTS. TRACKING THE BALL.'),
         (PRACTICE_CUTS[2], DANCE_TICK, 'STRETCHING AT THE WALL BARS.'),
     ),
     (
         (DANCE_TICK, FIRST_ROTATOR, 'TRACKING A SINGLE DANCER.'),
-        (tick_at_bar(26), FIRST_ROTATOR, 'THE GYM SCROLLS BEHIND HER.'),
-        (tick_at_bar(29), FIRST_ROTATOR, 'FOLLOWING HER RIBBONS IN PROFILE.'),
+        (tick_at_bar(27), FIRST_ROTATOR, 'RIBBONS IN PROFILE. COURT SCROLLS.'),
     ),
     (
         (FIRST_ROTATOR, tick_at_bar(33), 'SPIRAL TUNNEL.'),
         (tick_at_bar(33), tick_at_bar(34), 'ORGANIC TUNNEL.'),
-        (tick_at_bar(34), tick_at_bar(36), 'TUNNEL REVERSES. BALL MOVES ON.'),
-        (tick_at_bar(36), RIBBON_CUTS[0], 'TRACING THE BALL THROUGH THE CUTS.'),
+        (tick_at_bar(34), tick_at_bar(35), 'SPIRAL REVERSES.'),
+        (tick_at_bar(35), tick_at_bar(36), 'ORGANIC REVERSES.'),
+        (tick_at_bar(36), tick_at_bar(37), 'BACK TO SPIRAL.'),
+        (tick_at_bar(37), tick_at_bar(38), 'BACK TO ORGANIC.'),
+        (tick_at_bar(38), RIBBON_CUTS[0], 'THE BALL KEEPS MOVING FORWARD.'),
     ),
     (
         (RIBBON_CUTS[0], RIBBON_CUTS[1], 'TWO DANCERS FLANK THE LEAD.'),
-        (tick_at_bar(42), RIBBON_CUTS[1], 'THE TRIO MOVES THROUGH THE POSES.'),
         (RIBBON_CUTS[1], RIBBON_CUTS[2], 'CUTTING TO THE LEAD DANCER ALONE.'),
-        (RIBBON_CUTS[2], LAUNCH_PREP, 'THE TRIO RETURNS FOR THE LIFT.'),
-        (tick_at_bar(52), LAUNCH_PREP, 'TRACKING THE RIBBON BETWEEN POSES.'),
+        (RIBBON_CUTS[2], LAUNCH_PREP, 'THE TRIO RETURNS.'),
+        (LAUNCH_PREP, KISS_START, 'LIFT.'),
         (KISS_START, hero.CUTAWAY_START, 'A KISS.'),
     ),
     (
@@ -83,18 +84,17 @@ CAPTIONS = (
     (
         (hero.START, hero.DUNK, 'TRACKING THE DRIBBLE IN THE ARENA.'),
         (tick_at_bar(60), hero.DUNK, 'FOUR SATELLITES ORBIT THE BALL.'),
-        (hero.DUNK, hero.SHATTER_START, 'TRACKING THE WIND-UP AND LEAP.'),
-        (hero.SHATTER_START, hero.END, 'CRACK.'),
+        (hero.DUNK, hero.SHATTER_START, 'TRACKING THE DUNK.'),
+        (hero.SHATTER_START, hero.END, 'CRACK'),
     ),
     (
-        (hero.END+48, TREVOR_CLOSE, 'TREVOR EMERGES IN THE DARK GYM.'),
+        (hero.END+48, TREVOR_CLOSE, 'TREVOR EMERGES FROM THE DARK.'),
         (TREVOR_CLOSE, FLIGHT_START, 'CHECKING TREVOR IN THE CLOSER SHOT.'),
         (TREVOR_HITS[0], MONTAGE_START, 'TRACKING EACH IMPACT AND REBOUND.'),
         (TREVOR_HITS[len(TREVOR_HITS)//2], MONTAGE_START, 'THE PUNCHES SWITCH HANDS.'),
     ),
     (
         (MONTAGE_START, tick_at_bar(84), 'THE BANANAS ROTATE INTO VIEW.'),
-        (tick_at_bar(82), tick_at_bar(84), 'COMPARING THE BANANA ROTATIONS.'),
         (tick_at_bar(84), tick_at_bar(88), 'FOLLOWING THE RETURN TO THE SPIRAL.'),
         (tick_at_bar(88), tick_at_bar(92), 'THE TUNNEL SWITCHES TO ORGANIC.'),
         (tick_at_bar(92), tick_at_bar(96), 'THE BANANAS RETURN TO THE BEAT.'),
@@ -111,7 +111,7 @@ CAPTIONS = (
 # Three fixed inks give every glyph the scanline stripes from the greetings.
 # Keep one palette per act so cuts within an act share the same colors.
 PALETTES = (
-    (0x98, 0x76, 0x56),  # School
+    (0x98, 0x76, 0x56),  # Atari Arena arrival
     (0x48, 0x34, 0x26),  # Practice
     (0x68, 0x96, 0x46),  # Trio
     (0x28, 0xb4, 0xf6),  # First rotators
@@ -260,6 +260,9 @@ def build():
     c.jump(0x8d, 'enabled')
     c.emit(0xa9, 0xff)
     c.jump(0x8d, 'shown_line')
+    c.emit(0xa9, 0xfe)
+    c.jump(0x8d, 'screen_line')
+    c.jump(0x8d, 'screen_line_2')
     c.label('before_done')
     c.emit(0x60)
 
@@ -325,15 +328,28 @@ def build():
     c.emit(0x49, 1)
     for operand in ('clear_hi', 'write_char_hi', 'cursor_hi'):
         c.jump(0x8d, operand)
+    # If this inactive page already has the same line at the bottom, its
+    # history is valid. Repaint just that row for a keystroke or cursor blink.
+    c.emit(0x29, 1, 0xaa, 0xa0, 0)
+    c.jump(0xad, 'next_line')
+    c.jump(0xdd, 'screen_line')
+    c.branch(0xd0, 'new_history')
+    c.emit(0xa0, ROW_COUNT-1)
+    c.label('new_history')
+    c.jump(0x9d, 'screen_line')
+    c.jump(0xb9, 'row_offset')
+    c.emit(0x38, 0xe9, 1)
+    c.jump(0x8d, 'clear_until')
     c.emit(0xa9, 0, 0xa2, WIDTH*ROW_COUNT-1)
     c.label('clear')
     a(0x9d, SCREENS[0])
-    c.emit(0xca, 0xe0, 0xff)
+    c.emit(0xca, 0xe0)
+    c.label('clear_until'); c.emit(0xff)
     c.branch(0xd0, 'clear')
-    c.jump(0xad, 'next_line')
+    c.emit(0x98, 0x18); c.jump(0x6d, 'next_line')
     c.emit(0x38, 0xe9, ROW_COUNT-1)
     c.jump(0x8d, 'row_line')
-    c.emit(0xa2, 0)
+    c.emit(0x98, 0xaa)
     c.label('write_row')
     c.jump(0x8e, 'row')
     c.jump(0xbc, 'row_offset')
@@ -528,6 +544,8 @@ def build():
         c.label(f'text_hi_{index}')
         c.emit(0, 0x04, 0x04, 0x84, 0x41, base & 255, base >> 8)
         assert (tail & 0x3ff) + 10 <= 0x400
+    c.label('screen_line'); c.emit(0xfe)
+    c.label('screen_line_2'); c.emit(0xfe)
     # Use the space between existing tables and the two text buffers so the
     # renderer still fits ahead of the practice framebuffer map.
     auxiliary = []

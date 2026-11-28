@@ -13,7 +13,7 @@ The scrolling [credits terminal](outro_text.md) flows into the first greeting
 at the same cadence, with the last three credit lines still visible.
 
 ```text
->SILLY VENTURE 2026
+>MADE FOR SILLY VENTURE 2026 WE
 >AI TOOLS / ATARI SOUL
 >HUMAN VISION / LLM CODE
 ```

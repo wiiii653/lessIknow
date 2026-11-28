@@ -269,6 +269,43 @@ class Dump:
     # -- 01 intro -----------------------------------------------------------
 
     def build_intro(self):
+        if self.source_path != BUILD_COPY:
+            return self.build_procedural_title()
+        return self.build_archived_intro()
+
+    def build_procedural_title(self):
+        gid = '01-intro'
+        self.group(gid, 'Procedural plasma, city and title',
+                   'Title phases generated at runtime, with shared title mask pages')
+        bank = segment_of(title_plasma.FIRST_BANK)
+        plasma = title_plasma.artwork()[0]
+        wave_start = title_plasma.WAVE_TABLES - 0x4000
+        end = 0x2c00  # The fireworks occupy the next range.
+        self.check('procedural title bank', self.banks[bank][wave_start:end],
+                   plasma[wave_start:end], bank, wave_start)
+        locations, frames = title_plasma.mask_pages()
+        pages = {}
+        for expected, (owner, page) in locations.items():
+            segment = segment_of(owner)
+            offset = page*256-0x4000
+            raw = self.banks[segment][offset:offset+256]
+            self.check(f'title mask page {owner}/{page:02x}', raw, expected, segment, offset)
+            pages[owner, page] = raw
+        for index in range(16):
+            self.add(Asset(
+                f'{gid}/plasma', f'plasma-{index:02d}', 80, 64, 4,
+                unpack4(title_plasma.procedural_frame(index)), 'title-plasma-16',
+                'tools/title_plasma.py:procedural_frame()', 'Generated city and plasma preview',
+                None, None, 'Procedural frame', False))
+        count = title_plasma.LETTER_PAGES
+        for index, start in enumerate(range(0, len(frames), count)):
+            pixels = b''.join(pages[ref] for ref in frames[start:start+count])
+            self.add(Asset(
+                f'{gid}/title-masks', f'title-mask-{index:02d}', 80, 32, 4,
+                unpack4(pixels), 'title-mask', 'tools/title_plasma.py:mask_pages()',
+                'Reassembled title letter mask', None, None, 'Shared mask pages', True))
+
+    def build_archived_intro(self):
         gid = '01-intro'
         self.group(gid, 'Intro: plazma GTIA 11 i karty tytułu',
                    'sceny 0-2, ticki 0-2992; banki 40-48')
@@ -487,6 +524,27 @@ class Dump:
     # -- 05 bananas ---------------------------------------------------------
 
     def build_bananas(self):
+        if self.source_path == BUILD_COPY:
+            return self.build_archived_bananas()
+
+        gid = '05-bananas'
+        self.group(gid, 'Banana rotators', 'Two sets of 32 frames in the post-Trevor montage')
+        for variant, first_bank in enumerate((3, 41)):
+            for frame in range(32):
+                group, slot = divmod(frame, 4)
+                owner = first_bank + group
+                segment = segment_of(owner)
+                offset = slot * 3840
+                raw = self.banks[segment][offset:offset+3840]
+                self.check(f'banana {variant}/{frame}', raw,
+                           banana_variants.packed(frame, variant), segment, offset)
+                self.add(Asset(
+                    f'{gid}/v{variant}', f'frame-{frame:02d}', 160, 96, 2, unpack2(raw),
+                    'banana-4', 'tools/banana_variants.py:packed()',
+                    f'Variant {variant}, camera phase {frame}', owner, offset,
+                    '2bpp, 4 px/byte', True, segment=segment))
+
+    def build_archived_bananas(self):
         gid = '05-bananas'
         self.group(gid, 'Banany: oryginalny rotator',
                    'montaż po Trevrze, banki 3–10, 32 klatki na wariant')
@@ -661,10 +719,10 @@ def main():
 
     sha = hashlib.sha256(source.read_bytes()).hexdigest()
     reference_sha = (hashlib.sha256(REFERENCE_RELEASE.read_bytes()).hexdigest()
-                     if REFERENCE_RELEASE.exists() else None)
+                     if source == BUILD_COPY and REFERENCE_RELEASE.exists() else None)
     if reference_sha and reference_sha != REFERENCE_SHA256:
         raise SystemExit('release 126 SHA-256 does not match PLAN_STATUS.md')
-    build_sha = hashlib.sha256(BUILD_COPY.read_bytes()).hexdigest() if BUILD_COPY.exists() else None
+    source_label = os.path.relpath(source, ROOT)
 
     banks = demo_banks(source)
     parity = None
@@ -728,11 +786,8 @@ def main():
     manifest = {
         'generated': DATE,
         'source': {
-            'xex': str(source.relative_to(ROOT)),
+            'xex': source_label,
             'sha256': sha,
-            'build_copy': str(BUILD_COPY.relative_to(ROOT)),
-            'build_copy_sha256': build_sha,
-            'candidate': 'v388 / stereo 126',
             'bank_segments': 64,
         },
         'release_parity': parity,
@@ -765,11 +820,7 @@ def main():
     (output / 'manifest.json').write_text(json.dumps(manifest, indent=1) + '\n')
 
     lines = [f'# Zrzut bitmap — {DATE}', '',
-             f'Źródło: `{source.relative_to(ROOT)}` (SHA-256 `{sha}`).',
-             f'Kandydat: v388 / stereo 126. Wydanie: '
-             f'`{REFERENCE_RELEASE.relative_to(ROOT)}` (SHA-256 `{reference_sha}`).',
-             f'Kopia builda: `{BUILD_COPY.relative_to(ROOT)}` '
-             f'(SHA-256 `{build_sha}`).', '',
+             f'Źródło: `{source_label}` (SHA-256 `{sha}`).', '',
              'Pliki 1:1 są indeksowane: wartość piksela to surowy indeks Atari.',
              'Katalog `4x/` zawiera powiększenia nearest-neighbour, a w każdym',
              'folderze leży `_contact-2x.png` do szybkiego przeglądu.', '',
@@ -779,9 +830,11 @@ def main():
         lines.append(f'  - użycie: {dump.groups[gid]["usage"]}')
     lines += ['', '## Weryfikacja', '',
               f'Sprawdzono {len(dump.checks)} fragmentów banków; '
-              f'{sum(1 for check in dump.checks if check["ok"])} zgodnych.', '',
-              f'Dodatkowo {parity_assets} plików porównano z wydaniem 126; '
-              f'niezgodnych: {parity_failures}.', '',
+              f'{sum(1 for check in dump.checks if check["ok"])} zgodnych.', '']
+    if reference_sha:
+        lines += [f'Dodatkowo {parity_assets} plików porównano z wydaniem 126; '
+                  f'niezgodnych: {parity_failures}.', '']
+    lines += [
               'Pliki z `verified_against_xex: true` porównano bajt w bajt z bankiem',
               'zbudowanego XEX po spakowaniu 2bpp/4bpp. Pozostałe pochodzą z tych',
               'samych funkcji builda, ale są komponowane w locie (np. panele Trevora',

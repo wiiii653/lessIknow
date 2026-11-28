@@ -730,18 +730,6 @@ def build(origin, blank):
     # Entire picture rises from black and falls back before the scene cut.
     c.jump(0xae,'fade_phase'); c.jump(0xbd,'brightness')
     c.jump(0x8d,'published_light'); a(0x8d,0xd01a); c.emit(0x60)
-    c.label('water_raster')
-    # The extra DLI at relative line 201 lies between the music events
-    # at 156 and 234. Restore the sky at the latter, before the next frame.
-    a(0xad,0xd40b); c.emit(0xc9,96); c.branch(0x90,'music')
-    c.emit(0xc9,113); c.branch(0xb0,'restore_light')
-    c.jump(0xad,'published_light'); c.branch(0xf0,'water_light')
-    c.emit(0x38,0xe9,2)
-    c.label('water_light'); a(0x8d,0xd01a)
-    from outro_palette import EXIT
-    a(0x4c,EXIT)
-    c.label('restore_light'); c.jump(0xad,'published_light'); a(0x8d,0xd01a)
-    c.label('music'); a(0x8d,0xd40a); c.emit(0x60)
     c.label('published_light'); c.emit(0)
     c.label('brightness')
     c.emit(*([0,2,4,6,6,6,6] + [6]*32 + [6,6,6,4,4,2,0,0]))

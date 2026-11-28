@@ -43,7 +43,7 @@ bank can be emitted — the rest is guaranteed zero.
 `[READ]` The assertion `count == 64` ensures that all banks have been processed.
 
 `[READ]` Comparison after decomposition: the data of the 64 banks is identical byte
-for byte with the original (confirmed in `docs/V273_AVG_RAMBO_STARTUP.md`).
+for byte with the original (confirmed in `docs/backup/V273_AVG_RAMBO_STARTUP.md`).
 
 ## 5.4. Low-memory buffer (`$4000–$47FF`)
 

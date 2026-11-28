@@ -7,6 +7,8 @@ maintained project documentation in English.
 
 - [Project status](PLAN_STATUS.md) — approved release, current development
   state, validation limits and memory/loader constraints.
+- [Final polish](PLAN_STATUS.md#final-polish) — pending graphics work and
+  hardware validation.
 - [Current demo timeline](TIMELINE_MAP.md) — concise scene overview.
 - [Post-Trevor montage](CURRENT_MONTAGE_V330.md) — detailed current cuts.
 - [Technical overview](TECHNICAL_OVERVIEW_EN.md) — rendering and runtime
@@ -36,14 +38,12 @@ allocation and timing, and Project Status for release approval and hardware
 evidence. Update the corresponding reference when one of those facts changes.
 Only associate a validation result with the artifact actually exercised.
 
-## Historical records and proposals
+## Documentation backup
 
-Numbered version notes, audits, dated dumps and numbered loader chapters retain
-their original snapshots. The original timeline, terminal briefs, outro text
-review and basketball hero redraw record earlier decisions and proposals.
-Use the current source, generated build map and hardware loader contract for
-implementation decisions. The [v035 music-bank audit](MUSIC_BANK_AUDIT.md)
-records decoder measurements for the audited setup.
+The [documentation backup](backup/README.md) contains the numbered version
+notes, older audits and superseded plans. Dated dumps and art reviews sit
+with their associated assets. The loader chapters remain linked from the
+[loader guide](loader/README.md).
 
 `projects/` contains separate experiments with their own instructions.
 The imported `docs/boruta-atari8/` library is external reference material.

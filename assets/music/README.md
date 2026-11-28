@@ -11,7 +11,7 @@ python3 tools/extract_music.py less-i-know-release-v035.xex assets/music/v035
 Choose a new output directory if `v035/` already exists. The manifest records
 the original XEX and bank SHA-256 hashes. Banks 9–14 contain only `$FF`; bank 8
 contains data followed by `$FF`. Keep all banks until their playback reads have
-been verified. See [the music-bank audit](../../docs/MUSIC_BANK_AUDIT.md).
+been verified. See [the music-bank audit](../../docs/backup/MUSIC_BANK_AUDIT.md).
 
 The source banks preserve the original player data. The post-party stereo build
 uses the v035 player with four music updates per PAL frame. The hardware dev

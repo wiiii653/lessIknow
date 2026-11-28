@@ -56,7 +56,7 @@ was invisible despite a correct CHBASE. The change to `$E0` made the letters bri
 
 `[CONCLUSION]` The earlier diagnosis “a wrong CHBASE caused blank characters”
 was incorrect. The correct description: black text on a black background. The
-factual correction is in `docs/V272_AVG_INIT_TRACING.md`.
+factual correction is in `docs/backup/V272_AVG_INIT_TRACING.md`.
 
 ## 3.4. Current palette
 

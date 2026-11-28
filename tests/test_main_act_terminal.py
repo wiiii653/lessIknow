@@ -8,10 +8,12 @@ import test_sequence as sequence
 import test_outro_palette
 import basketball_hero as hero
 import girl_eyes
-from ribbon_dance import SIDE_START, SIDE_END, CUTS as RIBBON_CUTS
+from ribbon_dance import SIDE_START, SIDE_END, CUTS as RIBBON_CUTS, LAUNCH_PREP
+from launch_kiss import START as KISS_START
 from build_sequence import DANCE_TICK
 from gym_practice import PRACTICE_CUTS, practice_shot
 from music_timing import tick_at_bar
+from school_story import SCHOOL_PORTRAIT_TICK
 from outro_text import TEXT_DLI_VCOUNT
 from scene_palette_io import SHADOW
 from main_act_terminal import (
@@ -26,14 +28,23 @@ class MainActTerminalTests(unittest.TestCase):
     def test_captions_finish_during_the_shots_they_describe(self):
         lines = dict(zip(typing_lines(), line_starts()))
         windows = (
+            ('ATARI ARENA. TRACKING ARRIVAL.', CUES[0], SCHOOL_PORTRAIT_TICK),
+            ('CLOSE-UP. HE HOLDS THE BALL.', *PRACTICE_CUTS[:2]),
+            ('HE SHOOTS. TRACKING THE BALL.', *PRACTICE_CUTS[1:]),
             ('STRETCHING AT THE WALL BARS.', PRACTICE_CUTS[2], DANCE_TICK),
             ('TRACKING A SINGLE DANCER.', SIDE_START, SIDE_END),
+            ('SPIRAL REVERSES.', tick_at_bar(34), tick_at_bar(35)),
+            ('ORGANIC REVERSES.', tick_at_bar(35), tick_at_bar(36)),
+            ('BACK TO SPIRAL.', tick_at_bar(36), tick_at_bar(37)),
+            ('BACK TO ORGANIC.', tick_at_bar(37), tick_at_bar(38)),
             ('TWO DANCERS FLANK THE LEAD.', RIBBON_CUTS[0], RIBBON_CUTS[1]),
-            ('THE TRIO MOVES THROUGH THE POSES.', tick_at_bar(42), RIBBON_CUTS[1]),
             ('CUTTING TO THE LEAD DANCER ALONE.', RIBBON_CUTS[1], RIBBON_CUTS[2]),
-            ('THE TRIO RETURNS FOR THE LIFT.', RIBBON_CUTS[2], tick_at_bar(52)),
+            ('THE TRIO RETURNS.', RIBBON_CUTS[2], LAUNCH_PREP),
+            ('LIFT.', LAUNCH_PREP, KISS_START),
+            ('A KISS.', KISS_START, hero.CUTAWAY_START),
             ('BACK THROUGH THE TUNNEL TO THE COURT.', hero.CUTAWAY_START, hero.START),
-            ('CRACK.', hero.SHATTER_START, hero.END),
+            ('TRACKING THE DUNK.', hero.DUNK, hero.SHATTER_START),
+            ('CRACK', hero.SHATTER_START, hero.END),
             ('HOLDING THE CLOSE-UP ON HER EYES.', girl_eyes.START, girl_eyes.END),
             ('FOLLOWING THE LAST BANANA PASS.', girl_eyes.END, tick_at_bar(110)),
         )

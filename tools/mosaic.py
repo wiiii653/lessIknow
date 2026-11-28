@@ -14,6 +14,10 @@ from build_sequence import Code
 from music_timing import tick_at_bar
 from post_trevor_director import LATE_BANANA_START
 ENTRY=0x7c00
+SHARED_TABLES=0xdfc0
+TABLE_LIMIT=0xe180
+PUBLISH_START=124
+PUBLISH_LIMIT=128
 HIGHLIGHT_SHIFT=6  # Hold each hue for 16 PAL frames.
 KALEIDO_START=tick_at_bar(32)
 TREVOR_START=tick_at_bar(88)-4000
@@ -118,8 +122,29 @@ def palette_pairs():
     alternate=[pair for pair in pairs if all(separated(*pair,l+2,l-2) for l in (6,10))]
     return pairs+alternate[-17:]
 
+@lru_cache(maxsize=1)
+def shared_tables():
+    """One lookup table for each source row and one copy of the palette data."""
+    data = bytearray()
+    labels = {}
+    tables = (
+        ('source_hi', (0x40, 0x4f, 0x5e, 0x6d)),
+        ('divisor_lo', ((187 << i) & 255 for i in range(8))),
+        ('divisor_hi', ((187 << i) >> 8 for i in range(8))),
+        ('quotient_bits', (1 << i for i in range(8))),
+        ('hue_pairs', ((a << 4) | b for a, b in palette_pairs())),
+        ('row_lo', ((row*40) & 255 for row in range(96))),
+        ('row_hi', ((row*40) >> 8 for row in range(96))),
+    )
+    for name, values in tables:
+        labels[name] = SHARED_TABLES + len(data)
+        data.extend(values)
+    assert SHARED_TABLES + len(data) <= TABLE_LIMIT
+    return bytes(data), labels
+
 def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,cache_address=0x83fa,raw=False,peeled=False):
     c=Code(origin)
+    c.labels.update(shared_tables()[1])
     def a(op,address):emit_scene_io(c,op,address)
     def highlight_index():
         a(0xad,0x83e3);c.emit(0x0a,0x0a);a(0x8d,0x83ea)
@@ -144,14 +169,29 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
     if not banana_only or raw:c.emit(0x68,0xa2,3)
     a(0x20,copy_entry)
     cached_display_list(c, 1)
-    a(0xad,0x83e6);c.jump(0x8d,'dl1_hi');c.jump(0x8d,'dl2_hi')
-    c.emit(0xa9,3);c.jump(0x8d,'dl1_lo');c.emit(0xa9,4);c.jump(0x8d,'dl2_lo');c.emit(0xa0,0)
-    c.label('rows');c.jump(0xb9,'row_lo');c.label('dl1');c.emit(0x8d,0,0)
-    c.jump(0xb9,'row_hi');c.emit(0x18);a(0x6d,0x83fe);c.label('dl2');c.emit(0x8d,0,0)
-    for label in ('dl1','dl2'):
-        c.emit(0x18);c.jump(0xad,label+'_lo');c.emit(0x69,3);c.jump(0x8d,label+'_lo');c.branch(0x90,label+'ok');c.jump(0xee,label+'_hi');c.label(label+'ok')
-    c.emit(0xc8,0xc0,192);c.branch(0xd0,'rows')
-    c.label('swap');a(0xad,0xd40b);c.emit(0xc9,124);c.branch(0x90,'swap')
+    lms = ('first_lo', 'first_hi', 'second_lo', 'second_hi')
+    a(0xad,0x83e6)
+    for name in lms:
+        c.jump(0x8d,name+'_page')
+    for name, offset in zip(lms, (3,4,6,7)):
+        c.emit(0xa9,offset);c.jump(0x8d,name+'_offset')
+    c.emit(0xa0,0)
+    c.label('rows')
+    c.jump(0xb9,'row_lo')
+    for name in ('first_lo', 'second_lo'):
+        c.label(name);c.emit(0x8d,0,0)
+    c.jump(0xb9,'row_hi');c.emit(0x18);a(0x6d,0x83fe)
+    for name in ('first_hi', 'second_hi'):
+        c.label(name);c.emit(0x8d,0,0)
+    for name in lms:
+        c.emit(0x18);c.jump(0xad,name+'_offset');c.emit(0x69,6)
+        c.jump(0x8d,name+'_offset');c.branch(0x90,name+'_ready')
+        c.jump(0xee,name+'_page');c.label(name+'_ready')
+    c.emit(0xc8,0xc0,96);c.branch(0xd0,'rows')
+    # Keep the old display list live if the copy finishes after early blanking.
+    c.label('swap');a(0xad,0xd40b)
+    c.emit(0xc9,PUBLISH_START);c.branch(0x90,'swap')
+    c.emit(0xc9,PUBLISH_LIMIT);c.branch(0xb0,'swap')
     c.emit(0xa9,0);a(0x8d,0xd402);a(0xad,0x83e6);a(0x8d,0xd403);c.emit(0x49,4);a(0x8d,0x83e6)
     c.emit(0xa9,255);a(0x8d,0x83f8);a(0x8d,0x83f9)
     c.label('colors')
@@ -218,16 +258,9 @@ def helper(origin=ENTRY,copy_entry=COPY_PAGES,cache_key=None,banana_only=False,c
         c.emit(0xa9,val);a(0x8d,addr)
     if raw:c.emit(0xa9,0xff);a(0x8d,0x83fa)
     c.emit(0x60)
-    for label in ('dl1','dl2'):
-        c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
-    if not banana_only or raw:
-        c.label('source_hi');c.emit(0x40,0x4f,0x5e,0x6d)
-    c.label('divisor_lo');c.emit(*((187<<i)&255 for i in range(8)))
-    c.label('divisor_hi');c.emit(*((187<<i)>>8 for i in range(8)))
-    c.label('quotient_bits');c.emit(*(1<<i for i in range(8)))
-    c.label('hue_pairs');c.emit(*((a<<4)|b for a,b in palette_pairs()))
-    c.label('row_lo');c.emit(*((y//2*40)&255 for y in range(192)))
-    c.label('row_hi');c.emit(*((y//2*40)>>8 for y in range(192)))
+    for name in lms:
+        c.labels[name+'_offset']=c.labels[name]+1
+        c.labels[name+'_page']=c.labels[name]+2
     result=c.finish();assert len(result)<=1024,len(result)
     return result
 

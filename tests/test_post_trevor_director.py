@@ -3,6 +3,7 @@ import unittest
 import test_sequence as seq
 import post_trevor_director as d
 from girl_eyes import frame_at as eye_frame_at
+from outro_text import PREP_START
 
 class PostTrevorDirectorTests(unittest.TestCase):
     def test_short_music_aligned_passes_and_fixed_outro_entry(self):
@@ -65,7 +66,7 @@ class PostTrevorDirectorTests(unittest.TestCase):
 
     def test_live_frames_at_cuts_and_ball_hole_coverage(self):
         cpu=None;seen=set()
-        samples=sorted({d.START,d.END-1}|{t+delta for t,m in d.cuts() for delta in (-1,0,16) if d.START<=t+delta<d.END})
+        samples=sorted({d.START,PREP_START-1}|{t+delta for t,m in d.cuts() for delta in (-1,0,16) if d.START<=t+delta<PREP_START})
         for tick in samples:
             cpu=seq.execute(tick,cpu);m=cpu.memory
             self.assertEqual(m[0x83ed],eye_frame_at(tick,d.frame_at(tick)),tick)

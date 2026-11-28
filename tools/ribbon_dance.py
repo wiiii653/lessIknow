@@ -10,7 +10,7 @@ from bisect import bisect_right
 from pathlib import Path
 from scene_palette_io import emit as emit_scene_io
 from build_sequence import Code
-from engine_effects import PMBASE_SHADOW, cached_display_list, clear_pmg, DL_KEYS
+from engine_effects import COPY_PAGES, COPY_SIDE, PMBASE_SHADOW, cached_display_list, clear_pmg, DL_KEYS
 from music_timing import tick_at_bar, tick_at_beat
 
 ENTRY = 0x5400
@@ -22,6 +22,10 @@ FRAME_COUNT = 36
 FRAMES_PER_BANK = 6
 SIDE_COMPOSITOR = 0x0e00
 SIDE_BANK = 24  # extra loader indices 24–31, $4A00–$51FF
+SIDE_ACTOR_PIXELS = 0x4a00
+SIDE_ACTOR_MASK = 0x4e00
+SIDE_ACTOR_ROWS, SIDE_ACTOR_WIDTH = 56, 17
+SIDE_ACTOR_BYTES = SIDE_ACTOR_ROWS * SIDE_ACTOR_WIDTH
 SIDE_START, SIDE_END = tick_at_bar(24),tick_at_bar(32)
 SIDE_PREP_LEAD = 0
 SIDE_PREP_START = SIDE_START - SIDE_PREP_LEAD
@@ -329,8 +333,15 @@ def side_actor_data(pose):
         for x in range(4,72,4):
             pixels.append(sum(p[y*160+x+k]<<(6-2*k) for k in range(4)))
             keep.append(sum((0 if mask[y*160+x+k] else 3)<<(6-2*k) for k in range(4)))
-    assert len(pixels)==len(keep)==952
-    return bytes(pixels)+bytes(72)+bytes(keep)+bytes(72)
+    assert len(pixels)==len(keep)==SIDE_ACTOR_BYTES
+    last_columns = bytearray()
+    before_first = bytearray()
+    for start in range(0, SIDE_ACTOR_BYTES, SIDE_ACTOR_WIDTH):
+        used = [i for i, keep_value in enumerate(keep[start:start+SIDE_ACTOR_WIDTH]) if keep_value != 255]
+        last_columns.append(used[-1] if used else 255)
+        before_first.append((used[0]-1) & 255 if used else 255)
+    padding = bytes(1024 - SIDE_ACTOR_BYTES - SIDE_ACTOR_ROWS)
+    return bytes(pixels + last_columns) + padding + bytes(keep + before_first) + padding
 
 
 def install_side_actor(bank,index):
@@ -347,25 +358,30 @@ def install_runtime(runtime):
     def a(op,addr):emit_scene_io(c,op,addr)
     from ribbon_inbetweens import COPY
     c.emit(0x48);a(0xad,0x83e5);c.branch(0x10,'normal_frame');c.emit(0x68);a(0x4c,COPY)
-    c.label('normal_frame');c.emit(0x68)
-    a(0x20,0x0c00)  # existing background copy, A=source page, X=2
-    a(0xad,0x83ed);c.emit(0xc9,16);c.branch(0x90,'done');c.emit(0xc9,32);c.branch(0xb0,'done')
+    c.label('normal_frame')
+    a(0xad,0x83ed);c.emit(0xc9,16);c.branch(0x90,'not_side')
+    c.emit(0xc9,32);c.branch(0x90,'draw_side')
+    c.label('not_side');c.emit(0x68);a(0x4c,COPY_PAGES)
+    c.label('draw_side');c.emit(0x68);a(0x20,COPY_SIDE)
+    a(0xad,0x83ed)
     c.emit(0x38,0xe9,16,0x4a,0xaa);a(0xbd,0x08c0+SIDE_BANK);a(0x8d,0xd301)
     c.emit(0xa9,0)
     for label in ('pixel_lo','mask_lo'):c.jump(0x8d,label)
-    c.emit(0xa9,0x4a);c.jump(0x8d,'pixel_hi');c.emit(0xa9,0x4e);c.jump(0x8d,'mask_hi')
+    c.emit(0xa9,SIDE_ACTOR_PIXELS>>8);c.jump(0x8d,'pixel_hi')
+    c.emit(0xa9,SIDE_ACTOR_MASK>>8);c.jump(0x8d,'mask_hi')
     a(0xad,0x83fc);c.emit(0x18,0x69,0x41)
     for label in ('read_lo','write_lo'):c.jump(0x8d,label)
     a(0xad,0x83fe);c.emit(0x18,0x69,1)
     for label in ('read_hi','write_hi'):c.jump(0x8d,label)
-    c.emit(0xa2,56)
-    c.label('row');c.emit(0xa0,16)
+    c.emit(0xa2,0)
+    c.label('row');a(0xbc,SIDE_ACTOR_PIXELS+SIDE_ACTOR_BYTES);c.branch(0x30,'next_row')
+    a(0xbd,SIDE_ACTOR_MASK+SIDE_ACTOR_BYTES);c.jump(0x8d,'before_first_operand')
     c.label('byte');c.label('read');c.emit(0xb9,0,0x90)
     c.label('mask');c.emit(0x39,0,0x4e)
     c.label('pixel');c.emit(0x19,0,0x4a)
     c.label('write');c.emit(0x99,0,0x90)
-    c.emit(0x88);c.branch(0x10,'byte')
-    c.jump(0xad,'pixel_lo');c.emit(0x18,0x69,17)
+    c.emit(0x88);c.label('before_first');c.emit(0xc0,0);c.branch(0xd0,'byte')
+    c.label('next_row');c.jump(0xad,'pixel_lo');c.emit(0x18,0x69,SIDE_ACTOR_WIDTH)
     for label in ('pixel_lo','mask_lo'):c.jump(0x8d,label)
     c.branch(0x90,'source_ready')
     for label in ('pixel_hi','mask_hi'):c.jump(0xee,label)
@@ -373,8 +389,9 @@ def install_runtime(runtime):
     for label in ('read_lo','write_lo'):c.jump(0x8d,label)
     c.branch(0x90,'target_ready')
     for label in ('read_hi','write_hi'):c.jump(0xee,label)
-    c.label('target_ready');c.emit(0xca);c.branch(0xd0,'row')
-    c.label('done');c.emit(0x60)
+    c.label('target_ready');c.emit(0xe8,0xe0,SIDE_ACTOR_ROWS);c.branch(0xd0,'row')
+    c.emit(0x60)
+    c.labels['before_first_operand']=c.labels['before_first']+1
     for label in ('pixel','mask','read','write'):
         c.labels[label+'_lo']=c.labels[label]+1;c.labels[label+'_hi']=c.labels[label]+2
     data=c.finish();assert len(data)<=256
@@ -386,11 +403,12 @@ def install_runtime(runtime):
     return install_kiss_runtime(install_midpoint_runtime(out))
 
 
-def ribbon_streams():
+def ribbon_streams(halfway=False):
     """16 continuously varying shapes; four broad ribbons plus fine missiles."""
     result=bytearray()
     for plane in range(5):
         for phase in range(16):
+            phase += .5 if halfway else 0
             out=bytearray(64);angle=phase*math.tau/16+plane*.8
             if plane<4:
                 # A waving loop rooted at local (3.5,32), followed by a tail.
@@ -410,7 +428,7 @@ def ribbon_streams():
                         if 0<=x<8 and 0<=y<64:out[y]|=0x80>>x
             else:
                 for i in range(4):
-                    age=(phase+i*4)&15
+                    age=(phase+i*4)%16
                     y=32-round(2.8*age-.05*age*age)
                     # Bright two-pixel head and a thinning falling trail.
                     for dy,bits in enumerate((1,3,2,1)):
@@ -493,6 +511,8 @@ def launch_spark_path(phase):
 
 
 def helper(copy_address, palette_address=0):
+    import side_ribbons
+
     c=Code(ENTRY)
     def a(op,addr):emit_scene_io(c,op,addr)
     # The side shot advances through every party pose on its own 16-tick
@@ -541,6 +561,8 @@ def helper(copy_address, palette_address=0):
     c.label('source_row_ready');c.emit(0xc0,192);c.branch(0xd0,'rows')
     c.label('swap')
     c.label('prepare_pmg')
+    a(0x20,side_ribbons.QUEUE_ENTRY);c.branch(0x90,'foreground_pmg');c.emit(0x60)
+    c.label('foreground_pmg')
     # Back PMG base is $08 or $88. The unused prefix may hold static rows.
     a(0xad,0x83e8);c.emit(0x29,0x80,0x49,0x80);a(0x8d,0x83e8)
     c.emit(0xa9,0xa,0x0d,0xe8,0x83)

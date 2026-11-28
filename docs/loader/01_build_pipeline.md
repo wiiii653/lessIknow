@@ -83,7 +83,7 @@ not want the INIT numbers on screen.
 
 `[CONCLUSION]` After decomposition the bank data is identical byte for byte to
 the original — this was confirmed by comparison (see
-`docs/V273_AVG_RAMBO_STARTUP.md`).
+`docs/backup/V273_AVG_RAMBO_STARTUP.md`).
 
 ## 1.5. What stage 4 changes (late start)
 
