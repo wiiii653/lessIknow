@@ -6,18 +6,13 @@ Source [animated_loading.py](../tools/animated_loading.py).
 
 ```text
 THE LESS I KNOW THE BETTER
-A\SLOP BY OGNJEN / SILLY VENTURE 2026 WE
-INSPIRED BY TAME IMPALA'S MUSIC VIDEO
-```
-
-The loading indicator cycles through four states.
-
-```text
 LOADING
-LOADING.
-LOADING..
-LOADING...
+INSPIRED BY TAME IMPALA'S MUSIC VIDEO
+A\SLOP BY OGNJEN / SILLY VENTURE 2026 WE
 ```
+
+The loading indicator progresses through `LOADING..`, `LOADING...`,
+`LOADING`, and `LOADING.` during the INIT wrappers.
 
 ## Opening terminal
 

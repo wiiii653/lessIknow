@@ -4,8 +4,9 @@
 
 This is a stereo Atari XL/XE demo for a PAL machine with a 1 MB expansion and
 two POKEY chips. The latest approved release is stereo 133 / v390. The current
-source tree contains later development edits and is not itself a numbered,
-approved release. Release 058 / v330 is the documented AVG / Atari 1088 Rambo reference.
+source tree is ahead of prerelease 183. Release 058 / v330 is the documented
+AVG / Atari 1088 Rambo reference. See [Project Status](PLAN_STATUS.md) for the
+current regression baseline and the evidence for each build.
 
 The music uses the original v035 player and a tracker arrangement. Its clock
 advances four evenly spaced update ticks per PAL frame. Visual scene changes
@@ -32,19 +33,22 @@ physical playback or raster timing.
 
 | Scene | Rendering approach |
 |---|---|
-| Opening | Procedural plasma and staged city reveal; title cards; PMG fireworks that build over time |
+| Opening | Cold-start star and typed terminal, then procedural plasma, staged city reveal with water reflection, title cards and staggered PMG fireworks |
 | School and arena | ANTIC E artwork, masked character sprites, row-pointer parallax and PMG notes |
 | Practice and basketball | Bitmap poses, PMG basketball, satellites and impact effects |
 | Ribbon dance | Banked base compositions and in-between poses; double-buffered PMG ribbons and sparks |
 | Trevor | Bitmap poses, PMG impact words and bubbles, protected ball effects |
 | Post-Trevor montage | Banked banana mosaic, tunnel images and eye frames selected by a music-tick director |
-| Terminal | Four rows of low resolution ANTIC text below the boy, with rainbow DLI effects |
+| Main-act terminal | Four ANTIC 4 caption rows below the scene picture, with fixed dimmed palettes and double-buffered text |
+| Credits and greetings | Four ANTIC 4 rows below the boy's still portrait, with animated rainbow DLI effects |
 | Final shot | Bitmap portrait with orbiting PMG stars/notes, followed by ending cards with text fades |
 
-The current opening derives plasma and the city reveal procedurally from a
-single panorama source. This is intended to reduce duplicated frame storage.
-The terminal and credits use the established low-resolution text treatment;
-the proposed high-resolution system-font approach is not the current design.
+The opening builds its reveal and water reflection from live plasma and one
+city panorama. The school panorama uses 18 frames across logical load slots
+33–37, with the renderer in slot 33. The run stub clears the second
+framebuffer before the cold-start terminal. The generated JSON reports
+`bank_manifest`, including logical slots, selector addresses, owners and
+verified empty ranges with exclusive end addresses.
 
 ## Hardware packaging
 

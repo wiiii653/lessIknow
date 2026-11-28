@@ -1,4 +1,5 @@
-> **Draft proposal. The changes proposed here require separate implementation and verification.** See the [current documentation guide](README.md) for active instructions.
+> **Historical review and proposals.** See the current [credits and ending cards](outro_text.md)
+> and [greetings](greetings_terminal.md) for the text in the development build.
 
 # Terminal text and ending cards — review copy
 

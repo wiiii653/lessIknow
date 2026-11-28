@@ -2,9 +2,11 @@
 
 Read the current [hardware loader contract](../HARDWARE_LOADER_CONTRACT.md)
 before using any historical commands in this folder. `make hardware` builds
-the replaceable hardware development pair. The README describes the approved
-music source and build command. Old mono examples and manual packaging steps
-are not release procedures.
+the replaceable AVG package `build/hardware-dev.xex`. The [project README](../../README.md)
+describes the stereo build. The current package uses the full-rate star,
+the updated loader credit and a bounded blanking wait for wrapper refreshes.
+See the [loader text](../terminal_opening.md) and
+[development baseline](../PLAN_STATUS.md#current-development-baseline).
 
 This folder documents the 64-bank XEX pipeline, loading screen, AVG startup,
 runtime bank switching and diagnostic work. Detailed addresses and byte counts

@@ -15,8 +15,19 @@ maintained project documentation in English.
   for AVG loading and hardware packaging.
 - [Loader documentation](loader/README.md) — XEX layout, bank handling,
   startup and diagnostics.
-- [Music bank audit](MUSIC_BANK_AUDIT.md) — measured v035 decoder reads and
-  unused music-bank space.
+- [Opening and title reflection](TERMINAL_OPENING_IMPLEMENTATION.md) — current startup, player handoff and reflection implementation.
+- [Main-act terminal](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md) — caption timing, palette and display-list handoff.
+- [Music data](../assets/music/README.md) — original v035 source blocks and the development soundtrack.
+
+## Current screen text
+
+- [Loader and opening](terminal_opening.md)
+- [Main-act captions](main_act_terminal.md)
+- [Greetings](greetings_terminal.md)
+- [Credits and ending cards](outro_text.md)
+
+The four text references transcribe the current build inputs and link to the
+Python sources. Update the affected reference when the source copy changes.
 
 ## Keeping the references current
 
@@ -27,16 +38,12 @@ Only associate a validation result with the artifact actually exercised.
 
 ## Historical records and proposals
 
-Version notes, audits, dumps and the numbered loader chapters describe their
-recorded snapshots. Use the current source, generated build map and hardware
-loader contract for implementation decisions. Resolve conflicts in favor of
-those sources and update the affected plan before implementing it.
-
-The [opening plan](TERMINAL_OPENING_IMPLEMENTATION.md) and
-[main-act strip plan](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md) target prerelease
-182 as their regression baseline. The older terminal briefs provide draft
-copy and visual direction. The outro text review and the basketball hero
-redraw are preserved as proposals.
+Numbered version notes, audits, dated dumps and numbered loader chapters retain
+their original snapshots. The original timeline, terminal briefs, outro text
+review and basketball hero redraw record earlier decisions and proposals.
+Use the current source, generated build map and hardware loader contract for
+implementation decisions. The [v035 music-bank audit](MUSIC_BANK_AUDIT.md)
+records decoder measurements for the audited setup.
 
 `projects/` contains separate experiments with their own instructions.
 The imported `docs/boruta-atari8/` library is external reference material.

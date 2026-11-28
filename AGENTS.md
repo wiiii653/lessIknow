@@ -7,11 +7,11 @@ Better”. `tools/` contains 6502 code and asset builders, `tests/` contains
 py65 checks, `assets/` holds source art and music, and `releases/` preserves
 numbered XEX files.
 
-The latest approved release is v390 / stereo 133. The current source tree has
-unreleased development edits. Release 058 / v330 is the documented full run and loader reference
-for Atari 1088 Rambo using AVG. See `docs/PLAN_STATUS.md` for
-the current evidence and limitations, and `docs/TIMELINE_MAP.md` plus
-`docs/CURRENT_MONTAGE_V330.md` for current timing.
+The latest approved release is v390 / stereo 133. Prerelease 183 is the latest
+numbered development snapshot. Use the current development baseline in
+`docs/PLAN_STATUS.md` when checking for regressions. Release 058 / v330 is
+the documented full run and loader reference for Atari 1088 Rambo using AVG.
+See `docs/TIMELINE_MAP.md` and `docs/CURRENT_MONTAGE_V330.md` for current timing.
 
 ## Hardware loader contract
 

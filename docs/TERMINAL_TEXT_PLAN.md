@@ -1,6 +1,5 @@
-> **Historical text draft.** Use this for draft page copy. Its timing,
-> display layout and implementation suggestions are superseded by the
-> [main-act implementation plan](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md).
+> **Historical text draft.** See the [current strip implementation](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md)
+> and [current scene captions](main_act_terminal.md).
 
 # Terminal text plan — main acts
 

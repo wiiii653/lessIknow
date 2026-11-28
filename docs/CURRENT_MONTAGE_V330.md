@@ -1,9 +1,10 @@
 # Current Post-Trevor Timeline
 
 This page records the current post-Trevor scene cuts. Times use the v035
-player's integer update counter (ticks). The latest approved release is v390 /
-stereo 133; the timing below describes the current source montage and should be
-checked against a newly generated build JSON after timing edits.
+player's integer update counter (ticks). The cut ranges below describe the
+[current development baseline](PLAN_STATUS.md#current-development-baseline).
+Use `post_trevor_cuts` in the generated build JSON to check the exact cuts
+after timing edits.
 
 | Player ticks | Scene |
 |---:|---|

@@ -1,6 +1,5 @@
-> **Historical design brief.** Use this for draft copy and visual direction.
-> Its loader, timing and implementation suggestions are superseded by the
-> [opening implementation plan](TERMINAL_OPENING_IMPLEMENTATION.md).
+> **Historical design brief.** See the [current opening implementation](TERMINAL_OPENING_IMPLEMENTATION.md)
+> and [current loader and opening copy](terminal_opening.md).
 
 # Opening: loader star + 4-row terminal, then title with water
 

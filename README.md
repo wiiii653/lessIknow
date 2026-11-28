@@ -4,17 +4,14 @@ A stereo Atari XL/XE demo for a 1 MB memory expansion. It uses the original
 v035 POKEY player and an original tracker arrangement based on Tame Impala's
 composition.
 
-The project is nearly finished. The remaining work is focused on graphics
-improvements only. The accepted final prerelease is
-[`releases/less-i-know-demo-prerelease-165-stereo.xex`](releases/less-i-know-demo-prerelease-165-stereo.xex).
+## Current builds
 
-## Current release and working tree
+- [Release 133 / v390](releases/less-i-know-demo-release-133-stereo.xex) is the latest approved numbered release.
+- [Prerelease 183](releases/less-i-know-demo-prerelease-183-stereo.xex) is the latest numbered development snapshot. It includes the opening terminal, title reflection and ten main-act captions.
+- `make all` builds the current development snapshot. It also includes the consolidated school panorama banks, the updated **INSPIRED BY** loader credit and dimmer main-act captions. The opening terminal and the credits sequence keep their original palettes.
 
-The latest approved stereo release is **release 133 / v390**:
-[`releases/less-i-know-demo-release-133-stereo.xex`](releases/less-i-know-demo-release-133-stereo.xex).
-For the current working tree, prerelease history and hardware evidence, see
-[Project Status](docs/PLAN_STATUS.md). Use the release above for the approved
-build. The development build includes the restored basketball hero frames.
+See [Project Status](docs/PLAN_STATUS.md) for the current regression baseline,
+build hashes and playback evidence.
 
 The source currently builds stereo only. All 64 expansion banks are allocated.
 The music clock advances four evenly spaced updates per PAL frame. Scene
@@ -29,9 +26,11 @@ make all PYTHON=/path/to/venv/bin/python
 make check PYTHON=/path/to/venv/bin/python
 ```
 
-This produces the replaceable raw prototype, its build JSON and
-`build/hardware-dev.xex`. The hardware target uses release 122 music with
-the opening kick muted and enables the animated loader. For numbered candidates,
+`make all` produces the replaceable raw prototype `build/visual-prototype-dev.xex`,
+its layout and timing JSON, and the AVG-packaged `build/hardware-dev.xex`.
+The hardware target uses release 122 music with the opening kick muted and
+enables the full-rate animated loader. `make check` runs the discovered test
+suite against the raw prototype and also exercises the packager. For numbered candidates,
 use the [hardware packaging procedure](docs/HARDWARE_LOADER_CONTRACT.md).
 
 ## Project map

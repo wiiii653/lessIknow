@@ -14,8 +14,8 @@ development constraints are summarized in `AGENTS.md` and
 - Preserve PORTB across music NMI and banked callbacks.
 - All 64 expansion banks are allocated. Confirm the generated allocator map
   and overlap checks before changing ownership.
-- Main code occupies `$1400–$1DFF`; the shared scanline pool begins at `$1E00`
-  and currently contains 298 rows.
+- Main code occupies `$1400–$1DFF`. The shared scanline pool begins at `$1E00`.
+  Read `unique_rows` in the build JSON for the active row count.
 - The music player is stereo. Mono releases are retired.
 
 ## Video and PMG

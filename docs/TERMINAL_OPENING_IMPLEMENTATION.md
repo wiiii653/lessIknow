@@ -1,140 +1,49 @@
-> **Draft implementation plan.** Reviewed against prerelease 182 and commit
-> `2d523ff`. See the [opening brief](TERMINAL_OPENING_BRIEF.md) for the copy
-> and visual direction, and [Project Status](PLAN_STATUS.md) for release
-> evidence.
+# Opening terminal and title reflection
 
-# Opening star, terminal and water reflection
+[Loader and opening text](terminal_opening.md) transcribes both screens.
+[Project Status](PLAN_STATUS.md) records the current build and the evidence
+for numbered prereleases.
 
-Show the familiar animated star above four terminal rows when the demo takes
-over from the loader. Fade to the existing plasma and title sequence, then
-reveal a reflection below the city quay. The title uses that space for water.
-The [main-act strip](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md) can be implemented
-independently.
+## Cold start
 
-Start from the current source with commit `2d523ff` as the minimum baseline
-and compare candidates against the immutable prerelease 182 XEX. Preserve
-its full-rate animated loader, raster sync and DMA shutdown, RAM-shadowed
-PMG buffering, corrected title dissolve, stereo mix and SELECT restart.
-Treat changes to these behaviors outside the planned opening as regressions.
-Use the current source and build map wherever the older brief differs.
+The full-rate AVG loader animates the star during loading. Its last INIT
+wrapper restores the OS VBI and shuts off ANTIC DMA before later payloads
+overwrite loader assets. The final `$4800` bootstrap restores low RAM and
+jumps to the runtime entry at `$13E0`. The run stub clears the second
+framebuffer with DMA disabled, then enters the silent opening terminal.
 
-The current prototype on `feature/terminal-opening` advances the mark through
-all 32 original phases and types two pages in the four-row terminal at cold
-start. The second page starts at frame 144 and the final fade at frame 288.
-At frame 320, the cleanup helper at `$FD92` blanks the display, clears
-startup scratch in `$9000–$9BFF` and jumps to the original player entry.
-The interlude counts PAL blanking edges before the player starts. One
-display-list interrupt sets the current page's fixed striped text palette,
-which fades along with the star. The title reflection is implemented below.
-SELECT replay of the interlude is a subsequent milestone.
+[terminal_opening.py](../tools/terminal_opening.py) reconstructs the star
+using the 32 existing poses and types two pages below it. The interlude
+counts PAL blanking edges before the music player starts. Page two begins
+at frame 144, the fade starts at frame 288, and the handoff follows frame
+319. The cleanup helper at `$FD92` blanks the display, clears the startup
+scratch in `$9000–$9BFF`, and jumps to the player entry at `$2146`.
+SELECT restarts the scored sequence from the title rather than replaying
+the cold-start interlude.
 
-The first opening-interlude candidate was 1,044,790 bytes. Compared with prerelease
-182, the segment addresses and lengths match, and payload differences
-are confined to the startup jump, the opening data and code in the first
-framebuffer, and the cleanup helper under ROM. The startup checks in py65
-cover mark phase changes, text progress, the fade and the player handoff.
-The full-track Atari800 comparison matched the stereo POKEY stream from
-prerelease 182 after alignment at the first nonzero sample.
-The new interlude has yet to be viewed on physical hardware.
+The opening text has its own three-ink palettes and fades. The later
+main-act brightness change applies to the captions after the title.
 
-## 1. Start the interlude in the runtime
+## Scored opening
 
-Use a dedicated runtime display list after the `$4800` bootstrap hands off
-to `$13E0`. Prerelease 182 restores the OS VBI and shuts off ANTIC DMA before
-the final segments overwrite the loader font, list and animation data.
-Recreate the image from the same assets in the runtime. Keep the packaging
-protocol in the [hardware loader contract](HARDWARE_LOADER_CONTRACT.md).
+The plasma starts at player tick 0. Fireworks begin at tick 768. The city
+and water reveal together from tick 1024, the song title takes over at
+tick 1496, and school starts at tick 2992. The water renderer samples the
+live plasma before the skyline is drawn, then adds narrow reflections
+from the composited city.
 
-Start with the same scale, screen position, palette and nominal PAL frame
-cadence as the loader. `outro_text.final_mark()` yields 32 phases of 168
-glyph bytes each, and `final_boy.install_mark_frames()` already installs
-those phases at `$6800` in loader banks 20–23. Prototype reading those
-existing tables with a small runtime routine that restores PORTB. The finale
-animator assumes its own font destination and palette, so use its addressing
-as a reference when factoring a shared copy routine. A duplicate raw phase
-table alone would cost 5,376 bytes. Keep the mark's three ANTIC 5 rows and the
-terminal's four ANTIC 4 rows in separate bands with matching fonts and a
-black terminal background.
+The inactive title framebuffer holds 440 bytes of water at offset `$0B00`
+and a 103-byte display-list tail at offset `$0D00`. Water occupies relative
+scanlines 201–233. The last music DLI stays on line 234. The renderer
+publishes the picture and water together, restores the regular footer at
+the school handoff, and leaves the [main-act terminal](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md)
+to publish its own footer.
 
-## 2. Give the text time and preserve the scored opening
+## Regression checks
 
-Start with a silent runtime interlude of **320 PAL frames** (about 6.4 s).
-Use a frame count tied to the first of the four scheduled raster events
-while the music clock is held at zero. Keep NMI scheduling alive and gate
-packet consumption until the title's first frame is ready. Place the
-opening list's mark rows and blank spacers so the fourth text row ends at
-line 234 and the other clock slots stay on relative lines 0, 78 and 156.
-Use `stereo_playback.py` to trace SELECT restart and first packet handling.
-After the fade, publish the initial title list in blanking and release the
-player on the corresponding first music DLI. Verify both POKEYs start
-together and tick zero runs once. Start the silent interlude again on
-SELECT, including a SELECT from the credits and the final card.
-
-Use the two pages in the opening brief as draft copy. A workable first pass
-is frames 0–143 for page one, 144–287 for page two, and 288–319 for the fade
-and handoff. At the existing terminal's nominal character cadence, the pages
-take about 124 and 72 music-tick equivalents to type (roughly 0.62 and 0.36 s).
-Drive that cadence from interlude time while the player is held. Keep the
-complete pages visible for the rest of their windows. Apply the same
-brightness envelope to both the star and text, and hold a finished frame if
-the initial plasma buffer misses its publication window.
-
-An interlude over player ticks 0–1023 would be about 5.1 s. That version
-changes the visible artist cues from tick 512 and the fireworks from tick
-768. Use it only if an interlude over the music is an explicit editorial
-choice. The silent version keeps the city reveal at 1024, the card change
-at 1496 and the school entry at 2992 on the existing track clock.
-
-## 3. Prove the storage budget
-
-Reserve the opening display list, text pages, glyph destinations, message
-records and phase state in the current allocator. The later terminal
-unpacks into `$C000–$CEFF`, using the second framebuffer for staging.
-Reuse its glyph shapes and typing rules at build time. Any runtime reuse
-needs separate addresses and an audit of the live display list, records and
-scratch memory. Generate the opening font for the characters actually used
-in the two pages. Verify bracket glyphs and the synthetic cursor. Check that
-mark glyphs and text glyphs can coexist before assigning separate aligned
-font pages. The mark, four text rows and associated pointers must be safe
-across music bank switches and restart.
-
-Prerelease 182 is 1,044,790 bytes, leaving 3,786 bytes to the 1 MiB boundary.
-That number applies to the packaged file. The build JSON reports 295 shared
-scanline rows and 2,541 of 2,560 bytes of main code. Budget against the
-current generated allocation, including packed row spans, PMG pages and
-RAM under ROM. Reject overlaps at build time and measure the final package
-with the normal full-rate loader enabled.
-
-## 4. Add the reflection in the title tail
-
-The title keeps its 192 picture scanlines and uses relative lines 201–233
-for water. The fourth music DLI stays on line 234. The reflection samples
-eleven rows of the live plasma before the opaque skyline is drawn, so the
-plasma is visible below the quay. Thin echoes near the surface sample the
-composited city. Each water row has a shallow horizontal ripple with
-clipped edges. Its coverage follows the city reveal from tick 1024 and the
-title's final dissolve. Fireworks have their own player/missile planes.
-
-The inactive title framebuffer holds 440 bytes of water at offset
-`$0B00` and a 103-byte display-list tail at offset `$0D00`. The title
-bank holds the renderer, lookup tables and two tail templates. The bitmap
-and water are published together. The outgoing title restores both normal
-footers during blanking at the school cut or a restart to the early title.
-The main-act terminal then takes over the footer.
-
-## 5. Implementation and acceptance order
-
-1. Show the static mark and blank strip after the loader. Check the raster
-   positions, buffer ownership and the handoff to an unmodified title.
-2. Animate the mark, then add typing and fade. Exercise cold boot, player
-   start and SELECT from different acts. Compare the full stereo POKEY
-   stream to prerelease 182 after a single alignment at playback start,
-   and check the four music DLI positions separately.
-3. Add the static reflection, then ripple. Measure the worst case with the
-   city reveal, title dissolve and fireworks active. If ripple or a
-   luminance split misses the budget, keep the static reflection while
-   profiling those additions.
-4. Package the hardware XEX and record its size, SHA-256, AVG loading
-   setup if applicable, Atari model, memory expansion, stereo configuration
-   and PAL/NTSC setting. Use emulator captures for raster checks and a
-   physical AVG / 1088 Rambo run for hardware evidence.
+The startup check in `tests/test_sequence.py` covers framebuffer clearing,
+star phases, page changes, fade and player handoff. The title tests cover
+reveal and PMG fireworks behavior. For hardware changes, use the
+[loader contract](HARDWARE_LOADER_CONTRACT.md) and record the exact artifact
+and setup. The [original opening brief](TERMINAL_OPENING_BRIEF.md) records
+the earlier design.

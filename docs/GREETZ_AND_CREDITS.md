@@ -1,4 +1,5 @@
-> **Historical reference. Commands, addresses and findings describe the recorded snapshot.** See the [current documentation guide](README.md) for active instructions.
+> **Historical v261 snapshot.** See the current [credits and ending cards](outro_text.md)
+> and [greetings](greetings_terminal.md) for the text in the development build.
 
 # Credits and greetz — current text v261
 

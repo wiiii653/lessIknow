@@ -56,15 +56,19 @@ new filename:
 python3 tools/build_hardware_xex.py build/visual-prototype-dev.xex /path/to/new-stereo-candidate.xex --approved-music --release-122-music --full-rate-loading
 ```
 
-The full-rate loader uses the early blanking refresh from prerelease 181.
-Its final wrapper restores the OS VBI and disables both the DMA shadow and
-ANTIC DMA before the final segments overwrite the loader display. See
-[Project Status](PLAN_STATUS.md) for prerelease-specific packaging differences.
+The development target enables the full-rate animated loader. Wrapper
+refreshes use the bounded `124 <= VCOUNT < 128` blanking window inherited
+from prerelease 181. The final wrapper restores the OS VBI and disables
+both the DMA shadow and ANTIC DMA before late segments overwrite the loader
+display. See [Project Status](PLAN_STATUS.md#current-development-baseline)
+for the development package hash and [loader text](terminal_opening.md)
+for the current screen copy.
 
 The packager refuses to overwrite numbered files, verifies the release 058
-SHA-256, rejects unknown changes to bank procedures and compares the loader
-against the reference. It does not alter graphics, scene timing, the 64-bank
-allocation or the runtime player.
+SHA-256, rejects unknown changes to bank procedures and compares the base
+package against the reference before installing the optional animated
+loading screen. Packaging preserves the runtime graphics, scene timing,
+64-bank allocation and player code.
 
 py65 checks can verify reconstructed images, wrapper behavior and the bootstrap
 handoff, but they do not model ANTIC DMA or physical raster deadlines. Atari800

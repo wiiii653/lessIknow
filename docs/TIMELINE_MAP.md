@@ -1,12 +1,17 @@
 # Current Demo Timeline
 
-This concise map reflects the current source tree as reviewed on 2026-11-25.
+This map reflects the development baseline in [Project Status](PLAN_STATUS.md).
 Exact tick boundaries are generated from the music clock; after timing edits,
 use `build/visual-prototype-dev.json` as the build-specific source of truth.
 The clock runs at about 199.44 updates per second on PAL, with roughly 373.956
 ticks per 128 BPM bar.
 
 ## Opening
+
+A silent 320-frame PAL interlude follows the hardware loader at cold start.
+It types two pages below the animated star and fades before the v035 clock
+starts. Times in the tables are relative to music start. See the
+[opening implementation](TERMINAL_OPENING_IMPLEMENTATION.md).
 
 | Player ticks | Approx. time | Image |
 |---:|---:|---|
@@ -24,9 +29,9 @@ have not yet been verified in a full hardware run.
 
 | Player ticks | Approx. time | Act |
 |---:|---:|---|
-| 2,992–5,984 | 0:15–0:30 | School arrival, girl passes, boy whistles |
-| 5,984–8,975 | 0:30–0:45 | Basketball practice build-up |
-| 8,975–11,967 | 0:45–1:00 | First side-dancer sequence |
+| 2,992–5,983 | 0:15–0:30 | School arrival, girl passes, boy whistles |
+| 5,984–8,974 | 0:30–0:45 | Basketball practice build-up |
+| 8,975–11,966 | 0:45–1:00 | First side-dancer sequence |
 | 11,967–14,958 | 1:00–1:15 | Banana roto-zoom and tunnel transition |
 | 14,959–20,941 | 1:15–1:45 | Ribbon dance and performance |
 | 20,942–21,689 | 1:45–1:49 | Tunnel cutaway before the dunk |
@@ -37,15 +42,16 @@ have not yet been verified in a full hardware run.
 | 51,232–51,979 | 4:17–4:21 | Final shot, orbiting sprites and fade |
 | 51,980 onward | 4:21–5:00 | Final card and orbit; music continues to five minutes |
 
-The post-Trevor cuts are listed in detail in
+The [main-act terminal](TERMINAL_MAIN_ACTS_IMPLEMENTATION.md) types a page at
+each of the ten caption cues, starting at school. The final caption starts
+at tick 38,705 before the eye shot. The post-Trevor cuts are listed in detail in
 [`CURRENT_MONTAGE_V330.md`](CURRENT_MONTAGE_V330.md). The table above is a
 rounded overview, not a substitute for the generated build JSON.
 
 In the ribbon-dance section, the front solo uses the same half-beat pose-change
 cadence as the preceding trio. Smooth half-beat inbetweens are retained, but
 extra quarter-beat subdivisions are suppressed during the solo so it does not
-run faster than the three-dancer passage. The built stereo prerelease has not
-been confirmed on physical hardware.
+run faster than the three-dancer passage.
 
 ## Timing and validation
 
