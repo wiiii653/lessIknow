@@ -1,0 +1,93 @@
+# Main-act terminal
+
+Source [main_act_terminal.py](../tools/main_act_terminal.py).
+
+### Scene 1
+
+```text
+> SYS.OPEN SCENE 01 [OK]
+> SCHOOL / ARRIVAL
+> SHE PASSES. HE WHISTLES.
+> THE LESS I KNOW THE BETTER
+```
+
+### Scene 2
+
+```text
+> SYS.OPEN SCENE 02 [OK]
+> PRACTICE / GYM
+> HE SHOOTS. HE MISSES.
+> THE BALL NEVER LIES.
+```
+
+### Scene 3
+
+```text
+> SYS.OPEN SCENE 03 [OK]
+> RIBBON DANCE / TRIO
+> THREE GIRLS. ONE BEAT.
+> HOLD THE POSE.
+```
+
+### Scene 4
+
+```text
+> SYS.OPEN SCENE 04 [OK]
+> BANANA ROTO-ZOOM
+> SPIRAL. ORGANIC. REPEAT.
+> THE FRUIT IS A PORTAL.
+```
+
+### Scene 5
+
+```text
+> SYS.OPEN SCENE 05 [OK]
+> RIBBON DANCE / SOLO
+> HALF-BEAT POSES
+> SMOOTH INBETWEENS
+```
+
+### Scene 6
+
+```text
+> SYS.OPEN SCENE 06 [OK]
+> TUNNEL / CUTAWAY
+> THE DIRECTOR CUTS.
+> NEXT: THE DUNK.
+```
+
+### Scene 7
+
+```text
+> SYS.OPEN SCENE 07 [OK]
+> HERO / DUNK
+> FOUR SATELLITES
+> GLASS ON FIRST CRACK
+```
+
+### Scene 8
+
+```text
+> SYS.OPEN SCENE 08 [OK]
+> TREVOR / 13 HITS
+> HE TAKES THE BALLS.
+> HE KEEPS COMING.
+```
+
+### Scene 9
+
+```text
+> SYS.OPEN SCENE 09 [OK]
+> BANANAS / TUNNELS
+> 32 PASSAGES
+> A CUT EACH BAR
+```
+
+### Scene 10
+
+```text
+> SYS.OPEN SCENE 10 [OK]
+> GIRL'S EYES
+> BANANAS BEFORE / AFTER
+> BUM / BAM
+```

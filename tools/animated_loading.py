@@ -126,7 +126,7 @@ def install(data, *, full_rate=False):
     entries = list(segments(data))
     title = 'THE LESS I KNOW THE BETTER'
     credit = 'A\\SLOP BY OGNJEN / SILLY VENTURE 2026 WE'
-    source_credit = "BASED ON TAME IMPALA'S MUSIC VIDEO"
+    source_credit = "INSPIRED BY TAME IMPALA'S MUSIC VIDEO"
     alphabet = ' ' + ''.join(sorted(set(title + credit + source_credit + 'LOADING. ') - {' '}))
     codes = {ch: i for i, ch in enumerate(alphabet)}
 
