@@ -20,6 +20,73 @@ procedures alone therefore do not explain the failure. A later failure was
 reported for prototype v353, which used a different loading path. The exact
 hardware failure cause remains unresolved.
 
+The user reported flawless operation of `build/hardware-runad-compat-test.xex`
+on their AVG/Rambo setup. [Numbered prerelease 187](../releases/less-i-know-demo-prerelease-187-stereo.xex)
+is byte-identical to that file. It is 1,031,138 bytes, with SHA-256
+`89af0d1babcc4d5f820f2cdf5a999c67be152f31c1ff9d4bf1868fa0c5bb39d3`.
+It uses an unbanked `RUNAD` stub at `$3FB0` to select base RAM and invoke
+the existing `$4800` bootstrap. The firmware version and exact
+launch-to-opening time were unrecorded.
+
+## Prerelease 187 packaging
+
+The base was rebuilt with `make all`. Its `hardware-dev.xex` has SHA-256
+`6da09689335d59c841c1856cec53cac523f227b1efdc107783ac8a231115a5be`.
+The numbered build replaces the last two XEX records, `INITAD=$4800` and
+`RUNAD=$13E0`, with a stub at `$3FB0–$3FC3` and `RUNAD=$3FB0`. The stub
+disables IRQ, NMI and display DMA, selects base RAM with `PORTB=$FF` and
+jumps to `$4800`. Its payload is
+`78 A9 00 8D 0E D4 8D 00 D4 8D 2F 02 A9 FF 8D 01 D3 4C 00 48`.
+All preceding XEX records matched the rebuilt base. The final file matched
+the hash from the AVG test. The two loading-speed experiments below are
+closed and their changes are absent from prerelease 187.
+
+## Selective clear test
+
+`build/hardware-fast-load-test.xex` is a separate 1,032,272-byte test file,
+with SHA-256
+`ffc03e7b1f70fd25d15f73b53e2c3370a342107f6ddaccdbde0c92b2a97ece68`.
+Its only changes from the hardware-tested RUNAD file are the 64 routines at
+`$3A00`. Each routine clears the pages with gaps in the following XEX
+segments. All 64 staging images reconstructed byte for byte from poisoned
+RAM in py65. The final runtime overwrites the loader scratch area.
+
+On Atari800 7.2.1, PAL 1088XE with Altirra OS, the time from the loading
+screen to the silent opening fell from 1,169 to 809 PAL frames, about 23.45
+to 16.23 seconds. The silent opening lasted 930 frames in both runs, and
+full-track stereo POKEY output matched. On physical AVGCart, the user
+reported the same loading time for the selective clear and RUNAD control.
+Exact stopwatch times were unrecorded.
+
+## Compressed transfer test
+
+`build/hardware-compact-transfer-test.xex` is a 703,798-byte diagnostic
+package derived from the 1,031,138-byte RUNAD control, a 31.7% reduction.
+Its SHA-256 is
+`f1346b7f3dd38e1028ba598f41ceb526039bb7b24fcb82eff46a4f5119f6193e`.
+It uses the existing LZ decoder to unpack 49 video banks directly into
+their original extended RAM destinations. Those banks use a compressed
+payload and decode in place of the normal staging clear and copy.
+The 14 music banks, remaining video bank, INIT wrappers and bootstrap
+are unchanged. The decoder uses loader scratch RAM. All 49 outputs
+matched the control images byte for byte in py65.
+
+On Atari800 7.2.1 with the same PAL 1088XE and Altirra OS settings, the
+loading screen to silent opening took 1,194 PAL frames, versus 1,169 for
+the RUNAD control. All 64 extended RAM banks matched byte for byte at
+the start of the silent opening. The opening lasted 930 PAL frames,
+and the full-track stereo POKEY traces matched. The package changes XEX
+segment count and CPU work as well as file size. On physical AVGCart,
+the user reported approximately the same load time as the RUNAD control,
+possibly about two seconds longer. Exact times and firmware version were
+unrecorded. This test showed no speedup on that setup. The default
+hardware build still uses the required packaging below.
+
+In the Atari800 RUNAD control, frame-boundary CPU samples landed mainly
+in the staging clear and bank copy loops. The raster synchronization
+wait appeared in 19 of 1,169 samples. This profile covers emulated
+execution and gives no measurement of AVGCart transfer time.
+
 ## Required packaging behavior
 
 - Loading screen: text at `$3800`, ANTIC display list at `$3880`, INIT at
@@ -37,8 +104,10 @@ hardware failure cause remains unresolved.
   `$0900–$0976`, `$0980–$09FF`, `$0A00–$0BFF`. Audit any increase; do not
   silently change the bootstrap.
 - Keep PORTB unchanged between loading the `$4000` buffer and executing the
-  bootstrap. The `$4800` bootstrap disables IRQ/NMI, restores low RAM, then
-  jumps to `$13E0`. It does not return to the loader or rely on RUNAD handling.
+  bootstrap in the standard INIT package. For the RUNAD package, the
+  stub explicitly selects the same base RAM that holds the deferred data.
+  In either package, the `$4800` bootstrap disables IRQ/NMI, restores low
+  RAM and jumps directly to `$13E0`.
 - Keep the packaged file below 1 MiB to remain within the known-compatible
   loading path. This size limit is a compatibility condition, not a proven
   explanation for previous failures.

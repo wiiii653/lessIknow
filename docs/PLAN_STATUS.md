@@ -4,16 +4,17 @@ Reviewed 2026-11-28 against the development source and build artifacts.
 
 ## Final polish
 
-- The current development XEX is awaiting a hardware pass. Check AVG startup,
-  caption timing and animation on the Atari, and record the exact build hash
-  and machine setup with the result.
+- Prerelease 187 is byte-identical to the RUNAD package the user reported
+  working on Atari 1088 Rambo with AVGCart. A detailed physical timing and
+  cadence report should record the machine, video standard and stereo
+  setup with the exact XEX hash.
 - Graphics fixes and polish remain pending. The poses and keyframes are
   approved. The remaining scope is the appearance and visual quality of the
   existing artwork.
 
 ## Current development build
 
-The current source is ahead of numbered prerelease 186. It includes the
+The current runtime is packaged in numbered prerelease 187. It includes the
 revised opening, main-act and credits transcripts, PAL-frame profile ribbons, a
 tapered title reflection, the ending card on bitmap resolutions and scanline
 repetition, the shoe landing on every second kick during the credits, and
@@ -21,6 +22,7 @@ the Atari Arena captions.
 
 | Artifact | Bytes | SHA-256 |
 |---|---:|---|
+| [Prerelease 187](../releases/less-i-know-demo-prerelease-187-stereo.xex) | 1,031,138 | `89af0d1babcc4d5f820f2cdf5a999c67be152f31c1ff9d4bf1868fa0c5bb39d3` |
 | `build/hardware-dev.xex` | 1,031,120 | `6da09689335d59c841c1856cec53cac523f227b1efdc107783ac8a231115a5be` |
 | `build/visual-prototype-dev.xex` | 1,107,949 | `7f5d26d4c7993750c4c0a307b297fe9f77f852fffd3292659a9d16d8c92f6e5c` |
 
@@ -53,9 +55,9 @@ updates across the same 440 and 374 PAL frames. The two later banana
 passes increased from 34 to 39 and from 54 to 62 updates. Their longest
 holds were six and seven PAL frames.
 
-The full py65 suite passed 211 of 232 checks. The banana cycle-budget
-test now passes, and the 21 remaining failures also occurred before this
-change.
+The full py65 suite rerun for prerelease 187 passed 211 of 232 checks.
+The banana cycle-budget check passed, and the other 21 checks failed
+in the prior run on the one-color terminal build as well.
 
 Removing the unreachable montage dispatch and its tick check freed 125
 bytes in main code, bringing its free space to 135 bytes. In 465 py65
@@ -103,8 +105,7 @@ passed seven targeted checks. Atari800 confirmed its first two shoe landings
 and produced stereo POKEY output identical to prerelease 186. An earlier
 full-suite run on build
 `caf644bade27a064f79f09bdfb835535b1a4d8471711f3ff856670697b2f7710`
-reported 207 passes and the same 23 failures as prerelease 186. Physical
-testing of the current development build remains pending.
+reported 207 passes and the same 23 failures as prerelease 186.
 
 ### PMG cadence in the current build
 
@@ -193,6 +194,7 @@ exact artifact exercised.
 | [Prerelease 184](../releases/less-i-know-demo-prerelease-184-stereo.xex) | Audited build with the synced main-act terminal. The user reported clean physical playback. Machine and loader details for this run were not recorded. |
 | [Prerelease 185](../releases/less-i-know-demo-prerelease-185-stereo.xex) | Adds the credits foot tap on alternate kicks. |
 | [Prerelease 186](../releases/less-i-know-demo-prerelease-186-stereo.xex) | Hardware test candidate with a bounded montage swap, shared montage tables and lighter terminal redraws. Retains the credits foot tap. |
+| [Prerelease 187](../releases/less-i-know-demo-prerelease-187-stereo.xex) | Current runtime with the one-color main-act terminal and the AVG-tested RUNAD handoff. |
 | [Release 058 / v330](../releases/less-i-know-demo-release-058-stereo.xex) | Documented full run from AVG on Atari 1088 Rambo and immutable loader reference |
 
 The user also reported successful machine playback during later prerelease work.
@@ -200,6 +202,18 @@ The available record does not pin that report to an exact XEX hash and machine
 configuration. Releases 059 and 060 failed on hardware.
 
 ### Prerelease validation history
+
+Prerelease 187 includes the current opening, title reflection, caption timing,
+profile ribbons, banana playback and ending changes. Its main-act terminal uses
+1,120 bytes in RAM under ROM for the double-buffered text rows. The build JSON
+reports 64 allocated banks, 295 shared scanline rows and 2,425 bytes of main
+code. The numbered package preserves all 66 INIT wrappers, 64 staging clears,
+the deferred low RAM at `$4000–$47FF` and the `$4800` bootstrap. The final
+RUNAD stub uses `$3FB0–$3FC3`. py65 verified the handoff and all five
+low-RAM restore spans. Atari800 7.2.1 on PAL 1088XE recorded identical
+stereo POKEY output to the standard development XEX over the full track.
+See the [loader contract](HARDWARE_LOADER_CONTRACT.md) for the exact package
+difference and the AVG results.
 
 Prerelease 181 is 1,044,667 bytes. SHA-256:
 `2cc75d3444b7754fff7a8277db4314a07e545d14b238c510ef08146320fdc984`.
@@ -227,7 +241,7 @@ work, the Atari800 PAL 1088XE monitor recorded 185 first-dancer bitmap
 publications and a maximum five-frame pose hold, matching prerelease 182.
 It recorded 364 front-solo PMG publications versus 363 in prerelease 182.
 Those results apply to the monitored prerelease work. Physical playback of
-the identified 182, 183 and current development builds remains unverified.
+the identified 182 and 183 packages remains unverified.
 
 Prerelease 183 SHA-256:
 `91a27f7901b94ea678bb7e2fee9c5a037478a516dc34fefa527887a0b906619b`.

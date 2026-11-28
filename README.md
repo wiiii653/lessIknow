@@ -7,7 +7,7 @@ composition.
 ## Current builds
 
 - [Release 133 / v390](releases/less-i-know-demo-release-133-stereo.xex) is the latest approved numbered release.
-- [Prerelease 186](releases/less-i-know-demo-prerelease-186-stereo.xex) is the latest numbered test build in this workspace. It includes the shared montage tables and lighter terminal redraws.
+- [Prerelease 187](releases/less-i-know-demo-prerelease-187-stereo.xex) is the latest numbered stereo test build. It includes the one-color terminal and is byte-identical to the RUNAD package tested on Atari 1088 Rambo with AVGCart.
 - `make all` builds the current development snapshot with shot-synced captions, PAL-frame profile ribbons, and the credits shoe landing on every second kick.
 
 See [Project Status](docs/PLAN_STATUS.md) for the current regression baseline,
