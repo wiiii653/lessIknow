@@ -15,7 +15,6 @@ TEXT_HIGH = 0xCC00
 TEXT_END = 0xCF00
 STATE_FLAG = 0x0DD0
 STATE_START = 0x0DD1
-STATE_PHASE = 0x0DD2
 TMP_LO = 0x0DD3
 TMP_HI = 0x0DD4
 TMP_ROW = 0x0DD6
@@ -318,6 +317,8 @@ def line_records():
 
 
 def helper():
+    from outro_palette import TEXT_INK_TABLES, text_ink_tables
+
     c = Code(ENTRY)
     def a(op, address): c.emit(op, address & 255, address >> 8)
     c.label('active')
@@ -346,20 +347,8 @@ def helper():
         c.emit(0xA9,value);a(0x8D,base+FOOTER_DL+offset)
     a(0x20,COLOR_FONT_LOAD)
     c.label('text_ready')
-    a(0xAD,0x83E4);c.branch(0xD0,'final_blank')
-    a(0xAD,0x83E3);c.emit(0xC9,END>>8);c.branch(0x90,'cards');c.branch(0xD0,'final_blank')
-    a(0xAD,0x83E2);c.emit(0xC9,END&255);c.branch(0x90,'cards')
-    c.label('final_blank')
-    # The final card reuses the live terminal buffers at $BF00 and $BF80.
-    # Point every text row at immutable spaces before preparing that card.
-    blank = _line_addresses()[all_lines().index('')]
-    for offset, value in ((1, blank&255), (2, blank>>8)):
-        c.emit(0xA9,value)
-        for row in range(TEXT_ROWS):
-            a(0x8D,base+TEXT_DL+row*3+offset)
-    c.jump(0x4C,'done')
-    c.label('cards')
     # The start time of the bottom row also cues the next scroll.
+    # Keep selecting the final four lines until the ending card takes over.
     cue_lo = TIMES + HISTORY_ROWS - 1
     cue_hi = cue_lo + len(schedule())
     c.emit(0xA2,len(page_starts())-1)
@@ -380,7 +369,6 @@ def helper():
     a(0xAD, TMP_LO); a(0x99, 0xBC00+TEXT_DL+1)
     c.emit(0xa9,0xbf); a(0x99, 0xBC00+TEXT_DL+2)
     c.emit(0xE8, 0xE0, HISTORY_ROWS); c.branch(0xD0, 'row')
-    c.label('done')
     a(0xAD,STATE_FLAG);c.emit(0xC9,1);c.branch(0xD0,'published')
     c.label('publish_wait');a(0xAD,0xD40B);c.emit(0xC9,124);c.branch(0x90,'publish_wait');c.emit(0xC9,128);c.branch(0xB0,'publish_wait')
     from final_boy import ENTRY_VISIBLE
@@ -393,6 +381,8 @@ def helper():
     c.label('line_hi'); c.emit(*(a >> 8 for a in display_addresses()))
     assert c.origin+len(c.data)<=CACHE_ENTRY
     c.emit(*bytes(CACHE_ENTRY-c.origin-len(c.data)),*cache_helper())
+    assert c.origin+len(c.data)<=TEXT_INK_TABLES
+    c.emit(*bytes(TEXT_INK_TABLES-c.origin-len(c.data)),*text_ink_tables())
     if c.origin+len(c.data)>RESET_ENTRY:raise ValueError('text helper exceeds reset boundary')
     c.emit(*bytes(RESET_ENTRY-c.origin-len(c.data)))
     a(0xAD, STATE_FLAG); c.branch(0xF0, 'ended')

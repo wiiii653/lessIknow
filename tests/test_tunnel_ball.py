@@ -2,10 +2,10 @@
 import unittest
 import math
 import test_sequence as sequence
-from tunnel_ball import masks, tunnel_offsets
+from tunnel_ball import masks
 from engine_effects import pmg_art
 from mosaic import KALEIDO_START
-from post_trevor_director import START, BUM_START, SHIFT, frame_at
+from post_trevor_director import START, BUM_START, SHIFT, frame_at, timeline
 
 
 def director_phase(tick, memory):
@@ -16,7 +16,9 @@ def director_phase(tick, memory):
 
 
 def tunnel_drift(tick, memory):
-    angle = director_phase(tick, memory)*math.tau/128
+    phase = director_phase(tick, memory)
+    organic = memory[0x83ed] >= 48
+    angle = (phase-64 if organic else phase)*math.tau/(48 if organic else 64)
     return round(5*math.sin(angle)), round(2*math.sin(2*angle))
 
 @unittest.skipIf(sequence.MPU is None,'py65 required')
@@ -78,6 +80,28 @@ class TunnelBallTests(unittest.TestCase):
         self.assertEqual(cpu.memory[0xd01b],0x11)
         self.assertEqual(sequence.SequenceTests().raster(cpu,effects=True),
                          sequence.SequenceTests().raster(sequence.execute(9163),effects=True))
+
+    def test_tunnel_ball_drift_wraps_at_pal_cadence_in_both_directions(self):
+        passes = timeline()[:5]
+        for (start, mode, _, _), (end, _, _, _) in zip(passes, passes[1:]):
+            with self.subTest(mode=hex(mode)):
+                cpu = previous = None
+                low, high = (48, 59) if mode & 16 else (32, 47)
+                wrap = (low, high) if mode & 128 else (high, low)
+                wrapped = False
+                for tick in range((start+3) & ~3, end, 4):
+                    cpu = sequence.execute(tick, cpu)
+                    memory = cpu.memory
+                    frame = memory[0x83ed]
+                    x, y = tunnel_drift(tick, memory)
+                    self.assertEqual(memory[0xd000], 112+x)
+                    self.assertEqual(memory[0x83e9], y & 255)
+                    if previous is not None:
+                        prev_frame, prev_x, prev_y = previous
+                        wrapped |= (prev_frame, frame) == wrap
+                        self.assertLessEqual(max(abs(x-prev_x), abs(y-prev_y)), 1, tick)
+                    previous = frame, x, y
+                self.assertTrue(wrapped)
 
     def test_rainbow_panels_and_satellites_keep_distinct_hues(self):
         colors=set()
@@ -149,7 +173,6 @@ class TunnelBallTests(unittest.TestCase):
                             covered=True;break
                     self.assertTrue(covered,(i,x,y))
         self.assertGreater(len(positions),12)
-        self.assertEqual(tunnel_offsets()[0],(0,0))
 
     def test_two_paired_missile_stars_follow_different_ellipses(self):
         cpu=None

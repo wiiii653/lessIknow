@@ -39,7 +39,9 @@ class OutroTests(unittest.TestCase):
             self.assertFalse(address<TIMES+2*len(schedule()) and TIMES<address+len(data))
             self.assertFalse(address<0x249c and PALETTE<address+len(data))
 
-    def test_live_overlay_keeps_one_framing_and_blanks_text_at_finale(self):
+    def test_live_overlay_keeps_one_framing_and_retains_text_until_ending_card(self):
+        from final_boy import END as CARD_START, FADE_START, artwork
+
         cpu=seq.execute(text.START);m=cpu.memory
         self.assertEqual(bytes(m[0xc800:0xcf00]),loader.resources()[0][0x800:])
         self.assertEqual(m[0xd409],text.COLOR_FONT>>8)
@@ -51,21 +53,25 @@ class OutroTests(unittest.TestCase):
             if bitmap_mapping is None:bitmap_mapping=bytes(m[display+text.BITMAP_DL:display+text.FOOTER_DL])
             self.assertEqual(bytes(m[display+text.BITMAP_DL:display+text.FOOTER_DL]),bitmap_mapping)
             for row in range(text.HISTORY_ROWS):
-                at=display+text.TEXT_DL+3+row*3
+                at=display+text.TEXT_DL+row*3
                 self.assertEqual(m[at],0xc4)
                 address=m[at+1]|m[at+2]<<8
                 self.assertTrue(0xbf00<=address<0xbf00+text.HISTORY_ROWS*40)
             self.assertEqual(m[0xd301],0xff)
-        cpu=seq.execute(text.END,cpu)
-        display=m[0xd402]|m[0xd403]<<8
-        self.assertEqual(display,0xbc00)
-        self.assertEqual(bytes(m[display+text.BITMAP_DL:display+text.FOOTER_DL]),bitmap_mapping)
-        for row in range(text.HISTORY_ROWS):
-            at=display+text.TEXT_DL+4+row*3
-            address=m[at]|m[at+1]<<8
-            self.assertEqual(bytes(m[address:address+40]),b' '*40)
-        p=__import__('final_boy').artwork()
+        final_lines = text.typing_lines()[-text.HISTORY_ROWS:]
+        for tick in (text.END, FADE_START-1, *range(FADE_START, CARD_START, 16), CARD_START-1):
+            seq.execute(tick,cpu)
+            display=m[0xd402]|m[0xd403]<<8
+            self.assertEqual(display,0xbc00)
+            self.assertEqual(bytes(m[display+text.BITMAP_DL:display+text.FOOTER_DL]),bitmap_mapping)
+            for row,line in enumerate(final_lines):
+                at=display+text.TEXT_DL+1+row*3
+                address=m[at]|m[at+1]<<8
+                self.assertEqual(bytes(m[address:address+40]),(text.PROMPT+line.encode()).ljust(40))
+        p=artwork()
         self.assertEqual(seq.SequenceTests().raster(cpu),bytes(p[y//3*160+x] for y in range(192) for x in range(160)))
+        seq.execute(CARD_START,cpu)
+        self.assertEqual(m[0xd402]|m[0xd403]<<8,text.FINAL_CARD_DL)
 
     def test_music_dli_spacing_and_static_scanline_storage_survive_outro(self):
         cpu=seq.execute(text.START-1);m=cpu.memory

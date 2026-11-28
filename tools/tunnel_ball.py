@@ -10,15 +10,25 @@ ORBIT_TABLES = 0x76d0
 EYE_POSITION = 0x77d0
 DRIFT_X, DRIFT_Y = 0x5b00, 0x5b80
 SCENE_POSITION = 0x5c00
+SPIRAL_DRIFT_PERIOD = 16 * 4
+ORGANIC_DRIFT_PERIOD = 12 * 4
+DRIFT_PADDING = 2 * 3  # Three PAL subphases at up to double speed.
 
 
 def motion_tables():
-    """One position sample per PAL frame, at the original orbit durations."""
+    """Sample each centre path and satellite orbit once per PAL frame."""
+    spiral = tunnel_offsets(SPIRAL_DRIFT_PERIOD)
+    organic = tunnel_offsets(ORGANIC_DRIFT_PERIOD)
+    # The organic key indices start at 64. Pad both ends so signed
+    # subphases wrap through the same loop without a modulo operation.
+    drift = spiral + organic[-DRIFT_PADDING:] + organic + organic[:DRIFT_PADDING]
+    assert DRIFT_X + len(drift) <= DRIFT_Y
+    assert DRIFT_Y + len(drift) <= SCENE_POSITION
     tables = [
         (EYE_X, bytes(round(40*math.sin(math.tau*i/256)) & 255 for i in range(256))),
         (EYE_Y, bytes(round(8*math.sin(math.tau*i/128)) & 255 for i in range(128))),
-        (DRIFT_X, bytes(round(5*math.sin(math.tau*i/128)) & 255 for i in range(128))),
-        (DRIFT_Y, bytes(round(2*math.sin(2*math.tau*i/128)) & 255 for i in range(128))),
+        (DRIFT_X, bytes(x & 255 for x, _ in drift)),
+        (DRIFT_Y, bytes(y & 255 for _, y in drift)),
     ]
     satellites = bytearray()
     for rx, ry, phase in ((25, 14, 0), (40, 23, 16)):
@@ -57,7 +67,14 @@ def motion_tables():
     d.emit(0xbd,EYE_X&255,EYE_X>>8,0x8d,0xe8,0x83,0x8a,0x29,127,0xaa)
     d.emit(0xbd,EYE_Y&255,EYE_Y>>8,0x8d,0xe9,0x83,0x60)
     d.label('drift')
-    d.emit(0x8a,0x29,127,0xaa,0xbd,DRIFT_X&255,DRIFT_X>>8,0x8d,0xe8,0x83)
+    d.emit(0xad,0xed,0x83,0x29,16)
+    d.branch(0xf0,'spiral_drift')
+    d.emit(0x8a,0x18,0x69,DRIFT_PADDING)
+    d.branch(0xd0,'drift_lookup')
+    d.label('spiral_drift')
+    d.emit(0x8a,0x29,SPIRAL_DRIFT_PERIOD-1)
+    d.label('drift_lookup')
+    d.emit(0xaa,0xbd,DRIFT_X&255,DRIFT_X>>8,0x8d,0xe8,0x83)
     d.emit(0xbd,DRIFT_Y&255,DRIFT_Y>>8,0x8d,0xe9,0x83,0x60)
     c.data[eye_jump:eye_jump+2] = d.labels['sweep'].to_bytes(2, 'little')
     tables.append((EYE_POSITION, bytes(c.finish())))
@@ -111,8 +128,9 @@ def rotator_vertical_offsets():
     # The trajectory is invisible: only the ball traces the sideways figure 8.
     return [round(8*math.sin(2*math.tau*i/64)) for i in range(64)]
 
-def tunnel_offsets():
-    return [(round(5*math.sin(math.tau*i/32)),round(2*math.sin(2*math.tau*i/32))) for i in range(32)]
+def tunnel_offsets(period):
+    return [(round(5*math.sin(math.tau*i/period)),
+             round(2*math.sin(2*math.tau*i/period))) for i in range(period)]
 
 def helper():
     c=Code(ENTRY)

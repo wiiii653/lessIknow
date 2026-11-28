@@ -87,6 +87,7 @@ def fade_level(tick):
 
 def helper(copy_address):
     import final_orbits
+    from outro_palette import TEXT_FADE_ENTRY
     c=Code(ENTRY)
     def a(op,addr):c.emit(op,addr&255,addr>>8)
     c.emit(0xa9,0);a(0x8d,0x83e5)
@@ -150,7 +151,7 @@ def helper(copy_address):
     c.label('held')
     a(0xad,0x83ec);c.branch(0xf0,'portrait_light_ready')
     c.emit(0x4a,0x69,4,0x29,0xfe)
-    c.label('portrait_light_ready');a(0x8d,PORTRAIT_LUMA)
+    c.label('portrait_light_ready');a(0x8d,PORTRAIT_LUMA);a(0x20,TEXT_FADE_ENTRY)
     a(0xad,0x83e8);c.emit(0x09,8);a(0x8d,PMBASE_SHADOW);a(0x8d,0xd407)
     for plane in range(4):
         a(0xad,final_orbits.VALUES_X+plane);a(0x8d,0xd000+plane)

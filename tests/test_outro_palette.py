@@ -74,6 +74,28 @@ class OutroPaletteTests(unittest.TestCase):
             cpu=seq.execute(tick,cpu)
             self.assertEqual(cpu.memory[0xd016:0xd019],[0x48,pf1,0x2a])
 
+    def test_last_greeting_rows_fade_at_portrait_luminance(self):
+        from final_boy import END, FADE_START, PORTRAIT_LUMA, fade_level
+        from outro_palette import INK_PHASES, ROW_DLI_STEP, TICKS_PER_PHASE
+        from outro_text import BODY_DLI_VCOUNT, TEXT_DLI_VCOUNT, TEXT_ROWS
+
+        cpu = None
+        row_dlis = [TEXT_DLI_VCOUNT, *range(
+            BODY_DLI_VCOUNT - (TEXT_ROWS-1)*ROW_DLI_STEP, BODY_DLI_VCOUNT, ROW_DLI_STEP)]
+        for tick in (FADE_START-1, *range(FADE_START, END, 16), END-1):
+            cpu = seq.execute(tick, cpu)
+            memory = cpu.memory
+            portrait_level = ((4 + fade_level(tick)//2) & ~1) if fade_level(tick) else 0
+            self.assertEqual(memory[PORTRAIT_LUMA], portrait_level)
+            clock = bytes(memory[0x24a7:0x24aa])
+            for row, vcount in enumerate(row_dlis):
+                phase = (tick//TICKS_PER_PHASE + row) & 7
+                expected = bytes(((ink & 0xf0) | 2*round((ink & 14)*portrait_level/20))
+                                 if portrait_level else 0 for ink in INK_PHASES[phase])
+                self.interrupt(cpu, 2*vcount)
+                self.assertEqual(bytes(memory[0xd016:0xd019]), expected, (tick, row))
+                self.assertEqual(bytes(memory[0x24a7:0x24aa]), clock)
+
     def test_final_card_fixed_inks_track_fade_without_clocking_music(self):
         from final_boy import END
         from outro_palette import (CARD_DLI_VCOUNT, CARD_FADE, CARD_INKS,

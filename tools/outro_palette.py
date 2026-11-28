@@ -6,8 +6,12 @@ EXIT = 0x2480
 RASTER_ENTRY = 0xff94
 BODY_ENTRY = 0xffb8
 CARD_ENTRY = 0x3c00  # Late-loaded runtime, after the shared scanline pool.
+TEXT_FADE_ENTRY = 0x3c60
+TEXT_INK_TABLES = 0xc250  # Staged with the terminal, between cache and reset code.
 CARD_FONT_ENTRY = 0x3d20
 CARD_FADE = 0x0dd5
+TEXT_FADE_OFFSET = 0x0dd2  # Reuses the montage overlay flag during the finale.
+PORTRAIT_LEVELS = (0, 4, 6, 8, 10)
 CARD_CLOCK_PENDING = 0x80  # Also maps to the zero fade row in the DLI.
 CARD_DLI_VCOUNT = 55
 CARD_RESTORE_VCOUNT = 79
@@ -59,8 +63,8 @@ def helper():
     return result
 
 
-def fade_inks(level, palette):
-    return tuple(((ink&0xf0) | (2*round((ink&14)*level/14))) if level else 0
+def fade_inks(level, palette, full_level=7):
+    return tuple(((ink&0xf0) | (2*round((ink&14)*level/(2*full_level)))) if level else 0
                  for ink in palette)
 
 
@@ -87,7 +91,26 @@ def card_helper():
     palettes = [fade_inks(level,CARD_INKS) for level in range(8)]
     for pen in range(3):
         c.label(f'card_ink{pen}');c.emit(*(palette[pen] for palette in palettes))
+
+    # Publish the palette offset in the same blanking window as the portrait.
+    assert c.origin+len(c.data)<=TEXT_FADE_ENTRY
+    c.emit(*bytes(TEXT_FADE_ENTRY-c.origin-len(c.data)))
+    c.emit(0xaa);c.jump(0xbd,'text_fade_offsets')
+    a(0x8d,TEXT_FADE_OFFSET);c.emit(0x60)
+    c.label('text_fade_offsets')
+    offsets = {level: index*len(INK_PHASES) for index,level in enumerate(PORTRAIT_LEVELS)}
+    c.emit(*(offsets.get(level,0) for level in range(PORTRAIT_LEVELS[-1]+1)))
     return bytes(c.finish())
+
+
+def text_ink_tables():
+    from outro_text import TEXT_DLI_VCOUNT
+    # Rotate the lookup so the leading blank DLI selects the music phase.
+    lead_offset = (TEXT_DLI_VCOUNT // ROW_DLI_STEP) % len(INK_PHASES)
+    indexed_phases = INK_PHASES[-lead_offset:] + INK_PHASES[:-lead_offset]
+    text_palettes = [fade_inks(level, inks, full_level=PORTRAIT_LEVELS[-1])
+                     for level in PORTRAIT_LEVELS for inks in indexed_phases]
+    return bytes(ink for pen in zip(*text_palettes) for ink in pen)
 
 
 def card_font_copy():
@@ -111,11 +134,11 @@ def raster_helper():
     assert TICKS_PER_PHASE == ROW_DLI_STEP
     c.emit(0x29,(len(INK_PHASES)-1)*TICKS_PER_PHASE,0x18)
     a(0x6d,0xd40b)
-    c.emit(0x4a,0x4a,0x29,7,0xaa)
+    c.emit(0x4a,0x4a,0x29,7);a(0x0d,TEXT_FADE_OFFSET);c.emit(0xaa)
     # The first raster of each glyph is blank so this can run through the
     # row boundary without waiting on WSYNC during character DMA.
     for pen in range(3):
-        c.jump(0xbd,f'ink{pen}');a(0x8d,0xd016+pen)
+        a(0xbd,TEXT_INK_TABLES+pen*len(PORTRAIT_LEVELS)*len(INK_PHASES));a(0x8d,0xd016+pen)
     a(0x4c,EXIT)
     assert c.origin+len(c.data)<=BODY_ENTRY
     c.emit(*bytes(BODY_ENTRY-c.origin-len(c.data)))
@@ -129,13 +152,6 @@ def raster_helper():
     for pen in range(3):
         a(0x8d,0xd016+pen)
     c.emit(0x60)
-    from outro_text import TEXT_DLI_VCOUNT
-    # Rotate the lookup so the leading blank DLI selects the music phase.
-    lead_offset = (TEXT_DLI_VCOUNT // ROW_DLI_STEP) % len(INK_PHASES)
-    indexed_phases = INK_PHASES[-lead_offset:] + INK_PHASES[:-lead_offset]
-    for pen, phases in enumerate(zip(*indexed_phases)):
-        c.label(f'ink{pen}')
-        c.emit(*phases)
     result = bytes(c.finish())
     assert RASTER_ENTRY+len(result)<=0xfffa
     return result
