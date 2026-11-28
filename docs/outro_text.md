@@ -7,7 +7,7 @@ Source [outro_text.py](../tools/outro_text.py). See also [Greetings terminal](gr
 ### Page 1
 
 ```text
-
+[XE-OS] LINK:ONLINE // SV2026 [OK]
 >SYS.OPEN CREDITS [OK]
 >THE LESS I KNOW THE BETTER
 >A\SLOP BY OGNJEN / ATARI XE 1 MB

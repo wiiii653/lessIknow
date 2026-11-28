@@ -18,6 +18,12 @@ def schedule():
     ticks=[]
     starts=text.page_starts()
     for start,end,page in zip(starts,(*starts[1:],text.END),text.pages()):
+        if start >= text.GREETINGS_START:
+            # The page selector still gates visibility at start. Pre-age
+            # all four rows so the first displayed frame has complete text.
+            ready = text.GREETINGS_START - PROMPT_DELAY - max(map(len, text.GREETZ))
+            ticks.extend([ready] * text.HISTORY_ROWS)
+            continue
         now=start
         for line in page:
             ticks.append(now);now+=PROMPT_DELAY+len(line)+ENTER_DELAY

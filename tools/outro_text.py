@@ -63,6 +63,7 @@ CREDITS = (
     ("UPLINK SV2026 [CONNECTED]", "MADE FOR", "SILLY VENTURE 2026",
      "AI TOOLS / ATARI SOUL", "HUMAN VISION / LLM CODE"),
 )
+GREETINGS_START = START + len(CREDITS) * 1000
 GREETZ = (
     "GREETINGS TO ALL MY CHOOMS!",
     "ESPECIALLY MY SON VICVIP AND HIS",
@@ -455,18 +456,22 @@ def display_lines():
 def pages():
     first = ("", *CREDITS[0][:HISTORY_ROWS-1])
     greetings = tuple(line for line in GREETZ if line)
-    result = [CREDITS[0][HISTORY_ROWS-1:], *CREDITS[1:], greetings]
-    return (first, *(page[i:i+HISTORY_ROWS] for page in result
-                     for i in range(0,len(page),HISTORY_ROWS)))
+    assert len(greetings) >= HISTORY_ROWS
+    credits = [CREDITS[0][HISTORY_ROWS-1:], *CREDITS[1:]]
+    credit_pages = tuple(page[i:i+HISTORY_ROWS] for page in credits
+                         for i in range(0, len(page), HISTORY_ROWS))
+    greeting_pages = tuple(greetings[i:i+HISTORY_ROWS]
+                           for i in range(0, len(greetings)-HISTORY_ROWS, HISTORY_ROWS))
+    # Keep the lead-in to the closing line visible on the last page.
+    return (first, *credit_pages, *greeting_pages, greetings[-HISTORY_ROWS:])
 
 
 def page_starts():
     credit_pages=sum((len(page)+HISTORY_ROWS-1)//HISTORY_ROWS for page in (("", *CREDITS[0]), *CREDITS[1:]))
-    credits_end=START+len(CREDITS)*1000
     greetings=len(pages())-credit_pages
-    assert credits_end<END and greetings>0
-    return tuple(START+(credits_end-START)*i//credit_pages for i in range(credit_pages))+tuple(
-        credits_end+(END-credits_end)*i//greetings for i in range(greetings))
+    assert GREETINGS_START<END and greetings>0
+    return tuple(START+(GREETINGS_START-START)*i//credit_pages for i in range(credit_pages))+tuple(
+        GREETINGS_START+(END-GREETINGS_START)*i//greetings for i in range(greetings))
 
 
 def inserts():

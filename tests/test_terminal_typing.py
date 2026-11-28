@@ -62,20 +62,28 @@ class TerminalTypingTests(unittest.TestCase):
             cpu=seq.execute(end-1,cpu)
             self.assertEqual([self.row(cpu,row).replace(b'_',b' ') for row in range(text.HISTORY_ROWS)],before)
 
-    def test_paragraphs_get_separate_pages_without_losing_any_greeting(self):
-        display_lines=tuple(line for page in text.pages() for line in page if line)
-        expected=tuple(line for page in text.CREDITS for line in page if line)+tuple(line for line in text.GREETZ if line)
-        self.assertEqual(display_lines,expected)
-        cpu=seq.execute(text.page_starts()[9]+300)
-        self.assertIn(b'VIRUS / FOORMAN / MAQ / KEY-G',self.row(cpu,2))
-        self.assertIn(b'FALCON / ATARIONLINE.PL / PTODT',self.row(cpu,3))
-        cpu=seq.execute(text.page_starts()[10],cpu)
-        self.assertTrue(all(self.row(cpu,r)==b' '*40 for r in range(1,text.HISTORY_ROWS)))
-        cpu=seq.execute(text.END-1,cpu)
-        self.assertEqual(text.HISTORY_ROWS,4)
-        self.assertIn(b'PERSONALLY',self.row(cpu,0))
-        self.assertEqual(cpu.memory[0xd403],0xbc)
-        self.assertEqual(len(self.row(cpu,3)),40)
+    def test_greetings_show_four_complete_rows_at_each_page_cut(self):
+        starts = text.page_starts()
+        first = starts.index(text.GREETINGS_START)
+        pages = text.pages()[first:]
+        greetings = tuple(line for line in text.GREETZ if line)
+        self.assertEqual(tuple(line for page in pages[:-1] for line in page),
+                         greetings[:(len(pages)-1)*text.HISTORY_ROWS])
+        self.assertEqual(pages[-1], greetings[-text.HISTORY_ROWS:])
+
+        cpu = seq.execute(text.GREETINGS_START-1)
+        for start, end, page in zip(starts[first:], (*starts[first+1:], text.END), pages):
+            self.assertEqual(len(page), 4)
+            self.assertTrue(all(page))
+            expected = [b'>' + line.encode() for line in page]
+            for tick in (start, end-1):
+                cpu = seq.execute(tick, cpu)
+                self.assertEqual(cpu.memory[0xd403], 0xbc)
+                for row, line in enumerate(expected):
+                    lms = 0xbc00 + text.TEXT_DL + 3*row + 1
+                    self.assertEqual(bytes(cpu.memory[lms:lms+2]),
+                                     (0xbf00 + 40*row).to_bytes(2, 'little'))
+                    self.assertTrue(self.row(cpu, row).startswith(line), (tick, row))
 
     def test_ai_and_llm_creation_lines_are_typed_in_the_existing_pages(self):
         cpu=seq.execute(text.START+300)

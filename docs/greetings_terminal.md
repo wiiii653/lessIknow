@@ -2,6 +2,10 @@
 
 Source [outro_text.py](../tools/outro_text.py).
 
+Each greeting page appears with all four rows filled. The final page
+carries over three lines from the preceding page to keep the closing line
+with the rest of the farewell.
+
 ### Page 1
 
 ```text
@@ -50,5 +54,8 @@ Source [outro_text.py](../tools/outro_text.py).
 ### Page 6
 
 ```text
+>ALL THE GUESTS AT SILLY VENTURE,
+>THE WHOLE SILLY VENTURE CREW,
+>AND EVERYONE WATCHING -
 >EACH OF YOU, PERSONALLY!
 ```
